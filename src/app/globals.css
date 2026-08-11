@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-display: 'Sora Variable', system-ui, sans-serif;
+  --font-text: 'Plus Jakarta Sans Variable', system-ui, sans-serif;
+}
+
+/* ==========================================================================
+   Native feel on the phone, with no install required.
+
+   Everything in this block exists to remove a specific "this is a website"
+   tell. They are small individually and the difference together is the whole
+   gap between a web page and an app.
+   ========================================================================== */
+
+html {
+  -webkit-tap-highlight-color: transparent;  /* no grey flash box on tap */
+  -webkit-text-size-adjust: 100%;            /* no reflow on rotate */
+  overscroll-behavior-y: none;               /* no pull-to-refresh, no rubber band */
+  height: 100%;
+}
+
+body {
+  background: theme('colors.page');
+  color: theme('colors.body');
+  font-family: var(--font-text);
+  font-feature-settings: 'ss01', 'cv01';
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* `manipulation` drops double-tap-to-zoom, which also removes the 300ms click
+     delay. Note we do NOT set maximum-scale=1 in the viewport: pinch zoom stays
+     available, because taking it away fails WCAG 1.4.4 and Safari ignores it anyway. */
+  touch-action: manipulation;
+
+  /* Long-pressing a button and getting a selection handle is the loudest browser
+     tell there is. Text content opts back in below. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+p, h1, h2, h3, h4, li, blockquote, code, pre,
+input, textarea, [data-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* iOS zooms the entire page when a field smaller than 16px takes focus, and never
+   zooms back out. 16px is a floor, not a design choice.
+   Scoped to WebKit-on-iOS (`-webkit-touch-callout` is the standard sniff) so no other
+   platform inherits it, and !important because a Tailwind text-[…] class on the input
+   would otherwise win on specificity — this is patching a platform bug, not styling. */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
+/* Any inner scroll region should carry momentum and stop at its own edges. */
+.scroll-x, .scroll-y {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar, .scroll-y::-webkit-scrollbar { display: none; }
+.scroll-x { overflow-x: auto; }
+.scroll-y { overflow-y: auto; }
+
+@layer components {
+  /* ---- type scale: display face only for headings, tight tracking ---- */
+  .h-hero  { @apply font-display text-[34px] font-extrabold leading-[1.05] tracking-tightest; }
+  .h-page  { @apply font-display text-[27px] font-bold leading-tight tracking-tighter; }
+  .h-card  { @apply font-display text-[17px] font-bold leading-snug tracking-tighter; }
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-faint; }
+
+  /* ---- safe areas: notch at the top, home indicator at the bottom ----
+     max() rather than a bare env(), so the padding is still right on a device
+     with no inset at all (Android, older phones, desktop). */
+  .safe-t { padding-top: max(1.75rem, calc(env(safe-area-inset-top) + .5rem)); }
+  .safe-b { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+  .safe-x { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+  /* Content has to clear the floating tab bar AND the home indicator under it. */
+  .pad-nav { padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
+
+  /* ---- pressed states ----
+     Touch has no hover, so the press is the only feedback there is. Fast in,
+     slower out, which is what iOS does. Defined before the controls that @apply it. */
+  .pressable {
+    transition: transform .32s cubic-bezier(.16,1,.3,1), opacity .32s, background-color .3s,
+                border-color .3s, color .3s;
+  }
+  .pressable:active { transform: scale(.965); transition-duration: .06s; }
+
+  /* ---- surfaces ---- */
+  .card { @apply rounded-card border border-line/70 bg-surface shadow-card; }
+  .card-flat { @apply rounded-card border border-line/70 bg-surface; }
+
+  /* ---- controls ---- */
+  /* Every control clears 44px of tappable height — Apple's minimum, and the
+     difference between a kid hitting the chip they meant and the one beside it. */
+  .btn-gold {
+    @apply pressable min-h-11 rounded-btn bg-gold px-6 py-4 font-display text-[15px]
+           font-bold tracking-tighter text-ink shadow-gold
+           disabled:opacity-40 disabled:shadow-none;
+  }
+  .btn-ghost {
+    @apply pressable min-h-11 rounded-btn border border-line bg-surface px-5 py-3.5
+           text-sm font-semibold text-body hover:border-goldUi/40;
+  }
+  .chip {
+    @apply pressable inline-flex min-h-11 cursor-pointer select-none items-center rounded-pill
+           border border-line bg-surface px-4 text-[13.5px] font-semibold text-muted
+           hover:border-goldUi/50 hover:text-body;
+  }
+  .chip-on {
+    @apply border-transparent bg-ink text-white shadow-[0_2px_10px_-2px_rgba(18,18,15,.4)];
+  }
+  .chip-gold { @apply border-transparent bg-gold text-ink shadow-gold; }
+
+  /* ---- tags ---- */
+  .tag {
+    @apply rounded-lg bg-surface2 px-2 py-[3px] text-[11px] font-semibold text-muted;
+  }
+  .tag-gold { @apply bg-goldSoft text-goldText; }
+
+  /* ---- staggered entrance, capped so long lists don't crawl in ---- */
+  .stagger > * { @apply animate-rise; }
+  .stagger > *:nth-child(1) { animation-delay: 0ms }
+  .stagger > *:nth-child(2) { animation-delay: 45ms }
+  .stagger > *:nth-child(3) { animation-delay: 90ms }
+  .stagger > *:nth-child(4) { animation-delay: 135ms }
+  .stagger > *:nth-child(5) { animation-delay: 180ms }
+  .stagger > *:nth-child(n+6) { animation-delay: 215ms }
+}
+
+/* ---- route change ----
+   A screen that appears instantly reads as a page load; one that lifts in reads
+   as a push. 340ms, the same easing curve as everything else. */
+@keyframes pageIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.page-in { animation: pageIn .34s cubic-bezier(.16, 1, .3, 1) both; }
+
+/* ---- bottom sheet ---- */
+@keyframes sheetIn {
+  from { opacity: 0; transform: translate3d(0, 110%, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.sheet-in { animation: sheetIn .42s cubic-bezier(.16, 1, .3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
