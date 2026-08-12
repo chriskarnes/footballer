@@ -21,11 +21,18 @@ const EXAMPLES = [
 ];
 
 /**
- * The manual rows start open, then fold away the first time the coach builds
- * something — you see the controls exist before they get out of your way.
- * Flip to false to make the chat the only thing on screen at rest.
+ * The manual rows start open and are folded away by exactly one thing: the coach
+ * answering. Surprise me leaves them alone — you may well want to nudge the time
+ * and go again, and pulling the controls shut under your thumb to do that is rude.
  */
 const MANUAL_OPEN_BY_DEFAULT = true;
+
+/**
+ * Only used when someone hits Surprise me without having chosen a time. Nothing
+ * is preselected in the rows, but a session still needs a duration, and refusing
+ * to answer the one button meant for "I don't know" would defeat it.
+ */
+const SURPRISE_MINUTES = 20;
 
 const MINUTES = [10, 15, 20, 30, 45, 60];
 const PLACES: [SessionSpec['place'], string][] = [
@@ -67,12 +74,11 @@ function summarise(spec: Partial<SessionSpec>, anyFocus: boolean): string {
 }
 
 export function Coach({ exercises }: { exercises: Exercise[] }) {
-  // Minutes default to 20 rather than nothing. Time is a quantity, not a filter —
-  // "any" would be meaningless — so the row gets a sensible answer instead of a
-  // catch-all, which also leaves "Working on" as the only visibly open question.
-  const [spec, setSpec] = useState<Partial<SessionSpec>>({
-    minutes: 20, place: 'any', level: 'any', priority: 'touches',
-  });
+  // Nothing is preselected. A chip lit before you touched anything claims you
+  // chose it, and the summary then reported defaults back to you as if they were
+  // your answers. Unset place/level/priority still fall back to 'any' inside
+  // build(), so the filters behave the same — they just don't pretend.
+  const [spec, setSpec] = useState<Partial<SessionSpec>>({});
   const [anyFocus, setAnyFocus] = useState(false);
   const [built, setBuilt] = useState<BuiltSession | null>(null);
   const [text, setText] = useState('');
@@ -165,13 +171,12 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
    * surprise, it's a wrong answer. Whatever is in "How long" is kept.
    */
   function surpriseMe() {
-    const next = { ...spec, focus: [] };
+    // Writes the fallback duration into the spec rather than only into the build,
+    // so "How long" shows the time the session was actually cut to.
+    const next = { ...spec, minutes: spec.minutes ?? SURPRISE_MINUTES, focus: [] };
     setAnyFocus(true);
     setSpec(next);
-    if (build(next, true)) {
-      setManualOpen(false);
-      setPendingScroll(true);
-    }
+    if (build(next, true)) setPendingScroll(true);
   }
 
   const summary = summarise(spec, anyFocus);
@@ -277,8 +282,10 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
           </svg>
         </button>
 
+        {/* No entrance animation. animate-pop scales from .97, which on a block this
+            tall reads as the whole section flinching when you open it. */}
         {manualOpen && (
-          <div id="manual-controls" className="animate-pop">
+          <div id="manual-controls">
             <div className="mt-7 space-y-7">
               <Row label="How long">
                 {MINUTES.map((m) => (
@@ -327,7 +334,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
               disabled={!ready}
               className="btn-primary mt-8 w-full"
             >
-              {ready ? 'Build my session' : 'Pick what to work on'}
+              Build
               {ready && (
                 <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor"
                      strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
