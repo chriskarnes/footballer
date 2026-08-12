@@ -100,27 +100,52 @@ input, textarea, [data-selectable] {
   .card { @apply rounded-card border border-line/70 bg-surface shadow-card; }
   .card-flat { @apply rounded-card border border-line/70 bg-surface; }
 
-  /* ---- controls ---- */
-  /* Every control clears 44px of tappable height — Apple's minimum, and the
+  /* ---- controls ----
+     Three jobs, three shapes that can't be mistaken for each other:
+
+       .chip         pill,  bordered, white   →  CHOOSE one of these
+       .btn-primary  block, solid ink         →  DO the thing
+       .btn-ghost    block, bordered          →  the lesser action
+
+     Two rules hold the system together. Selection is carried by BORDER and ink
+     colour, never by a fill — so a picked chip stays legible and never turns into
+     a black slab. And a filled block is only ever an action, which is what makes
+     the primary button read as pressable without needing a shadow to say so.
+
+     Nothing in here casts a shadow. A shadow that appears on press or hover is
+     noise on a phone, where there is no hover to explain it.
+
+     Every control clears 44px of tappable height — Apple's minimum, and the
      difference between a kid hitting the chip they meant and the one beside it. */
-  .btn-gold {
-    @apply pressable min-h-11 rounded-btn bg-gold px-6 py-4 font-display text-[15px]
-           font-bold tracking-tighter text-ink shadow-gold
-           disabled:opacity-40 disabled:shadow-none;
-  }
-  .btn-ghost {
-    @apply pressable min-h-11 rounded-btn border border-line bg-surface px-5 py-3.5
-           text-sm font-semibold text-body hover:border-goldUi/40;
-  }
+
   .chip {
     @apply pressable inline-flex min-h-11 cursor-pointer select-none items-center rounded-pill
-           border border-line bg-surface px-4 text-[13.5px] font-semibold text-muted
-           hover:border-goldUi/50 hover:text-body;
+           border-[1.5px] border-line bg-surface px-4 text-[13.5px] font-semibold text-muted
+           hover:border-goldUi/60 hover:text-body;
   }
-  .chip-on {
-    @apply border-transparent bg-ink text-white shadow-[0_2px_10px_-2px_rgba(18,18,15,.4)];
+  /* Border WIDTH is identical in both states deliberately: stepping 1px → 2px on
+     select rewraps the whole row of chips under your thumb. Only the colour moves. */
+  .chip-on { @apply border-ink text-ink; }
+  .chip-on:hover { @apply border-ink; }
+
+  .btn-primary {
+    @apply pressable inline-flex min-h-[52px] items-center justify-center gap-2 rounded-btn
+           bg-ink px-6 font-display text-[16px] font-bold tracking-tighter text-gold
+           disabled:bg-surface2 disabled:text-muted;
   }
-  .chip-gold { @apply border-transparent bg-gold text-ink shadow-gold; }
+  /* Gold fill is now reserved for DARK surfaces, where it is the strongest contrast
+     available. The rule is "primary = the boldest fill this surface allows": that's
+     ink on the page, gold on the ink cards. Using it on white made the main action
+     look like one more chip. */
+  .btn-gold {
+    @apply pressable inline-flex min-h-[52px] items-center justify-center gap-2 rounded-btn
+           bg-gold px-6 font-display text-[16px] font-bold tracking-tighter text-ink
+           disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply pressable min-h-11 rounded-btn border-[1.5px] border-line bg-surface px-5 py-3.5
+           text-sm font-semibold text-body hover:border-goldUi/60;
+  }
 
   /* ---- tags ---- */
   .tag {
@@ -146,6 +171,16 @@ input, textarea, [data-selectable] {
   to   { opacity: 1; transform: none; }
 }
 .page-in { animation: pageIn .34s cubic-bezier(.16, 1, .3, 1) both; }
+
+/* ---- rotating example in the search bar ----
+   Fade and a 5px lift. Small on purpose: it should register in peripheral vision
+   without pulling the eye off whatever the player is actually doing. Caught by the
+   reduced-motion block at the end of this file. */
+@keyframes hintIn {
+  from { opacity: 0; transform: translate3d(0, 5px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.hint-in { animation: hintIn .45s cubic-bezier(.16, 1, .3, 1) both; }
 
 /* ---- bottom sheet ---- */
 @keyframes sheetIn {

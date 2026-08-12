@@ -30,7 +30,7 @@ export function TabBar() {
               className={`pressable flex min-h-11 items-center gap-2 rounded-pill px-4
                           text-[12.5px] font-bold tracking-tight
                           transition-colors duration-300
-                          ${on ? 'bg-ink text-white' : 'text-faint'}`}>
+                          ${on ? 'bg-ink text-gold' : 'text-faint'}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
                    strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
                 <path d={t.d} />

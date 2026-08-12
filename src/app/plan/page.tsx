@@ -27,7 +27,7 @@ export default function PlanPage() {
           The important change from the prototype: don&rsquo;t open with ten questions. Pre-fill
           position, level and focus from the player&rsquo;s history and ask only what&rsquo;s missing.
         </p>
-        <Link href="/" className="btn-gold mt-4 inline-block px-4 py-2 text-sm">
+        <Link href="/" className="btn-primary mt-4 px-4 py-2 text-sm">
           Train now instead →
         </Link>
       </div>

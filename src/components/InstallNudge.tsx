@@ -134,7 +134,7 @@ export function InstallNudge() {
           </ol>
         ) : (
           <div className="mt-4 flex gap-2.5">
-            <button onClick={install} className="btn-gold pressable flex-1">Install</button>
+            <button onClick={install} className="btn-primary pressable flex-1">Install</button>
             <button onClick={close} className="btn-ghost pressable">Not now</button>
           </div>
         )}

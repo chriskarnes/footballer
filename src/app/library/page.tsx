@@ -50,7 +50,7 @@ export default async function LibraryPage() {
                   return (
                     <Link key={p.id} href={`/library/${p.id}`}
                       className="card group flex items-center gap-4 p-4 transition
-                                 active:scale-[.99] hover:shadow-lift">
+                                 active:scale-[.99]">
                       <div className="min-w-0 flex-1">
                         <div className="h-card truncate">{p.name}</div>
                         <div className="mt-1 text-[12.5px] font-medium text-muted">

@@ -42,7 +42,7 @@ export function SignIn() {
         autoCapitalize="none" autoCorrect="off" spellCheck={false}
         className="w-full rounded-btn border border-line bg-surface2 px-4 py-3.5 text-[16px] font-medium outline-none transition focus:border-goldUi"
       />
-      <button onClick={send} className="btn-gold w-full">Email me a sign-in link</button>
+      <button onClick={send} className="btn-primary w-full">Email me a sign-in link</button>
       <button onClick={google} className="btn-ghost w-full">Continue with Google</button>
       {err && <p className="text-xs text-red-600">{err}</p>}
     </div>
