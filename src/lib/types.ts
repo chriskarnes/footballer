@@ -77,6 +77,71 @@ export interface BuiltSession {
   poolSize: number;
 }
 
+/* ---- the weekly blueprint ---------------------------------------------- */
+
+/**
+ * How a given weekday is spent. Mirrors plan_days.kind in schema.sql, except
+ * for 'both', which is an intake answer rather than a stored row: a "both" day
+ * is written as two plan_days rows at slot 0 and slot 1.
+ */
+export type DayKind = 'rest' | 'technical' | 'physical';
+export type Availability = DayKind | 'both';
+
+/**
+ * Drives session length. Volume comes down as matches start mattering more —
+ * nobody wants their legs emptied the day before a game.
+ */
+export type SeasonPhase = 'off' | 'pre' | 'in';
+
+/** 0 = Monday, matching the check constraint on plan_days.weekday. */
+export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+
+/** The answers. Stored verbatim in plans.intake so a plan can be rebuilt later. */
+export interface PlanIntake {
+  availability: Availability[];   // exactly 7, index 0 = Monday
+  weaknesses: FocusArea[];        // ordered — the first is weighted highest
+  seasonPhase: SeasonPhase;
+  equipment: string[];
+  homeOnly: boolean;
+  injured: boolean;               // excludes high-intensity work
+  level: string;                  // 'any' | Beginner | Advanced | Elite
+  /**
+   * Overrides the season phase's default length. Set from history when we know
+   * what they actually train for — PLAN.md wants phase to drive length, but a
+   * player whose sessions are all 20 minutes should not be handed 45 because
+   * it happens to be the off-season.
+   */
+  targetMinutes?: number;
+}
+
+/** One row of the generated week. `session` is null on a rest day. */
+export interface PlannedDay {
+  weekday: number;                // 0-6, Monday first
+  slot: number;                   // 0 or 1 — 1 only exists on a "both" day
+  kind: DayKind;
+  session: SessionRow | null;
+  /** Why this session was chosen, shown in the UI rather than hidden. */
+  reason: string;
+}
+
+export interface BuiltPlan {
+  intake: PlanIntake;
+  days: PlannedDay[];
+  totalMinutes: number;
+  totalTouches: number;
+  /** Weaknesses the library simply could not cover, so the UI can be honest. */
+  uncovered: FocusArea[];
+}
+
+/** Ball skills vs athletic work. The split behind `kind`. */
+export const TECHNICAL_FOCUS: FocusArea[] = [
+  'first_touch', 'ball_mastery', 'juggling', 'dribbling',
+  'passing', 'finishing', 'crossing', 'weak_foot',
+];
+export const PHYSICAL_FOCUS: FocusArea[] = [
+  'speed', 'agility', 'power', 'strength', 'core', 'conditioning', 'mobility',
+];
+
 export const FOCUS_LABELS: Record<FocusArea, string> = {
   first_touch: 'First Touch', ball_mastery: 'Ball Mastery', juggling: 'Juggling',
   dribbling: 'Dribbling', passing: 'Passing', finishing: 'Finishing',
