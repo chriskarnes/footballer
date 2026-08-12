@@ -35,12 +35,11 @@ export function SessionCard({
 
   return (
     <div>
-      {/* the headline number gets the space it deserves */}
+      {/* The headline number gets the space it deserves — and now the whole card,
+          since "Your session" is a heading above this box rather than a second,
+          smaller label repeating it inside. */}
       <div className="overflow-hidden rounded-card bg-ink p-6 shadow-lift">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/45">
-          Your session
-        </p>
-        <div className="mt-3 flex items-end gap-6">
+        <div className="flex items-end gap-6">
           <div>
             <div className="font-display text-[46px] font-extrabold leading-none
                             tracking-tightest text-gold">

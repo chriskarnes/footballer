@@ -6,15 +6,12 @@ import { FOCUS_LABELS } from '@/lib/types';
 import { SessionCard } from './SessionCard';
 
 /**
- * Examples are tappable and fill the box rather than rotating inside it.
+ * Examples are tappable, but they are set as running subtext rather than chips.
+ * A chip in this design system means "CHOOSE one of these" (see globals.css) and
+ * every real chip on this screen is a filter. Styling an autofill shortcut the
+ * same way made two unrelated things look like one control group.
  *
- * A rotating placeholder could only ever teach — you still had to type. A chip
- * puts a working request one tap away and leaves it editable, which is the
- * difference between "I see what this does" and "I've used it". They stay
- * visible after a build so trying a second angle is also one tap.
- *
- * Deliberately varied, and each is short enough to read as a chip on a phone:
- * no time, time + weakness, a place, time + skill.
+ * Deliberately varied: no time, time + weakness, a place, time + skill.
  */
 const EXAMPLES = [
   'Learn to juggle',
@@ -162,6 +159,21 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
     if (next) build({ ...spec, focus: [] }, true);
   };
 
+  /**
+   * Randomises what you work on, not how long for. Time is the one thing the
+   * player actually knows — a surprise 45 minutes when you have 15 is not a
+   * surprise, it's a wrong answer. Whatever is in "How long" is kept.
+   */
+  function surpriseMe() {
+    const next = { ...spec, focus: [] };
+    setAnyFocus(true);
+    setSpec(next);
+    if (build(next, true)) {
+      setManualOpen(false);
+      setPendingScroll(true);
+    }
+  }
+
   const summary = summarise(spec, anyFocus);
 
   return (
@@ -188,7 +200,11 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
             the box is the main event, the thing you press to use it shouldn't be
             something you have to discover. Ink fill, gold label — the same "this is
             an action" signal as btn-primary. */}
-        <button onClick={ask} disabled={busy || !text.trim()} aria-label="Build my session"
+        {/* The accessible name has to say what "Go" does, and it has to differ from
+            the manual Build button below — two controls sharing one name is a maze
+            for anyone navigating by voice or screen reader. */}
+        <button onClick={ask} disabled={busy || !text.trim()}
+          aria-label="Build a session from what you typed"
           className="pressable min-h-11 shrink-0 rounded-pill bg-ink px-6 font-display
                      text-[14px] font-bold tracking-tight text-gold
                      disabled:bg-surface2 disabled:text-muted">
@@ -196,25 +212,34 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
         </button>
       </div>
 
-      {/* Directly under the box, where someone deciding what to type is already
-          looking. Deliberately short: the page subhead above already asks for time
-          and focus, so the only new thing to say is that neither is required. */}
-      <p className="mt-3 pl-1 text-[14px] leading-relaxed text-muted">
-        Time, skill, place — any of it, or none of it.
+      {/* Subtext, directly under the box that it fills. leading-loose is doing
+          accessibility work, not decoration: when these wrap on a phone it keeps
+          each tappable phrase a clear thumb-width away from the one above it. */}
+      <p className="mt-3 pl-1 text-[14px] leading-loose text-muted">
+        Try{' '}
+        {EXAMPLES.map((e, i) => (
+          <span key={e}>
+            {i === EXAMPLES.length - 1 && 'or '}
+            {/* Muted like the sentence it sits in — the underline is what says
+                "tappable", not weight or colour. Semibold plus body ink turned four
+                shortcuts into four headlines competing with the box above them. */}
+            <button type="button" onClick={() => useExample(e)}
+              className="font-semibold underline decoration-line decoration-2
+                         underline-offset-4 transition-colors hover:text-body
+                         hover:decoration-goldUi">
+              {e}
+            </button>
+            {i < EXAMPLES.length - 1 ? ', ' : '.'}
+          </span>
+        ))}
       </p>
 
-      {/* One scrolling row, not a wrapped block. Written out as real sentences these
-          chips are each a full line wide on a phone, and four stacked rows pushed the
-          session controls off the bottom of the screen. Bleeds to the screen edge so
-          the fourth chip is visibly cut, which is what says "there is more". */}
-      <div className="scroll-x -mx-5 mt-3 flex gap-2 px-5 pb-1">
-        {EXAMPLES.map((e) => (
-          <button key={e} type="button" onClick={() => useExample(e)}
-            className="chip shrink-0 whitespace-nowrap">
-            {e}
-          </button>
-        ))}
-      </div>
+      {/* The way in for a player who genuinely doesn't know — which at this age is
+          most of them. btn-ghost because the design system already reserves the
+          bordered block for the lesser of two actions, and Go is the greater one. */}
+      <button type="button" onClick={surpriseMe} className="btn-ghost mt-4">
+        Surprise me
+      </button>
 
       {reply && (
         <p key={reply} className="hint-in mt-5 pl-1 text-[14px] font-medium text-body">{reply}</p>
@@ -230,10 +255,15 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
           className="pressable flex w-full items-center justify-between gap-3 text-left"
         >
           <span className="min-w-0">
-            <span className="eyebrow block">Or set it yourself</span>
-            {/* When folded, the summary is what tells you the coach understood you. */}
-            {!manualOpen && summary && (
-              <span className="mt-1 block truncate text-[14px] font-semibold text-body">
+            {/* h-card, not eyebrow. This is a section heading and the rows inside it
+                (How long, Working on…) are eyebrows — when both were eyebrows there
+                was no hierarchy, just two sizes of the same shout. */}
+            <span className="h-card block text-body">Build your session</span>
+            {/* The summary appears only once a session exists. Showing it before
+                that surfaced the default "20 min" against nothing the player had
+                chosen, which read as a leftover rather than an answer. */}
+            {!manualOpen && built && summary && (
+              <span className="mt-1 block truncate text-[13.5px] font-medium text-muted">
                 {summary}
               </span>
             )}
@@ -310,7 +340,11 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
       </div>
 
       {built && (
-        <div ref={sessionRef} className="mt-9 scroll-mt-5 animate-pop">
+        <div ref={sessionRef} className="mt-10 scroll-mt-5 animate-pop">
+          {/* Same level as "Or set it yourself", so the page reads as two sections
+              under the coach rather than one long undifferentiated column. The card
+              itself no longer repeats this label inside its own box. */}
+          <h2 className="h-card mb-3.5">Your session</h2>
           <SessionCard built={built}
             onSwap={(i) => setBuilt(swapDrill(exercises, built, i))}
             onShuffle={() => build()} />
