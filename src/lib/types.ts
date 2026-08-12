@@ -133,6 +133,22 @@ export interface BuiltPlan {
   uncovered: FocusArea[];
 }
 
+/**
+ * Just enough of an Exercise to list a day's drills.
+ *
+ * The full library is 471KB and the blueprint only needs four fields per drill,
+ * so the plan screen ships this instead. Train Now still gets whole Exercises
+ * because it has to run the selection algorithm client-side; here the sessions
+ * are already chosen.
+ */
+export interface DrillBrief {
+  id: string;
+  name: string;
+  sets: string;
+  reps_time: string;
+  total_seconds: number;
+}
+
 /** Ball skills vs athletic work. The split behind `kind`. */
 export const TECHNICAL_FOCUS: FocusArea[] = [
   'first_touch', 'ball_mastery', 'juggling', 'dribbling',

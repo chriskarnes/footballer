@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { getSessions } from '@/lib/library';
+import { getExercises, getSessions } from '@/lib/library';
 import { serverClient } from '@/lib/supabase/server';
 import { derivePrefill, type HistoryRow, type ProfileRow } from '@/lib/plan-builder';
 import { PlanBuilder } from '@/components/PlanBuilder';
-import { FOCUS_LABELS, WEEKDAYS } from '@/lib/types';
-import type { FocusArea, SessionRow } from '@/lib/types';
+import { PlanWeek } from '@/components/PlanWeek';
+import type { DrillBrief, SessionRow } from '@/lib/types';
 
 /**
  * The recurring order. Deliberately the LAST tab and the biggest ask, so it is
@@ -18,7 +18,17 @@ export default async function PlanPage({
   searchParams,
 }: { searchParams: Promise<{ edit?: string }> }) {
   const { edit } = await searchParams;
-  const sessions = await getSessions();
+  const [sessions, exercises] = await Promise.all([getSessions(), getExercises()]);
+
+  // Slim index rather than the whole 471KB library: the blueprint needs four
+  // fields per drill, and this crosses the wire to a client component.
+  const drillsBySession: Record<string, DrillBrief[]> = {};
+  for (const e of [...exercises].sort((a, b) => a.exercise_order - b.exercise_order)) {
+    (drillsBySession[e.session_id] ??= []).push({
+      id: e.id, name: e.name, sets: e.sets,
+      reps_time: e.reps_time, total_seconds: e.total_seconds,
+    });
+  }
 
   let signedIn = false;
   let history: HistoryRow[] = [];
@@ -65,8 +75,9 @@ export default async function PlanPage({
       </p>
 
       {saved && !edit
-        ? <SavedWeek days={saved.days} sessions={sessions} />
-        : <PlanBuilder sessions={sessions} prefill={prefill} signedIn={signedIn} />}
+        ? <SavedWeek days={saved.days} sessions={sessions} drillsBySession={drillsBySession} />
+        : <PlanBuilder sessions={sessions} drillsBySession={drillsBySession}
+            prefill={prefill} signedIn={signedIn} />}
     </div>
   );
 }
@@ -74,10 +85,11 @@ export default async function PlanPage({
 /** The week as it was saved. Read-only on purpose — this is the thing you follow,
  *  not the thing you fiddle with. Rebuilding is one tap away. */
 function SavedWeek({
-  days, sessions,
+  days, sessions, drillsBySession,
 }: {
   days: { weekday: number; slot: number; kind: string; session_id: string | null }[];
   sessions: SessionRow[];
+  drillsBySession: Record<string, DrillBrief[]>;
 }) {
   const byId = new Map(sessions.map((s) => [s.id, s]));
   const resolved = days.map((d) => ({ ...d, session: d.session_id ? byId.get(d.session_id) ?? null : null }));
@@ -101,38 +113,7 @@ function SavedWeek({
         <Stat v={touches >= 1000 ? `${(touches / 1000).toFixed(1)}k` : String(touches)} k="touches" />
       </div>
 
-      <ol className="mt-3 space-y-2">
-        {resolved.map((d) => (
-          <li key={`${d.weekday}-${d.slot}`}
-            className={d.kind === 'rest' ? 'flex items-center gap-3.5 px-4 py-2' : 'card p-4'}>
-            <span className={`w-10 shrink-0 font-display text-[13px] font-bold
-              ${d.kind === 'rest' ? 'text-faint' : 'text-body'}`}>
-              {WEEKDAYS[d.weekday]}
-            </span>
-            {d.kind === 'rest' ? (
-              <span className="text-[13.5px] text-faint">Rest</span>
-            ) : (
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14.5px] font-bold text-body">
-                  {d.session?.name ?? 'Session no longer in the library'}
-                </div>
-                <div className="mt-0.5 text-[12.5px] text-muted">
-                  {d.session
-                    ? `${Math.round(d.session.total_minutes)} min · ${d.session.focus_areas
-                        .slice(0, 2).map((f) => FOCUS_LABELS[f as FocusArea] ?? f).join(', ')}`
-                    : 'Rebuild the week to replace it'}
-                </div>
-              </div>
-            )}
-            {d.session && (
-              <Link href={`/library/${d.session.program_id}`}
-                className="btn-primary shrink-0 px-3 py-2 text-xs">
-                Open
-              </Link>
-            )}
-          </li>
-        ))}
-      </ol>
+      <PlanWeek rows={resolved} drillsBySession={drillsBySession} />
     </div>
   );
 }

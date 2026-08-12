@@ -2,7 +2,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { buildPlan, planDayRows, type Prefill } from '@/lib/plan-builder';
-import type { Availability, BuiltPlan, FocusArea, PlanIntake, SessionRow } from '@/lib/types';
+import { PlanWeek } from './PlanWeek';
+import type {
+  Availability, BuiltPlan, DrillBrief, FocusArea, PlanIntake, SessionRow,
+} from '@/lib/types';
 import { FOCUS_LABELS, WEEKDAYS } from '@/lib/types';
 
 const PHASES: [PlanIntake['seasonPhase'], string, string][] = [
@@ -38,8 +41,13 @@ const KIT_LABEL: Record<string, string> = {
  * asked outright is the one thing history cannot reveal — whether you're injured.
  */
 export function PlanBuilder({
-  sessions, prefill, signedIn,
-}: { sessions: SessionRow[]; prefill: Prefill; signedIn: boolean }) {
+  sessions, drillsBySession, prefill, signedIn,
+}: {
+  sessions: SessionRow[];
+  drillsBySession: Record<string, DrillBrief[]>;
+  prefill: Prefill;
+  signedIn: boolean;
+}) {
   const router = useRouter();
   const [intake, setIntake] = useState<PlanIntake>(prefill.intake);
   const [seed, setSeed] = useState(0.42);
@@ -241,36 +249,7 @@ export function PlanBuilder({
                 ? `${(plan.totalTouches / 1000).toFixed(1)}k` : String(plan.totalTouches)} k="touches" />
             </div>
 
-            <ol className="mt-3 space-y-2">
-              {plan.days.map((d) => (
-                <li key={`${d.weekday}-${d.slot}`}
-                  className={d.kind === 'rest' ? 'flex items-center gap-3.5 px-4 py-2' : 'card p-4'}>
-                  <span className={`w-10 shrink-0 font-display text-[13px] font-bold
-                    ${d.kind === 'rest' ? 'text-faint' : 'text-body'}`}>
-                    {WEEKDAYS[d.weekday]}
-                  </span>
-                  {d.kind === 'rest' ? (
-                    <span className="text-[13.5px] text-faint">Rest</span>
-                  ) : (
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[14.5px] font-bold text-body">
-                        {d.session?.name ?? 'Nothing fits this day'}
-                      </div>
-                      <div className="mt-0.5 text-[12.5px] text-muted">
-                        {d.session
-                          ? `${Math.round(d.session.total_minutes)} min · ${d.reason}`
-                          : 'Try adding kit, or turning off Home only'}
-                      </div>
-                    </div>
-                  )}
-                  {d.session && (
-                    <span className="tag tag-gold shrink-0">
-                      {d.kind === 'technical' ? 'Ball' : 'Physical'}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
+            <PlanWeek rows={plan.days} drillsBySession={drillsBySession} />
 
             {!!plan.uncovered.length && (
               <p className="mt-3.5 rounded-btn border border-line bg-surface2 p-3.5 text-[13px]
