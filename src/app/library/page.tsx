@@ -3,20 +3,20 @@ import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
 
 /**
- * The three category gradients are --forge-category-* extensions, not md.sys
+ * The three category gradients are --app-category-* extensions, not md.sys
  * roles: M3 has no mechanism for "three sibling categories that must stay
  * visually distinct". Each takes a different ramp that is still inside the
  * brief — primary navy, tertiary cyan-blue, primary at a lighter tone.
  *
- * Text on them uses --forge-on-category, which is FIXED rather than
+ * Text on them uses --app-on-category, which is FIXED rather than
  * scheme-following. The gradients do not flip between light and dark, so text
  * over them must not either — reusing an inverse role here is what put black
  * text on a green card when the dark scheme was first switched on.
  */
 const ART: Record<string, string> = {
-  'Technical': 'from-forge-category-technical-dim to-forge-category-technical',
-  'Physical': 'from-forge-category-physical-dim to-forge-category-physical',
-  'Finishing & Crossing': 'from-forge-category-finishing-dim to-forge-category-finishing',
+  'Technical': 'from-app-category-technical-dim to-app-category-technical',
+  'Physical': 'from-app-category-physical-dim to-app-category-physical',
+  'Finishing & Crossing': 'from-app-category-finishing-dim to-app-category-finishing',
 };
 const KID: Record<string, string> = {
   'Technical': 'Ball Skills', 'Physical': 'Speed & Strength',

@@ -42,7 +42,7 @@ const SPEC_TOOL = {
   },
 };
 
-const SYSTEM = `You are the Forge training coach for youth footballers.
+const SYSTEM = `You are the Train.futbol training coach for youth footballers.
 Read the player's message and record a session spec.
 Be generous in interpretation: "before practice" implies a short session; "I want to be
 more confident on the ball" implies ball_mastery and first_touch; "get faster" implies speed.

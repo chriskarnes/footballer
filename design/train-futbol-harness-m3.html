@@ -1,0 +1,1758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Train.futbol — design harness (Material Design 3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Roboto Flex is requested with four of its axes: opsz drives optical sizing
+     (which the browser applies automatically), slnt gives a real slant instead
+     of a synthesised oblique, wdth and wght are there for the display face. -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght@8..144,-10..0,75..151,100..1000&family=Noto+Sans:wght@400..800&display=swap" rel="stylesheet">
+
+<!--
+  TRAIN.FUTBOL — DESIGN HARNESS  ·  MATERIAL DESIGN 3
+  ===================================================
+  Same four screens, same class names, rebuilt on M3's token architecture.
+
+  WHAT CHANGED
+  Tokens are M3 system roles (md.sys.color.*, md.sys.typescale.*,
+  md.sys.shape.*, md.sys.elevation.*, md.sys.motion.*, md.sys.state.*), and
+  the palette is blue: dark navy through powder blue, on cool greys.
+  The whole scheme comes off one source hue via Google's
+  material-color-utilities, which is the point of the architecture — the
+  recolour from gold-and-black to blue touched only the values in the
+  MD.SYS.COLOR blocks. Not one component rule changed.
+
+  Class names are unchanged, so the port back to src/app/globals.css is still
+  a one-line edit per rule. Two new classes: .day / .day-on, which replace
+  seven copies of an inline selection style on the Plan screen.
+
+  THE THREE DECISIONS WORTH RE-READING
+    1. Chip selection is now a secondary-container FILL plus a checkmark,
+       replacing the border-and-ink rule. See .chip.
+    2. --faint is gone. It failed WCAG at every size it was used. Eyebrows,
+       inactive tabs and captions are now on-surface-variant, and visibly
+       darker. See .eyebrow.
+    3. There is a dark scheme. It has never been looked at on a device.
+    4. A program opens in a modal bottom sheet instead of a route change.
+       The sheet covers the navigation bar and the scrim eats taps aimed at
+       it, so the accidental jump to Plan is impossible rather than merely
+       unlikely. Three exits: close button, scrim, Esc. See .sheet.
+
+  WHAT THIS IS NOT
+  Not the app. The drill data is a handful of real rows, not 786; nothing is
+  interactive beyond switching screens and the theme toggle.
+
+  SOURCE OF TRUTH
+    tokens      -> tailwind.config.ts
+    components  -> src/app/globals.css
+  Neither has been migrated yet. Until they are, this file is the proposal.
+-->
+
+<style>
+/* ==========================================================================
+   MD.REF — reference layer. Primitives. Never referenced by a component.
+   The palettes below were generated with Google's material-color-utilities
+   from a single source hue: HCT 255, chroma 42. One hue covers the whole
+   brief — tone 14 is the dark navy, tone 85 is the powder blue, and every
+   step between them falls out of the same ramp, which is why the scheme
+   holds together without anyone picking shades by eye.
+   Neutrals are the same hue at chroma 3, so the greys read cool and clean
+   rather than dead. Tertiary is held at hue 225 instead of M3's default
+   hue+60, which would have landed on magenta and broken the brief.
+   ========================================================================== */
+:root {
+  --md-ref-typeface-brand: 'Roboto Flex', system-ui, sans-serif;
+  --md-ref-typeface-plain: 'Noto Sans', system-ui, sans-serif;
+}
+
+/* ==========================================================================
+   MD.SYS.COLOR — LIGHT
+   Every value here is generated. The gold and ink that used to override the
+   algorithm are gone, so nothing in this block is hand-picked any more.
+   Contrast was checked pair by pair: the tightest is `outline` at 4.27:1,
+   which clears the 3:1 WCAG asks of a control boundary; every text pair is
+   above 6:1.
+   ========================================================================== */
+:root {
+  --md-sys-color-primary:                   #286199;
+  --md-sys-color-on-primary:                #FFFFFF;
+  --md-sys-color-primary-container:         #D2E4FF;
+  --md-sys-color-on-primary-container:      #00497F;
+
+  --md-sys-color-secondary:                 #535F70;
+  --md-sys-color-on-secondary:              #FFFFFF;
+  --md-sys-color-secondary-container:       #D7E3F8;
+  --md-sys-color-on-secondary-container:    #3C4858;
+
+  --md-sys-color-tertiary:                  #336577;
+  --md-sys-color-on-tertiary:               #FFFFFF;
+  --md-sys-color-tertiary-container:        #B9EAFF;
+  --md-sys-color-on-tertiary-container:     #164D5E;
+
+  --md-sys-color-error:                     #BA1A1A;
+  --md-sys-color-on-error:                  #FFFFFF;
+  --md-sys-color-error-container:           #FFDAD6;
+  --md-sys-color-on-error-container:        #93000A;
+
+  --md-sys-color-surface:                   #FAF9FB;
+  --md-sys-color-on-surface:                #1B1C1D;
+  --md-sys-color-surface-variant:           #E0E2EA;
+  --md-sys-color-on-surface-variant:        #43474D;
+
+  --md-sys-color-surface-container-lowest:  #FFFFFF;
+  --md-sys-color-surface-container-low:     #F5F3F5;
+  --md-sys-color-surface-container:         #EFEDF0;
+  --md-sys-color-surface-container-high:    #E9E7EA;
+  --md-sys-color-surface-container-highest: #E3E2E4;
+  --md-sys-color-surface-dim:               #DBD9DC;
+  --md-sys-color-surface-bright:            #FAF9FB;
+
+  --md-sys-color-outline:                   #74777E;
+  --md-sys-color-outline-variant:           #C4C6CE;
+
+  --md-sys-color-inverse-surface:           #002544;
+  --md-sys-color-inverse-on-surface:        #F2F0F3;
+  --md-sys-color-inverse-primary:           #B9D7FF;
+
+  --md-sys-color-scrim:                     #000000;
+  --md-sys-color-shadow:                    #000000;
+}
+
+/* ==========================================================================
+   MD.SYS.COLOR — DARK
+   There was no dark scheme. This one is entirely generated; nothing here has
+   ever been eyeballed on a device.
+   ========================================================================== */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark;
+  --md-sys-color-primary:                   #A0C9FF;
+  --md-sys-color-on-primary:                #003259;
+  --md-sys-color-primary-container:         #00497F;
+  --md-sys-color-on-primary-container:      #D2E4FF;
+  --md-sys-color-secondary:                 #BBC7DB;
+  --md-sys-color-on-secondary:              #253141;
+  --md-sys-color-secondary-container:       #3C4858;
+  --md-sys-color-on-secondary-container:    #D7E3F8;
+  --md-sys-color-tertiary:                  #9CCEE3;
+  --md-sys-color-on-tertiary:               #003544;
+  --md-sys-color-tertiary-container:        #164D5E;
+  --md-sys-color-on-tertiary-container:     #B9EAFF;
+  --md-sys-color-error:                     #FFB4AB;
+  --md-sys-color-on-error:                  #690005;
+  --md-sys-color-error-container:           #93000A;
+  --md-sys-color-on-error-container:        #FFDAD6;
+  --md-sys-color-surface:                   #121315;
+  --md-sys-color-on-surface:                #E3E2E4;
+  --md-sys-color-surface-variant:           #43474D;
+  --md-sys-color-on-surface-variant:        #C4C6CE;
+  --md-sys-color-surface-container-lowest:  #0D0E10;
+  --md-sys-color-surface-container-low:     #1B1C1D;
+  --md-sys-color-surface-container:         #1F2022;
+  --md-sys-color-surface-container-high:    #292A2C;
+  --md-sys-color-surface-container-highest: #343537;
+  --md-sys-color-surface-dim:               #121315;
+  --md-sys-color-surface-bright:            #38393B;
+  --md-sys-color-outline:                   #8E9198;
+  --md-sys-color-outline-variant:           #43474D;
+  --md-sys-color-inverse-surface:           #D2E4FF;
+  --md-sys-color-inverse-on-surface:        #003259;
+  --md-sys-color-inverse-primary:           #286199;
+  --app-inverse-on-surface-variant:       #286199;
+  --app-inverse-outline-variant:          #7CAEEB;
+} }
+
+:root[data-theme="dark"] { color-scheme: dark;
+  --md-sys-color-primary:                   #A0C9FF;
+  --md-sys-color-on-primary:                #003259;
+  --md-sys-color-primary-container:         #00497F;
+  --md-sys-color-on-primary-container:      #D2E4FF;
+  --md-sys-color-secondary:                 #BBC7DB;
+  --md-sys-color-on-secondary:              #253141;
+  --md-sys-color-secondary-container:       #3C4858;
+  --md-sys-color-on-secondary-container:    #D7E3F8;
+  --md-sys-color-tertiary:                  #9CCEE3;
+  --md-sys-color-on-tertiary:               #003544;
+  --md-sys-color-tertiary-container:        #164D5E;
+  --md-sys-color-on-tertiary-container:     #B9EAFF;
+  --md-sys-color-error:                     #FFB4AB;
+  --md-sys-color-on-error:                  #690005;
+  --md-sys-color-error-container:           #93000A;
+  --md-sys-color-on-error-container:        #FFDAD6;
+  --md-sys-color-surface:                   #121315;
+  --md-sys-color-on-surface:                #E3E2E4;
+  --md-sys-color-surface-variant:           #43474D;
+  --md-sys-color-on-surface-variant:        #C4C6CE;
+  --md-sys-color-surface-container-lowest:  #0D0E10;
+  --md-sys-color-surface-container-low:     #1B1C1D;
+  --md-sys-color-surface-container:         #1F2022;
+  --md-sys-color-surface-container-high:    #292A2C;
+  --md-sys-color-surface-container-highest: #343537;
+  --md-sys-color-surface-dim:               #121315;
+  --md-sys-color-surface-bright:            #38393B;
+  --md-sys-color-outline:                   #8E9198;
+  --md-sys-color-outline-variant:           #43474D;
+  --md-sys-color-inverse-surface:           #D2E4FF;
+  --md-sys-color-inverse-on-surface:        #003259;
+  --md-sys-color-inverse-primary:           #286199;
+  --app-inverse-on-surface-variant:       #286199;
+  --app-inverse-outline-variant:          #7CAEEB;
+}
+
+/* ==========================================================================
+   FORGE EXTENSIONS — deliberately NOT named md.sys, because M3 does not
+   define these. Namespaced so it stays obvious which tokens you own.
+
+   M3 has no "on-inverse-surface-variant" role: the navy cards need a second,
+   quieter text colour and the spec offers only one. The old file used
+   rgba(255,255,255,.45–.6), which M3 rules out — alpha text breaks the
+   contrast guarantee the token system exists to provide. These are solid
+   tones from the primary ramp (tone 70 / tone 30), 6.8:1 on navy.
+   ========================================================================== */
+:root {
+  --app-inverse-on-surface-variant: #7CAEEB;
+  --app-inverse-outline-variant:    #00497F;
+  /* Retuned for Roboto Flex. Sora is a narrow geometric that tolerated
+     -0.045em; Roboto Flex is a grotesque with wider sidebearings and the same
+     value collided at display sizes. The compactness is recovered on the
+     wdth axis instead — see the -width tokens below — which is closer to what
+     Sora was doing anyway, and only Roboto Flex can do it. */
+  --app-track-tightest: -0.02em;
+  --app-track-tighter:  -0.005em;
+
+  /* The three Library category cards were green / blue / gold, which no
+     longer fits. Rather than three tones of one blue — which would have made
+     the categories hard to tell apart at a glance — each takes a different
+     ramp that is still inside the brief: primary navy, tertiary cyan-blue,
+     and neutral-variant slate. Distinct hues, one family.
+     M3's proper mechanism is a custom colour per category, each with its own
+     tonal palette and container roles. That is still the next job. */
+  --app-category-technical:     #00497F;   /* primary,   tone 30 */
+  --app-category-technical-dim: #00294B;   /* primary,   tone 16 */
+  --app-category-physical:      #225668;   /* tertiary,  tone 34 */
+  --app-category-physical-dim:  #003A4A;   /* tertiary,  tone 22 */
+  --app-category-finishing:     #2E669E;   /* primary,   tone 42 */
+  --app-category-finishing-dim: #00497F;   /* primary,   tone 30 */
+  --app-on-category:            #FFFFFF;
+  /* Fixed, not scheme-following: the gradients above do not flip, so text on
+     them must not either. This was the one real bug the dark scheme exposed —
+     the subtext had been reusing an inverse role and went black-on-green. */
+  --app-on-category-variant:    #DCE9FF;
+}
+
+/* ==========================================================================
+   MD.SYS.TYPESCALE — M3 role names, our values.
+   The scale is a set of roles, not a set of numbers, so the names port
+   cleanly while the sizes and the tightening tracking stay ours. Adopting
+   M3's own values would have loosened every headline: the spec sets display
+   and headline tracking at or near 0, against the original's -0.045em.
+   Role mapping:  h-hero -> headline-large   h-page  -> headline-small
+                  h-card -> title-medium     eyebrow -> label-small
+   ========================================================================== */
+:root {
+  --md-sys-typescale-headline-large-font:        var(--md-ref-typeface-brand);
+  --md-sys-typescale-headline-large-size:        34px;   /* spec 32 */
+  --md-sys-typescale-headline-large-weight:      800;
+  --md-sys-typescale-headline-large-width:       96%;
+  --md-sys-typescale-headline-large-line-height: 1.05;
+  --md-sys-typescale-headline-large-tracking:    -0.015em;
+
+  --md-sys-typescale-headline-small-font:        var(--md-ref-typeface-brand);
+  --md-sys-typescale-headline-small-size:        27px;   /* spec 24 */
+  --md-sys-typescale-headline-small-weight:      700;
+  --md-sys-typescale-headline-small-width:       97%;
+  --md-sys-typescale-headline-small-line-height: 1.25;
+  --md-sys-typescale-headline-small-tracking:    -0.01em;
+
+  --md-sys-typescale-title-medium-font:          var(--md-ref-typeface-brand);
+  --md-sys-typescale-title-medium-size:          17px;   /* spec 16 */
+  --md-sys-typescale-title-medium-weight:        700;
+  --md-sys-typescale-title-medium-width:         100%;
+  --md-sys-typescale-title-medium-line-height:   1.375;
+  --md-sys-typescale-title-medium-tracking:      -0.005em;
+
+  --md-sys-typescale-label-small-font:           var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-small-size:           11px;   /* spec 11 — exact match */
+  --md-sys-typescale-label-small-weight:         700;
+  --md-sys-typescale-label-small-tracking:       0.14em;
+
+  --md-sys-typescale-label-large-font:           var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-large-size:           14px;
+  --md-sys-typescale-label-large-weight:         600;
+
+  --md-sys-typescale-body-large-font:            var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-large-size:            15px;
+  --md-sys-typescale-body-large-line-height:     1.6;
+
+  --md-sys-typescale-body-medium-font:           var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-medium-size:           13.5px;
+  --md-sys-typescale-body-medium-line-height:    1.55;
+}
+
+/* ==========================================================================
+   MD.SYS.SHAPE — the full M3 scale. The original used three of the seven steps.
+   --r-card was 22px and now snaps to the Expressive large-increased token at
+   20px; the 2px is not visible and it buys a named step.
+   --r-btn 16px is already exactly corner-large. M3 buttons default to `full`
+   (pill); the 16px rectangle is Expressive's square button variant, kept
+   because it is what makes .btn-primary read as a block rather than a chip.
+   ========================================================================== */
+:root {
+  --md-sys-shape-corner-none:            0;
+  --md-sys-shape-corner-extra-small:     4px;
+  --md-sys-shape-corner-small:           8px;
+  --md-sys-shape-corner-medium:          12px;
+  --md-sys-shape-corner-large:           16px;   /* was --r-btn  */
+  --md-sys-shape-corner-large-increased: 20px;   /* was --r-card, 22px */
+  --md-sys-shape-corner-extra-large:     28px;
+  --md-sys-shape-corner-full:            999px;  /* was --r-pill */
+}
+
+/* ==========================================================================
+   MD.SYS.ELEVATION — six levels. The original had four shadows doing three jobs.
+   M3 prefers tonal elevation (a higher surface-container) over drop shadows,
+   which is why the level tokens are mostly unused below: .card is level 1,
+   the nav bar is level 2, and every control sits at level 0. That was already
+   the original rule — "nothing here casts a shadow" — so it survives unchanged.
+   --shadow-gold is retired: it had no M3 equivalent and no remaining callers.
+   ========================================================================== */
+:root {
+  --md-sys-elevation-level0: none;
+  --md-sys-elevation-level1: 0 1px 2px rgba(18,18,15,.04), 0 8px 24px -12px rgba(18,18,15,.10);
+  --md-sys-elevation-level2: 0 4px 12px rgba(18,18,15,.06), 0 20px 48px -20px rgba(18,18,15,.30);
+  --md-sys-elevation-level3: 0 2px 4px rgba(18,18,15,.05), 0 18px 40px -16px rgba(18,18,15,.18);
+  --md-sys-elevation-level4: 0 3px 6px rgba(18,18,15,.06), 0 24px 56px -20px rgba(18,18,15,.22);
+  --md-sys-elevation-level5: 0 4px 8px rgba(18,18,15,.07), 0 32px 72px -24px rgba(18,18,15,.26);
+}
+
+/* ==========================================================================
+   MD.SYS.MOTION
+   M3 Expressive replaced easing-and-duration with spring physics, which CSS
+   cannot express; Material Web ships the same fallback used here. The original
+   single cubic-bezier(.16,1,.3,1) is kept as the emphasized-decelerate token
+   — it is close to the spec's (.05,.7,.1,1) and it is the curve the app was
+   tuned on.
+   ========================================================================== */
+:root {
+  --md-sys-motion-easing-standard:              cubic-bezier(.2, 0, 0, 1);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(.16, 1, .3, 1);  /* was --ease */
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(.3, 0, .8, .15);
+  --md-sys-motion-duration-short2:  100ms;
+  --md-sys-motion-duration-medium2: 300ms;
+  --md-sys-motion-duration-long2:   500ms;
+}
+
+/* ==========================================================================
+   MD.SYS.STATE — new. The original had hover styles per component and no focus
+   styles at all, so keyboard users had nothing to follow.
+   ========================================================================== */
+:root {
+  --md-sys-state-hover-state-layer-opacity:   0.08;
+  --md-sys-state-focus-state-layer-opacity:   0.10;
+  --md-sys-state-pressed-state-layer-opacity: 0.10;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--md-sys-color-surface-dim);
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--md-ref-typeface-plain);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   TYPE — class names unchanged, values now come from the typescale tokens.
+   ========================================================================== */
+.h-hero  { font-family: var(--md-sys-typescale-headline-large-font);
+           font-size: var(--md-sys-typescale-headline-large-size);
+           font-weight: var(--md-sys-typescale-headline-large-weight);
+           line-height: var(--md-sys-typescale-headline-large-line-height);
+           font-stretch: var(--md-sys-typescale-headline-large-width);
+           letter-spacing: var(--md-sys-typescale-headline-large-tracking); margin: 0; }
+.h-page  { font-family: var(--md-sys-typescale-headline-small-font);
+           font-size: var(--md-sys-typescale-headline-small-size);
+           font-weight: var(--md-sys-typescale-headline-small-weight);
+           line-height: var(--md-sys-typescale-headline-small-line-height);
+           font-stretch: var(--md-sys-typescale-headline-small-width);
+           letter-spacing: var(--md-sys-typescale-headline-small-tracking); margin: 0; }
+.h-card  { font-family: var(--md-sys-typescale-title-medium-font);
+           font-size: var(--md-sys-typescale-title-medium-size);
+           font-weight: var(--md-sys-typescale-title-medium-weight);
+           line-height: var(--md-sys-typescale-title-medium-line-height);
+           font-stretch: var(--md-sys-typescale-title-medium-width);
+           letter-spacing: var(--md-sys-typescale-title-medium-tracking); margin: 0; }
+/* .eyebrow was --faint (#9A9A90), 2.84:1 on white — a fail at 11px, which is
+   not large text under WCAG. It is now on-surface-variant at 9.35:1. */
+.eyebrow { font-family: var(--md-sys-typescale-label-small-font);
+           font-size: var(--md-sys-typescale-label-small-size);
+           font-weight: var(--md-sys-typescale-label-small-weight);
+           letter-spacing: var(--md-sys-typescale-label-small-tracking);
+           text-transform: uppercase;
+           color: var(--md-sys-color-on-surface-variant); margin: 0; }
+
+/* ==========================================================================
+   STATE LAYER — M3's mechanism for hover / focus / pressed. A tinted overlay
+   at a fixed opacity on top of the container, rather than a bespoke colour
+   swap per component. Applied through ::after so it never disturbs layout.
+   ========================================================================== */
+.pressable {
+  position: relative;
+  isolation: isolate;
+  transition: transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
+              background-color var(--md-sys-motion-duration-medium2),
+              border-color var(--md-sys-motion-duration-medium2),
+              color var(--md-sys-motion-duration-medium2);
+}
+.pressable::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; pointer-events: none;
+  background: currentColor; opacity: 0;
+  transition: opacity var(--md-sys-motion-duration-short2) linear;
+}
+.pressable:hover::after  { opacity: var(--md-sys-state-hover-state-layer-opacity); }
+.pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
+/* The original scale press is kept alongside the state layer. On touch there is no
+   hover to reveal the layer, so the transform is still the only feedback the
+   press gets. Fast in, slower out. */
+.pressable:active { transform: scale(.965); transition-duration: 60ms; }
+
+/* M3 requires a visible focus indicator. There wasn't one. */
+.pressable:focus-visible,
+a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+
+/* ==========================================================================
+   SURFACES — M3 card variants.
+     .card       -> elevated card:  level 1, no outline
+     .card-flat  -> outlined card:  level 0, outline-variant
+   .card used to carry a border AND a shadow, which is neither variant. The
+   border is dropped; the shadow is what distinguishes it.
+   ========================================================================== */
+.card {
+  border-radius: var(--md-sys-shape-corner-large-increased);
+  background: var(--md-sys-color-surface-container-lowest);
+  box-shadow: var(--md-sys-elevation-level1);
+}
+.card-flat {
+  border-radius: var(--md-sys-shape-corner-large-increased);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+/* ==========================================================================
+   CONTROLS
+   Three jobs, three shapes:
+     .chip         pill,  filter chip            ->  CHOOSE one of these
+     .btn-primary  block, solid inverse-surface  ->  DO the thing
+     .btn-ghost    block, outlined               ->  the lesser action
+
+   SELECTION CHANGED. The original carried selection on border and ink alone, on the
+   stated grounds that a filled chip becomes an illegible black slab. M3 fills
+   with secondary-container instead — and the reason the old objection does
+   not apply is that secondary-container is a pale tone-90 fill, not ink:
+   #3C4858 on #D7E3F8 is 7.18:1, so a selected chip is more legible than an
+   unselected one, not less. The checkmark carries the state for anyone who
+   cannot separate the two by colour, which the border-only version never did.
+
+   The old note about border width is now moot — selected chips have no border
+   at all, so nothing rewraps under your thumb on select.
+
+   Chips stay at 44px rather than M3's 32dp: M3 gets to its 48dp touch target
+   with an invisible overlay, which is the right call in a component library
+   and the wrong one in a file meant to show real spacing.
+   ========================================================================== */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  cursor: pointer; user-select: none;
+  border-radius: var(--md-sys-shape-corner-full);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  padding: 0 16px;
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: 13.5px; font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.chip .chip-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
+.chip-on, .chip-on:hover {
+  border-color: transparent;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.chip-on .chip-check { display: block; }
+
+/* Deep navy with powder blue on it: inverse-surface + inverse-primary. The
+   pairing is the same one the black-and-gold button used, which is why the
+   recolour needed no edit here — the roles carried the intent, and only the
+   values underneath them moved. 10.55:1. */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 52px; border: 0; cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-inverse-surface);
+  padding: 0 24px;
+  font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
+  letter-spacing: var(--app-track-tighter);
+  color: var(--md-sys-color-inverse-primary);
+}
+.btn-primary:disabled {
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant); cursor: default;
+}
+
+/* The reverse: powder blue as the fill, navy as the label. inverse-primary is
+   M3's role for exactly this — the primary as it would appear in the opposite
+   scheme — so the old rule that the accent is only ever a fill on a dark
+   surface is now enforced by the token's meaning rather than by a comment.
+   Renamed from .btn-gold, which named a colour that no longer exists. It has
+   no callers in this file, so the rename is free. */
+.btn-accent {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 52px; border: 0; cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-inverse-primary);
+  padding: 0 24px;
+  font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
+  letter-spacing: var(--app-track-tighter);
+  color: var(--md-sys-color-inverse-surface);
+}
+
+/* Outlined button. The outline moved from --line (#E8E8E3, 1.23:1 against
+   white) to `outline` (#74777E, 4.27:1). 1.23:1 fails the 3:1 that WCAG asks
+   of a control's boundary — the old border was decorative, not perceptible. */
+.btn-ghost {
+  min-height: 44px; cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-large);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  padding: 14px 20px;
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Day selector on the Plan screen. This was seven copies of an inline
+   selection style that duplicated .chip's logic — same rule, second
+   implementation, free to drift. It is now the same filled selection. */
+.day {
+  border-radius: var(--md-sys-shape-corner-large);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  padding: 10px 0; text-align: center; cursor: pointer;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.day-on {
+  border-color: transparent;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+/* .tag-gold was --gold-text on --gold-soft: 4.35:1, just under the floor.
+   As a primary-container pair it is 7.21:1. Renamed to .tag-accent — this one
+   does have callers, so it is the only class name in the file that changed,
+   and the only line of the port that is not a straight copy. */
+.tag {
+  display: inline-block; border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-low);
+  padding: 3px 8px;
+  font-size: 11px; font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.tag-accent {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+/* ==========================================================================
+   TEXT FIELD (outlined) and LINEAR PROGRESS — new, both M3.
+   The text field uses corner-small rather than the spec's extra-small (4dp):
+   4dp reads as a mistake next to 20dp cards and pill inputs everywhere else
+   on this screen. Noted so it is a choice and not a drift.
+   ========================================================================== */
+.text-field { display: block; }
+.text-field > span { display: block; margin-bottom: 6px;
+  font-size: 13px; font-weight: 600; color: var(--md-sys-color-on-surface-variant); }
+.text-field input {
+  width: 100%; min-height: 52px; padding: 0 16px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-lowest);
+  font-family: var(--md-ref-typeface-plain); font-size: 15px;
+  color: var(--md-sys-color-on-surface);
+}
+.text-field input::placeholder { color: var(--md-sys-color-on-surface-variant); }
+.text-field input:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
+
+.progress { height: 4px; border-radius: var(--md-sys-shape-corner-full); overflow: hidden;
+            background: var(--md-sys-color-surface-container-highest); }
+.progress > div { height: 100%; border-radius: var(--md-sys-shape-corner-full);
+                  background: var(--md-sys-color-primary);
+                  transition: width var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate); }
+
+/* Screen-level landmarks. The Train header and hero were loose siblings in the
+   scroll container with a margin holding them apart — nothing said they were a
+   unit, and the h1 carried a 15ch measure that made it break narrower than the
+   cards beneath it. A measure is right for running prose; a two-word headline
+   above full-width content just looks misaligned. */
+.app-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hero { margin-top: 36px; }
+.hero .h-hero { max-width: none; }
+.hero > p { margin: 14px 0 0; font-size: 15px; line-height: 1.6;
+            color: var(--md-sys-color-on-surface-variant); }
+
+/* ==========================================================================
+   SEGMENTED BUTTON — single-select. New.
+   The Train screen offers two ways to get a session, and stacking them made
+   them read as steps: try the coach, and if that failed, here is a form.
+   They are not steps. They are two inputs to one output — the session below
+   belongs to neither and survives switching between them.
+
+   This is a segmented button rather than tabs on purpose. M3 tabs navigate
+   between peer content views and imply that what is underneath belongs to the
+   tab; segmented buttons pick a mode for content that stays put. Tabs here
+   would also stack a second navigation bar directly above the real one.
+
+   The ARIA is tablist/tab/tabpanel even so — that is genuinely what this does
+   to a screen reader, and it buys the arrow-key behaviour people expect. The
+   visual component and the accessibility role are allowed to disagree.
+   ========================================================================== */
+.segmented {
+  display: flex; width: 100%; overflow: hidden;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-full);
+}
+.segment {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 12px; cursor: pointer;
+  border: 0; border-left: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: 14px; font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.segment:first-child { border-left: 0; }
+.segment.on { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.segment .seg-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
+.segment.on .seg-check { display: block; }
+
+/* ==========================================================================
+   MODAL BOTTOM SHEET — new component.
+   A program used to open as a plain route change: no way back, and the nav
+   bar stayed live underneath, so a mis-tap dropped you into Plan and lost
+   your place in a 786-item list.
+
+   M3 offers two answers. A full-screen dialog is the spec's pick for long or
+   complex content, but it discards the context entirely. A modal bottom sheet
+   keeps a sliver of the Library visible above the scrim, which is what makes
+   "I am on top of something, and I can get back to it" legible without
+   reading anything. That is the one chosen here.
+
+   Either way the important half is the same and it is not visual: the sheet
+   covers the navigation bar, and the scrim swallows taps meant for it. The
+   accidental navigation is not styled away, it is made impossible.
+
+   Three exits, because different people reach for different ones: the close
+   button, the scrim, and Esc (which stands in for the Android back gesture —
+   wire the real thing to onDismiss when you port this).
+
+   In the app use a real focus-trapping dialog — <dialog>.showModal() or Radix
+   — rather than this div. Inside a 393px mock, showModal() escapes to the
+   viewport, so the harness fakes the container and does focus by hand.
+   ========================================================================== */
+.sheet-scrim {
+  position: absolute; inset: 0; z-index: 20;
+  background: var(--md-sys-color-scrim);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+}
+.sheet-scrim.open { opacity: .32; pointer-events: auto; }
+
+.sheet {
+  position: absolute; left: 0; right: 0; top: 44px; bottom: 0; z-index: 21;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 0;
+  box-shadow: var(--md-sys-elevation-level3);
+  transform: translateY(100%); visibility: hidden;
+  transition: transform var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate),
+              visibility 0s linear var(--md-sys-motion-duration-long2);
+}
+.sheet.open { transform: none; visibility: visible; transition-delay: 0s, 0s; }
+
+/* 32x4dp at 40% on-surface-variant, per spec. Purely an affordance here —
+   drag-to-dismiss needs a gesture handler this harness does not have. */
+.sheet-handle { width: 32px; height: 4px; margin: 16px auto 0; border-radius: var(--md-sys-shape-corner-full);
+                background: var(--md-sys-color-on-surface-variant); opacity: .4; }
+.sheet-head { display: flex; align-items: center; gap: 4px; padding: 6px 8px 0 20px; }
+.sheet-body { flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
+.sheet-actions { padding: 12px 20px 20px; background: var(--md-sys-color-surface-container-low);
+                 border-top: 1px solid var(--md-sys-color-outline-variant); }
+
+.icon-btn { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center;
+            border: 0; background: transparent; cursor: pointer;
+            border-radius: var(--md-sys-shape-corner-full);
+            color: var(--md-sys-color-on-surface-variant); }
+.icon-btn svg { width: 22px; height: 22px; }
+
+/* The list underneath keeps its scroll position; it is only made unreachable. */
+.phone-scroll[inert] { pointer-events: none; }
+
+/* ==========================================================================
+   MOTION
+   ========================================================================== */
+@keyframes pageIn { from { opacity:0; transform: translate3d(0,10px,0);} to { opacity:1; transform:none; } }
+@keyframes rise   { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none; } }
+@keyframes pop    { from { opacity:0; transform: scale(.97);} to { opacity:1; transform:none; } }
+.animate-pop  { animation: pop .35s var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.animate-rise { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.stagger > * { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.stagger > *:nth-child(1){animation-delay:0ms}    .stagger > *:nth-child(2){animation-delay:45ms}
+.stagger > *:nth-child(3){animation-delay:90ms}   .stagger > *:nth-child(4){animation-delay:135ms}
+.stagger > *:nth-child(5){animation-delay:180ms}  .stagger > *:nth-child(n+6){animation-delay:215ms}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ==========================================================================
+   HARNESS CHROME — not part of the design system.
+   ========================================================================== */
+.harness { padding: 28px 20px 60px; }
+.harness-head { max-width: 1600px; margin: 0 auto 26px; display: flex; gap: 24px;
+                align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.harness-head h1 { font-family: var(--md-ref-typeface-brand); font-size: 22px; font-weight: 800;
+                   letter-spacing: var(--app-track-tighter); margin: 0 0 6px; }
+.harness-head p  { margin: 0; font-size: 13.5px; color: var(--md-sys-color-on-surface-variant);
+                   max-width: 70ch; line-height: 1.6; }
+.theme-toggle { flex: 0 0 auto; }
+
+.legend { max-width: 1600px; margin: 0 auto 30px; display: flex; flex-wrap: wrap; gap: 22px;
+          padding: 16px 18px; border-radius: var(--md-sys-shape-corner-medium);
+          background: var(--md-sys-color-surface-container-lowest);
+          border: 1px solid var(--md-sys-color-outline-variant); }
+.legend section { min-width: 180px; }
+.legend h2 { font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+             letter-spacing: .12em; color: var(--md-sys-color-on-surface-variant); margin: 0 0 9px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw { width: 34px; height: 34px; border-radius: var(--md-sys-shape-corner-small);
+      border: 1px solid var(--md-sys-color-outline-variant); }
+.sw-label { font-size: 9px; color: var(--md-sys-color-on-surface-variant); text-align: center;
+            margin-top: 3px; max-width: 44px; line-height: 1.25; }
+
+.screens { max-width: 1600px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 26px; }
+.phone-wrap { flex: 0 0 auto; }
+.phone-name { font-size: 11px; font-weight: 700; text-transform: uppercase;
+              letter-spacing: .12em; color: var(--md-sys-color-on-surface-variant); margin: 0 0 8px 4px; }
+.phone {
+  position: relative; width: 393px; height: 800px; overflow: hidden;
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: var(--md-sys-elevation-level3);
+}
+.phone-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 26px 20px 128px;
+                scrollbar-width: thin; }
+.tabbar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center;
+          padding-bottom: 18px; pointer-events: none; }
+.tabbar-inner { display: flex; align-items: center; gap: 4px;
+                border-radius: var(--md-sys-shape-corner-full);
+                border: 1px solid var(--md-sys-color-outline-variant);
+                background: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 85%, transparent);
+                padding: 6px; box-shadow: var(--md-sys-elevation-level2);
+                backdrop-filter: blur(20px); }
+.tab { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+       border-radius: var(--md-sys-shape-corner-full); font-size: 12.5px; font-weight: 700;
+       letter-spacing: var(--app-track-tighter);
+       color: var(--md-sys-color-on-surface-variant); text-decoration: none; }
+.tab.on { background: var(--md-sys-color-inverse-surface); color: var(--md-sys-color-inverse-primary); }
+.tab svg { width: 18px; height: 18px; }
+
+/* small helpers used inside the mocked screens */
+.row { display: flex; }
+.mt3{margin-top:12px}.mt4{margin-top:14px}.mt5{margin-top:18px}.mt6{margin-top:22px}
+.mt8{margin-top:30px}.mt9{margin-top:36px}.mt10{margin-top:40px}
+.muted{color:var(--md-sys-color-on-surface-variant)} .faint{color:var(--md-sys-color-on-surface-variant)}
+.chiprow { display: flex; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+
+<div class="harness">
+  <div class="harness-head">
+    <div>
+      <h1>Train.futbol — design harness <span style="font-weight:600;color:var(--md-sys-color-on-surface-variant)">· Material Design 3</span></h1>
+      <p>
+        Class names still match <code>src/app/globals.css</code>, so a change here ports back as
+        the same edit there. Tokens are now M3 system roles rather than
+        <code>tailwind.config.ts</code> names — the mapping is commented at each token in the
+        stylesheet. Nothing is wired up except the theme toggle.
+      </p>
+    </div>
+    <button class="btn-ghost pressable theme-toggle" id="themeToggle" type="button">Dark scheme</button>
+  </div>
+
+  <div class="legend">
+    <section>
+      <h2>Primary</h2>
+      <div class="swatches">
+        <div><div class="sw" style="background:var(--md-sys-color-primary)"></div><div class="sw-label">primary</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-primary-container)"></div><div class="sw-label">primary container</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-inverse-primary)"></div><div class="sw-label">inverse primary</div></div>
+      </div>
+    </section>
+    <section>
+      <h2>Secondary — selection</h2>
+      <div class="swatches">
+        <div><div class="sw" style="background:var(--md-sys-color-secondary)"></div><div class="sw-label">secondary</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-secondary-container)"></div><div class="sw-label">secondary container</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-on-secondary-container)"></div><div class="sw-label">on secondary container</div></div>
+      </div>
+    </section>
+    <section>
+      <h2>Surfaces</h2>
+      <div class="swatches">
+        <div><div class="sw" style="background:var(--md-sys-color-surface)"></div><div class="sw-label">surface</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-surface-container-lowest)"></div><div class="sw-label">ctr lowest</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-surface-container-low)"></div><div class="sw-label">ctr low</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-surface-container)"></div><div class="sw-label">ctr</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-surface-container-high)"></div><div class="sw-label">ctr high</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-surface-container-highest)"></div><div class="sw-label">ctr highest</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-inverse-surface)"></div><div class="sw-label">inverse surface</div></div>
+      </div>
+    </section>
+    <section>
+      <h2>Text &amp; outline</h2>
+      <div class="swatches">
+        <div><div class="sw" style="background:var(--md-sys-color-on-surface)"></div><div class="sw-label">on surface</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-on-surface-variant)"></div><div class="sw-label">on surface variant</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-outline)"></div><div class="sw-label">outline</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-outline-variant)"></div><div class="sw-label">outline variant</div></div>
+        <div><div class="sw" style="background:var(--md-sys-color-error)"></div><div class="sw-label">error</div></div>
+      </div>
+    </section>
+    <section>
+      <h2>Type scale</h2>
+      <div class="h-hero" style="font-size:26px">headline large</div>
+      <div class="h-page" style="font-size:20px">headline small</div>
+      <div class="h-card">title medium</div>
+      <div class="eyebrow" style="margin-top:4px">label small</div>
+    </section>
+    <section>
+      <h2>Controls</h2>
+      <div class="chiprow" style="align-items:center">
+        <button class="chip pressable">Chip</button>
+        <button class="chip chip-on pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Chosen</button>
+      </div>
+      <div class="chiprow mt3" style="align-items:center">
+        <button class="btn-primary pressable" style="min-height:44px;font-size:14px">Primary</button>
+        <button class="btn-ghost pressable">Ghost</button>
+      </div>
+    </section>
+  </div>
+
+
+  <div class="screens">
+
+    <!-- ==================================================================
+         1. TRAIN  (src/app/page.tsx + src/components/Coach.tsx)
+         ================================================================== -->
+    <div class="phone-wrap">
+      <p class="phone-name">1 · Train</p>
+      <div class="phone">
+        <div class="phone-scroll">
+          <header class="app-bar">
+            <span style="font-family:var(--md-ref-typeface-brand);font-size:19px;
+                         letter-spacing:var(--app-track-tighter)">
+              <span style="font-weight:800">Train</span><span style="font-weight:500;color:var(--md-sys-color-on-surface-variant)">.futbol</span>
+            </span>
+            <span style="font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant)">786 drills</span>
+          </header>
+
+          <section class="hero">
+            <h1 class="h-hero">Start training now</h1>
+          </section>
+
+          <!-- Mode switch. The AI-specific promise used to sit up here, above
+               everything, so the page offered one thing and then presented two.
+               It has moved down into the panel it belongs to. -->
+          <div class="segmented mt6" role="tablist" aria-label="How to build your session">
+            <button class="segment pressable on" role="tab" id="tabAi" aria-controls="panelAi" aria-selected="true" data-mode="ai">
+              <svg class="seg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Ask the coach
+            </button>
+            <button class="segment pressable" role="tab" id="tabDiy" aria-controls="panelDiy" aria-selected="false" tabindex="-1" data-mode="diy">
+              <svg class="seg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Build it myself
+            </button>
+          </div>
+
+          <!-- ============================ AI ============================ -->
+          <div id="panelAi" role="tabpanel" aria-labelledby="tabAi">
+            <p class="mt5" style="font-size:15px;line-height:1.6;color:var(--md-sys-color-on-surface-variant);margin-bottom:0">
+              Tell me what you want to work on and how much time you have and I’ll build a
+              session instantly.
+            </p>
+
+            <div class="mt5" style="display:flex;align-items:center;gap:8px;border-radius:var(--md-sys-shape-corner-full);
+                        border:1.5px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface-container-lowest);padding:6px 6px 6px 20px">
+              <span style="flex:1;min-width:0;font-size:16px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">
+                What do you want to work on?
+              </span>
+              <button class="pressable" style="min-height:44px;flex:0 0 auto;border:0;border-radius:var(--md-sys-shape-corner-full);
+                      background:var(--md-sys-color-inverse-surface);padding:0 24px;font-family:var(--md-ref-typeface-brand);font-size:14px;
+                      font-weight:700;letter-spacing:var(--app-track-tighter);color:var(--md-sys-color-inverse-primary);cursor:pointer">Go</button>
+            </div>
+
+            <!-- Examples as running subtext, NOT chips: a chip means "choose one of
+                 these", and every real chip on this screen is a filter. -->
+            <p class="mt3" style="padding-left:4px;font-size:14px;line-height:2;color:var(--md-sys-color-on-surface-variant)">
+              Try <a href="#" style="color:inherit;font-weight:600;text-decoration:underline;
+              text-decoration-color:var(--md-sys-color-outline-variant);text-decoration-thickness:2px;text-underline-offset:4px">Learn to juggle</a>,
+              <a href="#" style="color:inherit;font-weight:600;text-decoration:underline;
+              text-decoration-color:var(--md-sys-color-outline-variant);text-decoration-thickness:2px;text-underline-offset:4px">15 minutes on my weak foot</a>,
+              <a href="#" style="color:inherit;font-weight:600;text-decoration:underline;
+              text-decoration-color:var(--md-sys-color-outline-variant);text-decoration-thickness:2px;text-underline-offset:4px">Get stronger in the gym</a>, or
+              <a href="#" style="color:inherit;font-weight:600;text-decoration:underline;
+              text-decoration-color:var(--md-sys-color-outline-variant);text-decoration-thickness:2px;text-underline-offset:4px">30 minutes of ball mastery</a>.
+            </p>
+
+            <!-- Zero-input, still the model choosing. It reads as a peer of the
+                 coach field today, which made the screen look like it offered
+                 three routes. It is a secondary action inside this one. -->
+            <button class="btn-ghost pressable mt4">Surprise me</button>
+          </div>
+
+          <!-- ============================ DIY =========================== -->
+          <!-- Low-fi. This used to be a collapsed row summarising state that was
+               already set ("20 min · Weak Foot") — as a real mode it has to be the
+               form itself, which raises the open question of what belongs in it. -->
+          <div id="panelDiy" role="tabpanel" aria-labelledby="tabDiy" hidden>
+            <p class="mt5" style="font-size:15px;line-height:1.6;color:var(--md-sys-color-on-surface-variant);margin-bottom:0">
+              Pick your time, what you want to work on, and what you’ve got with you.
+            </p>
+
+            <p class="eyebrow mt6" style="margin-bottom:10px">How long</p>
+            <div class="chiprow">
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>10 min</button>
+              <button class="chip chip-on pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>20 min</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>30 min</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>45 min</button>
+            </div>
+
+            <p class="eyebrow mt6" style="margin-bottom:10px">Focus</p>
+            <div class="chiprow">
+              <button class="chip chip-on pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Weak Foot</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Ball Mastery</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Passing</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Finishing</button>
+            </div>
+
+            <p class="eyebrow mt6" style="margin-bottom:10px">What you’ve got</p>
+            <div class="chiprow">
+              <button class="chip chip-on pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Ball</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Cones</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Wall</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Gym</button>
+            </div>
+
+            <button class="btn-primary pressable mt6" style="width:100%">Build session</button>
+          </div>
+
+          <div class="mt10">
+            <h2 class="h-card" style="margin-bottom:14px">Your session</h2>
+            <!-- the headline number gets the whole card -->
+            <div style="overflow:hidden;border-radius:var(--md-sys-shape-corner-large-increased);background:var(--md-sys-color-inverse-surface);
+                        padding:24px;box-shadow:var(--md-sys-elevation-level3)">
+              <div style="display:flex;align-items:flex-end;gap:24px">
+                <div>
+                  <div style="font-family:var(--md-ref-typeface-brand);font-size:46px;font-weight:800;
+                              line-height:1;letter-spacing:var(--app-track-tightest);color:var(--md-sys-color-inverse-primary)">1.1k</div>
+                  <div style="margin-top:6px;font-size:12.5px;font-weight:600;color:var(--app-inverse-on-surface-variant)">ball touches</div>
+                </div>
+                <div style="display:flex;gap:24px;margin-bottom:4px">
+                  <div>
+                    <div style="font-family:var(--md-ref-typeface-brand);font-size:22px;font-weight:700;line-height:1;
+                                letter-spacing:var(--app-track-tighter);color:var(--md-sys-color-inverse-on-surface)">19</div>
+                    <div style="margin-top:4px;font-size:11.5px;font-weight:600;color:var(--app-inverse-on-surface-variant)">min</div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--md-ref-typeface-brand);font-size:22px;font-weight:700;line-height:1;
+                                letter-spacing:var(--app-track-tighter);color:var(--md-sys-color-inverse-on-surface)">2</div>
+                    <div style="margin-top:4px;font-size:11.5px;font-weight:600;color:var(--app-inverse-on-surface-variant)">drills</div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:20px;height:6px;overflow:hidden;border-radius:var(--md-sys-shape-corner-full);
+                          background:var(--app-inverse-outline-variant)">
+                <div style="height:100%;width:65%;border-radius:var(--md-sys-shape-corner-full);background:var(--md-sys-color-inverse-primary)"></div>
+              </div>
+              <p style="margin:10px 0 0;font-size:12px;font-weight:500;color:var(--app-inverse-on-surface-variant)">
+                ~350 short of 1,000.
+              </p>
+            </div>
+
+            <ol class="stagger" style="margin:16px 0 0;padding:0;list-style:none;display:grid;gap:10px">
+              <li class="card" style="padding:16px">
+                <div style="display:flex;align-items:flex-start;gap:14px">
+                  <span style="margin-top:2px;font-family:var(--md-ref-typeface-brand);font-size:13px;
+                               font-weight:700;color:var(--md-sys-color-on-surface-variant)">01</span>
+                  <div style="min-width:0;flex:1">
+                    <div class="h-card">SLD – Inside Turn (R) &amp; (L)</div>
+                    <div style="margin-top:4px;font-size:12.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">1 × 6–10</div>
+                    <div class="chiprow" style="margin-top:10px;gap:6px">
+                      <span class="tag tag-accent">Weak Foot</span>
+                      <span class="tag tag-accent">~150 touches</span>
+                      <span class="tag">ball</span>
+                    </div>
+                  </div>
+                  <span style="font-family:var(--md-ref-typeface-brand);font-size:15px;font-weight:700;
+                               letter-spacing:var(--app-track-tighter)">5m</span>
+                </div>
+              </li>
+              <li class="card" style="padding:16px">
+                <div style="display:flex;align-items:flex-start;gap:14px">
+                  <span style="margin-top:2px;font-family:var(--md-ref-typeface-brand);font-size:13px;
+                               font-weight:700;color:var(--md-sys-color-on-surface-variant)">02</span>
+                  <div style="min-width:0;flex:1">
+                    <div class="h-card">Passing Gate (L)</div>
+                    <div style="margin-top:4px;font-size:12.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">1 × 20 · rest 60–90s</div>
+                    <div class="chiprow" style="margin-top:10px;gap:6px">
+                      <span class="tag tag-accent">Passing</span>
+                      <span class="tag">ball · cones</span>
+                    </div>
+                  </div>
+                  <span style="font-family:var(--md-ref-typeface-brand);font-size:15px;font-weight:700;
+                               letter-spacing:var(--app-track-tighter)">9m</span>
+                </div>
+              </li>
+            </ol>
+
+            <div class="row mt5" style="gap:10px">
+              <button class="btn-ghost pressable" style="flex:1">Another mix</button>
+              <button class="btn-ghost pressable" style="flex:1">Save</button>
+            </div>
+          </div>
+        </div>
+        <nav class="tabbar"><div class="tabbar-inner">
+          <a class="tab on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z"/></svg>Train</a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16M4 12h16M4 19h9"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v16H4zM16 3v4M8 3v4M4 11h16"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg></a>
+        </div></nav>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         2. LIBRARY  (src/app/library/page.tsx)
+         ================================================================== -->
+    <div class="phone-wrap">
+      <p class="phone-name">2 · Library <span style="font-weight:500;text-transform:none;letter-spacing:0">— tap a program</span></p>
+      <div class="phone">
+        <div class="phone-scroll">
+          <p class="eyebrow" style="margin-bottom:12px">Library</p>
+          <h1 class="h-hero">Training Programs</h1>
+          <p class="mt4" style="font-size:15px;color:var(--md-sys-color-on-surface-variant);margin-bottom:0">786 drills across 17 programs.</p>
+
+          <div class="stagger mt9" style="display:grid;gap:36px">
+            <section>
+              <div style="position:relative;overflow:hidden;border-radius:var(--md-sys-shape-corner-large-increased);margin-bottom:16px;
+                          background:linear-gradient(to bottom right,var(--app-category-technical-dim),var(--app-category-technical));padding:24px;
+                          box-shadow:var(--md-sys-elevation-level3)">
+                <p style="margin:0;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.16em;color:var(--app-on-category-variant)">Technical</p>
+                <h2 style="margin:6px 0 0;font-family:var(--md-ref-typeface-brand);font-size:24px;font-weight:800;
+                           line-height:1;letter-spacing:var(--app-track-tightest);color:var(--app-on-category)">Ball Skills</h2>
+                <p style="margin:10px 0 0;font-size:12.5px;font-weight:600;color:var(--app-on-category-variant)">
+                  8 programs · ~24k touches</p>
+              </div>
+              <div style="display:grid;gap:10px">
+                <button type="button" class="card pressable program"
+                        data-title="90 Day Ball Mastery Program" data-meta="Advanced · 12 sessions · ~5.4k touches"
+                        style="display:block;width:100%;text-align:left;border:0;font:inherit;
+                               color:inherit;padding:16px;cursor:pointer">
+                  <div class="h-card">90 Day Ball Mastery Program</div>
+                    <div style="margin-top:4px;font-size:12.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">
+                      Advanced · 12 sessions · ~5.4k touches</div>
+                </button>
+                <button type="button" class="card pressable program"
+                        data-title="Elite Dribbler Program" data-meta="Elite · 16 sessions · ~7.1k touches"
+                        style="display:block;width:100%;text-align:left;border:0;font:inherit;
+                               color:inherit;padding:16px;cursor:pointer">
+                  <div class="h-card">Elite Dribbler Program</div>
+                    <div style="margin-top:4px;font-size:12.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">
+                      Elite · 16 sessions · ~7.1k touches</div>
+                </button>
+              </div>
+            </section>
+
+            <section>
+              <div style="position:relative;overflow:hidden;border-radius:var(--md-sys-shape-corner-large-increased);margin-bottom:16px;
+                          background:linear-gradient(to bottom right,var(--app-category-physical-dim),var(--app-category-physical));padding:24px;
+                          box-shadow:var(--md-sys-elevation-level3)">
+                <p style="margin:0;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.16em;color:var(--app-on-category-variant)">Physical</p>
+                <h2 style="margin:6px 0 0;font-family:var(--md-ref-typeface-brand);font-size:24px;font-weight:800;
+                           line-height:1;letter-spacing:var(--app-track-tightest);color:var(--app-on-category)">Speed &amp; Strength</h2>
+                <p style="margin:10px 0 0;font-size:12.5px;font-weight:600;color:var(--app-on-category-variant)">
+                  5 programs · ~9k touches</p>
+              </div>
+              <div style="display:grid;gap:10px">
+                <button type="button" class="card pressable program"
+                        data-title="Speed Kills 2.0" data-meta="Advanced · 10 sessions · ~1.8k touches"
+                        style="display:block;width:100%;text-align:left;border:0;font:inherit;
+                               color:inherit;padding:16px;cursor:pointer">
+                  <div class="h-card">Speed Kills 2.0</div>
+                    <div style="margin-top:4px;font-size:12.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">
+                      Advanced · 10 sessions · ~1.8k touches</div>
+                </button>
+              </div>
+            </section>
+
+            <section>
+              <div style="position:relative;overflow:hidden;border-radius:var(--md-sys-shape-corner-large-increased);margin-bottom:16px;
+                          background:linear-gradient(to bottom right,var(--app-category-finishing-dim),var(--app-category-finishing));padding:24px;
+                          box-shadow:var(--md-sys-elevation-level3)">
+                <p style="margin:0;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.16em;color:var(--app-on-category-variant)">Finishing &amp; Crossing</p>
+                <h2 style="margin:6px 0 0;font-family:var(--md-ref-typeface-brand);font-size:24px;font-weight:800;
+                           line-height:1;letter-spacing:var(--app-track-tightest);color:var(--app-on-category)">Scoring Goals</h2>
+                <p style="margin:10px 0 0;font-size:12.5px;font-weight:600;color:var(--app-on-category-variant)">
+                  4 programs · ~6.2k touches</p>
+              </div>
+              <div style="display:grid;gap:10px">
+                <button type="button" class="card pressable program"
+                        data-title="Advanced Crossing Program" data-meta="Elite · 9 sessions · ~2.4k touches"
+                        style="display:block;width:100%;text-align:left;border:0;font:inherit;
+                               color:inherit;padding:16px;cursor:pointer">
+                  <div class="h-card">Advanced Crossing Program</div>
+                    <div style="margin-top:4px;font-size:12.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)">
+                      Elite · 9 sessions · ~2.4k touches</div>
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+        <nav class="tabbar"><div class="tabbar-inner">
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z"/></svg></a>
+          <a class="tab on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16M4 12h16M4 19h9"/></svg>Library</a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v16H4zM16 3v4M8 3v4M4 11h16"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg></a>
+        </div></nav>
+        <div class="sheet-scrim" data-sheet-scrim></div>
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" data-sheet>
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <p class="eyebrow" style="flex:1;margin:0" data-sheet-category>Technical</p>
+            <button type="button" class="icon-btn pressable" data-sheet-close aria-label="Close program">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="sheet-body">
+            <h2 class="h-page" id="sheetTitle" data-sheet-title>90 Day Ball Mastery Program</h2>
+            <p class="mt3" style="margin:0;font-size:13.5px;font-weight:500;color:var(--md-sys-color-on-surface-variant)"
+               data-sheet-meta>Advanced · 12 sessions · ~5.4k touches</p>
+
+            <p style="margin:18px 0 0;font-size:15px;line-height:1.6">
+              Twelve weeks of close control under fatigue. Each session builds on the last, so the
+              order matters more than the total — do them in sequence, three a week.
+            </p>
+
+            <p class="eyebrow mt8" style="margin-bottom:10px">Sessions</p>
+            <div style="display:grid;gap:8px">
+              <div class="card-flat" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+                <span class="h-card" style="width:22px;color:var(--md-sys-color-on-surface-variant)">1</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14.5px;font-weight:600">Both Feet, Tight Space</div>
+                  <div style="margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">~450 touches</div>
+                </div>
+              </div>
+              <div class="card-flat" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+                <span class="h-card" style="width:22px;color:var(--md-sys-color-on-surface-variant)">2</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14.5px;font-weight:600">Sole Rolls &amp; Turns</div>
+                  <div style="margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">~380 touches</div>
+                </div>
+              </div>
+              <div class="card-flat" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+                <span class="h-card" style="width:22px;color:var(--md-sys-color-on-surface-variant)">3</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14.5px;font-weight:600">Receiving Under Pressure</div>
+                  <div style="margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">~520 touches</div>
+                </div>
+              </div>
+              <div class="card-flat" style="display:flex;align-items:center;gap:14px;padding:14px 16px">
+                <span class="h-card" style="width:22px;color:var(--md-sys-color-on-surface-variant)">4</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14.5px;font-weight:600">Weak Foot Only</div>
+                  <div style="margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">~410 touches</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-actions">
+            <button class="btn-primary pressable" style="width:100%">Add to my plan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         3. PLAN  (src/app/plan/page.tsx + PlanBuilder + PlanWeek)
+         ================================================================== -->
+    <div class="phone-wrap">
+      <p class="phone-name">3 · Plan</p>
+      <div class="phone">
+        <div class="phone-scroll">
+          <p class="eyebrow" style="margin-bottom:12px">Plan</p>
+          <h1 class="h-hero">Weekly<br>blueprint</h1>
+          <p class="mt4" style="max-width:34ch;font-size:15px;line-height:1.6;color:var(--md-sys-color-on-surface-variant);margin-bottom:0">
+            A repeating week built around your weaknesses, your kit and the days you can
+            actually train.
+          </p>
+
+          <p class="mt8" style="border-radius:var(--md-sys-shape-corner-large-increased);border:1px solid var(--md-sys-color-outline-variant);
+                    background:var(--md-sys-color-surface-container-high);padding:16px;font-size:14px;line-height:1.6;
+                    color:var(--md-sys-color-on-surface);margin-bottom:0">
+            Built from your last 6 sessions — the areas you actually train, on the days you
+            actually trained, at about 20 minutes. Change anything that’s wrong.
+          </p>
+
+          <h2 class="h-card mt8">Your week</h2>
+          <p style="margin:4px 0 0;font-size:13.5px;color:var(--md-sys-color-on-surface-variant)">Tap a day to change what it’s for.</p>
+          <div class="mt4" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+            <button class="day day-on pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Mon</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Ball</span></button>
+            <button class="day day-on pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Tue</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Phys</span></button>
+            <button class="day day-on pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Wed</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Ball</span></button>
+            <button class="day pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Thu</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Rest</span></button>
+            <button class="day day-on pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Fri</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Ball</span></button>
+            <button class="day pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Sat</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Rest</span></button>
+            <button class="day pressable">
+              <span style="display:block;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter)">Sun</span>
+              <span style="display:block;margin-top:2px;font-size:10px;font-weight:600;
+                    text-transform:uppercase;letter-spacing:.04em">Rest</span></button>
+          </div>
+
+          <h2 class="h-card mt9">What to fix</h2>
+          <p style="margin:4px 0 0;font-size:13.5px;color:var(--md-sys-color-on-surface-variant)">
+            In order — the first one gets the most time. Up to four.</p>
+          <div class="chiprow mt4">
+            <button class="chip chip-on pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="margin-right:6px;font-family:var(--md-ref-typeface-brand);font-size:11px;
+                    font-weight:700;color:var(--md-sys-color-primary)">1</span>First Touch</button>
+            <button class="chip chip-on pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="margin-right:6px;font-family:var(--md-ref-typeface-brand);font-size:11px;
+                    font-weight:700;color:var(--md-sys-color-primary)">2</span>Weak Foot</button>
+            <button class="chip pressable">Ball Mastery</button>
+            <button class="chip pressable">Juggling</button>
+            <button class="chip pressable">Dribbling</button>
+            <button class="chip pressable">Passing</button>
+            <button class="chip pressable">Finishing</button>
+          </div>
+
+          <div class="mt10">
+            <div class="row" style="align-items:baseline;justify-content:space-between;gap:12px">
+              <h2 class="h-card">The blueprint</h2>
+              <a href="#" style="font-size:13px;font-weight:600;color:var(--md-sys-color-primary);
+                 text-decoration:underline;text-underline-offset:4px">Shuffle</a>
+            </div>
+
+            <div class="row mt4" style="gap:10px">
+              <div class="card-flat" style="flex:1;padding:12px">
+                <div style="font-family:var(--md-ref-typeface-brand);font-size:19px;font-weight:700;line-height:1;
+                            letter-spacing:var(--app-track-tighter)">4</div>
+                <div style="margin-top:4px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.1em;color:var(--md-sys-color-on-surface-variant)">sessions</div>
+              </div>
+              <div class="card-flat" style="flex:1;padding:12px">
+                <div style="font-family:var(--md-ref-typeface-brand);font-size:19px;font-weight:700;line-height:1;
+                            letter-spacing:var(--app-track-tighter)">141m</div>
+                <div style="margin-top:4px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.1em;color:var(--md-sys-color-on-surface-variant)">a week</div>
+              </div>
+              <div class="card-flat" style="flex:1;padding:12px">
+                <div style="font-family:var(--md-ref-typeface-brand);font-size:19px;font-weight:700;line-height:1;
+                            letter-spacing:var(--app-track-tighter)">3.4k</div>
+                <div style="margin-top:4px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.1em;color:var(--md-sys-color-on-surface-variant)">touches</div>
+              </div>
+            </div>
+
+            <ol style="margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px">
+              <!-- expanded day: drills shown in place -->
+              <li class="card" style="padding:16px">
+                <div style="display:flex;align-items:flex-start;gap:14px">
+                  <span style="margin-top:2px;width:40px;flex:0 0 auto;font-family:var(--md-ref-typeface-brand);
+                        font-size:13px;font-weight:700">Mon</span>
+                  <div style="min-width:0;flex:1">
+                    <span style="display:flex;align-items:flex-start;gap:6px">
+                      <span style="min-width:0;font-size:14.5px;font-weight:700;line-height:1.375">
+                        Tight Ball Control + Decision Gates</span>
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--md-sys-color-on-surface-variant)"
+                           stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+                           style="margin-top:3px;flex:0 0 auto;transform:rotate(180deg)"><path d="M6 9l6 6 6-6"/></svg>
+                    </span>
+                    <span style="display:block;margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+                      23 min · 4 drills · Targets First Touch</span>
+                  </div>
+                  <button class="pressable" style="flex:0 0 auto;border:0;border-radius:var(--md-sys-shape-corner-large);
+                          background:var(--md-sys-color-inverse-surface);padding:8px 12px;font-family:var(--md-ref-typeface-brand);
+                          font-size:12px;font-weight:700;color:var(--md-sys-color-inverse-primary);cursor:pointer">Start</button>
+                </div>
+                <ol style="margin:14px 0 0;padding:14px 0 0;list-style:none;display:grid;gap:6px;
+                           border-top:1px solid var(--md-sys-color-outline-variant)">
+                  <li style="display:flex;align-items:baseline;gap:10px">
+                    <span style="width:16px;flex:0 0 auto;font-family:var(--md-ref-typeface-brand);font-size:11px;
+                          font-weight:700;color:var(--md-sys-color-on-surface-variant)">1</span>
+                    <span style="min-width:0;flex:1;font-size:13px;font-weight:500">Two-Touch Passing
+                      <span style="margin-left:6px;font-size:12px;color:var(--md-sys-color-on-surface-variant)">2 × 150–350</span></span>
+                    <span style="flex:0 0 auto;font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant)">25m</span>
+                  </li>
+                  <li style="display:flex;align-items:baseline;gap:10px">
+                    <span style="width:16px;flex:0 0 auto;font-family:var(--md-ref-typeface-brand);font-size:11px;
+                          font-weight:700;color:var(--md-sys-color-on-surface-variant)">2</span>
+                    <span style="min-width:0;flex:1;font-size:13px;font-weight:500">Inside Drag Passing
+                      <span style="margin-left:6px;font-size:12px;color:var(--md-sys-color-on-surface-variant)">2 × 25 drags</span></span>
+                    <span style="flex:0 0 auto;font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant)">8m</span>
+                  </li>
+                </ol>
+              </li>
+
+              <li style="display:flex;align-items:center;gap:14px;padding:8px 16px">
+                <span style="width:40px;flex:0 0 auto;font-family:var(--md-ref-typeface-brand);font-size:13px;
+                      font-weight:700;color:var(--md-sys-color-on-surface-variant)">Tue</span>
+                <span style="font-size:13.5px;color:var(--md-sys-color-on-surface-variant)">Rest</span>
+              </li>
+
+              <li class="card" style="padding:16px">
+                <div style="display:flex;align-items:flex-start;gap:14px">
+                  <span style="margin-top:2px;width:40px;flex:0 0 auto;font-family:var(--md-ref-typeface-brand);
+                        font-size:13px;font-weight:700">Wed</span>
+                  <div style="min-width:0;flex:1">
+                    <span style="display:flex;align-items:flex-start;gap:6px">
+                      <span style="min-width:0;font-size:14.5px;font-weight:700;line-height:1.375">
+                        Build-Out Foundation</span>
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--md-sys-color-on-surface-variant)"
+                           stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+                           style="margin-top:3px;flex:0 0 auto"><path d="M6 9l6 6 6-6"/></svg>
+                    </span>
+                    <span style="display:block;margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+                      43 min · 6 drills · Targets Weak Foot</span>
+                  </div>
+                  <button class="pressable" style="flex:0 0 auto;border:0;border-radius:var(--md-sys-shape-corner-large);
+                          background:var(--md-sys-color-inverse-surface);padding:8px 12px;font-family:var(--md-ref-typeface-brand);
+                          font-size:12px;font-weight:700;color:var(--md-sys-color-inverse-primary);cursor:pointer">Start</button>
+                </div>
+              </li>
+
+              <li class="card" style="padding:16px">
+                <div style="display:flex;align-items:flex-start;gap:14px">
+                  <span style="margin-top:2px;width:40px;flex:0 0 auto;font-family:var(--md-ref-typeface-brand);
+                        font-size:13px;font-weight:700">Thu</span>
+                  <div style="min-width:0;flex:1">
+                    <span style="display:flex;align-items:flex-start;gap:6px">
+                      <span style="min-width:0;font-size:14.5px;font-weight:700;line-height:1.375">
+                        Pressure Creation</span>
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--md-sys-color-on-surface-variant)"
+                           stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+                           style="margin-top:3px;flex:0 0 auto"><path d="M6 9l6 6 6-6"/></svg>
+                    </span>
+                    <span style="display:block;margin-top:2px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+                      39 min · 5 drills · Agility, Power</span>
+                  </div>
+                  <button class="pressable" style="flex:0 0 auto;border:0;border-radius:var(--md-sys-shape-corner-large);
+                          background:var(--md-sys-color-inverse-surface);padding:8px 12px;font-family:var(--md-ref-typeface-brand);
+                          font-size:12px;font-weight:700;color:var(--md-sys-color-inverse-primary);cursor:pointer">Start</button>
+                </div>
+              </li>
+            </ol>
+
+            <button class="btn-primary pressable mt8" style="width:100%">Save this week</button>
+          </div>
+        </div>
+        <nav class="tabbar"><div class="tabbar-inner">
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16M4 12h16M4 19h9"/></svg></a>
+          <a class="tab on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v16H4zM16 3v4M8 3v4M4 11h16"/></svg>Plan</a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg></a>
+        </div></nav>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         4. ME  (src/app/me/page.tsx) — signed in
+         ================================================================== -->
+    <div class="phone-wrap">
+      <p class="phone-name">4 · Me</p>
+      <div class="phone">
+        <div class="phone-scroll">
+          <p class="eyebrow" style="margin-bottom:12px">Your training</p>
+          <h1 class="h-page">chris@example.com</h1>
+
+          <div class="row mt6" style="gap:10px">
+            <div class="card" style="flex:1;padding:16px">
+              <div style="font-family:var(--md-ref-typeface-brand);font-size:21px;font-weight:700;line-height:1;
+                          letter-spacing:var(--app-track-tighter)">6</div>
+              <div style="margin-top:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.1em;color:var(--md-sys-color-on-surface-variant)">Sessions</div>
+            </div>
+            <div class="card" style="flex:1;padding:16px">
+              <div style="font-family:var(--md-ref-typeface-brand);font-size:21px;font-weight:700;line-height:1;
+                          letter-spacing:var(--app-track-tighter)">142m</div>
+              <div style="margin-top:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.1em;color:var(--md-sys-color-on-surface-variant)">Minutes</div>
+            </div>
+            <div class="card" style="flex:1;padding:16px">
+              <div style="font-family:var(--md-ref-typeface-brand);font-size:21px;font-weight:700;line-height:1;
+                          letter-spacing:var(--app-track-tighter)">~6.4k</div>
+              <div style="margin-top:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;
+                          letter-spacing:.1em;color:var(--md-sys-color-on-surface-variant)">Touches</div>
+            </div>
+          </div>
+
+          <p class="eyebrow mt9" style="margin-bottom:12px">Do it again</p>
+          <div style="display:grid;gap:8px">
+            <div class="card" style="display:flex;align-items:center;gap:16px;padding:16px">
+              <div style="min-width:0;flex:1">
+                <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  20-min Weak Foot + First Touch</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant)">12/08/2026 · completed · 20m · ⚽ ~1.1k</div>
+              </div>
+              <button class="pressable" style="border:0;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-inverse-surface);
+                      padding:8px 12px;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                      color:var(--md-sys-color-inverse-primary);cursor:pointer">Again</button>
+            </div>
+            <div class="card" style="display:flex;align-items:center;gap:16px;padding:16px">
+              <div style="min-width:0;flex:1">
+                <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  30-min Ball Mastery</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant)">10/08/2026 · completed · 30m · ⚽ ~1.6k</div>
+              </div>
+              <button class="pressable" style="border:0;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-inverse-surface);
+                      padding:8px 12px;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                      color:var(--md-sys-color-inverse-primary);cursor:pointer">Again</button>
+            </div>
+            <div class="card" style="display:flex;align-items:center;gap:16px;padding:16px">
+              <div style="min-width:0;flex:1">
+                <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  15-min Finishing</div>
+                <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant)">08/08/2026 · saved · 15m · ⚽ ~700</div>
+              </div>
+              <button class="pressable" style="border:0;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-inverse-surface);
+                      padding:8px 12px;font-family:var(--md-ref-typeface-brand);font-size:12px;font-weight:700;
+                      color:var(--md-sys-color-inverse-primary);cursor:pointer">Again</button>
+            </div>
+          </div>
+
+          <!-- the blueprint prompt: appears once three sessions are done -->
+          <div class="mt9" style="border-radius:var(--md-sys-shape-corner-large-increased);border:1px solid var(--md-sys-color-primary);
+                      background:var(--md-sys-color-primary-container);padding:20px">
+            <div class="h-card">Make this a weekly routine?</div>
+            <p style="margin:4px 0 0;font-size:14px;line-height:1.55;color:var(--md-sys-color-on-surface-variant)">
+              You’ve trained 6 times. I can turn what you’ve been doing into a repeating week —
+              most of the questions are already answered by your history.
+            </p>
+            <button class="pressable mt3" style="border:0;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-inverse-surface);
+                    padding:10px 16px;font-family:var(--md-ref-typeface-brand);font-size:14px;font-weight:700;
+                    letter-spacing:var(--app-track-tighter);color:var(--md-sys-color-inverse-primary);cursor:pointer">
+              Build my weekly blueprint →</button>
+          </div>
+        </div>
+        <nav class="tabbar"><div class="tabbar-inner">
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16M4 12h16M4 19h9"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v16H4zM16 3v4M8 3v4M4 11h16"/></svg></a>
+          <a class="tab on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>Me</a>
+        </div></nav>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         4b. ME — empty state  (src/app/me/page.tsx)
+
+         THE MODEL: a parent signs up and owns the account; the player uses
+         the app. One player per account for now — seats are a later problem,
+         so nothing here needs a player switcher.
+
+         The copy is therefore addressed to the player, because the player is
+         who answers it. That leaves one seam this screen cannot close on its
+         own: a parent who has just finished signup and has not yet handed the
+         phone over will read "How old are you" and answer about themselves.
+         The fix is one line at the end of signup telling them to pass it on —
+         it belongs in the signup flow, not here, but it has to exist.
+
+         Every required question states what it changes. Anything that cannot
+         finish that sentence is below the line and marked optional, which is
+         the honest place for it.
+         ================================================================== -->
+    <div class="phone-wrap">
+      <p class="phone-name">4b · Me <span style="font-weight:500;text-transform:none;letter-spacing:0">— empty</span></p>
+      <div class="phone">
+        <div class="phone-scroll" data-profile>
+          <p class="eyebrow" style="margin-bottom:12px">Account · chris@example.com</p>
+          <h1 class="h-page">Let’s set you up</h1>
+
+          <!-- No stats, because there is nothing to count yet. An empty
+               6 / 0m / 0 row would look like failure rather than a new start. -->
+          <div class="card-flat mt6" style="padding:20px">
+            <div class="h-card">Nothing here yet</div>
+            <p style="margin:6px 0 0;font-size:14px;line-height:1.55;color:var(--md-sys-color-on-surface-variant)">
+              Four questions and I’ll build your first week. Each one changes what you get —
+              nothing here is asked for its own sake.
+            </p>
+            <div class="progress mt4"><div data-progress style="width:0%"></div></div>
+            <p class="eyebrow" style="margin-top:8px" data-count>0 of 4 answered</p>
+          </div>
+
+          <!-- Name is required now that the profile is about someone else, but
+               first name or a nickname is all the app ever needs. A full legal
+               name adds nothing to a drill plan and a great deal to the blast
+               radius if this database ever leaks. -->
+          <div class="mt9" data-required>
+            <p class="eyebrow" style="margin-bottom:2px">What should I call you</p>
+            <p style="margin:0 0 10px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+              First name or a nickname — it’s just what the app calls you.</p>
+            <label class="text-field">
+              <input type="text" placeholder="e.g. Sam" autocomplete="off" data-name>
+            </label>
+          </div>
+
+          <div class="mt9">
+            <p class="eyebrow" style="margin-bottom:2px">How old are you</p>
+            <p style="margin:0 0 10px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+              Sets how long a session runs and how hard it pushes you.</p>
+            <div class="chiprow" data-single data-required>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Under 10</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>10–12</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>13–15</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>16–18</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>18+</button>
+            </div>
+            <p class="mt3" style="margin-bottom:0;padding-left:2px;font-size:12.5px;line-height:1.55;color:var(--md-sys-color-on-surface-variant)">
+              Under 13? Grab a parent — they need to set this up with you.
+            </p>
+          </div>
+
+          <div class="mt8">
+            <p class="eyebrow" style="margin-bottom:2px">Where do you play</p>
+            <p style="margin:0 0 10px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+              Picks which drills come up. Choose as many as apply.</p>
+            <div class="chiprow" data-required>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>GK</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Centre-back</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Full-back</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Defensive mid</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Centre mid</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Attacking mid</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Winger</button>
+              <button class="chip pressable"><svg class="chip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Striker</button>
+            </div>
+          </div>
+
+          <div class="mt8" data-required>
+            <p class="eyebrow" style="margin-bottom:2px">Dominant foot</p>
+            <p style="margin:0 0 10px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+              Sets how much weak-foot work gets built into your sessions.</p>
+            <!-- Same component as the Train mode switch, different semantics:
+                 nothing is revealed by choosing, so this is a radiogroup. -->
+            <div class="segmented" role="radiogroup" aria-label="Dominant foot">
+              <button class="segment pressable" role="radio" aria-checked="false" tabindex="-1"><svg class="seg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Left</button>
+              <button class="segment pressable" role="radio" aria-checked="false" tabindex="-1"><svg class="seg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Right</button>
+              <button class="segment pressable" role="radio" aria-checked="false" tabindex="-1"><svg class="seg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Both</button>
+            </div>
+          </div>
+
+          <button class="btn-primary pressable mt8" style="width:100%">Build my first week</button>
+
+          <!-- ---------------------------------------------------------------
+               Below the line. Neither of these changes a single drill, so
+               neither is allowed to look required.
+
+               They are also the two that need a decision before this ships.
+               The parent owns the account but the child is the one typing, so
+               this is collection from a child in the ordinary sense and the
+               consent has to have been obtained upstream, at signup. Note that
+               COPPA's verifiable parental consent means an actual verification
+               method, not merely a signup form a parent happened to fill in.
+               Worth checking what account creation actually does today.
+
+               Whoever types them, name + age band + club + region together
+               narrow to a small number of real children. That is the reason
+               these two sit down here rather than up there.
+
+               If these fields stay: region rather than town, never device
+               location, and both genuinely skippable.
+               --------------------------------------------------------------- -->
+          <div class="mt10" style="border-top:1px solid var(--md-sys-color-outline-variant);padding-top:20px">
+            <p class="eyebrow" style="margin-bottom:2px">Optional</p>
+            <p style="margin:0 0 14px;font-size:12.5px;color:var(--md-sys-color-on-surface-variant)">
+              Doesn’t change your plan. Skip it and nothing is lost.</p>
+
+            <label class="text-field"><span>Region</span>
+              <input type="text" placeholder="e.g. Pennsylvania" autocomplete="off"></label>
+            <label class="text-field mt4"><span>Club</span>
+              <input type="text" placeholder="Your team, if you’re in one" autocomplete="off"></label>
+          </div>
+
+          <p class="mt6" style="margin-bottom:0;font-size:12px;line-height:1.6;color:var(--md-sys-color-on-surface-variant)">
+            You can change or delete any of this later from your profile.
+          </p>
+        </div>
+        <nav class="tabbar"><div class="tabbar-inner">
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16M4 12h16M4 19h9"/></svg></a>
+          <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 5h16v16H4zM16 3v4M8 3v4M4 11h16"/></svg></a>
+          <a class="tab on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/></svg>Me</a>
+        </div></nav>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* Harness only — the app should follow the OS. This exists so the dark scheme
+   can be judged without changing system settings. */
+const root = document.documentElement, btn = document.getElementById('themeToggle');
+btn.addEventListener('click', () => {
+  const dark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+  btn.textContent = dark ? 'Dark scheme' : 'Light scheme';
+});
+</script>
+
+<script>
+/* Modal bottom sheet. In the app this should be a focus-trapping dialog
+   component; the hand-rolled version here exists because showModal() would
+   escape the 393px phone mock. The behaviours it demonstrates are the ones
+   worth keeping: three ways out, focus moved in and handed back, and the
+   list behind made inert rather than merely covered. */
+(() => {
+  const phone  = document.querySelector('[data-sheet]').closest('.phone');
+  const sheet  = phone.querySelector('[data-sheet]');
+  const scrim  = phone.querySelector('[data-sheet-scrim]');
+  const scroll = phone.querySelector('.phone-scroll');
+  const title  = sheet.querySelector('[data-sheet-title]');
+  const meta   = sheet.querySelector('[data-sheet-meta]');
+  const cat    = sheet.querySelector('[data-sheet-category]');
+  const closeB = sheet.querySelector('[data-sheet-close]');
+  let opener = null;
+
+  const open = (btn) => {
+    opener = btn;
+    title.textContent = btn.dataset.title;
+    meta.textContent  = btn.dataset.meta;
+    cat.textContent   = btn.closest('section').querySelector('p').textContent.trim();
+    sheet.classList.add('open');
+    scrim.classList.add('open');
+    scroll.setAttribute('inert', '');
+    closeB.focus();
+  };
+  const close = () => {
+    sheet.classList.remove('open');
+    scrim.classList.remove('open');
+    scroll.removeAttribute('inert');
+    if (opener) { opener.focus(); opener = null; }
+  };
+
+  phone.querySelectorAll('.program').forEach(b => b.addEventListener('click', () => open(b)));
+  closeB.addEventListener('click', close);
+  scrim.addEventListener('click', close);
+  /* Stands in for the Android back gesture — wire that to the same handler. */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sheet.classList.contains('open')) { e.preventDefault(); close(); }
+  });
+})();
+</script>
+
+<script>
+/* Segmented buttons. Two on the page and they are not the same thing:
+   the Train one swaps panels, so it carries tablist/tab/tabpanel roles; the
+   dominant-foot one is a plain choice with nothing to reveal, so it is a
+   radiogroup. Same component, different semantics — driven off whether the
+   group declares role="tablist".
+
+   Two behaviours worth keeping when this is ported, because both get decided
+   by accident otherwise: what you typed into one mode survives a trip to the
+   other, and switching mode does NOT clear an already-generated session.
+   Hiding panels rather than rebuilding them gets the first for free; the
+   second is why "Your session" sits outside both panels. */
+document.querySelectorAll('.segmented').forEach(group => {
+  const segs = [...group.querySelectorAll('.segment')];
+  const isTabs = group.getAttribute('role') === 'tablist';
+  const select = (seg) => segs.forEach(sg => {
+    const on = sg === seg;
+    sg.classList.toggle('on', on);
+    sg.setAttribute(isTabs ? 'aria-selected' : 'aria-checked', on);
+    sg.tabIndex = on ? 0 : -1;
+    if (isTabs) document.getElementById(sg.getAttribute('aria-controls')).hidden = !on;
+  });
+  segs.forEach(sg => sg.addEventListener('click', () => select(sg)));
+  group.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const next = segs[(segs.indexOf(document.activeElement) + (e.key === 'ArrowRight' ? 1 : -1) + segs.length) % segs.length];
+    next.focus(); select(next);
+  });
+});
+
+/* Chips. [data-single] groups behave as radio, the rest toggle. Low-fi, but
+   enough to click through the profile and watch the progress bar move. */
+document.querySelectorAll('.chiprow').forEach(row => {
+  const single = row.hasAttribute('data-single');
+  row.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+    if (single) row.querySelectorAll('.chip').forEach(c => c.classList.remove('chip-on'));
+    chip.classList.toggle('chip-on', single ? true : !chip.classList.contains('chip-on'));
+    row.dispatchEvent(new CustomEvent('chipchange', { bubbles: true }));
+  }));
+});
+
+/* Profile completion. Counts only the three questions that change the plan. */
+(() => {
+  const form = document.querySelector('[data-profile]');
+  if (!form) return;
+  const bar = form.querySelector('[data-progress]'), count = form.querySelector('[data-count]');
+  const groups = [...form.querySelectorAll('[data-required]')];
+  const update = () => {
+    const done = groups.filter(g => g.querySelector('.chip-on, .segment.on')
+                                 || g.querySelector('input')?.value.trim()).length;
+    bar.style.width = (done / groups.length * 100) + '%';
+    count.textContent = done + ' of ' + groups.length + ' answered';
+  };
+  form.addEventListener('chipchange', update);
+  form.addEventListener('input', update);
+  form.addEventListener('click', e => { if (e.target.closest('.segment')) update(); });
+  update();
+})();
+</script>
+
+</body>
+</html>

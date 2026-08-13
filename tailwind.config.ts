@@ -59,16 +59,16 @@ const config: Config = {
         'inverse-primary':           'var(--md-sys-color-inverse-primary)',
         scrim:                       'var(--md-sys-color-scrim)',
         /* Forge extensions — M3 defines no role for these. */
-        'forge-inverse-on-surface-variant': 'var(--forge-inverse-on-surface-variant)',
-        'forge-inverse-outline-variant':    'var(--forge-inverse-outline-variant)',
-        'forge-category-technical':         'var(--forge-category-technical)',
-        'forge-category-technical-dim':     'var(--forge-category-technical-dim)',
-        'forge-category-physical':          'var(--forge-category-physical)',
-        'forge-category-physical-dim':      'var(--forge-category-physical-dim)',
-        'forge-category-finishing':         'var(--forge-category-finishing)',
-        'forge-category-finishing-dim':     'var(--forge-category-finishing-dim)',
-        'on-category':                      'var(--forge-on-category)',
-        'on-category-variant':              'var(--forge-on-category-variant)',
+        'app-inverse-on-surface-variant': 'var(--app-inverse-on-surface-variant)',
+        'app-inverse-outline-variant':    'var(--app-inverse-outline-variant)',
+        'app-category-technical':         'var(--app-category-technical)',
+        'app-category-technical-dim':     'var(--app-category-technical-dim)',
+        'app-category-physical':          'var(--app-category-physical)',
+        'app-category-physical-dim':      'var(--app-category-physical-dim)',
+        'app-category-finishing':         'var(--app-category-finishing)',
+        'app-category-finishing-dim':     'var(--app-category-finishing-dim)',
+        'on-category':                      'var(--app-on-category)',
+        'on-category-variant':              'var(--app-on-category-variant)',
       },
       borderRadius: {
         /* ---- M3 shape scale (stage 1) ---- */
@@ -103,8 +103,8 @@ const config: Config = {
       },
       letterSpacing: {
         /* M3 typescale tracking, retuned for Roboto Flex — see globals.css. */
-        tightest: 'var(--forge-track-tightest)',
-        tighter:  'var(--forge-track-tighter)',
+        tightest: 'var(--app-track-tightest)',
+        tighter:  'var(--app-track-tighter)',
       },
       keyframes: {
         rise: { '0%': { opacity: '0', transform: 'translateY(10px)' },

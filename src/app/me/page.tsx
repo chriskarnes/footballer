@@ -2,15 +2,18 @@ import Link from 'next/link';
 import { serverClient } from '@/lib/supabase/server';
 import { formatTouches } from '@/lib/session-builder';
 import { SignIn } from '@/components/SignIn';
+import { ProfileSetup } from '@/components/ProfileSetup';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
+ * with nothing to count it's the four setup questions; signed in with history
  * it leads with what you did last, because repeating a session you liked is
  * the single most common thing a returning player wants.
  */
 export default async function MePage() {
   let user = null as null | { id: string; email?: string };
   let workouts: any[] = [];
+  let profile: { display_name?: string | null } | null = null;
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -18,10 +21,15 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const { data: rows } = await db
-          .from('workouts').select('*')
-          .order('created_at', { ascending: false }).limit(25);
+        const [{ data: rows }, { data: prof }] = await Promise.all([
+          db.from('workouts').select('*')
+            .order('created_at', { ascending: false }).limit(25),
+          // Only the column that decides which screen this is. Selecting the
+          // setup fields here would make the page depend on the migration.
+          db.from('profiles').select('display_name').eq('id', user.id).maybeSingle(),
+        ]);
         workouts = rows ?? [];
+        profile = prof ?? null;
       }
     } catch { /* not configured yet */ }
   }
@@ -40,6 +48,14 @@ export default async function MePage() {
         </p>
       </div>
     );
+  }
+
+  // Signed in, nothing done, nothing said about themselves: this is a new
+  // account, and the four questions are worth more than an empty history list.
+  // Having trained already outranks an unfinished profile — someone mid-session
+  // should not be sent back to a form.
+  if (!profile?.display_name && !workouts.length) {
+    return <ProfileSetup email={user.email} />;
   }
 
   const done = workouts.filter((w) => w.status === 'completed');

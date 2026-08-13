@@ -7,24 +7,24 @@ export default async function TrainNowPage() {
   const exercises = await getExercises();
   return (
     <div className="animate-pop">
-      <div className="mb-9 flex items-center justify-between">
+      {/* Landmarks, not loose divs held apart by a margin. */}
+      <header className="app-bar">
         <Brand small />
         <span className="text-[12px] font-semibold text-on-surface-variant">786 drills</span>
-      </div>
+      </header>
 
-      {/* No "Train now" kicker above this one: the headline already says it, and
-          the tab you arrived on is called Train. Two of the three were noise. */}
-      {/* Explicit break, as the previous headline had: left to wrap on its own this
-          strands "now" alone on line two. Breaking after "training" is where you'd
-          draw breath saying it. */}
-      <h1 className="h-hero max-w-[15ch]">
-        Start training<br />right now
-      </h1>
-      <p className="mt-3.5 max-w-[36ch] text-[15px] leading-relaxed text-on-surface-variant">
-        Tell me what you want to work on and how much time you have and I&rsquo;ll build a
-        session instantly.
-      </p>
+      {/* No "Train now" kicker: the headline says it and the tab you arrived on
+          is called Train. The 15ch measure is gone with the explicit break —
+          "Start training now" is three words and sets on one line at every
+          width we support, so the manual break was breaking a line that no
+          longer needed breaking. */}
+      <section className="hero">
+        <h1 className="h-hero">Start training now</h1>
+      </section>
 
+      {/* The promise used to live here, above everything, so the page offered
+          one thing and then presented two. It has moved into the coach panel,
+          which is the only mode it describes. */}
       <Coach exercises={exercises} />
     </div>
   );

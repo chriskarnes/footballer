@@ -10,13 +10,15 @@ import { InstallNudge } from '@/components/InstallNudge';
 import { ServiceWorker } from '@/components/ServiceWorker';
 
 export const metadata: Metadata = {
-  title: 'Forge — Elite Accelerator',
+  title: 'Train.futbol',
   description: 'Individual soccer training. 786 drills, built around your time and your weaknesses.',
   manifest: '/manifest.webmanifest',
-  applicationName: 'Forge',
+  applicationName: 'Train.futbol',
   appleWebApp: {
     capable: true,
-    title: 'Forge',
+    // What sits under the home-screen icon, where there is room for about 12
+    // characters before iOS truncates. The dot is part of the name.
+    title: 'Train.futbol',
     // `default` gives dark status-bar text over our light page. `black-translucent`
     // would put white text on a near-white background and make the clock vanish.
     statusBarStyle: 'default',

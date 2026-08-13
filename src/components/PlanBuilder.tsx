@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { buildPlan, planDayRows, type Prefill } from '@/lib/plan-builder';
 import { PlanWeek } from './PlanWeek';
+import { Chip } from './Chip';
 import type {
   Availability, BuiltPlan, DrillBrief, FocusArea, PlanIntake, SessionRow,
 } from '@/lib/types';
@@ -202,22 +203,19 @@ export function PlanBuilder({
         <h2 className="h-card">What you&rsquo;ve got</h2>
         <div className="mt-3.5 flex flex-wrap gap-2">
           {KIT.map((k) => (
-            <button key={k} type="button" onClick={() => toggleKit(k)}
-              className={`chip ${intake.equipment.includes(k) ? 'chip-on' : ''}`}>
+            <Chip key={k} on={intake.equipment.includes(k)} onClick={() => toggleKit(k)}>
               {KIT_LABEL[k] ?? k}
-            </button>
+            </Chip>
           ))}
         </div>
         <div className="mt-3.5 flex flex-wrap gap-2">
-          <button type="button" onClick={() => set({ homeOnly: !intake.homeOnly })}
-            className={`chip ${intake.homeOnly ? 'chip-on' : ''}`}>
+          <Chip on={intake.homeOnly} onClick={() => set({ homeOnly: !intake.homeOnly })}>
             Home only
-          </button>
+          </Chip>
           {/* The one thing history can't tell us, so it's the one thing asked outright. */}
-          <button type="button" onClick={() => set({ injured: !intake.injured })}
-            className={`chip ${intake.injured ? 'chip-on' : ''}`}>
+          <Chip on={intake.injured} onClick={() => set({ injured: !intake.injured })}>
             Carrying an injury
-          </button>
+          </Chip>
         </div>
         {intake.injured && (
           <p className="mt-2.5 pl-1 text-[13px] text-on-surface-variant">

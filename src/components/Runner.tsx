@@ -66,18 +66,18 @@ export function Runner({
                             tracking-tightest text-inverse-primary">
               {formatTouches(doneTouches).replace('~', '')}
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-forge-inverse-on-surface-variant">touches banked</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-app-inverse-on-surface-variant">touches banked</div>
           </div>
           <div className="text-right">
             <div className="font-brand text-[20px] font-bold tracking-tighter text-inverse-on-surface">
-              {done.size}<span className="text-forge-inverse-on-surface-variant">/{drills.length}</span>
+              {done.size}<span className="text-app-inverse-on-surface-variant">/{drills.length}</span>
             </div>
-            <div className="mt-1 text-[11.5px] font-semibold text-forge-inverse-on-surface-variant">
+            <div className="mt-1 text-[11.5px] font-semibold text-app-inverse-on-surface-variant">
               of {formatTouches(totalTouches)}
             </div>
           </div>
         </div>
-        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-forge-inverse-outline-variant">
+        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-app-inverse-outline-variant">
           <div className="h-full rounded-full bg-inverse-primary transition-all duration-500"
                style={{ width: `${pct}%` }} />
         </div>

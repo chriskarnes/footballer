@@ -11,8 +11,8 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'Forge — Elite Accelerator',
-    short_name: 'Forge',
+    name: 'Train.futbol',
+    short_name: 'Train.futbol',
     description:
       'Individual soccer training. Tell it how long you have and what you want to work on.',
     start_url: '/?source=pwa',

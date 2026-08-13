@@ -45,7 +45,7 @@ export function SessionCard({
                             tracking-tightest text-inverse-primary">
               {formatTouches(built.totalTouches).replace('~', '')}
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-forge-inverse-on-surface-variant">ball touches</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-app-inverse-on-surface-variant">ball touches</div>
           </div>
           <div className="mb-1 flex gap-6">
             <Metric v={`${mins}`} unit="min" />
@@ -53,11 +53,11 @@ export function SessionCard({
           </div>
         </div>
 
-        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-forge-inverse-outline-variant">
+        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-app-inverse-outline-variant">
           <div className="h-full rounded-full bg-inverse-primary transition-all duration-700"
                style={{ width: `${pct}%` }} />
         </div>
-        <p className="mt-2.5 text-[12px] font-medium text-forge-inverse-on-surface-variant">
+        <p className="mt-2.5 text-[12px] font-medium text-app-inverse-on-surface-variant">
           {hit
             ? `Past the ${TOUCH_GOAL.toLocaleString()} goal — a team practice gives most players a few hundred.`
             : `${formatTouches(TOUCH_GOAL - built.totalTouches)} short of ${TOUCH_GOAL.toLocaleString()}.`}
@@ -131,7 +131,7 @@ function Metric({ v, unit }: { v: string; unit: string }) {
   return (
     <div>
       <div className="font-brand text-[22px] font-bold leading-none tracking-tighter text-inverse-on-surface">{v}</div>
-      <div className="mt-1 text-[11.5px] font-semibold text-forge-inverse-on-surface-variant">{unit}</div>
+      <div className="mt-1 text-[11.5px] font-semibold text-app-inverse-on-surface-variant">{unit}</div>
     </div>
   );
 }

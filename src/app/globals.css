@@ -5,7 +5,7 @@
 /* ==========================================================================
    MATERIAL DESIGN 3 TOKEN LAYER
    ==========================================================================
-   Ported from design/forge-harness-m3.html; the comments came with it because
+   Ported from design/train-futbol-harness-m3.html; the comments came with it because
    they record three places a Forge value was overruled on contrast, and
    re-deriving that costs more than the diff noise.
 
@@ -137,8 +137,8 @@
   --md-sys-color-inverse-surface:           #D2E4FF;
   --md-sys-color-inverse-on-surface:        #003259;
   --md-sys-color-inverse-primary:           #286199;
-  --forge-inverse-on-surface-variant:       #286199;
-  --forge-inverse-outline-variant:          #7CAEEB;
+  --app-inverse-on-surface-variant:       #286199;
+  --app-inverse-outline-variant:          #7CAEEB;
 } }
 
 :root[data-theme="dark"] { color-scheme: dark;
@@ -174,8 +174,8 @@
   --md-sys-color-inverse-surface:           #D2E4FF;
   --md-sys-color-inverse-on-surface:        #003259;
   --md-sys-color-inverse-primary:           #286199;
-  --forge-inverse-on-surface-variant:       #286199;
-  --forge-inverse-outline-variant:          #7CAEEB;
+  --app-inverse-on-surface-variant:       #286199;
+  --app-inverse-outline-variant:          #7CAEEB;
 }
 
 /* ==========================================================================
@@ -189,15 +189,15 @@
    tones from the primary ramp (tone 70 / tone 30), 6.8:1 on navy.
    ========================================================================== */
 :root {
-  --forge-inverse-on-surface-variant: #7CAEEB;
-  --forge-inverse-outline-variant:    #00497F;
+  --app-inverse-on-surface-variant: #7CAEEB;
+  --app-inverse-outline-variant:    #00497F;
   /* Retuned for Roboto Flex. Sora is a narrow geometric that tolerated
      -0.045em; Roboto Flex is a grotesque with wider sidebearings and the same
      value collided at display sizes. The compactness is recovered on the
      wdth axis instead — see the -width tokens below — which is closer to what
      Sora was doing anyway, and only Roboto Flex can do it. */
-  --forge-track-tightest: -0.02em;
-  --forge-track-tighter:  -0.005em;
+  --app-track-tightest: -0.02em;
+  --app-track-tighter:  -0.005em;
 
   /* The three Library category cards were green / blue / gold, which no
      longer fits. Rather than three tones of one blue — which would have made
@@ -206,17 +206,17 @@
      and neutral-variant slate. Distinct hues, one family.
      M3's proper mechanism is a custom colour per category, each with its own
      tonal palette and container roles. That is still the next job. */
-  --forge-category-technical:     #00497F;   /* primary,   tone 30 */
-  --forge-category-technical-dim: #00294B;   /* primary,   tone 16 */
-  --forge-category-physical:      #225668;   /* tertiary,  tone 34 */
-  --forge-category-physical-dim:  #003A4A;   /* tertiary,  tone 22 */
-  --forge-category-finishing:     #2E669E;   /* primary,   tone 42 */
-  --forge-category-finishing-dim: #00497F;   /* primary,   tone 30 */
-  --forge-on-category:            #FFFFFF;
+  --app-category-technical:     #00497F;   /* primary,   tone 30 */
+  --app-category-technical-dim: #00294B;   /* primary,   tone 16 */
+  --app-category-physical:      #225668;   /* tertiary,  tone 34 */
+  --app-category-physical-dim:  #003A4A;   /* tertiary,  tone 22 */
+  --app-category-finishing:     #2E669E;   /* primary,   tone 42 */
+  --app-category-finishing-dim: #00497F;   /* primary,   tone 30 */
+  --app-on-category:            #FFFFFF;
   /* Fixed, not scheme-following: the gradients above do not flip, so text on
      them must not either. This was the one real bug the dark scheme exposed —
      the subtext had been reusing an inverse role and went black-on-green. */
-  --forge-on-category-variant:    #DCE9FF;
+  --app-on-category-variant:    #DCE9FF;
 }
 
 /* ==========================================================================
@@ -413,7 +413,7 @@ input, textarea, [data-selectable] {
 
 /* ==========================================================================
    M3 COMPONENT LAYER  —  migration stage 2 of 3
-   Ported from design/forge-harness-m3.html. Outside @layer components so the
+   Ported from design/train-futbol-harness-m3.html. Outside @layer components so the
    state layer and focus rules keep their specificity against Tailwind
    utilities; these are components, not utilities, and nothing @applies them.
    ========================================================================== */
@@ -518,6 +518,11 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    the selected block rather than as a second colour. It is still 1px, so
    nothing rewraps under your thumb on select.
 
+   The checkmark these rules have always described is finally rendered, by
+   components/Chip.tsx — it was specified here and in no markup, so the state
+   was carried by colour alone for anyone who could not see the fill. Three
+   cues now: fill, border, mark.
+
    Chips stay at 44px rather than M3's 32dp: M3 gets to its 48dp touch target
    with an invisible overlay, which is the right call in a component library
    and the wrong one in a file meant to show real spacing.
@@ -552,7 +557,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   background: var(--md-sys-color-inverse-surface);
   padding: 0 24px;
   font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
-  letter-spacing: var(--forge-track-tighter);
+  letter-spacing: var(--app-track-tighter);
   color: var(--md-sys-color-inverse-primary);
 }
 .btn-primary:disabled {
@@ -573,7 +578,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   background: var(--md-sys-color-inverse-primary);
   padding: 0 24px;
   font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
-  letter-spacing: var(--forge-track-tighter);
+  letter-spacing: var(--app-track-tighter);
   color: var(--md-sys-color-inverse-surface);
 }
 
@@ -608,6 +613,87 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-secondary-container);
 }
 
+/* ==========================================================================
+   SEGMENTED BUTTON — single-select. New in this stage.
+   Train offers two ways to get a session. Stacked, they read as steps: try the
+   coach, and if that failed, here is a form. They are not steps — they are two
+   inputs to one output, and the session below belongs to neither.
+
+   A segmented button rather than tabs, on purpose. M3 tabs navigate between
+   peer content views and imply that what sits underneath belongs to the tab;
+   segmented buttons pick a mode for content that stays put. Tabs here would
+   also stack a second navigation bar directly above the real one.
+
+   The ARIA is tablist/tab/tabpanel even so — that is genuinely what this does
+   to a screen reader, and it buys the arrow-key behaviour people expect. The
+   visual component and the accessibility role are allowed to disagree. The
+   dominant-foot picker on Me reuses the same class with radiogroup roles,
+   because nothing is revealed by choosing there.
+   ========================================================================== */
+.segmented {
+  display: flex; width: 100%; overflow: hidden;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-full);
+}
+.segment {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 12px; cursor: pointer;
+  border: 0; border-left: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: 14px; font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.segment:first-child { border-left: 0; }
+.segment-on {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.segment .seg-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
+.segment-on .seg-check { display: block; }
+
+/* ==========================================================================
+   TEXT FIELD (outlined) and LINEAR PROGRESS — both new, both M3.
+   The text field uses corner-small rather than the spec's extra-small (4dp):
+   4dp reads as a mistake next to 20dp cards and pill inputs everywhere else.
+   Noted so it is a choice and not a drift.
+   ========================================================================== */
+.text-field { display: block; }
+.text-field > span {
+  display: block; margin-bottom: 6px;
+  font-size: 13px; font-weight: 600; color: var(--md-sys-color-on-surface-variant);
+}
+.text-field input {
+  width: 100%; min-height: 52px; padding: 0 16px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-lowest);
+  /* 16px, not the harness's 15: anything smaller makes iOS zoom the page on
+     focus and never zoom back out. The same reason the coach input is 16. */
+  font-family: var(--md-ref-typeface-plain); font-size: 16px;
+  color: var(--md-sys-color-on-surface);
+}
+.text-field input::placeholder { color: var(--md-sys-color-on-surface-variant); }
+.text-field input:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
+
+.progress {
+  height: 4px; border-radius: var(--md-sys-shape-corner-full); overflow: hidden;
+  background: var(--md-sys-color-surface-container-highest);
+}
+.progress > div {
+  height: 100%; border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-primary);
+  transition: width var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate);
+}
+
+/* Screen-level landmarks. The Train header and hero were loose siblings held
+   apart by a margin, with a 15ch measure on the h1 that made it break narrower
+   than the cards beneath it. A measure is right for running prose; a two-word
+   headline above full-width content just looks misaligned. */
+.app-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hero { margin-top: 36px; }
+.hero .h-hero { max-width: none; }
+
 /* .tag-gold was --gold-text on --gold-soft: 4.35:1, just under the floor.
    As a primary-container pair it is 7.21:1. Renamed to .tag-accent — this one
    does have callers, so it is the only class name in the file that changed,
@@ -628,7 +714,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    and left by an explicit back control. Its classes — .sheet-dialog,
    .sheet-inner, .sheet-handle/-head/-body/-actions, .icon-btn and the
    phone-scroll[inert] guard — went with it rather than sitting here unused.
-   Recoverable from design/forge-harness-m3.html if the decision reverses. */
+   Recoverable from design/train-futbol-harness-m3.html if the decision reverses. */
 
 
 /* The floating tab bar's frosted fill.

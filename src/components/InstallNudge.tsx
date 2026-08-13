@@ -7,7 +7,7 @@ import { haptic } from '@/lib/haptics';
  *
  * Two rules shape this component:
  *
- * 1. **It is never required.** Forge works completely from a link — that is the
+ * 1. **It is never required.** Train.futbol works completely from a link — that is the
  *    whole point of shipping web. So the nudge waits until the third visit, and
  *    once dismissed it never comes back. A player who ignores it loses nothing.
  *
@@ -87,14 +87,14 @@ export function InstallNudge() {
   return (
     <div className="safe-x fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
       <div className="sheet-in card w-full max-w-lg p-5 shadow-level3" role="dialog"
-           aria-label="Add Forge to your home screen">
+           aria-label="Add Train.futbol to your home screen">
         <div className="flex items-start gap-3.5">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px]
                            bg-inverse-surface font-brand text-[18px] font-extrabold italic text-inverse-primary">
             F
           </span>
           <div className="min-w-0 flex-1">
-            <p className="h-card">Keep Forge one tap away</p>
+            <p className="h-card">Keep Train.futbol one tap away</p>
             <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
               {platform === 'ios'
                 ? 'Add it to your home screen and it opens full screen, with its own icon.'

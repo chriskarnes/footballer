@@ -4,6 +4,7 @@ import { buildSession, swapDrill } from '@/lib/session-builder';
 import type { BuiltSession, Exercise, FocusArea, SessionSpec } from '@/lib/types';
 import { FOCUS_LABELS } from '@/lib/types';
 import { SessionCard } from './SessionCard';
+import { Chip, CheckIcon } from './Chip';
 
 /**
  * Examples are tappable, but they are set as running subtext rather than chips.
@@ -21,11 +22,14 @@ const EXAMPLES = [
 ];
 
 /**
- * The manual rows start open and are folded away by exactly one thing: the coach
- * answering. Surprise me leaves them alone — you may well want to nudge the time
- * and go again, and pulling the controls shut under your thumb to do that is rude.
+ * Which mode Train opens in. The coach every time is right for a new player and
+ * friction for someone who always builds by hand — see the open question about
+ * remembering the last mode. Until that's decided, a first-time-correct default
+ * beats a remembered one.
  */
-const MANUAL_OPEN_BY_DEFAULT = true;
+const DEFAULT_MODE: Mode = 'ai';
+
+type Mode = 'ai' | 'diy';
 
 /**
  * Only used when someone hits Surprise me without having chosen a time. Nothing
@@ -60,18 +64,7 @@ function pickAnyFocus(): FocusArea[] {
   return out;
 }
 
-/** What the collapsed header shows, so folding the rows never hides the answer. */
-function summarise(spec: Partial<SessionSpec>, anyFocus: boolean): string {
-  const bits: string[] = [];
-  if (spec.minutes) bits.push(`${spec.minutes} min`);
-  if (anyFocus) bits.push('Anything');
-  else if (spec.focus?.length) bits.push(spec.focus.map((f) => FOCUS_LABELS[f]).join(', '));
-  if (spec.place && spec.place !== 'any') {
-    const place = PLACES.find(([v]) => v === spec.place);
-    if (place) bits.push(place[1]);
-  }
-  return bits.join('  ·  ');
-}
+const MODES: [Mode, string][] = [['ai', 'Ask the coach'], ['diy', 'Build it myself']];
 
 export function Coach({ exercises }: { exercises: Exercise[] }) {
   // Nothing is preselected. A chip lit before you touched anything claims you
@@ -84,11 +77,12 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [reply, setReply] = useState('');
-  const [manualOpen, setManualOpen] = useState(MANUAL_OPEN_BY_DEFAULT);
+  const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
   const [pendingScroll, setPendingScroll] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionRef = useRef<HTMLDivElement>(null);
+  const tablistRef = useRef<HTMLDivElement>(null);
 
   // Runs after the session card is actually in the DOM — on the first build the
   // ref doesn't exist yet at the moment the request resolves.
@@ -131,19 +125,17 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
         const named = !!data.spec.focus?.length;
         if (named) setAnyFocus(false);
         setSpec(merged); setReply(data.reply ?? '');
-        // Fold the rows and travel to the session only when there IS one. A reply
-        // that still needs a follow-up leaves the controls where they were.
-        if (build(merged, anyFocus && !named)) {
-          setManualOpen(false);
-          setPendingScroll(true);
-        }
+        // Travel to the session only when there IS one. A reply that still needs
+        // a follow-up leaves you where you were, with the box still in reach.
+        if (build(merged, anyFocus && !named)) setPendingScroll(true);
       }
       setText('');
     } catch {
       // Previously any failure here threw past the UI and the box just went quiet.
-      // Say so, and put the controls back so there is still a way to train.
-      setReply('Could not reach the coach just now — set it yourself below and I’ll build it.');
-      setManualOpen(true);
+      // Say so, and hand over the mode that doesn't need the network — everything
+      // typed here survives the switch, so nothing is lost by taking it.
+      setReply('Could not reach the coach just now — build it yourself and I’ll put it together.');
+      setMode('diy');
     } finally { setBusy(false); }
   }
 
@@ -179,13 +171,50 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
     if (build(next, true)) setPendingScroll(true);
   }
 
-  const summary = summarise(spec, anyFocus);
+  /** Roving focus across the two segments, which is what `role="tab"` promises. */
+  function onTablistKey(e: React.KeyboardEvent) {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    const next: Mode =
+      e.key === 'Home' ? 'ai'
+      : e.key === 'End' ? 'diy'
+      : mode === 'ai' ? 'diy' : 'ai';
+    setMode(next);
+    const i = MODES.findIndex(([m]) => m === next);
+    (tablistRef.current?.children[i] as HTMLElement | undefined)?.focus();
+  }
 
   return (
     <div className="mt-8">
-      {/* ---- the coach: the primary way in ---- */}
+      {/* ---- mode switch ----
+          Two inputs to one output, not two steps. Stacked, the form read as the
+          fallback for the coach having failed. The session below belongs to
+          neither panel, which is why it sits outside both. */}
+      <div ref={tablistRef} onKeyDown={onTablistKey} className="segmented"
+           role="tablist" aria-label="How to build your session">
+        {MODES.map(([m, label]) => (
+          <button key={m} role="tab" id={`tab-${m}`} aria-controls={`panel-${m}`}
+                  aria-selected={mode === m} tabIndex={mode === m ? 0 : -1}
+                  onClick={() => setMode(m)}
+                  className={`segment pressable ${mode === m ? 'segment-on' : ''}`}>
+            <CheckIcon className="seg-check" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ---- the coach ---- */}
+      {/* `hidden`, not unmounted: what you typed in one mode survives a trip to
+          the other, and a half-filled form is worth more than a clean remount. */}
+      <div id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" hidden={mode !== 'ai'}>
+      <p className="mt-5 text-[15px] leading-relaxed text-on-surface-variant">
+        Tell me what you want to work on and how much time you have and I&rsquo;ll build a
+        session instantly.
+      </p>
+
       {/* Focus is shown by the border alone — no shadow bloom on focus. */}
-      <div className="flex items-center gap-2 rounded-full border-[1.5px] border-outline-variant bg-surface-container-lowest
+      <div className="mt-5 flex items-center gap-2 rounded-full border-[1.5px] border-outline-variant bg-surface-container-lowest
                       p-1.5 pl-5 transition-colors focus-within:border-primary">
         <input
           ref={inputRef}
@@ -240,8 +269,10 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
       </p>
 
       {/* The way in for a player who genuinely doesn't know — which at this age is
-          most of them. btn-ghost because the design system already reserves the
-          bordered block for the lesser of two actions, and Go is the greater one. */}
+          most of them. It sits inside this panel as a secondary action: as a peer
+          of the coach box it read as a third route through the screen. btn-ghost
+          because the design system reserves the bordered block for the lesser of
+          two actions, and Go is the greater one. */}
       <button type="button" onClick={surpriseMe} className="btn-ghost mt-4">
         Surprise me
       </button>
@@ -249,108 +280,74 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
       {reply && (
         <p key={reply} className="hint-in mt-5 pl-1 text-[14px] font-medium text-on-surface">{reply}</p>
       )}
+      </div>
 
-      {/* ---- manual controls: same power, folded away once the coach answers ---- */}
-      <div className="mt-8 border-t border-outline-variant pt-5">
-        <button
-          type="button"
-          onClick={() => setManualOpen((o) => !o)}
-          aria-expanded={manualOpen}
-          aria-controls="manual-controls"
-          className="pressable flex w-full items-center justify-between gap-3 text-left"
-        >
-          <span className="min-w-0">
-            {/* h-card, not eyebrow. This is a section heading and the rows inside it
-                (How long, Working on…) are eyebrows — when both were eyebrows there
-                was no hierarchy, just two sizes of the same shout. */}
-            <span className="h-card block text-on-surface">Build your session</span>
-            {/* The summary appears only once a session exists. Showing it before
-                that surfaced the default "20 min" against nothing the player had
-                chosen, which read as a leftover rather than an answer. */}
-            {!manualOpen && built && summary && (
-              <span className="mt-1 block truncate text-[13.5px] font-medium text-on-surface-variant">
-                {summary}
-              </span>
-            )}
-          </span>
-          <svg viewBox="0 0 24 24" aria-hidden="true"
-               className={`h-5 w-5 shrink-0 text-on-surface-variant transition-transform duration-200
-                           ${manualOpen ? 'rotate-180' : ''}`}
-               fill="none" stroke="currentColor" strokeWidth="2.4"
-               strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
+      {/* ---- build it yourself: the same power, asked for directly ---- */}
+      <div id="panel-diy" role="tabpanel" aria-labelledby="tab-diy" hidden={mode !== 'diy'}>
+        <p className="mt-5 text-[15px] leading-relaxed text-on-surface-variant">
+          Pick your time and what you want to work on. Everything else is optional.
+        </p>
 
-        {/* No entrance animation. animate-pop scales from .97, which on a block this
-            tall reads as the whole section flinching when you open it. */}
-        {manualOpen && (
-          <div id="manual-controls">
             <div className="mt-7 space-y-7">
               <Row label="How long">
                 {MINUTES.map((m) => (
-                  <button key={m} onClick={() => { const n = { ...spec, minutes: m }; setSpec(n); build(n); }}
-                    className={`chip ${spec.minutes === m ? 'chip-on' : ''}`}>
+                  <Chip key={m} on={spec.minutes === m} label={`${m} minutes`}
+                    onClick={() => { const n = { ...spec, minutes: m }; setSpec(n); build(n); }}>
                     {m}<span className="ml-0.5 opacity-60">min</span>
-                  </button>
+                  </Chip>
                 ))}
               </Row>
 
               <Row label="Working on">
                 {/* Catch-all first, matching "Anywhere" in the row below. */}
-                <button onClick={chooseAny} className={`chip ${anyFocus ? 'chip-on' : ''}`}>
-                  Anything
-                </button>
+                <Chip on={anyFocus} onClick={chooseAny}>Anything</Chip>
                 {(Object.keys(FOCUS_LABELS) as FocusArea[]).map((f) => (
-                  <button key={f} onClick={() => toggleFocus(f)}
-                    className={`chip ${!anyFocus && spec.focus?.includes(f) ? 'chip-on' : ''}`}>
+                  <Chip key={f} on={!anyFocus && !!spec.focus?.includes(f)}
+                        onClick={() => toggleFocus(f)}>
                     {FOCUS_LABELS[f]}
-                  </button>
+                  </Chip>
                 ))}
               </Row>
 
               <div className="grid grid-cols-1 gap-7 sm:grid-cols-2">
                 <Row label="Where">
                   {PLACES.map(([v, l]) => (
-                    <button key={v} onClick={() => { const n = { ...spec, place: v }; setSpec(n); build(n); }}
-                      className={`chip ${spec.place === v ? 'chip-on' : ''}`}>{l}</button>
+                    <Chip key={v} on={spec.place === v}
+                      onClick={() => { const n = { ...spec, place: v }; setSpec(n); build(n); }}>{l}</Chip>
                   ))}
                 </Row>
                 <Row label="Priority">
                   {(['touches', 'balanced'] as const).map((p) => (
-                    <button key={p} onClick={() => { const n = { ...spec, priority: p }; setSpec(n); build(n); }}
-                      className={`chip ${spec.priority === p ? 'chip-on' : ''}`}>
+                    <Chip key={p} on={spec.priority === p}
+                      onClick={() => { const n = { ...spec, priority: p }; setSpec(n); build(n); }}>
                       {p === 'touches' ? 'Max touches' : 'Balanced'}
-                    </button>
+                    </Chip>
                   ))}
                 </Row>
               </div>
             </div>
 
-            {/* The arrow is doing real work: on a light page a filled block plus a
-                direction glyph reads as "press me" faster than colour alone ever did. */}
-            <button
-              onClick={() => { if (build()) setPendingScroll(true); }}
-              disabled={!ready}
-              className="btn-primary mt-8 w-full"
-            >
-              Build
-              {ready && (
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor"
-                     strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M5 12h13M13 6l6 6-6 6" />
-                </svg>
-              )}
-            </button>
-          </div>
-        )}
+        {/* The arrow is doing real work: on a light page a filled block plus a
+            direction glyph reads as "press me" faster than colour alone ever did. */}
+        <button
+          onClick={() => { if (build()) setPendingScroll(true); }}
+          disabled={!ready}
+          className="btn-primary mt-8 w-full"
+        >
+          Build
+          {ready && (
+            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor"
+                 strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6" />
+            </svg>
+          )}
+        </button>
       </div>
 
+      {/* Outside both panels, deliberately: switching mode must not clear a
+          session you already have. It belongs to neither input. */}
       {built && (
         <div ref={sessionRef} className="mt-10 scroll-mt-5 animate-pop">
-          {/* Same level as "Or set it yourself", so the page reads as two sections
-              under the coach rather than one long undifferentiated column. The card
-              itself no longer repeats this label inside its own box. */}
           <h2 className="h-card mb-3.5">Your session</h2>
           <SessionCard built={built}
             onSwap={(i) => setBuilt(swapDrill(exercises, built, i))}
