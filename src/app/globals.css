@@ -508,11 +508,15 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    with secondary-container instead — and the reason the old objection does
    not apply is that secondary-container is a pale tone-90 fill, not ink:
    #3C4858 on #D7E3F8 is 7.18:1, so a selected chip is more legible than an
-   unselected one, not less. The checkmark carries the state for anyone who
-   cannot separate the two by colour, which the border-only version never did.
+   unselected one, not less.
 
-   The old note about border width is now moot — selected chips have no border
-   at all, so nothing rewraps under your thumb on select.
+   The fill alone was not enough: dropping the border on select made the
+   selected chip lose its edge, and #D7E3F8 against the near-white surface it
+   sits on is a 1.1:1 boundary — the state was carried by a difference you have
+   to hunt for. The selected chip keeps a border, now drawn in
+   on-secondary-container: the label's own ink, so the outline reads as part of
+   the selected block rather than as a second colour. It is still 1px, so
+   nothing rewraps under your thumb on select.
 
    Chips stay at 44px rather than M3's 32dp: M3 gets to its 48dp touch target
    with an invisible overlay, which is the right call in a component library
@@ -531,7 +535,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 }
 .chip .chip-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
 .chip-on, .chip-on:hover {
-  border-color: transparent;
+  border-color: var(--md-sys-color-on-secondary-container);
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
 }
@@ -599,7 +603,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-surface-variant);
 }
 .day-on {
-  border-color: transparent;
+  border-color: var(--md-sys-color-on-secondary-container);
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
 }
