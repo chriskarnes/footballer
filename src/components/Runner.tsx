@@ -5,12 +5,16 @@ import { FOCUS_LABELS, TOUCH_GOAL } from '@/lib/types';
 import { formatTouches } from '@/lib/session-builder';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
+import { BackLink } from './BackLink';
 
 export function Runner({
-  title, subtitle, drills, workoutId, sessionRef,
+  title, subtitle, drills, workoutId, sessionRef, back,
 }: {
   title: string; subtitle: string; drills: Exercise[];
   workoutId?: string; sessionRef?: string;
+  /** Where this session was opened from. The runner fills the screen and the tab
+   *  bar does not lead back to the program, so without this it is a dead end. */
+  back?: { href: string; label: string };
 }) {
   const [done, setDone] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState(false);
@@ -50,6 +54,7 @@ export function Runner({
 
   return (
     <div className="animate-pop">
+      {back && <BackLink href={back.href} label={back.label} />}
       <p className="eyebrow mb-3">{subtitle}</p>
       <h1 className="h-page">{title}</h1>
 

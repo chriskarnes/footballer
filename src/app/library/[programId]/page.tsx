@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getExercises, getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
+import { BackLink } from '@/components/BackLink';
 
 export default async function ProgramPage({ params }: { params: Promise<{ programId: string }> }) {
   const { programId } = await params;
@@ -16,20 +17,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
 
   return (
     <div className="animate-pop">
-      {/* This is the whole reason a program can be a page rather than a sheet, so
-          it is a real control: 44px of tappable height, its own outline, at the
-          top-left where a back affordance is looked for. The previous version was
-          13px of text with a 14px chevron — findable, but not reliably hittable. */}
-      <Link href="/library" aria-label="Back to Library"
-        className="pressable mb-6 inline-flex min-h-11 items-center gap-1.5 rounded-full
-                   border border-outline pl-3 pr-4 text-[13px] font-bold text-on-surface-variant
-                   hover:text-on-surface">
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor"
-             strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        Library
-      </Link>
+      <BackLink href="/library" label="Library" />
 
       <p className="eyebrow mb-3">{program.level}</p>
       <h1 className="h-page">{program.name}</h1>
