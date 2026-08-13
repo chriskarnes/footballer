@@ -1,124 +1,107 @@
-# Get it live for testing — today
+# Deploying Forge
 
-Goal: a real HTTPS URL on your own domain that you can open on your phone and hand to a
-coach. **Fifteen minutes, free, no database, no API key.**
+**Deploying is `git push`.** The Vercel project is connected to this repo, so any
+push to `main` builds and goes live on its own. There is no deploy command to run
+and no dashboard step.
 
-Everything works without a single environment variable: Train Now (the buttons), the whole
-786-drill library, the session runner, touch banking, offline. Two things are off until
-later — history/sign-in (needs Supabase) and the free-text box (needs an Anthropic key).
-Neither blocks testing.
-
-> **Use Vercel, not Netlify.** You have both, and Netlify runs Next fine, but Vercel builds
-> Next with zero configuration — no adapter plugin, no build settings, no lag behind new
-> Next releases. This repo is Next 16. Take the shorter path.
+Live: **https://demo.train.futbol**
 
 ---
 
-## 1. Push it to GitHub (5 min)
-
-Unzip the repo, open a terminal in that folder, and:
+## The whole procedure
 
 ```bash
-git init
+export PATH="$HOME/.nvm/versions/node/v22.23.2/bin:$PATH"
+npm run build          # must pass before you push
 git add -A
-git commit -m "Forge"
+git commit -m "what changed"
+git push origin main
 ```
 
-You do **not** need to `npm install` for this — Vercel installs and builds on its own. Only
-run it if you want `npm run dev` locally too.
+Ready in about 20 seconds.
 
-Make an empty repo at [github.com/new](https://github.com/new) — private is fine — then
-paste the two lines GitHub shows you under *"…or push an existing repository"*:
+### The PATH line is not optional
+
+`/usr/local/bin/node` on this machine is **v0.12.5, built in 2015**, and it comes
+first on `PATH`. Nothing in this repo builds with it — `npm install`, `npm run
+build` and `npm run seed` all fail in confusing ways. Export the nvm path first,
+in every shell, or the errors will look like code problems.
+
+### Build before you push
+
+Vercel builds on its own, but a failure there is a broken deploy you find out
+about a minute later. `npm run build` runs the same compile and TypeScript pass
+locally in a couple of seconds. It is the whole safety net.
+
+---
+
+## Checking it worked
 
 ```bash
-git remote add origin https://github.com/YOUR-NAME/forge-training.git
-git branch -M main
-git push -u origin main
+npx vercel@latest ls footballer --scope i250
 ```
 
-## 2. Deploy (3 min)
+The newest row should read `● Ready`. Then confirm the live domain is actually
+serving the change — a green deploy only means it compiled:
 
-1. [vercel.com/new](https://vercel.com/new) → sign in with GitHub.
-2. Find `forge-training` → **Import**.
-3. **Change nothing.** Framework is detected, build settings are correct, there are no
-   environment variables to add yet.
-4. **Deploy.**
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' https://demo.train.futbol
+curl -sS https://demo.train.futbol | grep -o 'some text you just added'
+```
 
-Ninety seconds later you have `forge-training.vercel.app` on HTTPS. Open it on your phone
-right now — that URL alone is enough to test with.
-
-Every `git push` to `main` redeploys from here on.
-
-## 3. Put it on your domain (5 min + DNS)
-
-**Use a subdomain, not the apex.** `train.yourdomain.com` or `forge.yourdomain.com`. It
-keeps your main site untouched, it's a single CNAME instead of an A record, and it reads
-fine to a parent. You can always move it later.
-
-1. Vercel → your project → **Settings → Domains → Add**.
-2. Type `train.yourdomain.com`.
-3. Vercel shows you a **CNAME** value. **Copy the one it shows you** — it's unique per
-   project and looks like `d1d4fc829fe7bc7c.vercel-dns-017.com`. Old blog posts tell you to
-   use `cname.vercel-dns.com`; that is not what your project needs.
-4. At your registrar, add:
-
-   | Type | Name | Value |
-   |---|---|---|
-   | CNAME | `train` | *(the value Vercel showed you)* |
-
-5. Wait. Usually minutes, occasionally an hour. Vercel flips the domain to **Valid
-   Configuration** on its own and issues the certificate.
-
-If you'd rather use the apex (`yourdomain.com`), Vercel gives you an **A** record instead —
-same idea, copy the value from the dashboard rather than from anywhere else.
+Grep for something you changed. "It returned 200" is not evidence your change
+shipped; the previous build also returns 200.
 
 ---
 
-## Test it on the phone
+## Environment variables
 
-Open the URL in Safari on your iPhone and check the things that are easy to get wrong:
+Four are already set in Vercel, for Production and Preview:
 
-- The header sits **below** the notch, and the floating tab bar sits **above** the home
-  indicator.
-- **Drag down hard at the top.** Nothing should bounce or reload.
-- **Press and hold a chip.** No blue selection, no copy/paste bubble.
-- **Double-tap the page.** It shouldn't zoom.
-- **Tap into the "20 minutes, first touch" box.** The page must not zoom in and stay there.
-- Pick a time and a focus, hit a session, and **leave the phone alone for two minutes** —
-  the screen should stay awake.
-- Turn on airplane mode and reload. You should get the Forge offline screen, not Safari's.
-- Visit three times. On the third, the *Add to Home Screen* card appears. Dismiss it and it
-  never comes back.
+| Variable | What it is |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public key, safe in the browser bundle |
+| `SUPABASE_SERVICE_ROLE_KEY` | **bypasses row-level security** — server only, never `NEXT_PUBLIC_` |
+| `ANTHROPIC_API_KEY` | the coach box |
 
-## Four things that will confuse you if nobody warns you
+**Environment variables only apply to new builds.** Adding or changing one does
+nothing until you redeploy — Vercel → Deployments → ⋯ → Redeploy. This catches
+everyone once.
 
-**Testing over your local network won't show the real thing.** Service workers and the
-screen wake lock require HTTPS. `localhost` counts as secure, but `192.168.x.x:3000` on
-your phone does not — so offline mode and the wake lock will silently do nothing. Test on
-the deployed URL, not your laptop's IP.
+To see which are set without revealing values:
 
-**If a tester hits a Vercel login screen**, that's Deployment Protection. It guards preview
-URLs (the long `…-git-main-….vercel.app` ones). Send people your custom domain, or turn it
-off under **Settings → Deployment Protection**.
+```bash
+npx vercel@latest env ls --scope i250 --project footballer
+```
 
-**Environment variables only apply to new builds.** Add one and nothing changes until you
-**Deployments → ⋯ → Redeploy**. This catches everyone once.
-
-**The service worker caches static assets.** Pages are always fetched fresh, so you'll
-normally see your changes immediately. If a phone ever seems stuck on an old build:
-iPhone → Settings → Safari → Advanced → Website Data → remove the site. Desktop Chrome →
-DevTools → Application → Service Workers → Unregister.
+Locally the same values live in `.env.local`, which is gitignored.
 
 ---
 
-## When you want more
+## Things that will confuse you
 
-**Accounts, history and "do it again"** — `SETUP.md` Stage 2. Supabase, about fifteen
-minutes, still free. Remember to add `NEXT_PUBLIC_SITE_URL` and the
-`/auth/callback` redirect URL using your **custom domain**, not the vercel.app one.
+**Preview URLs ask you to log in.** The `*.vercel.app` URLs sit behind Vercel
+Authentication because this is a team account. That is expected. Custom
+production domains are exempt, which is why `demo.train.futbol` is the link to
+hand to anyone else.
 
-**The free-text coach box** — add `ANTHROPIC_API_KEY` in Vercel and redeploy. About a tenth
-of a cent per message. Without it the box politely tells players to use the buttons.
+**The service worker caches static assets.** Pages are always fetched fresh, so
+changes normally appear immediately. If a phone seems stuck on an old build:
+iPhone → Settings → Safari → Advanced → Website Data → remove the site. Desktop
+Chrome → DevTools → Application → Service Workers → Unregister.
 
-**Before real families use it** — `LAUNCH.md`. The COPPA question about who owns a child's
-account is the one to settle early, because it changes signup.
+**`AGENTS.md` and `CLAUDE.md` are generated by `next dev`.** They reappear as
+untracked files every time the dev server runs. Commit them or ignore them, but
+do not be surprised by them.
+
+**Don't reach for `npx vercel --prod`.** It works, but it uploads your local
+working tree instead of building from the commit, so the live site can end up
+ahead of or behind `main` with nothing recording the difference. Push instead.
+
+---
+
+## Rolling back
+
+Vercel → Deployments → find the last good one → ⋯ → **Promote to Production**.
+Instant, and it does not touch the repo. Fix forward in git afterwards.
