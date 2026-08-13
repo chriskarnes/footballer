@@ -54,33 +54,33 @@ export function Runner({
       <h1 className="h-page">{title}</h1>
 
       {/* live progress, dark so the number carries */}
-      <div className="mt-6 rounded-card bg-ink p-6 shadow-lift">
+      <div className="mt-6 rounded-large-increased bg-inverse-surface p-6 shadow-level3">
         <div className="flex items-end justify-between">
           <div>
-            <div className="font-display text-[40px] font-extrabold leading-none
-                            tracking-tightest text-gold">
+            <div className="font-brand text-[40px] font-extrabold leading-none
+                            tracking-tightest text-inverse-primary">
               {formatTouches(doneTouches).replace('~', '')}
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-white/55">touches banked</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-forge-inverse-on-surface-variant">touches banked</div>
           </div>
           <div className="text-right">
-            <div className="font-display text-[20px] font-bold tracking-tighter text-white">
-              {done.size}<span className="text-white/40">/{drills.length}</span>
+            <div className="font-brand text-[20px] font-bold tracking-tighter text-inverse-on-surface">
+              {done.size}<span className="text-forge-inverse-on-surface-variant">/{drills.length}</span>
             </div>
-            <div className="mt-1 text-[11.5px] font-semibold text-white/45">
+            <div className="mt-1 text-[11.5px] font-semibold text-forge-inverse-on-surface-variant">
               of {formatTouches(totalTouches)}
             </div>
           </div>
         </div>
-        <div className="mt-5 h-[6px] overflow-hidden rounded-pill bg-white/12">
-          <div className="h-full rounded-pill bg-gold transition-all duration-500"
+        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-forge-inverse-outline-variant">
+          <div className="h-full rounded-full bg-inverse-primary transition-all duration-500"
                style={{ width: `${pct}%` }} />
         </div>
         {allDone && !saved && (
           <button onClick={finish} className="btn-gold mt-5 w-full">Finish session</button>
         )}
         {saved && (
-          <p className="mt-5 text-center text-[14px] font-bold text-gold">Saved to your history</p>
+          <p className="mt-5 text-center text-[14px] font-bold text-inverse-primary">Saved to your history</p>
         )}
       </div>
 
@@ -97,16 +97,16 @@ export function Runner({
                             ${on ? 'opacity-45' : ''}`}>
               <div className={`mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center
                                rounded-[9px] border-2 transition
-                               ${on ? 'border-gold bg-gold' : 'border-line bg-surface2'}`}>
+                               ${on ? 'border-inverse-primary bg-inverse-primary' : 'border-outline-variant bg-surface-container-low'}`}>
                 {on && (
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-ink" fill="none"
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-on-surface" fill="none"
                        stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"
                        strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className={`h-card ${on ? 'line-through' : ''}`}>{d.name}</div>
-                <div className="mt-1 text-[12.5px] font-medium text-muted">
+                <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
                   {d.sets} × {d.reps_time}{d.rest && d.rest !== '-' ? ` · rest ${d.rest}` : ''}
                 </div>
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -118,7 +118,7 @@ export function Runner({
                 <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"
                    onClick={(e) => e.stopPropagation()}
                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
-                              bg-surface2 text-body transition active:scale-90">
+                              bg-surface-container-low text-on-surface transition active:scale-90">
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                   </svg>

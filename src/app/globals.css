@@ -2,18 +2,344 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   MATERIAL DESIGN 3 TOKEN LAYER  —  migration stage 1 of 3
+   ==========================================================================
+   Ported verbatim from design/forge-harness-m3.html. Tokens only: no
+   component in this file consumes them yet, that is stage 2.
+
+   This project is on Tailwind v3 (3.4.19), so there is no `@theme` block —
+   the custom properties live here and tailwind.config.ts maps utility names
+   onto them, which is the v3 equivalent.
+
+   The legacy Forge palette below this block is still live and still the thing
+   every component reads. It is deleted in stage 2, once the call sites move.
+   ========================================================================== */
+
+/* ==========================================================================
+   MD.REF — reference layer. Primitives. Never referenced by a component.
+   The palettes below were generated with Google's material-color-utilities
+   from a single source hue: HCT 255, chroma 42. One hue covers the whole
+   brief — tone 14 is the dark navy, tone 85 is the powder blue, and every
+   step between them falls out of the same ramp, which is why the scheme
+   holds together without anyone picking shades by eye.
+   Neutrals are the same hue at chroma 3, so the greys read cool and clean
+   rather than dead. Tertiary is held at hue 225 instead of M3's default
+   hue+60, which would have landed on magenta and broken the brief.
+   ========================================================================== */
 :root {
-  color-scheme: light;
-  --font-display: 'Sora Variable', system-ui, sans-serif;
-  --font-text: 'Plus Jakarta Sans Variable', system-ui, sans-serif;
+  /* Self-hosted via @fontsource-variable, which names its families
+     "<Name> Variable" — the bare "Roboto Flex" the harness ships resolves to
+     nothing here and falls through to system-ui, silently. The plain names are
+     kept as the second step so a Google Fonts <link> would also satisfy this.
+
+     roboto-flex is imported from `wdth.css`, not `index.css`: the typescale
+     sets font-stretch and only the wdth build carries that axis. It is also
+     58KB against standard's 243KB. The cost is the opsz axis, so
+     `font-optical-sizing` below is inert until someone wants that trade. */
+  --md-ref-typeface-brand: 'Roboto Flex Variable', 'Roboto Flex', system-ui, sans-serif;
+  --md-ref-typeface-plain: 'Noto Sans Variable', 'Noto Sans', system-ui, sans-serif;
 }
+
+/* ==========================================================================
+   MD.SYS.COLOR — LIGHT
+   Every value here is generated. The gold and ink that used to override the
+   algorithm are gone, so nothing in this block is hand-picked any more.
+   Contrast was checked pair by pair: the tightest is `outline` at 4.27:1,
+   which clears the 3:1 WCAG asks of a control boundary; every text pair is
+   above 6:1.
+   ========================================================================== */
+:root {
+  --md-sys-color-primary:                   #286199;
+  --md-sys-color-on-primary:                #FFFFFF;
+  --md-sys-color-primary-container:         #D2E4FF;
+  --md-sys-color-on-primary-container:      #00497F;
+
+  --md-sys-color-secondary:                 #535F70;
+  --md-sys-color-on-secondary:              #FFFFFF;
+  --md-sys-color-secondary-container:       #D7E3F8;
+  --md-sys-color-on-secondary-container:    #3C4858;
+
+  --md-sys-color-tertiary:                  #336577;
+  --md-sys-color-on-tertiary:               #FFFFFF;
+  --md-sys-color-tertiary-container:        #B9EAFF;
+  --md-sys-color-on-tertiary-container:     #164D5E;
+
+  --md-sys-color-error:                     #BA1A1A;
+  --md-sys-color-on-error:                  #FFFFFF;
+  --md-sys-color-error-container:           #FFDAD6;
+  --md-sys-color-on-error-container:        #93000A;
+
+  --md-sys-color-surface:                   #FAF9FB;
+  --md-sys-color-on-surface:                #1B1C1D;
+  --md-sys-color-surface-variant:           #E0E2EA;
+  --md-sys-color-on-surface-variant:        #43474D;
+
+  --md-sys-color-surface-container-lowest:  #FFFFFF;
+  --md-sys-color-surface-container-low:     #F5F3F5;
+  --md-sys-color-surface-container:         #EFEDF0;
+  --md-sys-color-surface-container-high:    #E9E7EA;
+  --md-sys-color-surface-container-highest: #E3E2E4;
+  --md-sys-color-surface-dim:               #DBD9DC;
+  --md-sys-color-surface-bright:            #FAF9FB;
+
+  --md-sys-color-outline:                   #74777E;
+  --md-sys-color-outline-variant:           #C4C6CE;
+
+  --md-sys-color-inverse-surface:           #002544;
+  --md-sys-color-inverse-on-surface:        #F2F0F3;
+  --md-sys-color-inverse-primary:           #B9D7FF;
+
+  --md-sys-color-scrim:                     #000000;
+  --md-sys-color-shadow:                    #000000;
+}
+
+/* ==========================================================================
+   MD.SYS.COLOR — DARK
+   Forge had no dark scheme. This one is entirely generated; nothing here has
+   ever been eyeballed on a device.
+   ========================================================================== */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark;
+  --md-sys-color-primary:                   #A0C9FF;
+  --md-sys-color-on-primary:                #003259;
+  --md-sys-color-primary-container:         #00497F;
+  --md-sys-color-on-primary-container:      #D2E4FF;
+  --md-sys-color-secondary:                 #BBC7DB;
+  --md-sys-color-on-secondary:              #253141;
+  --md-sys-color-secondary-container:       #3C4858;
+  --md-sys-color-on-secondary-container:    #D7E3F8;
+  --md-sys-color-tertiary:                  #9CCEE3;
+  --md-sys-color-on-tertiary:               #003544;
+  --md-sys-color-tertiary-container:        #164D5E;
+  --md-sys-color-on-tertiary-container:     #B9EAFF;
+  --md-sys-color-error:                     #FFB4AB;
+  --md-sys-color-on-error:                  #690005;
+  --md-sys-color-error-container:           #93000A;
+  --md-sys-color-on-error-container:        #FFDAD6;
+  --md-sys-color-surface:                   #121315;
+  --md-sys-color-on-surface:                #E3E2E4;
+  --md-sys-color-surface-variant:           #43474D;
+  --md-sys-color-on-surface-variant:        #C4C6CE;
+  --md-sys-color-surface-container-lowest:  #0D0E10;
+  --md-sys-color-surface-container-low:     #1B1C1D;
+  --md-sys-color-surface-container:         #1F2022;
+  --md-sys-color-surface-container-high:    #292A2C;
+  --md-sys-color-surface-container-highest: #343537;
+  --md-sys-color-surface-dim:               #121315;
+  --md-sys-color-surface-bright:            #38393B;
+  --md-sys-color-outline:                   #8E9198;
+  --md-sys-color-outline-variant:           #43474D;
+  --md-sys-color-inverse-surface:           #D2E4FF;
+  --md-sys-color-inverse-on-surface:        #003259;
+  --md-sys-color-inverse-primary:           #286199;
+  --forge-inverse-on-surface-variant:       #286199;
+  --forge-inverse-outline-variant:          #7CAEEB;
+} }
+
+:root[data-theme="dark"] { color-scheme: dark;
+  --md-sys-color-primary:                   #A0C9FF;
+  --md-sys-color-on-primary:                #003259;
+  --md-sys-color-primary-container:         #00497F;
+  --md-sys-color-on-primary-container:      #D2E4FF;
+  --md-sys-color-secondary:                 #BBC7DB;
+  --md-sys-color-on-secondary:              #253141;
+  --md-sys-color-secondary-container:       #3C4858;
+  --md-sys-color-on-secondary-container:    #D7E3F8;
+  --md-sys-color-tertiary:                  #9CCEE3;
+  --md-sys-color-on-tertiary:               #003544;
+  --md-sys-color-tertiary-container:        #164D5E;
+  --md-sys-color-on-tertiary-container:     #B9EAFF;
+  --md-sys-color-error:                     #FFB4AB;
+  --md-sys-color-on-error:                  #690005;
+  --md-sys-color-error-container:           #93000A;
+  --md-sys-color-on-error-container:        #FFDAD6;
+  --md-sys-color-surface:                   #121315;
+  --md-sys-color-on-surface:                #E3E2E4;
+  --md-sys-color-surface-variant:           #43474D;
+  --md-sys-color-on-surface-variant:        #C4C6CE;
+  --md-sys-color-surface-container-lowest:  #0D0E10;
+  --md-sys-color-surface-container-low:     #1B1C1D;
+  --md-sys-color-surface-container:         #1F2022;
+  --md-sys-color-surface-container-high:    #292A2C;
+  --md-sys-color-surface-container-highest: #343537;
+  --md-sys-color-surface-dim:               #121315;
+  --md-sys-color-surface-bright:            #38393B;
+  --md-sys-color-outline:                   #8E9198;
+  --md-sys-color-outline-variant:           #43474D;
+  --md-sys-color-inverse-surface:           #D2E4FF;
+  --md-sys-color-inverse-on-surface:        #003259;
+  --md-sys-color-inverse-primary:           #286199;
+  --forge-inverse-on-surface-variant:       #286199;
+  --forge-inverse-outline-variant:          #7CAEEB;
+}
+
+/* ==========================================================================
+   FORGE EXTENSIONS — deliberately NOT named md.sys, because M3 does not
+   define these. Namespaced so it stays obvious which tokens you own.
+
+   M3 has no "on-inverse-surface-variant" role: the navy cards need a second,
+   quieter text colour and the spec offers only one. The old file used
+   rgba(255,255,255,.45–.6), which M3 rules out — alpha text breaks the
+   contrast guarantee the token system exists to provide. These are solid
+   tones from the primary ramp (tone 70 / tone 30), 6.8:1 on navy.
+   ========================================================================== */
+:root {
+  --forge-inverse-on-surface-variant: #7CAEEB;
+  --forge-inverse-outline-variant:    #00497F;
+  /* Retuned for Roboto Flex. Sora is a narrow geometric that tolerated
+     -0.045em; Roboto Flex is a grotesque with wider sidebearings and the same
+     value collided at display sizes. The compactness is recovered on the
+     wdth axis instead — see the -width tokens below — which is closer to what
+     Sora was doing anyway, and only Roboto Flex can do it. */
+  --forge-track-tightest: -0.02em;
+  --forge-track-tighter:  -0.005em;
+
+  /* The three Library category cards were green / blue / gold, which no
+     longer fits. Rather than three tones of one blue — which would have made
+     the categories hard to tell apart at a glance — each takes a different
+     ramp that is still inside the brief: primary navy, tertiary cyan-blue,
+     and neutral-variant slate. Distinct hues, one family.
+     M3's proper mechanism is a custom colour per category, each with its own
+     tonal palette and container roles. That is still the next job. */
+  --forge-category-technical:     #00497F;   /* primary,   tone 30 */
+  --forge-category-technical-dim: #00294B;   /* primary,   tone 16 */
+  --forge-category-physical:      #225668;   /* tertiary,  tone 34 */
+  --forge-category-physical-dim:  #003A4A;   /* tertiary,  tone 22 */
+  --forge-category-finishing:     #2E669E;   /* primary,   tone 42 */
+  --forge-category-finishing-dim: #00497F;   /* primary,   tone 30 */
+  --forge-on-category:            #FFFFFF;
+  /* Fixed, not scheme-following: the gradients above do not flip, so text on
+     them must not either. This was the one real bug the dark scheme exposed —
+     the subtext had been reusing an inverse role and went black-on-green. */
+  --forge-on-category-variant:    #DCE9FF;
+}
+
+/* ==========================================================================
+   MD.SYS.TYPESCALE — M3 role names, Forge's values.
+   The scale is a set of roles, not a set of numbers, so the names port
+   cleanly while the sizes and the tightening tracking stay Forge's. Adopting
+   M3's own values would have loosened every headline: the spec sets display
+   and headline tracking at or near 0, against Forge's -0.045em.
+   Role mapping:  h-hero -> headline-large   h-page  -> headline-small
+                  h-card -> title-medium     eyebrow -> label-small
+   ========================================================================== */
+:root {
+  --md-sys-typescale-headline-large-font:        var(--md-ref-typeface-brand);
+  --md-sys-typescale-headline-large-size:        34px;   /* spec 32 */
+  --md-sys-typescale-headline-large-weight:      800;
+  --md-sys-typescale-headline-large-width:       96%;
+  --md-sys-typescale-headline-large-line-height: 1.05;
+  --md-sys-typescale-headline-large-tracking:    -0.015em;
+
+  --md-sys-typescale-headline-small-font:        var(--md-ref-typeface-brand);
+  --md-sys-typescale-headline-small-size:        27px;   /* spec 24 */
+  --md-sys-typescale-headline-small-weight:      700;
+  --md-sys-typescale-headline-small-width:       97%;
+  --md-sys-typescale-headline-small-line-height: 1.25;
+  --md-sys-typescale-headline-small-tracking:    -0.01em;
+
+  --md-sys-typescale-title-medium-font:          var(--md-ref-typeface-brand);
+  --md-sys-typescale-title-medium-size:          17px;   /* spec 16 */
+  --md-sys-typescale-title-medium-weight:        700;
+  --md-sys-typescale-title-medium-width:         100%;
+  --md-sys-typescale-title-medium-line-height:   1.375;
+  --md-sys-typescale-title-medium-tracking:      -0.005em;
+
+  --md-sys-typescale-label-small-font:           var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-small-size:           11px;   /* spec 11 — exact match */
+  --md-sys-typescale-label-small-weight:         700;
+  --md-sys-typescale-label-small-tracking:       0.14em;
+
+  --md-sys-typescale-label-large-font:           var(--md-ref-typeface-plain);
+  --md-sys-typescale-label-large-size:           14px;
+  --md-sys-typescale-label-large-weight:         600;
+
+  --md-sys-typescale-body-large-font:            var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-large-size:            15px;
+  --md-sys-typescale-body-large-line-height:     1.6;
+
+  --md-sys-typescale-body-medium-font:           var(--md-ref-typeface-plain);
+  --md-sys-typescale-body-medium-size:           13.5px;
+  --md-sys-typescale-body-medium-line-height:    1.55;
+}
+
+/* ==========================================================================
+   MD.SYS.SHAPE — the full M3 scale. Forge used three of the seven steps.
+   --r-card was 22px and now snaps to the Expressive large-increased token at
+   20px; the 2px is not visible and it buys a named step.
+   --r-btn 16px is already exactly corner-large. M3 buttons default to `full`
+   (pill); the 16px rectangle is Expressive's square button variant, kept
+   because it is what makes .btn-primary read as a block rather than a chip.
+   ========================================================================== */
+:root {
+  --md-sys-shape-corner-none:            0;
+  --md-sys-shape-corner-extra-small:     4px;
+  --md-sys-shape-corner-small:           8px;
+  --md-sys-shape-corner-medium:          12px;
+  --md-sys-shape-corner-large:           16px;   /* Forge --r-btn  */
+  --md-sys-shape-corner-large-increased: 20px;   /* Forge --r-card, was 22px */
+  --md-sys-shape-corner-extra-large:     28px;
+  --md-sys-shape-corner-full:            999px;  /* Forge --r-pill */
+}
+
+/* ==========================================================================
+   MD.SYS.ELEVATION — six levels. Forge had four shadows doing three jobs.
+   M3 prefers tonal elevation (a higher surface-container) over drop shadows,
+   which is why the level tokens are mostly unused below: .card is level 1,
+   the nav bar is level 2, and every control sits at level 0. That was already
+   Forge's rule — "nothing here casts a shadow" — so it survives unchanged.
+   --shadow-gold is retired: it had no M3 equivalent and no remaining callers.
+   ========================================================================== */
+:root {
+  --md-sys-elevation-level0: none;
+  --md-sys-elevation-level1: 0 1px 2px rgba(18,18,15,.04), 0 8px 24px -12px rgba(18,18,15,.10);
+  --md-sys-elevation-level2: 0 4px 12px rgba(18,18,15,.06), 0 20px 48px -20px rgba(18,18,15,.30);
+  --md-sys-elevation-level3: 0 2px 4px rgba(18,18,15,.05), 0 18px 40px -16px rgba(18,18,15,.18);
+  --md-sys-elevation-level4: 0 3px 6px rgba(18,18,15,.06), 0 24px 56px -20px rgba(18,18,15,.22);
+  --md-sys-elevation-level5: 0 4px 8px rgba(18,18,15,.07), 0 32px 72px -24px rgba(18,18,15,.26);
+}
+
+/* ==========================================================================
+   MD.SYS.MOTION
+   M3 Expressive replaced easing-and-duration with spring physics, which CSS
+   cannot express; Material Web ships the same fallback used here. Forge's
+   single cubic-bezier(.16,1,.3,1) is kept as the emphasized-decelerate token
+   — it is close to the spec's (.05,.7,.1,1) and it is the curve the app was
+   tuned on.
+   ========================================================================== */
+:root {
+  --md-sys-motion-easing-standard:              cubic-bezier(.2, 0, 0, 1);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(.16, 1, .3, 1);  /* Forge --ease */
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(.3, 0, .8, .15);
+  --md-sys-motion-duration-short2:  100ms;
+  --md-sys-motion-duration-medium2: 300ms;
+  --md-sys-motion-duration-long2:   500ms;
+}
+
+/* ==========================================================================
+   MD.SYS.STATE — new. Forge had hover styles per component and no focus
+   styles at all, so keyboard users had nothing to follow.
+   ========================================================================== */
+:root {
+  --md-sys-state-hover-state-layer-opacity:   0.08;
+  --md-sys-state-focus-state-layer-opacity:   0.10;
+  --md-sys-state-pressed-state-layer-opacity: 0.10;
+}
+
+
+
+:root { color-scheme: light; }
+/* The dark blocks above also declare color-scheme: dark. That is now honest —
+   as of stage 3 the surfaces really do repaint — but it was a live bug for the
+   duration of stage 1, when the UA was told "dark" over a light page and every
+   unstyled control rendered near-black text on a near-black field. */
 
 /* ==========================================================================
    Native feel on the phone, with no install required.
 
    Everything in this block exists to remove a specific "this is a website"
    tell. They are small individually and the difference together is the whole
-   gap between a web page and an app.
+   gap between a web page and an app. Not part of the M3 system — kept as-is.
    ========================================================================== */
 
 html {
@@ -24,10 +350,10 @@ html {
 }
 
 body {
-  background: theme('colors.page');
-  color: theme('colors.body');
-  font-family: var(--font-text);
-  font-feature-settings: 'ss01', 'cv01';
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-family: var(--md-ref-typeface-plain);
+  font-optical-sizing: auto;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -52,10 +378,7 @@ input, textarea, [data-selectable] {
 }
 
 /* iOS zooms the entire page when a field smaller than 16px takes focus, and never
-   zooms back out. 16px is a floor, not a design choice.
-   Scoped to WebKit-on-iOS (`-webkit-touch-callout` is the standard sniff) so no other
-   platform inherits it, and !important because a Tailwind text-[…] class on the input
-   would otherwise win on specificity — this is patching a platform bug, not styling. */
+   zooms back out. 16px is a floor, not a design choice. */
 @supports (-webkit-touch-callout: none) {
   input, textarea, select { font-size: 16px !important; }
 }
@@ -70,124 +393,318 @@ input, textarea, [data-selectable] {
 .scroll-x { overflow-x: auto; }
 .scroll-y { overflow-y: auto; }
 
+/* ==========================================================================
+   LAYOUT UTILITIES — Forge-specific, no M3 equivalent. Kept from the original.
+   ========================================================================== */
 @layer components {
-  /* ---- type scale: display face only for headings, tight tracking ---- */
-  .h-hero  { @apply font-display text-[34px] font-extrabold leading-[1.05] tracking-tightest; }
-  .h-page  { @apply font-display text-[27px] font-bold leading-tight tracking-tighter; }
-  .h-card  { @apply font-display text-[17px] font-bold leading-snug tracking-tighter; }
-  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-faint; }
-
-  /* ---- safe areas: notch at the top, home indicator at the bottom ----
-     max() rather than a bare env(), so the padding is still right on a device
-     with no inset at all (Android, older phones, desktop). */
+  /* safe areas: notch at the top, home indicator at the bottom. max() rather
+     than a bare env(), so the padding is still right on a device with no inset. */
   .safe-t { padding-top: max(1.75rem, calc(env(safe-area-inset-top) + .5rem)); }
   .safe-b { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
   .safe-x { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
-
   /* Content has to clear the floating tab bar AND the home indicator under it. */
   .pad-nav { padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)); }
-
-  /* ---- pressed states ----
-     Touch has no hover, so the press is the only feedback there is. Fast in,
-     slower out, which is what iOS does. Defined before the controls that @apply it. */
-  .pressable {
-    transition: transform .32s cubic-bezier(.16,1,.3,1), opacity .32s, background-color .3s,
-                border-color .3s, color .3s;
-  }
-  .pressable:active { transform: scale(.965); transition-duration: .06s; }
-
-  /* ---- surfaces ---- */
-  .card { @apply rounded-card border border-line/70 bg-surface shadow-card; }
-  .card-flat { @apply rounded-card border border-line/70 bg-surface; }
-
-  /* ---- controls ----
-     Three jobs, three shapes that can't be mistaken for each other:
-
-       .chip         pill,  bordered, white   →  CHOOSE one of these
-       .btn-primary  block, solid ink         →  DO the thing
-       .btn-ghost    block, bordered          →  the lesser action
-
-     Two rules hold the system together. Selection is carried by BORDER and ink
-     colour, never by a fill — so a picked chip stays legible and never turns into
-     a black slab. And a filled block is only ever an action, which is what makes
-     the primary button read as pressable without needing a shadow to say so.
-
-     Nothing in here casts a shadow. A shadow that appears on press or hover is
-     noise on a phone, where there is no hover to explain it.
-
-     Every control clears 44px of tappable height — Apple's minimum, and the
-     difference between a kid hitting the chip they meant and the one beside it. */
-
-  .chip {
-    @apply pressable inline-flex min-h-11 cursor-pointer select-none items-center rounded-pill
-           border-[1.5px] border-line bg-surface px-4 text-[13.5px] font-semibold text-muted
-           hover:border-goldUi/60 hover:text-body;
-  }
-  /* Border WIDTH is identical in both states deliberately: stepping 1px → 2px on
-     select rewraps the whole row of chips under your thumb. Only the colour moves. */
-  .chip-on { @apply border-ink text-ink; }
-  .chip-on:hover { @apply border-ink; }
-
-  .btn-primary {
-    @apply pressable inline-flex min-h-[52px] items-center justify-center gap-2 rounded-btn
-           bg-ink px-6 font-display text-[16px] font-bold tracking-tighter text-gold
-           disabled:bg-surface2 disabled:text-muted;
-  }
-  /* Gold fill is now reserved for DARK surfaces, where it is the strongest contrast
-     available. The rule is "primary = the boldest fill this surface allows": that's
-     ink on the page, gold on the ink cards. Using it on white made the main action
-     look like one more chip. */
-  .btn-gold {
-    @apply pressable inline-flex min-h-[52px] items-center justify-center gap-2 rounded-btn
-           bg-gold px-6 font-display text-[16px] font-bold tracking-tighter text-ink
-           disabled:opacity-40;
-  }
-  .btn-ghost {
-    @apply pressable min-h-11 rounded-btn border-[1.5px] border-line bg-surface px-5 py-3.5
-           text-sm font-semibold text-body hover:border-goldUi/60;
-  }
-
-  /* ---- tags ---- */
-  .tag {
-    @apply rounded-lg bg-surface2 px-2 py-[3px] text-[11px] font-semibold text-muted;
-  }
-  .tag-gold { @apply bg-goldSoft text-goldText; }
-
-  /* ---- staggered entrance, capped so long lists don't crawl in ---- */
-  .stagger > * { @apply animate-rise; }
-  .stagger > *:nth-child(1) { animation-delay: 0ms }
-  .stagger > *:nth-child(2) { animation-delay: 45ms }
-  .stagger > *:nth-child(3) { animation-delay: 90ms }
-  .stagger > *:nth-child(4) { animation-delay: 135ms }
-  .stagger > *:nth-child(5) { animation-delay: 180ms }
-  .stagger > *:nth-child(n+6) { animation-delay: 215ms }
 }
 
-/* ---- route change ----
-   A screen that appears instantly reads as a page load; one that lifts in reads
-   as a push. 340ms, the same easing curve as everything else. */
-@keyframes pageIn {
-  from { opacity: 0; transform: translate3d(0, 10px, 0); }
-  to   { opacity: 1; transform: none; }
-}
-.page-in { animation: pageIn .34s cubic-bezier(.16, 1, .3, 1) both; }
+/* ==========================================================================
+   M3 COMPONENT LAYER  —  migration stage 2 of 3
+   Ported from design/forge-harness-m3.html. Outside @layer components so the
+   state layer and focus rules keep their specificity against Tailwind
+   utilities; these are components, not utilities, and nothing @applies them.
+   ========================================================================== */
 
-/* ---- the coach's reply arriving ----
-   Fade and a 5px lift. Small on purpose: it should register in peripheral vision
-   without pulling the eye off whatever the player is actually doing. Caught by the
-   reduced-motion block at the end of this file. */
-@keyframes hintIn {
-  from { opacity: 0; transform: translate3d(0, 5px, 0); }
-  to   { opacity: 1; transform: none; }
-}
-.hint-in { animation: hintIn .45s cubic-bezier(.16, 1, .3, 1) both; }
+/* ==========================================================================
+   TYPE — class names unchanged, values now come from the typescale tokens.
+   ========================================================================== */
+.h-hero  { font-family: var(--md-sys-typescale-headline-large-font);
+           font-size: var(--md-sys-typescale-headline-large-size);
+           font-weight: var(--md-sys-typescale-headline-large-weight);
+           line-height: var(--md-sys-typescale-headline-large-line-height);
+           font-stretch: var(--md-sys-typescale-headline-large-width);
+           letter-spacing: var(--md-sys-typescale-headline-large-tracking); margin: 0; }
+.h-page  { font-family: var(--md-sys-typescale-headline-small-font);
+           font-size: var(--md-sys-typescale-headline-small-size);
+           font-weight: var(--md-sys-typescale-headline-small-weight);
+           line-height: var(--md-sys-typescale-headline-small-line-height);
+           font-stretch: var(--md-sys-typescale-headline-small-width);
+           letter-spacing: var(--md-sys-typescale-headline-small-tracking); margin: 0; }
+.h-card  { font-family: var(--md-sys-typescale-title-medium-font);
+           font-size: var(--md-sys-typescale-title-medium-size);
+           font-weight: var(--md-sys-typescale-title-medium-weight);
+           line-height: var(--md-sys-typescale-title-medium-line-height);
+           font-stretch: var(--md-sys-typescale-title-medium-width);
+           letter-spacing: var(--md-sys-typescale-title-medium-tracking); margin: 0; }
+/* .eyebrow was --faint (#9A9A90), 2.84:1 on white — a fail at 11px, which is
+   not large text under WCAG. It is now on-surface-variant at 9.35:1. */
+.eyebrow { font-family: var(--md-sys-typescale-label-small-font);
+           font-size: var(--md-sys-typescale-label-small-size);
+           font-weight: var(--md-sys-typescale-label-small-weight);
+           letter-spacing: var(--md-sys-typescale-label-small-tracking);
+           text-transform: uppercase;
+           color: var(--md-sys-color-on-surface-variant); margin: 0; }
 
-/* ---- bottom sheet ---- */
-@keyframes sheetIn {
-  from { opacity: 0; transform: translate3d(0, 110%, 0); }
-  to   { opacity: 1; transform: none; }
+/* ==========================================================================
+   STATE LAYER — M3's mechanism for hover / focus / pressed. A tinted overlay
+   at a fixed opacity on top of the container, rather than a bespoke colour
+   swap per component. Applied through ::after so it never disturbs layout.
+   ========================================================================== */
+.pressable {
+  position: relative;
+  isolation: isolate;
+  transition: transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
+              background-color var(--md-sys-motion-duration-medium2),
+              border-color var(--md-sys-motion-duration-medium2),
+              color var(--md-sys-motion-duration-medium2);
 }
-.sheet-in { animation: sheetIn .42s cubic-bezier(.16, 1, .3, 1) both; }
+.pressable::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; pointer-events: none;
+  background: currentColor; opacity: 0;
+  transition: opacity var(--md-sys-motion-duration-short2) linear;
+}
+.pressable:hover::after  { opacity: var(--md-sys-state-hover-state-layer-opacity); }
+.pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
+/* Forge's scale press is kept alongside the state layer. On touch there is no
+   hover to reveal the layer, so the transform is still the only feedback the
+   press gets. Fast in, slower out. */
+.pressable:active { transform: scale(.965); transition-duration: 60ms; }
+
+/* M3 requires a visible focus indicator. There wasn't one. */
+.pressable:focus-visible,
+a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+
+/* ==========================================================================
+   SURFACES — M3 card variants.
+     .card       -> elevated card:  level 1, no outline
+     .card-flat  -> outlined card:  level 0, outline-variant
+   .card used to carry a border AND a shadow, which is neither variant. The
+   border is dropped; the shadow is what distinguishes it.
+   ========================================================================== */
+.card {
+  border-radius: var(--md-sys-shape-corner-large-increased);
+  background: var(--md-sys-color-surface-container-lowest);
+  box-shadow: var(--md-sys-elevation-level1);
+}
+.card-flat {
+  border-radius: var(--md-sys-shape-corner-large-increased);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-lowest);
+}
+
+/* ==========================================================================
+   CONTROLS
+   Three jobs, three shapes:
+     .chip         pill,  filter chip            ->  CHOOSE one of these
+     .btn-primary  block, solid inverse-surface  ->  DO the thing
+     .btn-ghost    block, outlined               ->  the lesser action
+
+   SELECTION CHANGED. Forge carried selection on border and ink alone, on the
+   stated grounds that a filled chip becomes an illegible black slab. M3 fills
+   with secondary-container instead — and the reason the old objection does
+   not apply is that secondary-container is a pale tone-90 fill, not ink:
+   #3C4858 on #D7E3F8 is 7.18:1, so a selected chip is more legible than an
+   unselected one, not less. The checkmark carries the state for anyone who
+   cannot separate the two by colour, which the border-only version never did.
+
+   The old note about border width is now moot — selected chips have no border
+   at all, so nothing rewraps under your thumb on select.
+
+   Chips stay at 44px rather than M3's 32dp: M3 gets to its 48dp touch target
+   with an invisible overlay, which is the right call in a component library
+   and the wrong one in a file meant to show real spacing.
+   ========================================================================== */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  cursor: pointer; user-select: none;
+  border-radius: var(--md-sys-shape-corner-full);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  padding: 0 16px;
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: 13.5px; font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.chip .chip-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
+.chip-on, .chip-on:hover {
+  border-color: transparent;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.chip-on .chip-check { display: block; }
+
+/* Deep navy with powder blue on it: inverse-surface + inverse-primary. The
+   pairing is the same one the black-and-gold button used, which is why the
+   recolour needed no edit here — the roles carried the intent, and only the
+   values underneath them moved. 10.55:1. */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 52px; border: 0; cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-inverse-surface);
+  padding: 0 24px;
+  font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
+  letter-spacing: var(--forge-track-tighter);
+  color: var(--md-sys-color-inverse-primary);
+}
+.btn-primary:disabled {
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant); cursor: default;
+}
+
+/* The reverse: powder blue as the fill, navy as the label. inverse-primary is
+   M3's role for exactly this — the primary as it would appear in the opposite
+   scheme — so the old rule that the accent is only ever a fill on a dark
+   surface is now enforced by the token's meaning rather than by a comment.
+   Renamed from .btn-gold, which named a colour that no longer exists. It has
+   no callers in this file, so the rename is free. */
+.btn-accent {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 52px; border: 0; cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-inverse-primary);
+  padding: 0 24px;
+  font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
+  letter-spacing: var(--forge-track-tighter);
+  color: var(--md-sys-color-inverse-surface);
+}
+
+/* Outlined button. The outline moved from --line (#E8E8E3, 1.23:1 against
+   white) to `outline` (#74777E, 4.27:1). 1.23:1 fails the 3:1 that WCAG asks
+   of a control's boundary — the old border was decorative, not perceptible. */
+.btn-ghost {
+  min-height: 44px; cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-large);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  padding: 14px 20px;
+  font-family: var(--md-sys-typescale-label-large-font);
+  font-size: var(--md-sys-typescale-label-large-size);
+  font-weight: var(--md-sys-typescale-label-large-weight);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Day selector on the Plan screen. This was seven copies of an inline
+   selection style that duplicated .chip's logic — same rule, second
+   implementation, free to drift. It is now the same filled selection. */
+.day {
+  border-radius: var(--md-sys-shape-corner-large);
+  border: 1px solid var(--md-sys-color-outline);
+  background: transparent;
+  padding: 10px 0; text-align: center; cursor: pointer;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.day-on {
+  border-color: transparent;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+/* .tag-gold was --gold-text on --gold-soft: 4.35:1, just under the floor.
+   As a primary-container pair it is 7.21:1. Renamed to .tag-accent — this one
+   does have callers, so it is the only class name in the file that changed,
+   and the only line of the port that is not a straight copy. */
+.tag {
+  display: inline-block; border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-low);
+  padding: 3px 8px;
+  font-size: 11px; font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.tag-accent {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+/* ==========================================================================
+   MODAL BOTTOM SHEET — new component.
+   A program used to open as a plain route change: no way back, and the nav
+   bar stayed live underneath, so a mis-tap dropped you into Plan and lost
+   your place in a 786-item list.
+
+   M3 offers two answers. A full-screen dialog is the spec's pick for long or
+   complex content, but it discards the context entirely. A modal bottom sheet
+   keeps a sliver of the Library visible above the scrim, which is what makes
+   "I am on top of something, and I can get back to it" legible without
+   reading anything. That is the one chosen here.
+
+   Either way the important half is the same and it is not visual: the sheet
+   covers the navigation bar, and the scrim swallows taps meant for it. The
+   accidental navigation is not styled away, it is made impossible.
+
+   Three exits, because different people reach for different ones: the close
+   button, the scrim, and Esc (which stands in for the Android back gesture —
+   wire the real thing to onDismiss when you port this).
+
+   PORTED AS A REAL DIALOG, as the harness's own note asks. The harness used an
+   absolutely-positioned div with a hand-rolled scrim because showModal() escapes
+   a 393px phone mock; there is no mock here, so <dialog>.showModal() gives the
+   focus trap, Esc, the top layer and inert-behind correctly rather than by
+   imitation. Living in the top layer is also why the sheet covers the tab bar
+   without needing to out-guess its z-index.
+   ========================================================================== */
+.sheet-dialog {
+  /* The dialog IS the scrim area: full-bleed, transparent, sheet pinned to the
+     bottom. Clicking the dialog but not its inner panel is the scrim tap. */
+  max-width: 100%; max-height: 100%;
+  width: 100%; height: 100%;
+  margin: 0; padding: 0; border: 0; background: transparent;
+  overflow: hidden;
+}
+.sheet-dialog::backdrop {
+  background: var(--md-sys-color-scrim);
+  opacity: .32;
+}
+.sheet-inner {
+  position: absolute; left: 0; right: 0; top: 44px; bottom: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 0;
+  box-shadow: var(--md-sys-elevation-level3);
+  animation: sheetUp var(--md-sys-motion-duration-long2)
+             var(--md-sys-motion-easing-emphasized-decelerate) both;
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+
+/* 32x4dp at 40% on-surface-variant, per spec. Purely an affordance here —
+   drag-to-dismiss needs a gesture handler this harness does not have. */
+.sheet-handle { width: 32px; height: 4px; margin: 16px auto 0; border-radius: var(--md-sys-shape-corner-full);
+                background: var(--md-sys-color-on-surface-variant); opacity: .4; }
+.sheet-head { display: flex; align-items: center; gap: 4px; padding: 6px 8px 0 20px; }
+.sheet-body { flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
+.sheet-actions { padding: 12px 20px 20px; background: var(--md-sys-color-surface-container-low);
+                 border-top: 1px solid var(--md-sys-color-outline-variant); }
+
+/* The floating tab bar's frosted fill.
+   NOT a Tailwind opacity modifier. `bg-surface-container-lowest/85` compiles to
+   rgba(0,0,0,0) here: v3's alpha modifier needs the token as space-separated
+   channels, and these are hex — so every `/nn` on an M3 role silently resolves
+   to transparent, or to Tailwind's default grey on a border. color-mix takes the
+   hex directly, and is what the harness uses for this exact surface. */
+.tabbar-surface {
+  background: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 85%, transparent);
+}
+
+.icon-btn { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center;
+            border: 0; background: transparent; cursor: pointer;
+            border-radius: var(--md-sys-shape-corner-full);
+            color: var(--md-sys-color-on-surface-variant); }
+.icon-btn svg { width: 22px; height: 22px; }
+
+/* The list underneath keeps its scroll position; it is only made unreachable. */
+.phone-scroll[inert] { pointer-events: none; }
+
+/* ==========================================================================
+   MOTION
+   ========================================================================== */
+@keyframes pageIn { from { opacity:0; transform: translate3d(0,10px,0);} to { opacity:1; transform:none; } }
+@keyframes rise   { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none; } }
+@keyframes pop    { from { opacity:0; transform: scale(.97);} to { opacity:1; transform:none; } }
+.animate-pop  { animation: pop .35s var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.animate-rise { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.stagger > * { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.stagger > *:nth-child(1){animation-delay:0ms}    .stagger > *:nth-child(2){animation-delay:45ms}
+.stagger > *:nth-child(3){animation-delay:90ms}   .stagger > *:nth-child(4){animation-delay:135ms}
+.stagger > *:nth-child(5){animation-delay:180ms}  .stagger > *:nth-child(n+6){animation-delay:215ms}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

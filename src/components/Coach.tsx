@@ -185,8 +185,8 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
     <div className="mt-8">
       {/* ---- the coach: the primary way in ---- */}
       {/* Focus is shown by the border alone — no shadow bloom on focus. */}
-      <div className="flex items-center gap-2 rounded-pill border-[1.5px] border-line bg-surface
-                      p-1.5 pl-5 transition-colors focus-within:border-goldUi">
+      <div className="flex items-center gap-2 rounded-full border-[1.5px] border-outline-variant bg-surface-container-lowest
+                      p-1.5 pl-5 transition-colors focus-within:border-primary">
         <input
           ref={inputRef}
           value={text} onChange={(e) => setText(e.target.value)}
@@ -199,7 +199,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
           // 16px, not 15: anything smaller makes iOS zoom the whole page on focus
           // and never zoom back out.
           className="min-w-0 flex-1 bg-transparent py-2.5 text-[16px] font-medium
-                     text-body outline-none placeholder:text-faint"
+                     text-on-surface outline-none placeholder:text-on-surface-variant"
         />
         {/* Always present now, rather than appearing with the first keystroke: when
             the box is the main event, the thing you press to use it shouldn't be
@@ -210,9 +210,9 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
             for anyone navigating by voice or screen reader. */}
         <button onClick={ask} disabled={busy || !text.trim()}
           aria-label="Build a session from what you typed"
-          className="pressable min-h-11 shrink-0 rounded-pill bg-ink px-6 font-display
-                     text-[14px] font-bold tracking-tight text-gold
-                     disabled:bg-surface2 disabled:text-muted">
+          className="pressable min-h-11 shrink-0 rounded-full bg-inverse-surface px-6 font-brand
+                     text-[14px] font-bold tracking-tight text-inverse-primary
+                     disabled:bg-surface-container-low disabled:text-on-surface-variant">
           {busy ? '···' : 'Go'}
         </button>
       </div>
@@ -220,7 +220,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
       {/* Subtext, directly under the box that it fills. leading-loose is doing
           accessibility work, not decoration: when these wrap on a phone it keeps
           each tappable phrase a clear thumb-width away from the one above it. */}
-      <p className="mt-3 pl-1 text-[14px] leading-loose text-muted">
+      <p className="mt-3 pl-1 text-[14px] leading-loose text-on-surface-variant">
         Try{' '}
         {EXAMPLES.map((e, i) => (
           <span key={e}>
@@ -229,9 +229,9 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
                 "tappable", not weight or colour. Semibold plus body ink turned four
                 shortcuts into four headlines competing with the box above them. */}
             <button type="button" onClick={() => useExample(e)}
-              className="font-semibold underline decoration-line decoration-2
-                         underline-offset-4 transition-colors hover:text-body
-                         hover:decoration-goldUi">
+              className="font-semibold underline decoration-outline decoration-2
+                         underline-offset-4 transition-colors hover:text-on-surface
+                         hover:decoration-primary">
               {e}
             </button>
             {i < EXAMPLES.length - 1 ? ', ' : '.'}
@@ -247,11 +247,11 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
       </button>
 
       {reply && (
-        <p key={reply} className="hint-in mt-5 pl-1 text-[14px] font-medium text-body">{reply}</p>
+        <p key={reply} className="hint-in mt-5 pl-1 text-[14px] font-medium text-on-surface">{reply}</p>
       )}
 
       {/* ---- manual controls: same power, folded away once the coach answers ---- */}
-      <div className="mt-8 border-t border-line pt-5">
+      <div className="mt-8 border-t border-outline-variant pt-5">
         <button
           type="button"
           onClick={() => setManualOpen((o) => !o)}
@@ -263,18 +263,18 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
             {/* h-card, not eyebrow. This is a section heading and the rows inside it
                 (How long, Working on…) are eyebrows — when both were eyebrows there
                 was no hierarchy, just two sizes of the same shout. */}
-            <span className="h-card block text-body">Build your session</span>
+            <span className="h-card block text-on-surface">Build your session</span>
             {/* The summary appears only once a session exists. Showing it before
                 that surfaced the default "20 min" against nothing the player had
                 chosen, which read as a leftover rather than an answer. */}
             {!manualOpen && built && summary && (
-              <span className="mt-1 block truncate text-[13.5px] font-medium text-muted">
+              <span className="mt-1 block truncate text-[13.5px] font-medium text-on-surface-variant">
                 {summary}
               </span>
             )}
           </span>
           <svg viewBox="0 0 24 24" aria-hidden="true"
-               className={`h-5 w-5 shrink-0 text-muted transition-transform duration-200
+               className={`h-5 w-5 shrink-0 text-on-surface-variant transition-transform duration-200
                            ${manualOpen ? 'rotate-180' : ''}`}
                fill="none" stroke="currentColor" strokeWidth="2.4"
                strokeLinecap="round" strokeLinejoin="round">

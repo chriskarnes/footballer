@@ -69,7 +69,7 @@ export default async function PlanPage({
     <div>
       <p className="eyebrow mb-3">Plan</p>
       <h1 className="h-hero">Weekly<br />blueprint</h1>
-      <p className="mt-3.5 max-w-[34ch] text-[15px] leading-relaxed text-muted">
+      <p className="mt-3.5 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
         A repeating week built around your weaknesses, your kit and the days you can
         actually train.
       </p>
@@ -102,7 +102,7 @@ function SavedWeek({
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="h-card">This week</h2>
         <Link href="/plan?edit=1"
-          className="text-[13px] font-semibold text-goldText underline underline-offset-4">
+          className="text-[13px] font-semibold text-primary underline underline-offset-4">
           Rebuild
         </Link>
       </div>
@@ -121,8 +121,8 @@ function SavedWeek({
 function Stat({ v, k }: { v: string; k: string }) {
   return (
     <div className="card-flat flex-1 p-3">
-      <div className="font-display text-[19px] font-bold leading-none tracking-tighter">{v}</div>
-      <div className="mt-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-faint">{k}</div>
+      <div className="font-brand text-[19px] font-bold leading-none tracking-tighter">{v}</div>
+      <div className="mt-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">{k}</div>
     </div>
   );
 }

@@ -40,7 +40,7 @@ export function SignIn() {
         // address, which is most of what makes a mobile form feel native.
         inputMode="email" autoComplete="email" enterKeyHint="send"
         autoCapitalize="none" autoCorrect="off" spellCheck={false}
-        className="w-full rounded-btn border border-line bg-surface2 px-4 py-3.5 text-[16px] font-medium outline-none transition focus:border-goldUi"
+        className="w-full rounded-large border border-outline-variant bg-surface-container-low px-4 py-3.5 text-[16px] font-medium outline-none transition focus:border-primary"
       />
       <button onClick={send} className="btn-primary w-full">Email me a sign-in link</button>
       <button onClick={google} className="btn-ghost w-full">Continue with Google</button>

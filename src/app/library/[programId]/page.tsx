@@ -17,8 +17,8 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
   return (
     <div className="animate-pop">
       <Link href="/library"
-        className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-bold text-muted
-                   transition hover:text-body">
+        className="mb-6 inline-flex items-center gap-1.5 text-[13px] font-bold text-on-surface-variant
+                   transition hover:text-on-surface">
         <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor"
              strokeWidth="2.5" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
         Library
@@ -26,11 +26,11 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
 
       <p className="eyebrow mb-3">{program.level}</p>
       <h1 className="h-page">{program.name}</h1>
-      <p className="mt-3 text-[13px] font-semibold text-goldText">
+      <p className="mt-3 text-[13px] font-semibold text-primary">
         {mine.length} sessions · {formatTouches(program.touches)} touches · {program.total_minutes} min
       </p>
       {program.goal && (
-        <p className="mt-4 line-clamp-4 text-[14.5px] leading-relaxed text-muted">{program.goal}</p>
+        <p className="mt-4 line-clamp-4 text-[14.5px] leading-relaxed text-on-surface-variant">{program.goal}</p>
       )}
 
       <div className="stagger mt-8 grid grid-cols-1 gap-2.5">
@@ -39,19 +39,19 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
           return (
             <Link key={s.id} href={`/session/${s.id}`}
               className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
-              <span className="font-display text-[13px] font-bold text-faint">
+              <span className="font-brand text-[13px] font-bold text-on-surface-variant">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="h-card truncate">{s.name}</div>
-                <div className="mt-1 text-[12.5px] font-medium text-muted">{drills.length} drills</div>
+                <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">{drills.length} drills</div>
               </div>
               <div className="text-right">
-                <div className="font-display text-[15px] font-bold tracking-tighter">
+                <div className="font-brand text-[15px] font-bold tracking-tighter">
                   {Math.round(s.total_minutes)}m
                 </div>
                 {!!s.touches && (
-                  <div className="mt-0.5 text-[11.5px] font-bold text-goldText">
+                  <div className="mt-0.5 text-[11.5px] font-bold text-primary">
                     {formatTouches(s.touches)}
                   </div>
                 )}

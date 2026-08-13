@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 // Self-hosted via npm: no Google Fonts request, no layout shift, works offline.
-import '@fontsource-variable/sora';
-import '@fontsource-variable/plus-jakarta-sans';
+// `wdth` rather than the default entry point — the M3 typescale sets
+// font-stretch, and only the wdth build ships that axis. See globals.css.
+import '@fontsource-variable/roboto-flex/wdth.css';
+import '@fontsource-variable/noto-sans';
 import './globals.css';
 import { TabBar } from '@/components/TabBar';
 import { InstallNudge } from '@/components/InstallNudge';
@@ -42,7 +44,14 @@ export const viewport: Viewport = {
   // by `touch-action: manipulation` in globals.css, which is the accessible fix.
   viewportFit: 'cover',                  // let content reach under the notch
   interactiveWidget: 'resizes-content',  // keyboard pushes the layout, not covers it
-  themeColor: '#F6F6F4',                 // status bar matches the page, not a dark bar
+  // Two entries, not one: the status bar has to follow the scheme now that there
+  // is a dark one. A single light value would leave a white bar above a dark app.
+  // These are md-sys-color-surface in each scheme — the literal is unavoidable,
+  // since a meta tag cannot read a custom property.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FAF9FB' },
+    { media: '(prefers-color-scheme: dark)', color: '#121315' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

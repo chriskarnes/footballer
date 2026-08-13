@@ -31,11 +31,11 @@ export default async function MePage() {
       <div>
         <p className="eyebrow mb-3">Your training</p>
         <h1 className="h-hero">Keep every<br />session</h1>
-        <p className="mt-3.5 max-w-[32ch] text-[15px] leading-relaxed text-muted">
+        <p className="mt-3.5 max-w-[32ch] text-[15px] leading-relaxed text-on-surface-variant">
           Sign in to build a history, repeat a session you liked, and save a weekly plan.
         </p>
         <div className="mt-5"><SignIn /></div>
-        <p className="mt-4 text-xs text-muted">
+        <p className="mt-4 text-xs text-on-surface-variant">
           You don&rsquo;t need an account to train — the coach works signed out.
         </p>
       </div>
@@ -59,8 +59,8 @@ export default async function MePage() {
 
       <p className="eyebrow mb-3 mt-9">Do it again</p>
       {!workouts.length && (
-        <p className="mt-2 text-sm text-muted">
-          Nothing yet. <Link href="/" className="font-bold text-goldText">Build a session →</Link>
+        <p className="mt-2 text-sm text-on-surface-variant">
+          Nothing yet. <Link href="/" className="font-bold text-primary">Build a session →</Link>
         </p>
       )}
       <div className="mt-2 grid grid-cols-1 gap-2">
@@ -68,7 +68,7 @@ export default async function MePage() {
           <div key={w.id} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
             <div className="min-w-0 flex-1">
               <div className="truncate font-semibold">{w.title}</div>
-              <div className="text-xs text-muted">
+              <div className="text-xs text-on-surface-variant">
                 {new Date(w.created_at).toLocaleDateString()} ·{' '}
                 {w.status === 'completed' ? 'completed' : 'saved'} ·{' '}
                 {Math.round(Number(w.planned_minutes ?? 0))}m
@@ -83,9 +83,9 @@ export default async function MePage() {
       </div>
 
       {done.length >= 3 && (
-        <div className="mt-9 rounded-card border border-goldUi/40 bg-goldSoft p-5">
+        <div className="mt-9 rounded-large-increased border border-primary bg-primary-container p-5">
           <div className="h-card">Make this a weekly routine?</div>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-on-surface-variant">
             You&rsquo;ve trained {done.length} times. I can turn what you&rsquo;ve been doing into a
             repeating week — most of the questions are already answered by your history.
           </p>
@@ -101,8 +101,8 @@ export default async function MePage() {
 function Stat({ v, k }: { v: string; k: string }) {
   return (
     <div className="card p-4">
-      <div className="font-display text-[21px] font-bold leading-none tracking-tighter">{v}</div>
-      <div className="mt-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-faint">{k}</div>
+      <div className="font-brand text-[21px] font-bold leading-none tracking-tighter">{v}</div>
+      <div className="mt-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">{k}</div>
     </div>
   );
 }

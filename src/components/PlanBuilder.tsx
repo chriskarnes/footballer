@@ -108,8 +108,8 @@ export function PlanBuilder({
     <div className="mt-8">
       {/* ---- what we already knew ---- */}
       {prefill.sessionsSeen > 0 ? (
-        <p className="mb-7 rounded-card border border-goldUi/40 bg-goldSoft p-4 text-[14px]
-                      leading-relaxed text-body">
+        <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-high p-4 text-[14px]
+                      leading-relaxed text-on-surface">
           Built from your last {prefill.sessionsSeen} session
           {prefill.sessionsSeen === 1 ? '' : 's'}
           {prefill.known.weaknesses && ' — the areas you actually train'}
@@ -118,9 +118,9 @@ export function PlanBuilder({
           Change anything that&rsquo;s wrong.
         </p>
       ) : (
-        <p className="mb-7 rounded-card border border-line bg-surface p-4 text-[14px]
-                      leading-relaxed text-muted">
-          <strong className="text-body">Here&rsquo;s a starting week.</strong> Train a few
+        <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-lowest p-4 text-[14px]
+                      leading-relaxed text-on-surface-variant">
+          <strong className="text-on-surface">Here&rsquo;s a starting week.</strong> Train a few
           sessions and this fills itself in from what you actually do — until then,
           change whatever doesn&rsquo;t fit.
         </p>
@@ -128,18 +128,18 @@ export function PlanBuilder({
 
       {/* ---- the week ---- */}
       <h2 className="h-card">Your week</h2>
-      <p className="mt-1 text-[13.5px] text-muted">Tap a day to change what it&rsquo;s for.</p>
+      <p className="mt-1 text-[13.5px] text-on-surface-variant">Tap a day to change what it&rsquo;s for.</p>
       <div className="mt-3.5 grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((d, i) => {
           const a = intake.availability[i];
           return (
             <button key={d} type="button" onClick={() => cycleDay(i)}
               aria-label={`${d}: ${DAY_SPOKEN[a]}. Tap to change.`}
-              className={`pressable rounded-btn border-[1.5px] py-2.5 text-center transition-colors
+              className={`pressable rounded-large border-[1.5px] py-2.5 text-center transition-colors
                 ${a === 'rest'
-                  ? 'border-line bg-surface text-faint'
-                  : 'border-ink bg-surface text-ink'}`}>
-              <span className="block font-display text-[12px] font-bold tracking-tight">{d}</span>
+                  ? 'border-outline-variant bg-surface-container-lowest text-on-surface-variant'
+                  : 'border-inverse-surface bg-surface-container-lowest text-on-surface'}`}>
+              <span className="block font-brand text-[12px] font-bold tracking-tight">{d}</span>
               <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide">
                 {DAY_LABEL[a]}
               </span>
@@ -151,7 +151,7 @@ export function PlanBuilder({
       {/* ---- weaknesses ---- */}
       <div className="mt-9">
         <h2 className="h-card">What to fix</h2>
-        <p className="mt-1 text-[13.5px] text-muted">
+        <p className="mt-1 text-[13.5px] text-on-surface-variant">
           In order — the first one gets the most time. Up to four.
         </p>
         <div className="mt-3.5 flex flex-wrap gap-2">
@@ -161,7 +161,7 @@ export function PlanBuilder({
               <button key={f} type="button" onClick={() => toggleWeakness(f)}
                 className={`chip ${rank >= 0 ? 'chip-on' : ''}`}>
                 {rank >= 0 && (
-                  <span className="mr-1.5 font-display text-[11px] font-bold text-goldText">
+                  <span className="mr-1.5 font-brand text-[11px] font-bold text-primary">
                     {rank + 1}
                   </span>
                 )}
@@ -178,19 +178,19 @@ export function PlanBuilder({
         <div className="mt-3.5 space-y-2">
           {PHASES.map(([v, title, why]) => (
             <button key={v} type="button" onClick={() => set({ seasonPhase: v, targetMinutes: undefined })}
-              className={`pressable block w-full rounded-btn border-[1.5px] p-3.5 text-left
+              className={`pressable block w-full rounded-large border-[1.5px] p-3.5 text-left
                 ${intake.seasonPhase === v && !intake.targetMinutes
-                  ? 'border-ink bg-surface' : 'border-line bg-surface'}`}>
-              <span className="block text-[14.5px] font-bold text-body">{title}</span>
-              <span className="mt-0.5 block text-[12.5px] text-muted">{why}</span>
+                  ? 'border-inverse-surface bg-surface-container-lowest' : 'border-outline-variant bg-surface-container-lowest'}`}>
+              <span className="block text-[14.5px] font-bold text-on-surface">{title}</span>
+              <span className="mt-0.5 block text-[12.5px] text-on-surface-variant">{why}</span>
             </button>
           ))}
         </div>
         {!!intake.targetMinutes && (
-          <p className="mt-2.5 pl-1 text-[13px] text-muted">
+          <p className="mt-2.5 pl-1 text-[13px] text-on-surface-variant">
             Using ~{intake.targetMinutes} min from your history instead.{' '}
             <button type="button" onClick={() => set({ targetMinutes: undefined })}
-              className="font-semibold text-goldText underline underline-offset-2">
+              className="font-semibold text-primary underline underline-offset-2">
               Use the season instead
             </button>
           </p>
@@ -220,7 +220,7 @@ export function PlanBuilder({
           </button>
         </div>
         {intake.injured && (
-          <p className="mt-2.5 pl-1 text-[13px] text-muted">
+          <p className="mt-2.5 pl-1 text-[13px] text-on-surface-variant">
             Physical sessions are left out while this is on. Ball work only.
           </p>
         )}
@@ -231,13 +231,13 @@ export function PlanBuilder({
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="h-card">The blueprint</h2>
           <button type="button" onClick={() => setSeed(Math.random())}
-            className="text-[13px] font-semibold text-goldText underline underline-offset-4">
+            className="text-[13px] font-semibold text-primary underline underline-offset-4">
             Shuffle
           </button>
         </div>
 
         {trainingDays === 0 ? (
-          <p className="card-flat mt-3.5 p-5 text-[14px] text-muted">
+          <p className="card-flat mt-3.5 p-5 text-[14px] text-on-surface-variant">
             Every day is set to rest. Tap a day above to train on it.
           </p>
         ) : (
@@ -252,10 +252,10 @@ export function PlanBuilder({
             <PlanWeek rows={plan.days} drillsBySession={drillsBySession} />
 
             {!!plan.uncovered.length && (
-              <p className="mt-3.5 rounded-btn border border-line bg-surface2 p-3.5 text-[13px]
-                            leading-relaxed text-muted">
+              <p className="mt-3.5 rounded-large border border-outline-variant bg-surface-container-low p-3.5 text-[13px]
+                            leading-relaxed text-on-surface-variant">
                 Nothing in the library covers{' '}
-                <strong className="text-body">
+                <strong className="text-on-surface">
                   {plan.uncovered.map((f) => FOCUS_LABELS[f]).join(', ')}
                 </strong>{' '}
                 under these constraints. The rest of the week still targets what it can.
@@ -273,13 +273,13 @@ export function PlanBuilder({
             {saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved ✓' : 'Save this week'}
           </button>
           {saving === 'error' && (
-            <p className="mt-3 text-center text-[13px] text-muted">{error}</p>
+            <p className="mt-3 text-center text-[13px] text-on-surface-variant">{error}</p>
           )}
         </>
       ) : (
-        <p className="mt-8 rounded-card border border-line bg-surface p-5 text-[14px]
-                      leading-relaxed text-muted">
-          <strong className="text-body">Sign in to keep this week.</strong> You can keep
+        <p className="mt-8 rounded-large-increased border border-outline-variant bg-surface-container-lowest p-5 text-[14px]
+                      leading-relaxed text-on-surface-variant">
+          <strong className="text-on-surface">Sign in to keep this week.</strong> You can keep
           adjusting it without an account — it just won&rsquo;t be here tomorrow.
         </p>
       )}
@@ -290,8 +290,8 @@ export function PlanBuilder({
 function Stat({ v, k }: { v: string; k: string }) {
   return (
     <div className="card-flat flex-1 p-3">
-      <div className="font-display text-[19px] font-bold leading-none tracking-tighter">{v}</div>
-      <div className="mt-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-faint">{k}</div>
+      <div className="font-brand text-[19px] font-bold leading-none tracking-tighter">{v}</div>
+      <div className="mt-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">{k}</div>
     </div>
   );
 }

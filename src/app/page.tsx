@@ -9,7 +9,7 @@ export default async function TrainNowPage() {
     <div className="animate-pop">
       <div className="mb-9 flex items-center justify-between">
         <Brand small />
-        <span className="text-[12px] font-semibold text-faint">786 drills</span>
+        <span className="text-[12px] font-semibold text-on-surface-variant">786 drills</span>
       </div>
 
       {/* No "Train now" kicker above this one: the headline already says it, and
@@ -20,7 +20,7 @@ export default async function TrainNowPage() {
       <h1 className="h-hero max-w-[15ch]">
         Start training<br />right now
       </h1>
-      <p className="mt-3.5 max-w-[36ch] text-[15px] leading-relaxed text-muted">
+      <p className="mt-3.5 max-w-[36ch] text-[15px] leading-relaxed text-on-surface-variant">
         Tell me what you want to work on and how much time you have and I&rsquo;ll build a
         session instantly.
       </p>

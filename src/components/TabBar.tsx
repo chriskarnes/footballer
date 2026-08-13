@@ -18,8 +18,8 @@ export function TabBar() {
     // safe-b keeps the bar clear of the iPhone home indicator; without it the pill
     // sits underneath the gesture area and taps land on the wrong thing.
     <nav className="safe-b safe-x pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center">
-      <div className="pointer-events-auto flex items-center gap-1 rounded-pill border border-line/70
-                      bg-surface/85 p-1.5 shadow-nav backdrop-blur-xl">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-outline-variant
+                      tabbar-surface p-1.5 shadow-level2 backdrop-blur-xl">
         {TABS.map((t) => {
           const on = t.href === '/' ? path === '/' : path.startsWith(t.href);
           return (
@@ -27,10 +27,10 @@ export function TabBar() {
               onClick={() => { if (!on) haptic('tap'); }}
               // min-h-11 = 44px, Apple's minimum touch target. The visual pill is
               // smaller than the tappable area, which is how native bars work.
-              className={`pressable flex min-h-11 items-center gap-2 rounded-pill px-4
+              className={`pressable flex min-h-11 items-center gap-2 rounded-full px-4
                           text-[12.5px] font-bold tracking-tight
                           transition-colors duration-300
-                          ${on ? 'bg-ink text-gold' : 'text-faint'}`}>
+                          ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant'}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
                    strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
                 <path d={t.d} />

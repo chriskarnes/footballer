@@ -86,23 +86,23 @@ export function InstallNudge() {
 
   return (
     <div className="safe-x fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-      <div className="sheet-in card w-full max-w-lg p-5 shadow-lift" role="dialog"
+      <div className="sheet-in card w-full max-w-lg p-5 shadow-level3" role="dialog"
            aria-label="Add Forge to your home screen">
         <div className="flex items-start gap-3.5">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px]
-                           bg-ink font-display text-[18px] font-extrabold italic text-gold">
+                           bg-inverse-surface font-brand text-[18px] font-extrabold italic text-inverse-primary">
             F
           </span>
           <div className="min-w-0 flex-1">
             <p className="h-card">Keep Forge one tap away</p>
-            <p className="mt-1 text-[13px] leading-snug text-muted">
+            <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
               {platform === 'ios'
                 ? 'Add it to your home screen and it opens full screen, with its own icon.'
                 : 'Install it and it opens full screen, with its own icon.'}
             </p>
           </div>
           <button onClick={close} aria-label="Not now"
-                  className="pressable -mr-1 -mt-1 shrink-0 rounded-full p-2 text-faint">
+                  className="pressable -mr-1 -mt-1 shrink-0 rounded-full p-2 text-on-surface-variant">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor"
                  strokeWidth="2.2" strokeLinecap="round">
               <path d="M6 6l12 12M18 6L6 18" />
@@ -111,14 +111,14 @@ export function InstallNudge() {
         </div>
 
         {platform === 'ios' ? (
-          <ol className="mt-4 space-y-2.5 border-t border-line pt-4">
+          <ol className="mt-4 space-y-2.5 border-t border-outline-variant pt-4">
             <li className="flex items-center gap-3 text-[13.5px] font-semibold">
               <span className="tag tag-gold w-5 text-center">1</span>
               <span className="flex items-center gap-1.5">
                 Tap
                 {/* The Share glyph, drawn rather than described - it is the step people
                     get stuck on, and naming it is not enough. */}
-                <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] text-goldUi" fill="none"
+                <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] text-primary" fill="none"
                      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"
                      strokeLinejoin="round" aria-label="the Share button">
                   <path d="M12 15V3M12 3 8.5 6.5M12 3l3.5 3.5" />
@@ -129,7 +129,7 @@ export function InstallNudge() {
             </li>
             <li className="flex items-center gap-3 text-[13.5px] font-semibold">
               <span className="tag tag-gold w-5 text-center">2</span>
-              <span>Choose <em className="not-italic text-goldText">Add to Home Screen</em></span>
+              <span>Choose <em className="not-italic text-primary">Add to Home Screen</em></span>
             </li>
           </ol>
         ) : (

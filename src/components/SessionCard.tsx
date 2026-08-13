@@ -28,7 +28,7 @@ export function SessionCard({
   }
 
   if (!built.drills.length) {
-    return <div className="card p-6 text-[15px] text-muted">
+    return <div className="card p-6 text-[15px] text-on-surface-variant">
       Nothing matched — try a longer session or a different place.
     </div>;
   }
@@ -38,14 +38,14 @@ export function SessionCard({
       {/* The headline number gets the space it deserves — and now the whole card,
           since "Your session" is a heading above this box rather than a second,
           smaller label repeating it inside. */}
-      <div className="overflow-hidden rounded-card bg-ink p-6 shadow-lift">
+      <div className="overflow-hidden rounded-large-increased bg-inverse-surface p-6 shadow-level3">
         <div className="flex items-end gap-6">
           <div>
-            <div className="font-display text-[46px] font-extrabold leading-none
-                            tracking-tightest text-gold">
+            <div className="font-brand text-[46px] font-extrabold leading-none
+                            tracking-tightest text-inverse-primary">
               {formatTouches(built.totalTouches).replace('~', '')}
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-white/55">ball touches</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-forge-inverse-on-surface-variant">ball touches</div>
           </div>
           <div className="mb-1 flex gap-6">
             <Metric v={`${mins}`} unit="min" />
@@ -53,11 +53,11 @@ export function SessionCard({
           </div>
         </div>
 
-        <div className="mt-5 h-[6px] overflow-hidden rounded-pill bg-white/12">
-          <div className="h-full rounded-pill bg-gold transition-all duration-700"
+        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-forge-inverse-outline-variant">
+          <div className="h-full rounded-full bg-inverse-primary transition-all duration-700"
                style={{ width: `${pct}%` }} />
         </div>
-        <p className="mt-2.5 text-[12px] font-medium text-white/50">
+        <p className="mt-2.5 text-[12px] font-medium text-forge-inverse-on-surface-variant">
           {hit
             ? `Past the ${TOUCH_GOAL.toLocaleString()} goal — a team practice gives most players a few hundred.`
             : `${formatTouches(TOUCH_GOAL - built.totalTouches)} short of ${TOUCH_GOAL.toLocaleString()}.`}
@@ -68,12 +68,12 @@ export function SessionCard({
         {built.drills.map((d, i) => (
           <li key={d.id} className="card p-4">
             <div className="flex items-start gap-3.5">
-              <span className="mt-0.5 font-display text-[13px] font-bold text-faint">
+              <span className="mt-0.5 font-brand text-[13px] font-bold text-on-surface-variant">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="h-card">{d.name}</div>
-                <div className="mt-1 text-[12.5px] font-medium text-muted">
+                <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
                   {d.sets} × {d.reps_time}{d.rest && d.rest !== '-' ? ` · rest ${d.rest}` : ''}
                 </div>
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
@@ -83,22 +83,22 @@ export function SessionCard({
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <span className="font-display text-[15px] font-bold tracking-tighter">
+                <span className="font-brand text-[15px] font-bold tracking-tighter">
                   {d.total_seconds < 60 ? `${d.total_seconds}s` : `${Math.round(d.total_seconds / 60)}m`}
                 </span>
                 <div className="flex gap-1.5">
                   {d.video_url && (
                     <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"
                        className="flex h-8 w-8 items-center justify-center rounded-full
-                                  bg-surface2 text-body transition active:scale-90">
+                                  bg-surface-container-low text-on-surface transition active:scale-90">
                       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </a>
                   )}
                   <button onClick={() => onSwap(i)} aria-label="Swap this drill"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface2
-                               text-muted transition active:scale-90 hover:text-body">
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low
+                               text-on-surface-variant transition active:scale-90 hover:text-on-surface">
                     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none"
                          stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                       <path d="M4 8h13l-3-3M20 16H7l3 3" />
@@ -118,8 +118,8 @@ export function SessionCard({
         </button>
       </div>
       {saving === 'signin' && (
-        <p className="mt-3 text-center text-[13px] text-muted">
-          <Link href="/me" className="font-bold text-goldText">Create an account</Link> to keep
+        <p className="mt-3 text-center text-[13px] text-on-surface-variant">
+          <Link href="/me" className="font-bold text-primary">Create an account</Link> to keep
           your history and repeat sessions.
         </p>
       )}
@@ -130,8 +130,8 @@ export function SessionCard({
 function Metric({ v, unit }: { v: string; unit: string }) {
   return (
     <div>
-      <div className="font-display text-[22px] font-bold leading-none tracking-tighter text-white">{v}</div>
-      <div className="mt-1 text-[11.5px] font-semibold text-white/45">{unit}</div>
+      <div className="font-brand text-[22px] font-bold leading-none tracking-tighter text-inverse-on-surface">{v}</div>
+      <div className="mt-1 text-[11.5px] font-semibold text-forge-inverse-on-surface-variant">{unit}</div>
     </div>
   );
 }
