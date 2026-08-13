@@ -3,17 +3,22 @@
 @tailwind utilities;
 
 /* ==========================================================================
-   MATERIAL DESIGN 3 TOKEN LAYER  —  migration stage 1 of 3
+   MATERIAL DESIGN 3 TOKEN LAYER
    ==========================================================================
-   Ported verbatim from design/forge-harness-m3.html. Tokens only: no
-   component in this file consumes them yet, that is stage 2.
+   Ported from design/forge-harness-m3.html; the comments came with it because
+   they record three places a Forge value was overruled on contrast, and
+   re-deriving that costs more than the diff noise.
 
-   This project is on Tailwind v3 (3.4.19), so there is no `@theme` block —
-   the custom properties live here and tailwind.config.ts maps utility names
-   onto them, which is the v3 equivalent.
+   This project is on Tailwind v3, so there is no `@theme` block — the custom
+   properties live here and tailwind.config.ts names them. That indirection is
+   what lets `bg-primary-container` follow the scheme with no `dark:` variant.
 
-   The legacy Forge palette below this block is still live and still the thing
-   every component reads. It is deleted in stage 2, once the call sites move.
+   One trap it also creates: v3's alpha modifier expects space-separated
+   channels, and these are hex, so `bg-primary/50` compiles to transparent and
+   `border-primary/40` to Tailwind's default grey — silently, both of them. Use
+   a solid role, or color-mix, as .tabbar-surface does further down.
+
+   The legacy Forge palette is gone. Nothing reads --gold, --ink or --line.
    ========================================================================== */
 
 /* ==========================================================================
@@ -615,64 +620,12 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-primary-container);
 }
 
-/* ==========================================================================
-   MODAL BOTTOM SHEET — new component.
-   A program used to open as a plain route change: no way back, and the nav
-   bar stayed live underneath, so a mis-tap dropped you into Plan and lost
-   your place in a 786-item list.
+/* The modal bottom sheet is gone: a program is a page again, reached by a link
+   and left by an explicit back control. Its classes — .sheet-dialog,
+   .sheet-inner, .sheet-handle/-head/-body/-actions, .icon-btn and the
+   phone-scroll[inert] guard — went with it rather than sitting here unused.
+   Recoverable from design/forge-harness-m3.html if the decision reverses. */
 
-   M3 offers two answers. A full-screen dialog is the spec's pick for long or
-   complex content, but it discards the context entirely. A modal bottom sheet
-   keeps a sliver of the Library visible above the scrim, which is what makes
-   "I am on top of something, and I can get back to it" legible without
-   reading anything. That is the one chosen here.
-
-   Either way the important half is the same and it is not visual: the sheet
-   covers the navigation bar, and the scrim swallows taps meant for it. The
-   accidental navigation is not styled away, it is made impossible.
-
-   Three exits, because different people reach for different ones: the close
-   button, the scrim, and Esc (which stands in for the Android back gesture —
-   wire the real thing to onDismiss when you port this).
-
-   PORTED AS A REAL DIALOG, as the harness's own note asks. The harness used an
-   absolutely-positioned div with a hand-rolled scrim because showModal() escapes
-   a 393px phone mock; there is no mock here, so <dialog>.showModal() gives the
-   focus trap, Esc, the top layer and inert-behind correctly rather than by
-   imitation. Living in the top layer is also why the sheet covers the tab bar
-   without needing to out-guess its z-index.
-   ========================================================================== */
-.sheet-dialog {
-  /* The dialog IS the scrim area: full-bleed, transparent, sheet pinned to the
-     bottom. Clicking the dialog but not its inner panel is the scrim tap. */
-  max-width: 100%; max-height: 100%;
-  width: 100%; height: 100%;
-  margin: 0; padding: 0; border: 0; background: transparent;
-  overflow: hidden;
-}
-.sheet-dialog::backdrop {
-  background: var(--md-sys-color-scrim);
-  opacity: .32;
-}
-.sheet-inner {
-  position: absolute; left: 0; right: 0; top: 44px; bottom: 0;
-  display: flex; flex-direction: column; overflow: hidden;
-  background: var(--md-sys-color-surface-container-low);
-  border-radius: var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 0;
-  box-shadow: var(--md-sys-elevation-level3);
-  animation: sheetUp var(--md-sys-motion-duration-long2)
-             var(--md-sys-motion-easing-emphasized-decelerate) both;
-}
-@keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
-
-/* 32x4dp at 40% on-surface-variant, per spec. Purely an affordance here —
-   drag-to-dismiss needs a gesture handler this harness does not have. */
-.sheet-handle { width: 32px; height: 4px; margin: 16px auto 0; border-radius: var(--md-sys-shape-corner-full);
-                background: var(--md-sys-color-on-surface-variant); opacity: .4; }
-.sheet-head { display: flex; align-items: center; gap: 4px; padding: 6px 8px 0 20px; }
-.sheet-body { flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
-.sheet-actions { padding: 12px 20px 20px; background: var(--md-sys-color-surface-container-low);
-                 border-top: 1px solid var(--md-sys-color-outline-variant); }
 
 /* The floating tab bar's frosted fill.
    NOT a Tailwind opacity modifier. `bg-surface-container-lowest/85` compiles to
@@ -683,15 +636,6 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 .tabbar-surface {
   background: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 85%, transparent);
 }
-
-.icon-btn { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center;
-            border: 0; background: transparent; cursor: pointer;
-            border-radius: var(--md-sys-shape-corner-full);
-            color: var(--md-sys-color-on-surface-variant); }
-.icon-btn svg { width: 22px; height: 22px; }
-
-/* The list underneath keeps its scroll position; it is only made unreachable. */
-.phone-scroll[inert] { pointer-events: none; }
 
 /* ==========================================================================
    MOTION

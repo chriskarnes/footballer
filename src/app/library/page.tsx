@@ -1,6 +1,6 @@
+import Link from 'next/link';
 import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
-import { ProgramSheet } from '@/components/ProgramSheet';
 
 /**
  * The three category gradients are --forge-category-* extensions, not md.sys
@@ -54,7 +54,34 @@ export default async function LibraryPage() {
                 </p>
               </div>
 
-              <ProgramSheet programs={inCat} sessions={sessions} />
+              {/* A program is a destination again, not a dialog. The sheet's job
+                  was to stop a mis-tap on the live tab bar dropping you into Plan;
+                  the program page answers that with an explicit back control
+                  instead, and the App Router restores your scroll position in the
+                  list on the way back. */}
+              <div className="grid grid-cols-1 gap-2.5">
+                {inCat.map((p) => {
+                  const n = sessions.filter((s) => s.program_id === p.id).length;
+                  return (
+                    <Link key={p.id} href={`/library/${p.id}`}
+                      className="card pressable flex items-center gap-4 p-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="h-card truncate">{p.name}</div>
+                        {/* No minute total. The number that helps is per drill, on
+                            Train — "384m" against a program is not actionable. */}
+                        <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
+                          {p.level} · {n} sessions · {formatTouches(p.touches)} touches
+                        </div>
+                      </div>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"
+                           className="h-4 w-4 shrink-0 text-on-surface-variant" fill="none"
+                           stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
+                    </Link>
+                  );
+                })}
+              </div>
             </section>
           );
         })}
