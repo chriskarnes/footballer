@@ -127,10 +127,22 @@ export const roundTouches = (n: number): number => {
   return Math.max(step, Math.round(n / step) * step);
 };
 
+/**
+ * Touches, written out in full: 1,000 rather than 1k.
+ *
+ * The number is still rounded — roundTouches snaps to 100 above a thousand —
+ * and the "~" that used to say so is gone. Every touch count in this app is an
+ * estimate of a drill nobody has done yet, so the approximation is a property
+ * of the whole idea rather than of any one figure, and marking each one
+ * individually was punctuation the reader had already assumed.
+ *
+ * Written out because "5.4k" is a number you have to convert before you can
+ * feel it, and the whole point of the figure is that it should land.
+ */
 export const formatTouches = (n: number): string => {
   const v = roundTouches(n);
   if (v <= 0) return '0';
-  return '~' + (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : v);
+  return v.toLocaleString('en-US');
 };
 
 export const hitsGoal = (touches: number) => touches >= TOUCH_GOAL;

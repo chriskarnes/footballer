@@ -189,7 +189,7 @@ export function PlanBuilder({
         </div>
         {!!intake.targetMinutes && (
           <p className="mt-2.5 pl-1 text-[13px] text-on-surface-variant">
-            Using ~{intake.targetMinutes} min from your history instead.{' '}
+            Using {intake.targetMinutes} min from your history instead.{' '}
             <button type="button" onClick={() => set({ targetMinutes: undefined })}
               className="font-semibold text-primary underline underline-offset-2">
               Use the season instead
@@ -227,7 +227,7 @@ export function PlanBuilder({
       {/* ---- the result ---- */}
       <div ref={weekRef} className="mt-10 scroll-mt-5">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="h-card">The blueprint</h2>
+          <h2 className="h-card">Your schedule</h2>
           <button type="button" onClick={() => setSeed(Math.random())}
             className="text-[13px] font-semibold text-primary underline underline-offset-4">
             Shuffle

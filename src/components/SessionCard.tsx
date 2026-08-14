@@ -43,7 +43,7 @@ export function SessionCard({
           <div>
             <div className="font-brand text-[46px] font-extrabold leading-none
                             tracking-tightest text-inverse-primary">
-              {formatTouches(built.totalTouches).replace('~', '')}
+              {formatTouches(built.totalTouches)}
             </div>
             <div className="mt-1.5 text-[12.5px] font-semibold text-app-inverse-on-surface-variant">ball touches</div>
           </div>
@@ -77,8 +77,8 @@ export function SessionCard({
                   {d.sets} × {d.reps_time}{d.rest && d.rest !== '-' ? ` · rest ${d.rest}` : ''}
                 </div>
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                  <span className="tag tag-gold">{FOCUS_LABELS[d.primary_focus]}</span>
-                  {!!d.touches && <span className="tag tag-gold">{formatTouches(d.touches)} touches</span>}
+                  <span className="tag tag-accent">{FOCUS_LABELS[d.primary_focus]}</span>
+                  {!!d.touches && <span className="tag tag-accent">{formatTouches(d.touches)} touches</span>}
                   <span className="tag">{d.equipment.join(' · ') || 'no kit'}</span>
                 </div>
               </div>

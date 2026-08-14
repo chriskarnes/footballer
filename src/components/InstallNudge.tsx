@@ -113,7 +113,7 @@ export function InstallNudge() {
         {platform === 'ios' ? (
           <ol className="mt-4 space-y-2.5 border-t border-outline-variant pt-4">
             <li className="flex items-center gap-3 text-[13.5px] font-semibold">
-              <span className="tag tag-gold w-5 text-center">1</span>
+              <span className="tag tag-accent w-5 text-center">1</span>
               <span className="flex items-center gap-1.5">
                 Tap
                 {/* The Share glyph, drawn rather than described - it is the step people
@@ -128,7 +128,7 @@ export function InstallNudge() {
               </span>
             </li>
             <li className="flex items-center gap-3 text-[13.5px] font-semibold">
-              <span className="tag tag-gold w-5 text-center">2</span>
+              <span className="tag tag-accent w-5 text-center">2</span>
               <span>Choose <em className="not-italic text-primary">Add to Home Screen</em></span>
             </li>
           </ol>

@@ -68,10 +68,12 @@ export default async function PlanPage({
   return (
     <div>
       <p className="eyebrow mb-3">Plan</p>
-      <h1 className="h-hero">Weekly<br />blueprint</h1>
+      {/* Two words, no explicit break: "Weekly Schedule" sets on one line at
+          375px, and the break that "blueprint" needed would now split a phrase
+          that fits. */}
+      <h1 className="h-hero">Weekly Schedule</h1>
       <p className="mt-3.5 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
-        A repeating week built around your weaknesses, your kit and the days you can
-        actually train.
+        A repeating weekly training routine built just for you.
       </p>
 
       {saved && !edit

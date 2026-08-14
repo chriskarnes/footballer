@@ -106,7 +106,7 @@ export default async function MePage() {
             repeating week — most of the questions are already answered by your history.
           </p>
           <Link href="/plan" className="btn-primary mt-3 px-4 py-2 text-sm">
-            Build my weekly blueprint →
+            Build my weekly schedule →
           </Link>
         </div>
       )}

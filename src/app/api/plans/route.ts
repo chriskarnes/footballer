@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     .from('plans')
     .insert({
       user_id: user.id,
-      name: name || 'My weekly blueprint',
+      name: name || 'My weekly schedule',
       active: true,
       intake,
     })
