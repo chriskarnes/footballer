@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { serverClient } from '@/lib/supabase/server';
 import { formatTouches } from '@/lib/session-builder';
 import { SignIn } from '@/components/SignIn';
+import { SignOut } from '@/components/SignOut';
 import { ProfileSetup } from '@/components/ProfileSetup';
 
 /**
@@ -65,7 +66,17 @@ export default async function MePage() {
   return (
     <div>
       <p className="eyebrow mb-3">Your training</p>
-      <h1 className="h-page">{user.email}</h1>
+      <h1 className="h-page">{profile?.display_name || user.email}</h1>
+      {/* The two account controls, together and out of the way of the history.
+          Neither existed: the profile was reachable only by a brand-new account
+          and there was no sign-out anywhere in the app. */}
+      <div className="mt-2 flex items-center gap-4">
+        <Link href="/me/profile"
+              className="pressable text-[13px] font-semibold text-primary underline underline-offset-4">
+          {profile?.display_name ? 'Edit profile' : 'Set up your profile'}
+        </Link>
+        <SignOut />
+      </div>
 
       <div className="mt-6 grid grid-cols-3 gap-2.5">
         <Stat v={String(done.length)} k="Sessions" />

@@ -27,16 +27,30 @@ const POSITIONS = [
 
 const FEET: [string, string][] = [['left', 'Left'], ['right', 'Right'], ['both', 'Both']];
 
-export function ProfileSetup({ email }: { email?: string }) {
+export type ProfileValues = {
+  display_name?: string | null;
+  age_band?: string | null;
+  positions?: string[] | null;
+  dominant_foot?: string | null;
+  region?: string | null;
+  club?: string | null;
+};
+
+export function ProfileSetup({ email, initial }: { email?: string; initial?: ProfileValues }) {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [ageBand, setAgeBand] = useState('');
-  const [positions, setPositions] = useState<string[]>([]);
-  const [foot, setFoot] = useState('');
-  const [region, setRegion] = useState('');
-  const [club, setClub] = useState('');
+  const [name, setName] = useState(initial?.display_name ?? '');
+  const [ageBand, setAgeBand] = useState(initial?.age_band ?? '');
+  const [positions, setPositions] = useState<string[]>(initial?.positions ?? []);
+  const [foot, setFoot] = useState(initial?.dominant_foot ?? '');
+  const [region, setRegion] = useState(initial?.region ?? '');
+  const [club, setClub] = useState(initial?.club ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // Someone who has answered before is correcting, not starting. Same four
+  // questions either way — only the framing around them changes, because
+  // "Let's set you up" over your own filled-in answers reads as a reset.
+  const returning = !!initial?.display_name;
 
   // The four that count are the four that change a drill. Region and club are
   // deliberately not in this number — showing "4 of 6" would make skippable
@@ -75,8 +89,9 @@ export function ProfileSetup({ email }: { email?: string }) {
         }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      // The whole point of answering is the week it builds, so go there.
-      router.push('/plan');
+      // First time through, the whole point of answering is the week it builds,
+      // so go there. Someone correcting one answer is not asking to be moved.
+      router.push(returning ? '/me' : '/plan');
       router.refresh();
     } catch {
       setError('Could not save that just now. Your answers are still here — try again.');
@@ -87,15 +102,16 @@ export function ProfileSetup({ email }: { email?: string }) {
   return (
     <div className="animate-pop">
       <p className="eyebrow mb-3">Account{email ? ` · ${email}` : ''}</p>
-      <h1 className="h-page">Let&rsquo;s set you up</h1>
+      <h1 className="h-page">{returning ? 'Your profile' : 'Let’s set you up'}</h1>
 
       {/* No stats row. A 0 / 0m / 0 version of the populated screen reads as
           failure rather than as a new start. */}
       <div className="card-flat mt-6 p-5">
-        <div className="h-card">Nothing here yet</div>
+        <div className="h-card">{returning ? 'What your sessions are built from' : 'Nothing here yet'}</div>
         <p className="mt-1.5 text-[14px] leading-snug text-on-surface-variant">
-          Four questions and I&rsquo;ll build your first week. Each one changes what you
-          get — nothing here is asked for its own sake.
+          {returning
+            ? 'Change any of it and the next session you build will follow. Each answer changes what you get — nothing here is asked for its own sake.'
+            : 'Four questions and I’ll build your first week. Each one changes what you get — nothing here is asked for its own sake.'}
         </p>
         <div className="progress mt-4">
           <div style={{ width: `${(answered / 4) * 100}%` }} />
@@ -170,7 +186,7 @@ export function ProfileSetup({ email }: { email?: string }) {
 
       <button type="button" onClick={save} disabled={!complete || busy}
               className="btn-primary mt-8 w-full">
-        {busy ? 'Saving…' : 'Build my first week'}
+        {busy ? 'Saving…' : returning ? 'Save changes' : 'Build my first week'}
       </button>
       {error && <p className="mt-3 text-[13px] font-medium text-error">{error}</p>}
 
