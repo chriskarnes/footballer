@@ -3,7 +3,8 @@ import { serverClient } from '@/lib/supabase/server';
 import { formatTouches } from '@/lib/session-builder';
 import { SignIn } from '@/components/SignIn';
 import { SignOut } from '@/components/SignOut';
-import { ProfileSetup } from '@/components/ProfileSetup';
+import { ProfileCard } from '@/components/ProfileCard';
+import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -11,10 +12,26 @@ import { ProfileSetup } from '@/components/ProfileSetup';
  * it leads with what you did last, because repeating a session you liked is
  * the single most common thing a returning player wants.
  */
+/**
+ * The profile columns arrive with supabase/migrations/0001. Until it runs, the
+ * full select fails as a unit, so the two columns that predate it are read on
+ * their own — the card then shows a name and a foot and omits the rest, which
+ * is exactly how it treats any unanswered question.
+ */
+async function readProfile(db: any, id: string): Promise<ProfileValues | null> {
+  const BASE = 'display_name, dominant_foot';
+  const { data, error } = await db.from('profiles')
+    .select(`${BASE}, age_band, positions, region, club`).eq('id', id).maybeSingle();
+  if (!error) return data ?? null;
+  const { data: base } = await db.from('profiles').select(BASE).eq('id', id).maybeSingle();
+  return base ?? null;
+}
+
 export default async function MePage() {
   let user = null as null | { id: string; email?: string };
   let workouts: any[] = [];
-  let profile: { display_name?: string | null } | null = null;
+  let profile: ProfileValues | null = null;
+  let hasPlan = false;
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -22,15 +39,15 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [{ data: rows }, { data: prof }] = await Promise.all([
+        const [{ data: rows }, prof, { data: plans }] = await Promise.all([
           db.from('workouts').select('*')
             .order('created_at', { ascending: false }).limit(25),
-          // Only the column that decides which screen this is. Selecting the
-          // setup fields here would make the page depend on the migration.
-          db.from('profiles').select('display_name').eq('id', user.id).maybeSingle(),
+          readProfile(db, user.id),
+          db.from('plans').select('id').eq('user_id', user.id).eq('active', true).limit(1),
         ]);
         workouts = rows ?? [];
-        profile = prof ?? null;
+        profile = prof;
+        hasPlan = !!plans?.length;
       }
     } catch { /* not configured yet */ }
   }
@@ -65,24 +82,43 @@ export default async function MePage() {
 
   return (
     <div>
-      <p className="eyebrow mb-3">Your training</p>
-      <h1 className="h-page">{profile?.display_name || user.email}</h1>
-      {/* The two account controls, together and out of the way of the history.
-          Neither existed: the profile was reachable only by a brand-new account
-          and there was no sign-out anywhere in the app. */}
-      <div className="mt-2 flex items-center gap-4">
-        <Link href="/me/profile"
-              className="pressable text-[13px] font-semibold text-primary underline underline-offset-4">
-          {profile?.display_name ? 'Edit profile' : 'Set up your profile'}
-        </Link>
+      <div className="app-bar">
+        <p className="eyebrow">Your training</p>
         <SignOut />
       </div>
+
+      {/* Who this account is, before what it has done. The stats beneath answer
+          "how much have I trained"; this answers "what am I training as", which
+          is the thing that decides what a session contains. */}
+      <ProfileCard profile={profile} email={user.email} />
 
       <div className="mt-6 grid grid-cols-3 gap-2.5">
         <Stat v={String(done.length)} k="Sessions" />
         <Stat v={`${Math.round(minutes)}m`} k="Minutes" />
         <Stat v={formatTouches(touches)} k="Touches" />
       </div>
+
+      {/* The saved week, when there is one. A link rather than a copy of the
+          grid: /plan is where a week is read and changed, and two places
+          showing the same seven days is two places to keep in step. */}
+      {hasPlan && (
+        <>
+          <p className="eyebrow mb-3 mt-9">Your weekly schedule</p>
+          <Link href="/plan" className="card pressable flex items-center gap-4 p-4">
+            <div className="min-w-0 flex-1">
+              <div className="h-card">The week you saved</div>
+              <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
+                Repeating — open it to follow or change it
+              </div>
+            </div>
+            <svg viewBox="0 0 24 24" aria-hidden="true"
+                 className="h-4 w-4 shrink-0 text-on-surface-variant" fill="none"
+                 stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </Link>
+        </>
+      )}
 
       <p className="eyebrow mb-3 mt-9">Do it again</p>
       {!workouts.length && (

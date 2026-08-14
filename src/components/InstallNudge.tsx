@@ -89,10 +89,12 @@ export function InstallNudge() {
       <div className="sheet-in card w-full max-w-lg p-5 shadow-level3" role="dialog"
            aria-label="Add Train.futbol to your home screen">
         <div className="flex items-start gap-3.5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px]
-                           bg-inverse-surface font-brand text-[18px] font-extrabold italic text-inverse-primary">
-            F
-          </span>
+          {/* The actual icon the player is being offered, rather than a glyph
+              that has to be kept in step with it by hand — this one was still
+              drawing a gold italic F long after the brand changed. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon-192.png" alt="" width={44} height={44}
+               className="h-11 w-11 shrink-0 rounded-[13px]" />
           <div className="min-w-0 flex-1">
             <p className="h-card">Keep Train.futbol one tap away</p>
             <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
