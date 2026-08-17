@@ -92,18 +92,25 @@ export default async function MePage() {
           is the thing that decides what a session contains. */}
       <ProfileCard profile={profile} email={user.email} />
 
-      <div className="mt-6 grid grid-cols-3 gap-2.5">
-        <Stat v={String(done.length)} k="Sessions" />
-        <Stat v={`${Math.round(minutes)}m`} k="Minutes" />
-        <Stat v={formatTouches(touches)} k="Touches" />
-      </div>
+      {/* One rhythm for the whole screen: 36px between sections, 12px between a
+          section's label and its content. Before this every eyebrow's margin
+          utilities were being zeroed by the type layer, so all three sections
+          ran together at a flat 12px and nothing read as a group. */}
+      <section className="mt-9">
+        <p className="eyebrow mb-3">What you&rsquo;ve done</p>
+        <div className="grid grid-cols-3 gap-2.5">
+          <Stat v={String(done.length)} k="Sessions" />
+          <Stat v={`${Math.round(minutes)}m`} k="Minutes" />
+          <Stat v={formatTouches(touches)} k="Touches" />
+        </div>
+      </section>
 
       {/* The saved week, when there is one. A link rather than a copy of the
           grid: /plan is where a week is read and changed, and two places
           showing the same seven days is two places to keep in step. */}
       {hasPlan && (
-        <>
-          <p className="eyebrow mb-3 mt-9">Your weekly schedule</p>
+        <section className="mt-9">
+          <p className="eyebrow mb-3">Your weekly schedule</p>
           <Link href="/plan" className="card pressable flex items-center gap-4 p-4">
             <div className="min-w-0 flex-1">
               <div className="h-card">The week you saved</div>
@@ -117,16 +124,17 @@ export default async function MePage() {
               <path d="M9 6l6 6-6 6" />
             </svg>
           </Link>
-        </>
+        </section>
       )}
 
-      <p className="eyebrow mb-3 mt-9">Do it again</p>
+      <section className="mt-9">
+      <p className="eyebrow mb-3">Do it again</p>
       {!workouts.length && (
-        <p className="mt-2 text-sm text-on-surface-variant">
+        <p className="text-sm text-on-surface-variant">
           Nothing yet. <Link href="/" className="font-bold text-primary">Build a session →</Link>
         </p>
       )}
-      <div className="mt-2 grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2">
         {workouts.map((w) => (
           <div key={w.id} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
             <div className="min-w-0 flex-1">
@@ -144,6 +152,7 @@ export default async function MePage() {
           </div>
         ))}
       </div>
+      </section>
 
       {done.length >= 3 && (
         <div className="mt-9 rounded-large-increased border border-primary bg-primary-container p-5">

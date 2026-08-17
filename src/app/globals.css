@@ -446,7 +446,19 @@ input, textarea, [data-selectable] {
 
 /* ==========================================================================
    TYPE — class names unchanged, values now come from the typescale tokens.
+
+   Inside @layer components, unlike everything below it, and the reason is
+   `margin: 0`. These four classes zero their margins so a heading carries no
+   spacing it did not ask for — but an unlayered rule beats a Tailwind utility
+   on equal specificity by source order, and this file loads after the utility
+   layer. `<p class="eyebrow mt-9 mb-3">` therefore resolved to a margin of
+   zero, silently, in seventeen places across the app. Layered, the utility
+   wins and the reset only applies where nothing overrides it.
+
+   The state layer and focus rules below stay unlayered on purpose: those DO
+   need to beat utilities.
    ========================================================================== */
+@layer components {
 .h-hero  { font-family: var(--md-sys-typescale-headline-large-font);
            font-size: var(--md-sys-typescale-headline-large-size);
            font-weight: var(--md-sys-typescale-headline-large-weight);
@@ -473,6 +485,7 @@ input, textarea, [data-selectable] {
            letter-spacing: var(--md-sys-typescale-label-small-tracking);
            text-transform: uppercase;
            color: var(--md-sys-color-on-surface-variant); margin: 0; }
+}
 
 /* ==========================================================================
    STATE LAYER — M3's mechanism for hover / focus / pressed. A tinted overlay
@@ -702,6 +715,16 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 }
 .text-field input::placeholder { color: var(--md-sys-color-on-surface-variant); }
 .text-field input:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
+/* A field that is shown but cannot be edited. It keeps the outlined shape so
+   it still reads as "this is one of the fields", and loses the white fill so
+   it does not read as "type here". Still focusable and still announced — see
+   the note at its call site about readOnly rather than disabled. */
+.text-field-locked {
+  background: var(--md-sys-color-surface-container) !important;
+  border-style: dashed;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  cursor: default;
+}
 
 .progress {
   height: 4px; border-radius: var(--md-sys-shape-corner-full); overflow: hidden;

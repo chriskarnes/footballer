@@ -101,7 +101,8 @@ export function ProfileSetup({ email, initial }: { email?: string; initial?: Pro
 
   return (
     <div className="animate-pop">
-      <p className="eyebrow mb-3">Account{email ? ` · ${email}` : ''}</p>
+      {/* No "Account · you@example.com" line above the title. The address is a
+          field further down now, which is where someone looks for it. */}
       <h1 className="h-page">{returning ? 'Your profile' : 'Let’s set you up'}</h1>
 
       {/* No stats row. A 0 / 0m / 0 version of the populated screen reads as
@@ -132,6 +133,26 @@ export function ProfileSetup({ email, initial }: { email?: string; initial?: Pro
                  placeholder="e.g. Sam" autoComplete="off"
                  aria-label="What should I call you" />
         </label>
+      </div>
+
+      {/* The address the account signs in with, shown as a field because that
+          is where someone looks for it — but read-only, because changing it is
+          an auth flow (confirm the new address, keep the old one working until
+          they do) and not a text box. `readOnly` rather than `disabled`: a
+          disabled input is skipped by keyboard navigation and not read out,
+          which would hide the answer from exactly the people who need it. */}
+      <div className="mt-6">
+        <p className="eyebrow mb-0.5">Email</p>
+        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
+          What you sign in with. Not shown to anyone else.
+        </p>
+        <label className="text-field">
+          <input type="email" value={email ?? ''} readOnly aria-label="Email"
+                 aria-describedby="email-locked" className="text-field-locked" />
+        </label>
+        <p id="email-locked" className="mt-1.5 text-[12px] text-on-surface-variant">
+          Can&rsquo;t be changed here yet.
+        </p>
       </div>
 
       <div className="mt-9">
@@ -184,31 +205,35 @@ export function ProfileSetup({ email, initial }: { email?: string; initial?: Pro
         </div>
       </div>
 
-      <button type="button" onClick={save} disabled={!complete || busy}
-              className="btn-primary mt-8 w-full">
-        {busy ? 'Saving…' : returning ? 'Save changes' : 'Build my first week'}
-      </button>
-      {error && <p className="mt-3 text-[13px] font-medium text-error">{error}</p>}
-
-      {/* Below the line. Neither of these changes a drill, so neither is allowed
-          to look required. Region rather than town, never device location, and
-          both genuinely skippable. */}
+      {/* Below the line but above the button. Neither of these changes a drill,
+          so neither is allowed to look required — the rule is the line and the
+          label, not the position. Sitting under the save button meant they were
+          past the end of the form: anyone who filled in the four questions and
+          pressed the obvious control never saw them, and the two fields that
+          most needed to be a free choice were the two nobody was offered.
+          Region rather than town, never device location, both skippable. */}
       <div className="mt-10 border-t border-outline-variant pt-5">
         <p className="eyebrow mb-0.5">Optional</p>
         <p className="mb-3.5 text-[12.5px] text-on-surface-variant">
           Doesn&rsquo;t change your plan. Skip it and nothing is lost.
         </p>
         <label className="text-field">
-          <span>Region</span>
-          <input type="text" value={region} onChange={(e) => setRegion(e.target.value)}
-                 placeholder="e.g. Pennsylvania" autoComplete="off" />
-        </label>
-        <label className="text-field mt-4">
           <span>Club</span>
           <input type="text" value={club} onChange={(e) => setClub(e.target.value)}
                  placeholder="Your team, if you’re in one" autoComplete="off" />
         </label>
+        <label className="text-field mt-4">
+          <span>Location</span>
+          <input type="text" value={region} onChange={(e) => setRegion(e.target.value)}
+                 placeholder="e.g. Pennsylvania" autoComplete="off" />
+        </label>
       </div>
+
+      <button type="button" onClick={save} disabled={!complete || busy}
+              className="btn-primary mt-8 w-full">
+        {busy ? 'Saving…' : returning ? 'Save changes' : 'Build my first week'}
+      </button>
+      {error && <p className="mt-3 text-[13px] font-medium text-error">{error}</p>}
 
       <p className="mt-6 text-[12px] leading-relaxed text-on-surface-variant">
         You can change or delete any of this later from your profile.
