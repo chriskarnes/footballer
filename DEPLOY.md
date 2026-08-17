@@ -79,6 +79,48 @@ Locally the same values live in `.env.local`, which is gitignored.
 
 ---
 
+## Database changes
+
+**Nothing runs these for you.** `git push` deploys code; the schema is a
+separate act, by hand, and the deploy will not wait for it or warn you.
+
+Migrations live in `supabase/migrations/`, numbered, and are meant to be run in
+order. Neither `psql` nor the Supabase CLI is installed on this machine, so the
+shortest path is the dashboard:
+
+1. Open the SQL editor:
+   **https://supabase.com/dashboard/project/ypcwazerkuvngptprlii/sql/new**
+2. Paste the whole contents of the migration file
+3. Run
+
+Every statement is written `if not exists` / `drop … if exists` first, so
+running one twice is harmless. That is deliberate — it makes "did I already run
+this?" a question you can answer by just running it again.
+
+If you'd rather do it from a terminal, install one of them first:
+
+```bash
+brew install postgresql@16
+```
+
+then take the connection string from Supabase → Project Settings → Database →
+Connection string → URI, and:
+
+```bash
+psql "$SUPABASE_DB_URL" -f supabase/migrations/0001_profile_setup_fields.sql
+```
+
+### Order it with the deploy
+
+Code that reads a new column should tolerate its absence, so that the order of
+the two acts cannot break the app. `/api/profile` and the Me page both do this:
+the full select fails as a unit, they fall back to the columns that predate the
+migration, and the API answers `stored: "partial"` to say what it dropped.
+Keep that up and a migration can be run before or after its deploy. Skip it and
+you have a window where the site is broken and the fix is not in git.
+
+---
+
 ## Things that will confuse you
 
 **Preview URLs ask you to log in.** The `*.vercel.app` URLs sit behind Vercel
