@@ -101,8 +101,11 @@ export function ProfileSetup({ email, initial }: { email?: string; initial?: Pro
 
   return (
     <div className="animate-pop">
-      {/* No "Account · you@example.com" line above the title. The address is a
-          field further down now, which is where someone looks for it. */}
+      {/* The kicker every other screen has. Removing the "Account ·
+          you@example.com" line took this screen's header with it — the address
+          belonged in a field, but the eyebrow above the title was doing a
+          separate job, which is telling you which screen you are on. */}
+      <p className="eyebrow mb-3">Profile</p>
       <h1 className="h-page">{returning ? 'Your profile' : 'Let’s set you up'}</h1>
 
       {/* No stats row. A 0 / 0m / 0 version of the populated screen reads as

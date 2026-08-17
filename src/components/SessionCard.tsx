@@ -89,15 +89,15 @@ export function SessionCard({
                 <div className="flex gap-1.5">
                   {d.video_url && (
                     <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"
-                       className="flex h-8 w-8 items-center justify-center rounded-full
-                                  bg-surface-container-low text-on-surface transition active:scale-90">
+                       className="pressable flex h-8 w-8 items-center justify-center rounded-full
+                                  bg-surface-container-low text-on-surface active:scale-90">
                       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </a>
                   )}
                   <button onClick={() => onSwap(i)} aria-label="Swap this drill"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low
+                    className="pressable flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-low
                                text-on-surface-variant transition active:scale-90 hover:text-on-surface">
                     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none"
                          stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">

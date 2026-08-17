@@ -82,7 +82,16 @@ export function Runner({
                style={{ width: `${pct}%` }} />
         </div>
         {allDone && !saved && (
-          <button onClick={finish} className="btn-gold mt-5 w-full">Finish session</button>
+          /* This one sits ON the brand block, so it takes the block's own
+              on-colour rather than on-surface — which here would be black
+              ink on a black card. It was `btn-gold` until now: a class that
+              stopped existing when the M3 migration renamed it, so the only
+              button in the runner has been rendering unstyled ever since. */
+          <button onClick={finish}
+                  className="btn-primary pressable mt-5 w-full border-on-surface-brand
+                             text-on-surface-brand hover:outline-on-surface-brand">
+            Finish session
+          </button>
         )}
         {saved && (
           <p className="mt-5 text-center text-[14px] font-bold text-on-surface-brand">Saved to your history</p>
@@ -125,7 +134,7 @@ export function Runner({
               {d.video_url && (
                 <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"
                    onClick={(e) => e.stopPropagation()}
-                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+                   className="pressable flex h-9 w-9 shrink-0 items-center justify-center rounded-full
                               bg-surface-container-low text-on-surface transition active:scale-90">
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M8 5v14l11-7z" />

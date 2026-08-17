@@ -595,8 +595,34 @@ input, textarea, [data-selectable] {
   background: currentColor; opacity: 0;
   transition: opacity var(--md-sys-motion-duration-short2) linear;
 }
+/* Every control that has a box gets the hover outline, not only the ones
+   someone remembered to mark `.pressable`. Relying on the marker alone left
+   program rows, the play and swap buttons on a drill, Surprise me and every
+   .btn-ghost on the site with no hover at all — the marker is easy to forget
+   and its absence is invisible until someone hovers the thing.
+
+   Text links are deliberately not in this list: an outline around a run of
+   inline text boxes it in a way that reads as a bug. They have underlines. */
+.chip, .segment, .day, .icon-btn, a.card, button.card {
+  outline: 1.5px solid transparent;
+  outline-offset: -1.5px;
+  transition: outline-color var(--md-sys-motion-duration-short2);
+}
 @media (hover: hover) {
-  .pressable:hover { outline-color: var(--md-sys-color-on-surface); }
+  .pressable:hover,
+  .chip:hover, .segment:hover, .day:hover, .icon-btn:hover,
+  a.card:hover, button.card:hover {
+    outline-color: var(--md-sys-color-on-surface);
+  }
+  /* The buttons are already outlined, so an inner ring of the same colour
+     would be invisible on one and redundant on the other. Ghost promotes its
+     muted border to full ink; primary, already at full ink, takes a ring just
+     outside it — which reads as the edge thickening without the reflow that
+     actually thickening a border would cause. */
+  .btn-ghost:not(:disabled):hover { border-color: var(--md-sys-color-on-surface); }
+  .btn-primary:not(:disabled):hover {
+    outline: 1.5px solid var(--md-sys-color-on-surface); outline-offset: 0;
+  }
 }
 .pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
 .pressable:active { transform: scale(.965); transition-duration: 60ms; }
