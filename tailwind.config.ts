@@ -59,7 +59,15 @@ const config: Config = {
         'inverse-on-surface':        'var(--md-sys-color-inverse-on-surface)',
         'inverse-primary':           'var(--md-sys-color-inverse-primary)',
         scrim:                       'var(--md-sys-color-scrim)',
-        /* Forge extensions — M3 defines no role for these. */
+        /* App extensions — M3 defines no role for these. */
+        /* The brand block: a surface made of the brand that does not follow
+           the scheme. See the note in globals.css for why this is not
+           inverse-surface. */
+        'surface-brand':                    'var(--app-surface-brand)',
+        'on-surface-brand':                 'var(--app-on-surface-brand)',
+        'on-surface-brand-variant':         'var(--app-on-surface-brand-variant)',
+        'brand-track':                      'var(--app-brand-track)',
+        'brand-edge':                       'var(--app-brand-edge)',
         'app-inverse-on-surface-variant': 'var(--app-inverse-on-surface-variant)',
         'app-inverse-outline-variant':    'var(--app-inverse-outline-variant)',
         'app-category-technical':         'var(--app-category-technical)',

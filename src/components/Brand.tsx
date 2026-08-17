@@ -17,10 +17,10 @@ export function Brand({ small }: { small?: boolean }) {
     );
   }
   return (
-    <span className="inline-block rounded-[20px] bg-inverse-surface px-6 py-4 shadow-level3">
-      <span className="block font-brand text-[34px] leading-none tracking-tightest text-inverse-primary">
+    <span className="inline-block rounded-[20px] bg-surface-brand border border-brand-edge px-6 py-4 shadow-level3">
+      <span className="block font-brand text-[34px] leading-none tracking-tightest text-on-surface-brand">
         <span className="font-extrabold">Train</span>
-        <span className="font-medium text-app-inverse-on-surface-variant">.futbol</span>
+        <span className="font-medium text-on-surface-brand-variant">.futbol</span>
       </span>
     </span>
   );

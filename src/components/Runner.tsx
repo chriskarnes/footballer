@@ -59,33 +59,33 @@ export function Runner({
       <h1 className="h-page">{title}</h1>
 
       {/* live progress, dark so the number carries */}
-      <div className="mt-6 rounded-large-increased bg-inverse-surface p-6 shadow-level3">
+      <div className="mt-6 rounded-large-increased bg-surface-brand border border-brand-edge p-6 shadow-level3">
         <div className="flex items-end justify-between">
           <div>
             <div className="font-brand text-[40px] font-extrabold leading-none
-                            tracking-tightest text-inverse-primary">
+                            tracking-tightest text-on-surface-brand">
               {formatTouches(doneTouches)}
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-app-inverse-on-surface-variant">touches banked</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">touches banked</div>
           </div>
           <div className="text-right">
-            <div className="font-brand text-[20px] font-bold tracking-tighter text-inverse-on-surface">
-              {done.size}<span className="text-app-inverse-on-surface-variant">/{drills.length}</span>
+            <div className="font-brand text-[20px] font-bold tracking-tighter text-on-surface-brand">
+              {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
             </div>
-            <div className="mt-1 text-[11.5px] font-semibold text-app-inverse-on-surface-variant">
+            <div className="mt-1 text-[11.5px] font-semibold text-on-surface-brand-variant">
               of {formatTouches(totalTouches)}
             </div>
           </div>
         </div>
-        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-app-inverse-outline-variant">
-          <div className="h-full rounded-full bg-inverse-primary transition-all duration-500"
+        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-brand-track">
+          <div className="h-full rounded-full bg-on-surface-brand transition-all duration-500"
                style={{ width: `${pct}%` }} />
         </div>
         {allDone && !saved && (
           <button onClick={finish} className="btn-gold mt-5 w-full">Finish session</button>
         )}
         {saved && (
-          <p className="mt-5 text-center text-[14px] font-bold text-inverse-primary">Saved to your history</p>
+          <p className="mt-5 text-center text-[14px] font-bold text-on-surface-brand">Saved to your history</p>
         )}
       </div>
 
@@ -100,11 +100,14 @@ export function Runner({
                 }}
                 className={`card pressable flex cursor-pointer items-start gap-3.5 p-4
                             ${on ? 'opacity-45' : ''}`}>
+              {/* A ticked drill is a selection, not a brand block, so it takes
+                  the selection pair and flips with the scheme — same as a
+                  chosen chip and the navigation pill. */}
               <div className={`mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center
                                rounded-[9px] border-2 transition
-                               ${on ? 'border-inverse-primary bg-inverse-primary' : 'border-outline-variant bg-surface-container-low'}`}>
+                               ${on ? 'border-secondary-container bg-secondary-container' : 'border-outline-variant bg-surface-container-low'}`}>
                 {on && (
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-on-surface" fill="none"
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-on-secondary-container" fill="none"
                        stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"
                        strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 )}

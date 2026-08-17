@@ -38,14 +38,14 @@ export function SessionCard({
       {/* The headline number gets the space it deserves — and now the whole card,
           since "Your session" is a heading above this box rather than a second,
           smaller label repeating it inside. */}
-      <div className="overflow-hidden rounded-large-increased bg-inverse-surface p-6 shadow-level3">
+      <div className="overflow-hidden rounded-large-increased bg-surface-brand border border-brand-edge p-6 shadow-level3">
         <div className="flex items-end gap-6">
           <div>
             <div className="font-brand text-[46px] font-extrabold leading-none
-                            tracking-tightest text-inverse-primary">
+                            tracking-tightest text-on-surface-brand">
               {formatTouches(built.totalTouches)}
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-app-inverse-on-surface-variant">ball touches</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">ball touches</div>
           </div>
           <div className="mb-1 flex gap-6">
             <Metric v={`${mins}`} unit="min" />
@@ -53,11 +53,11 @@ export function SessionCard({
           </div>
         </div>
 
-        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-app-inverse-outline-variant">
-          <div className="h-full rounded-full bg-inverse-primary transition-all duration-700"
+        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-brand-track">
+          <div className="h-full rounded-full bg-on-surface-brand transition-all duration-700"
                style={{ width: `${pct}%` }} />
         </div>
-        <p className="mt-2.5 text-[12px] font-medium text-app-inverse-on-surface-variant">
+        <p className="mt-2.5 text-[12px] font-medium text-on-surface-brand-variant">
           {hit
             ? `Past the ${TOUCH_GOAL.toLocaleString()} goal — a team practice gives most players a few hundred.`
             : `${formatTouches(TOUCH_GOAL - built.totalTouches)} short of ${TOUCH_GOAL.toLocaleString()}.`}
@@ -130,8 +130,8 @@ export function SessionCard({
 function Metric({ v, unit }: { v: string; unit: string }) {
   return (
     <div>
-      <div className="font-brand text-[22px] font-bold leading-none tracking-tighter text-inverse-on-surface">{v}</div>
-      <div className="mt-1 text-[11.5px] font-semibold text-app-inverse-on-surface-variant">{unit}</div>
+      <div className="font-brand text-[22px] font-bold leading-none tracking-tighter text-on-surface-brand">{v}</div>
+      <div className="mt-1 text-[11.5px] font-semibold text-on-surface-brand-variant">{unit}</div>
     </div>
   );
 }
