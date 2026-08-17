@@ -237,11 +237,16 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
         {/* The accessible name has to say what "Go" does, and it has to differ from
             the manual Build button below — two controls sharing one name is a maze
             for anyone navigating by voice or screen reader. */}
+        {/* The disabled state used to be a #F4F4F4 pill on a white field: the
+            label passed contrast but the control had no perceptible boundary
+            at all, which is the 3:1 WCAG asks of a control's edge and a 1.06:1
+            it actually had. It is outlined when disabled, filled when not. */}
         <button onClick={ask} disabled={busy || !text.trim()}
           aria-label="Build a session from what you typed"
-          className="pressable min-h-11 shrink-0 rounded-full bg-inverse-surface px-6 font-brand
-                     text-[14px] font-bold tracking-tight text-inverse-primary
-                     disabled:bg-surface-container-low disabled:text-on-surface-variant">
+          className="pressable min-h-11 shrink-0 rounded-full border border-transparent
+                     bg-inverse-surface px-6 font-brand text-[14px] font-bold tracking-tight
+                     text-inverse-primary
+                     disabled:border-outline disabled:bg-transparent disabled:text-on-surface-variant">
           {busy ? '···' : 'Go'}
         </button>
       </div>
@@ -327,12 +332,20 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
               </div>
             </div>
 
-        {/* The arrow is doing real work: on a light page a filled block plus a
-            direction glyph reads as "press me" faster than colour alone ever did. */}
+        {/* Outlined, not filled. A filled black block is what a selected chip
+            is now, and this button sits directly under thirty of them — filled,
+            it read as one more thing that had been chosen rather than the thing
+            that acts on the choosing. The arrow is doing the work the fill used
+            to: a direction glyph says "press me" without claiming a state. */}
         <button
           onClick={() => { if (build()) setPendingScroll(true); }}
           disabled={!ready}
-          className="btn-primary mt-8 w-full"
+          /* Disabled dims the border, not the label. `opacity` on the whole
+             button would have taken the text to 3.0:1 — WCAG exempts disabled
+             controls, but an unreadable label is still an unreadable label. */
+          className="btn-ghost pressable mt-8 flex w-full items-center justify-center gap-2
+                     text-[16px] font-bold disabled:border-outline-variant
+                     disabled:text-on-surface-variant"
         >
           Build
           {ready && (

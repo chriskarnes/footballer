@@ -72,16 +72,46 @@
    `outline` at #777777 is 4.5:1 on the page, well past the 3:1 WCAG asks of
    a control boundary, and every text pair is above 8:1.
    ========================================================================== */
+/* ==========================================================================
+   BRAND — the two colours the product is made of.
+
+   Primary is what a filled, chosen or emphasised thing is; secondary is what
+   sits on top of it. Everything else in the scheme is the neutral ramp, which
+   is background rather than brand.
+
+   These two are separated out because they are the pair a customer will
+   eventually choose to match their own brand. What that needs beyond this
+   block: a tonal palette generated from each colour, because the scheme wants
+   more than two steps of a brand — containers, dim variants, and an on-colour
+   picked for contrast rather than assumed. Two hardcoded values cannot answer
+   "what is the hover tint of your green". Google's material-color-utilities
+   does exactly this and is what the original palette was generated with.
+
+   Until then: swapping these two swaps every filled block, every selected
+   chip, day and segment, and the app bar. Contrast is only guaranteed for
+   pairs that are actually opposite ends of a ramp.
+   ========================================================================== */
 :root {
-  --md-sys-color-primary:                   #1B1B1B;
-  --md-sys-color-on-primary:                #FFFFFF;
+  --app-brand-primary:   #1B1B1B;   /* ink   */
+  --app-brand-secondary: #FFFFFF;   /* paper */
+}
+
+:root {
+  --md-sys-color-primary:                   var(--app-brand-primary);
+  --md-sys-color-on-primary:                var(--app-brand-secondary);
   --md-sys-color-primary-container:         #DCDCDC;
   --md-sys-color-on-primary-container:      #1B1B1B;
 
   --md-sys-color-secondary:                 #474747;
   --md-sys-color-on-secondary:              #FFFFFF;
-  --md-sys-color-secondary-container:       #E3E3E3;
-  --md-sys-color-on-secondary-container:    #1B1B1B;
+  /* Selection. M3 uses a pale tone-90 fill here, and on a monochrome palette
+     that put "your pointer is here" and "you chose this" within a few percent
+     of each other. The selected state is now the brand pair at full contrast —
+     the same black-on-white the navigation bar has always used for the tab you
+     are on, which is the one selected state in the app nobody has ever had to
+     squint at. */
+  --md-sys-color-secondary-container:       var(--app-brand-primary);
+  --md-sys-color-on-secondary-container:    var(--app-brand-secondary);
 
   --md-sys-color-tertiary:                  #303030;
   --md-sys-color-on-tertiary:               #FFFFFF;
@@ -113,11 +143,12 @@
   --md-sys-color-outline:                   #777777;
   --md-sys-color-outline-variant:           #C7C7C7;
 
-  /* Near-black rather than #000000. A pure-black block against a white page
-     is a hole; tone 10 reads as ink. */
-  --md-sys-color-inverse-surface:           #1B1B1B;
+  /* The filled block: brand primary with brand secondary on it. Near-black
+     rather than #000000 — a pure-black block against a white page is a hole,
+     and tone 10 reads as ink. */
+  --md-sys-color-inverse-surface:           var(--app-brand-primary);
   --md-sys-color-inverse-on-surface:        #F1F1F1;
-  --md-sys-color-inverse-primary:           #FFFFFF;
+  --md-sys-color-inverse-primary:           var(--app-brand-secondary);
 
   --md-sys-color-scrim:                     #000000;
   --md-sys-color-shadow:                    #000000;
@@ -135,8 +166,12 @@
   --md-sys-color-on-primary-container:      #E3E3E3;
   --md-sys-color-secondary:                 #C7C7C7;
   --md-sys-color-on-secondary:              #303030;
-  --md-sys-color-secondary-container:       #474747;
-  --md-sys-color-on-secondary-container:    #E3E3E3;
+  /* The brand pair, swapped: on a dark background the emphasised thing is the
+     light one. Tone 90 rather than the brand's own #FFFFFF — a pure-white
+     block on a near-black page glares, and every filled surface in the dark
+     scheme already stops here. */
+  --md-sys-color-secondary-container:       #E3E3E3;
+  --md-sys-color-on-secondary-container:    var(--app-brand-primary);
   --md-sys-color-tertiary:                  #C7C7C7;
   --md-sys-color-on-tertiary:               #303030;
   --md-sys-color-tertiary-container:        #474747;
@@ -160,7 +195,7 @@
   --md-sys-color-outline-variant:           #474747;
   --md-sys-color-inverse-surface:           #E3E3E3;
   --md-sys-color-inverse-on-surface:        #303030;
-  --md-sys-color-inverse-primary:           #1B1B1B;
+  --md-sys-color-inverse-primary:           var(--app-brand-primary);
   --app-inverse-on-surface-variant:         #5E5E5E;
   --app-inverse-outline-variant:            #ABABAB;
 } }
@@ -172,8 +207,12 @@
   --md-sys-color-on-primary-container:      #E3E3E3;
   --md-sys-color-secondary:                 #C7C7C7;
   --md-sys-color-on-secondary:              #303030;
-  --md-sys-color-secondary-container:       #474747;
-  --md-sys-color-on-secondary-container:    #E3E3E3;
+  /* The brand pair, swapped: on a dark background the emphasised thing is the
+     light one. Tone 90 rather than the brand's own #FFFFFF — a pure-white
+     block on a near-black page glares, and every filled surface in the dark
+     scheme already stops here. */
+  --md-sys-color-secondary-container:       #E3E3E3;
+  --md-sys-color-on-secondary-container:    var(--app-brand-primary);
   --md-sys-color-tertiary:                  #C7C7C7;
   --md-sys-color-on-tertiary:               #303030;
   --md-sys-color-tertiary-container:        #474747;
@@ -197,7 +236,7 @@
   --md-sys-color-outline-variant:           #474747;
   --md-sys-color-inverse-surface:           #E3E3E3;
   --md-sys-color-inverse-on-surface:        #303030;
-  --md-sys-color-inverse-primary:           #1B1B1B;
+  --md-sys-color-inverse-primary:           var(--app-brand-primary);
   --app-inverse-on-surface-variant:         #5E5E5E;
   --app-inverse-outline-variant:            #ABABAB;
 }
@@ -488,9 +527,26 @@ input, textarea, [data-selectable] {
 }
 
 /* ==========================================================================
-   STATE LAYER — M3's mechanism for hover / focus / pressed. A tinted overlay
-   at a fixed opacity on top of the container, rather than a bespoke colour
-   swap per component. Applied through ::after so it never disturbs layout.
+   STATE LAYER — hover / pressed.
+
+   M3's mechanism is a tinted overlay at a fixed opacity. On a colour scheme
+   that reads fine; on this one it does not, and for a specific reason: the
+   hover tint and the selected fill are both "a grey wash over the container",
+   so a hovered card and a chosen chip arrived at nearly the same colour.
+   A state that means "your pointer is here" and a state that means "you chose
+   this" cannot look alike.
+
+   So hover draws an outline instead of a fill, and selection keeps the fill —
+   now at full contrast, see the note above .chip. Two different mechanisms for
+   two different meanings, rather than two opacities of one.
+
+   The outline is drawn with `outline`, not `border` or `box-shadow`: it sits
+   outside the box model, so nothing reflows and the card cannot change size on
+   hover. `outline-offset: -1.5px` pulls it inside the corner radius.
+
+   The press keeps the tint AND the scale. Press is momentary and physical, and
+   on touch there is no hover at all, so the transform is the only feedback the
+   press gets.
    ========================================================================== */
 .pressable {
   position: relative;
@@ -498,7 +554,10 @@ input, textarea, [data-selectable] {
   transition: transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
               background-color var(--md-sys-motion-duration-medium2),
               border-color var(--md-sys-motion-duration-medium2),
+              outline-color var(--md-sys-motion-duration-short2),
               color var(--md-sys-motion-duration-medium2);
+  outline: 1.5px solid transparent;
+  outline-offset: -1.5px;
 }
 .pressable::after {
   content: ''; position: absolute; inset: 0; z-index: -1;
@@ -506,11 +565,10 @@ input, textarea, [data-selectable] {
   background: currentColor; opacity: 0;
   transition: opacity var(--md-sys-motion-duration-short2) linear;
 }
-.pressable:hover::after  { opacity: var(--md-sys-state-hover-state-layer-opacity); }
+@media (hover: hover) {
+  .pressable:hover { outline-color: var(--md-sys-color-on-surface); }
+}
 .pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
-/* Forge's scale press is kept alongside the state layer. On touch there is no
-   hover to reveal the layer, so the transform is still the only feedback the
-   press gets. Fast in, slower out. */
 .pressable:active { transform: scale(.965); transition-duration: 60ms; }
 
 /* M3 requires a visible focus indicator. There wasn't one. */
@@ -549,18 +607,15 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    #3C4858 on #D7E3F8 is 7.18:1, so a selected chip is more legible than an
    unselected one, not less.
 
-   The fill alone was not enough: dropping the border on select made the
-   selected chip lose its edge, and #D7E3F8 against the near-white surface it
-   sits on is a 1.1:1 boundary — the state was carried by a difference you have
-   to hunt for. The selected chip keeps a border, now drawn in
-   on-secondary-container: the label's own ink, so the outline reads as part of
-   the selected block rather than as a second colour. It is still 1px, so
-   nothing rewraps under your thumb on select.
+   The fill is now the brand pair at full contrast — black chip, white label —
+   which is what the navigation bar has always done for the tab you are on. A
+   pale fill needed a border and a checkmark to be legible at all; a black one
+   is unmistakable at a glance, and keeps them anyway for the reader who cannot
+   separate two fills by lightness.
 
-   The checkmark these rules have always described is finally rendered, by
-   components/Chip.tsx — it was specified here and in no markup, so the state
-   was carried by colour alone for anyone who could not see the fill. Three
-   cues now: fill, border, mark.
+   The border is drawn in secondary-container, the fill's own colour, so it
+   reads as the edge of the block rather than a ring around it. It stays 1px so
+   nothing rewraps under your thumb on select.
 
    Chips stay at 44px rather than M3's 32dp: M3 gets to its 48dp touch target
    with an invisible overlay, which is the right call in a component library
@@ -579,7 +634,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 }
 .chip .chip-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
 .chip-on, .chip-on:hover {
-  border-color: var(--md-sys-color-on-secondary-container);
+  border-color: var(--md-sys-color-secondary-container);
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
 }
@@ -648,7 +703,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-surface-variant);
 }
 .day-on {
-  border-color: var(--md-sys-color-on-secondary-container);
+  border-color: var(--md-sys-color-secondary-container);
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
 }

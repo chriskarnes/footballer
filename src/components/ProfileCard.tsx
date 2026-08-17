@@ -51,9 +51,9 @@ export function ProfileCard({
   return (
     <div className="card mt-6 p-5">
       <div className="flex items-center gap-4">
-        {/* Initials, not a silhouette. The ring is the same secondary-container
-            pair a selected chip uses, so the avatar is made of roles the rest
-            of the app already spends. */}
+        {/* Initials, not a silhouette. The same brand pair a selected chip
+            uses, so the avatar is made of roles the rest of the app spends
+            rather than a colour chosen for this one place. */}
         <span aria-hidden="true"
               className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full
                          bg-secondary-container font-brand text-[19px] font-extrabold
