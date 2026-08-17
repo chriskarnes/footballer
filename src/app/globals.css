@@ -640,46 +640,57 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 }
 .chip-on .chip-check { display: block; }
 
-/* Black with white on it: inverse-surface + inverse-primary. This rule has now
-   survived two full recolours without an edit — black-and-gold, then navy and
-   powder blue, now ink and paper — because the roles carry the intent and only
-   the values underneath them move. That is the whole case for the token layer,
-   demonstrated twice. 17.4:1. */
+/* THE RULE: a filled block is a state, an outlined one is an action.
+   Nothing chosen is ever outlined, and nothing you press is ever filled.
+
+   .btn-primary was a filled black block, which is now exactly what a selected
+   chip is. Two things that mean opposite things — "this is what you picked"
+   and "press this to act on what you picked" — cannot share a treatment, and
+   on a monochrome palette there is no hue left to separate them with. So the
+   fill goes to state, and buttons take the outline.
+
+   That leaves primary and ghost both outlined, so the hierarchy between them
+   moves to weight: 2px in on-surface against 1px in outline, 52px tall against
+   44px, and the brand face against the label face. A primary action still
+   wins its screen — it wins by weight rather than by being the only black
+   thing on it. */
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 52px; border: 0; cursor: pointer;
+  min-height: 52px; cursor: pointer;
+  border: 2px solid var(--md-sys-color-on-surface);
   border-radius: var(--md-sys-shape-corner-large);
-  background: var(--md-sys-color-inverse-surface);
+  background: transparent;
   padding: 0 24px;
   font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
   letter-spacing: var(--app-track-tighter);
-  color: var(--md-sys-color-inverse-primary);
+  color: var(--md-sys-color-on-surface);
 }
+/* Dims the border, not the label. Dropping the whole button to a lower opacity
+   takes the text under 4:1, and WCAG exempting disabled controls does not make
+   an unreadable label readable. */
 .btn-primary:disabled {
-  background: var(--md-sys-color-surface-container-low);
+  /* `outline` (4.5:1), not `outline-variant` (1.69:1). A disabled control is
+     exempt from WCAG's 3:1 boundary rule, but the complaint that started this
+     was a button nobody could see the edge of, and "it was disabled" is not an
+     answer to that. One weight down and a muted label is enough to say
+     unavailable. */
+  border-color: var(--md-sys-color-outline);
+  border-width: 1px;
   color: var(--md-sys-color-on-surface-variant); cursor: default;
 }
 
-/* The reverse: white as the fill, black as the label. inverse-primary is M3's
-   role for exactly this — the primary as it would appear in the opposite
-   scheme — so the old rule that the accent is only ever a fill on a dark
-   surface is now enforced by the token's meaning rather than by a comment.
-   Renamed from .btn-gold, which named a colour that no longer exists. It has
-   no callers in this file, so the rename is free. */
-.btn-accent {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 52px; border: 0; cursor: pointer;
-  border-radius: var(--md-sys-shape-corner-large);
-  background: var(--md-sys-color-inverse-primary);
-  padding: 0 24px;
-  font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
-  letter-spacing: var(--app-track-tighter);
-  color: var(--md-sys-color-inverse-surface);
-}
+/* .btn-accent is gone. It was a filled button — white on dark, the reverse of
+   the old .btn-primary — which is precisely what THE RULE above now forbids,
+   and it had no callers in the app or this file. A dead rule that contradicts
+   the stated system is worse than no rule: the next person to want a filled
+   button would have found one sitting here looking sanctioned. Recoverable
+   from git if a filled action ever earns its place back.
 
-/* Outlined button. The outline moved from --line (#E8E8E3, 1.23:1 against
-   white) to `outline` (#74777E, 4.27:1). 1.23:1 fails the 3:1 that WCAG asks
-   of a control's boundary — the old border was decorative, not perceptible. */
+   Outlined button, the lesser action. The outline moved from --line (#E8E8E3,
+   1.23:1 against white) to `outline` (4.5:1). 1.23:1 fails the 3:1 that WCAG
+   asks of a control's boundary — the old border was decorative, not
+   perceptible. One weight below .btn-primary in every dimension: 1px against
+   2px, muted against on-surface, 44px against 52px, label face against brand. */
 .btn-ghost {
   min-height: 44px; cursor: pointer;
   border-radius: var(--md-sys-shape-corner-large);
