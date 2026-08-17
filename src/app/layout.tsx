@@ -51,8 +51,8 @@ export const viewport: Viewport = {
   // These are md-sys-color-surface in each scheme — the literal is unavoidable,
   // since a meta tag cannot read a custom property.
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FAF9FB' },
-    { media: '(prefers-color-scheme: dark)', color: '#121315' },
+    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
+    { media: '(prefers-color-scheme: dark)', color: '#121212' },
   ],
 };
 

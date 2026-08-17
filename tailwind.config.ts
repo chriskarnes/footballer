@@ -12,9 +12,10 @@ import type { Config } from 'tailwindcss';
  * an `@theme` block and generate their utilities directly; on v3 the custom
  * properties live in CSS and this file names them.
  *
- * The whole colour scheme derives from one source hue — HCT 255, chroma 42 —
- * through Google's material-color-utilities. If the brand colour moves,
- * regenerate from the new source rather than hand-editing tones here.
+ * The scheme is monochrome — one neutral ramp at chroma 0. The role names
+ * below are unchanged and still worth having: `primary` means "the accent"
+ * whether the accent is a hue or a value, and keeping the M3 vocabulary is
+ * what let the palette swap out underneath this file without touching it.
  */
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],

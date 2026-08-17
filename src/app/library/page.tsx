@@ -5,8 +5,8 @@ import { formatTouches } from '@/lib/session-builder';
 /**
  * The three category gradients are --app-category-* extensions, not md.sys
  * roles: M3 has no mechanism for "three sibling categories that must stay
- * visually distinct". Each takes a different ramp that is still inside the
- * brief — primary navy, tertiary cyan-blue, primary at a lighter tone.
+ * visually distinct". On a monochrome palette they separate by value rather
+ * than hue — a near-black, a mid and a light band of the neutral ramp.
  *
  * Text on them uses --app-on-category, which is FIXED rather than
  * scheme-following. The gradients do not flip between light and dark, so text
