@@ -66,24 +66,34 @@ export function Runner({
           it never reaches a number anyone recognises as finished. The bar has
           always been drawn from the drill count, so the headline now agrees
           with the bar underneath it. */}
-      <div className="mt-6 rounded-large-increased bg-surface-brand border border-brand-edge p-6 shadow-level3">
+      <div key={allDone ? 'done' : 'going'}
+           className={`mt-6 rounded-large-increased bg-surface-brand border border-brand-edge
+                       p-6 shadow-level3 ${allDone ? 'celebrate' : ''}`}>
         <div className="flex items-end justify-between">
-          <div>
-            <div className="font-brand text-[40px] font-extrabold leading-none
-                            tracking-tightest text-on-surface-brand">
-              {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
-            </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
-              drills done
+          <div className="flex items-end gap-3">
+            {allDone && (
+              <svg viewBox="0 0 24 24" aria-hidden="true"
+                   className="mb-1 h-9 w-9 shrink-0 text-on-surface-brand"
+                   fill="none" stroke="currentColor" strokeWidth="3"
+                   strokeLinecap="round" strokeLinejoin="round">
+                <path className="celebrate-tick" d="M20 6 9 17l-5-5" />
+              </svg>
+            )}
+            <div>
+              <div className="font-brand text-[40px] font-extrabold leading-none
+                              tracking-tightest text-on-surface-brand">
+                {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
+              </div>
+              <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
+                {allDone ? 'session complete' : 'completed drills'}
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="font-brand text-[20px] font-bold tracking-tighter text-on-surface-brand">
-              {formatTouches(doneTouches)}
-            </div>
-            <div className="mt-1 text-[11.5px] font-semibold text-on-surface-brand-variant">
-              of {formatTouches(totalTouches)} touches
-            </div>
+          {/* Touches, at one weight and in the quiet tone. The banked count used
+              to sit above this in bold white, which put a second headline
+              number on a card that only has room for one. */}
+          <div className="text-right text-[11.5px] font-semibold text-on-surface-brand-variant">
+            {formatTouches(doneTouches)} of {formatTouches(totalTouches)} touches
           </div>
         </div>
         <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-brand-track">

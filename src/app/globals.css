@@ -715,6 +715,14 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 }
 .chip-on .chip-check { display: block; color: var(--md-sys-color-secondary-container); }
 
+/* Inside @layer components, for the same reason the type classes are: an
+   unlayered rule beats a Tailwind utility of equal specificity by source
+   order, and this file loads after the utility layer. `.btn-primary` setting
+   `background` therefore silently beat `bg-on-surface-brand` on the one
+   button that has to override it — the runner's Finish, which sits on the
+   black brand block and was rendering black on black, invisible until you
+   found it with a cursor. Layered, the utility wins. */
+@layer components {
 /* THE RULE: a filled block is an action, a heavy ring is a selection.
 
    The previous version of this comment said the opposite, and both readings
@@ -791,6 +799,8 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   font-weight: var(--md-sys-typescale-label-large-weight);
   color: var(--md-sys-color-on-surface);
 }
+}
+
 
 /* Day selector on the Plan screen. This was seven copies of an inline
    selection style that duplicated .chip's logic — same rule, second
@@ -949,6 +959,32 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 @keyframes pageIn { from { opacity:0; transform: translate3d(0,10px,0);} to { opacity:1; transform:none; } }
 @keyframes rise   { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none; } }
 @keyframes pop    { from { opacity:0; transform: scale(.97);} to { opacity:1; transform:none; } }
+
+/* Finishing a session is the only moment in this app worth marking, and the
+   palette has no confetti in it — so the celebration is motion and weight
+   rather than colour. The block swells once and settles, the way something
+   lands, and the tick draws itself in behind it.
+
+   Both are one-shot and short. A session ends with a phone being picked up off
+   the grass, not watched. */
+@keyframes land {
+  0%   { transform: scale(1); }
+  38%  { transform: scale(1.035); }
+  70%  { transform: scale(.994); }
+  100% { transform: scale(1); }
+}
+@keyframes draw { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+.celebrate { animation: land 700ms var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.celebrate-tick {
+  stroke-dasharray: 30;
+  animation: draw 460ms var(--md-sys-motion-easing-emphasized-decelerate) 160ms both;
+}
+/* Someone who has asked for less motion still gets the state change, just not
+   the movement — the tick appears rather than drawing. */
+@media (prefers-reduced-motion: reduce) {
+  .celebrate { animation: none; }
+  .celebrate-tick { animation: none; stroke-dasharray: none; }
+}
 .animate-pop  { animation: pop .35s var(--md-sys-motion-easing-emphasized-decelerate) both; }
 .animate-rise { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
 .stagger > * { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
