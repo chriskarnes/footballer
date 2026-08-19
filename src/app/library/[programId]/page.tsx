@@ -33,7 +33,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
           const drills = exercises.filter((e) => e.session_id === s.id);
           return (
             <Link key={s.id} href={`/session/${s.id}`}
-              className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
+              className="card pressable flex items-center gap-4 p-4">
               <span className="font-brand text-[13px] font-bold text-on-surface-variant">
                 {String(i + 1).padStart(2, '0')}
               </span>

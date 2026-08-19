@@ -580,8 +580,7 @@ input, textarea, [data-selectable] {
 .pressable {
   position: relative;
   isolation: isolate;
-  transition: transform var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate),
-              background-color var(--md-sys-motion-duration-medium2),
+  transition: background-color var(--md-sys-motion-duration-medium2),
               border-color var(--md-sys-motion-duration-medium2),
               outline-color var(--md-sys-motion-duration-short2),
               color var(--md-sys-motion-duration-medium2);
@@ -623,8 +622,16 @@ input, textarea, [data-selectable] {
     opacity: var(--md-sys-state-hover-state-layer-opacity);
   }
 }
+/* Press is the tint alone. It used to also scale to .965, which is 17px off
+   the width of a library row — the "why did that card just resize" everyone
+   noticed — and inside the segmented switch it was worse: the segments are
+   clipped by a pill with overflow:hidden, so a scaled segment pulled its fill
+   away from the rounded cap and left a wedge of bare pill behind it.
+
+   A press does not need to move anything. The tint appears under the finger,
+   which is the half of the feedback that was doing the work, and the layout
+   holds still — the same reason hover draws an outline instead of a fill. */
 .pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
-.pressable:active { transform: scale(.965); transition-duration: 60ms; }
 
 /* M3 requires a visible focus indicator. There wasn't one. */
 .pressable:focus-visible,

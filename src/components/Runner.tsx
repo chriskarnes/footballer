@@ -134,7 +134,7 @@ export function Runner({
                 <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"
                    onClick={(e) => e.stopPropagation()}
                    className="pressable flex h-9 w-9 shrink-0 items-center justify-center rounded-full
-                              bg-surface-container-low text-on-surface transition active:scale-90">
+                              bg-surface-container-low text-on-surface">
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                   </svg>

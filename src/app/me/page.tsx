@@ -136,7 +136,7 @@ export default async function MePage() {
       )}
       <div className="grid grid-cols-1 gap-2">
         {workouts.map((w) => (
-          <div key={w.id} className="card flex items-center gap-4 p-4 transition active:scale-[.99]">
+          <div key={w.id} className="card flex items-center gap-4 p-4">
             <div className="min-w-0 flex-1">
               <div className="truncate font-semibold">{w.title}</div>
               <div className="text-xs text-on-surface-variant">
