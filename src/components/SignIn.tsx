@@ -21,14 +21,6 @@ export function SignIn() {
     }
   }
 
-  async function google() {
-    const db = browserClient();
-    await db.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/me` },
-    });
-  }
-
   if (sent) return <p className="text-sm">Check your email for the sign-in link.</p>;
 
   return (
@@ -42,8 +34,7 @@ export function SignIn() {
         autoCapitalize="none" autoCorrect="off" spellCheck={false}
         className="w-full rounded-large border border-outline-variant bg-surface-container-low px-4 py-3.5 text-[16px] font-medium outline-none transition focus:border-primary"
       />
-      <button onClick={send} className="btn-primary w-full">Email me a sign-in link</button>
-      <button onClick={google} className="btn-ghost w-full">Continue with Google</button>
+      <button onClick={send} className="btn-primary pressable w-full">Email me a sign-in link</button>
       {err && <p className="text-xs text-red-600">{err}</p>}
     </div>
   );

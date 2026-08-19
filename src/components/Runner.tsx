@@ -82,14 +82,13 @@ export function Runner({
                style={{ width: `${pct}%` }} />
         </div>
         {allDone && !saved && (
-          /* This one sits ON the brand block, so it takes the block's own
-              on-colour rather than on-surface — which here would be black
-              ink on a black card. It was `btn-gold` until now: a class that
-              stopped existing when the M3 migration renamed it, so the only
-              button in the runner has been rendering unstyled ever since. */
+          /* The one primary button that sits ON the brand block, so its fill
+              and label swap: a black button on a black card is not a button.
+              It was `btn-gold` until recently — a class that stopped existing
+              when the M3 migration renamed it, so the only button in the
+              runner rendered as browser default for months. */
           <button onClick={finish}
-                  className="btn-primary pressable mt-5 w-full border-on-surface-brand
-                             text-on-surface-brand hover:outline-on-surface-brand">
+                  className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
             Finish session
           </button>
         )}
@@ -114,9 +113,9 @@ export function Runner({
                   chosen chip and the navigation pill. */}
               <div className={`mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center
                                rounded-[9px] border-2 transition
-                               ${on ? 'border-secondary-container bg-secondary-container' : 'border-outline-variant bg-surface-container-low'}`}>
+                               ${on ? 'border-secondary-container bg-transparent' : 'border-outline-variant bg-surface-container-low'}`}>
                 {on && (
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-on-secondary-container" fill="none"
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-secondary-container" fill="none"
                        stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"
                        strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 )}

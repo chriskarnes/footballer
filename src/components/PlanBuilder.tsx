@@ -136,10 +136,10 @@ export function PlanBuilder({
           return (
             <button key={d} type="button" onClick={() => cycleDay(i)}
               aria-label={`${d}: ${DAY_SPOKEN[a]}. Tap to change.`}
-              className={`pressable rounded-large border-[1.5px] py-2.5 text-center transition-colors
+              className={`pressable rounded-large border-2 py-2.5 text-center transition-colors
                 ${a === 'rest'
                   ? 'border-outline-variant bg-surface-container-lowest text-on-surface-variant'
-                  : 'border-inverse-surface bg-surface-container-lowest text-on-surface'}`}>
+                  : 'border-secondary-container bg-surface-container-lowest text-on-surface'}`}>
               <span className="block font-brand text-[12px] font-bold tracking-tight">{d}</span>
               <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide">
                 {DAY_LABEL[a]}
@@ -179,9 +179,9 @@ export function PlanBuilder({
         <div className="mt-3.5 space-y-2">
           {PHASES.map(([v, title, why]) => (
             <button key={v} type="button" onClick={() => set({ seasonPhase: v, targetMinutes: undefined })}
-              className={`pressable block w-full rounded-large border-[1.5px] p-3.5 text-left
+              className={`pressable block w-full rounded-large border-2 p-3.5 text-left
                 ${intake.seasonPhase === v && !intake.targetMinutes
-                  ? 'border-inverse-surface bg-surface-container-lowest' : 'border-outline-variant bg-surface-container-lowest'}`}>
+                  ? 'border-secondary-container bg-surface-container-lowest' : 'border-outline-variant bg-surface-container-lowest'}`}>
               <span className="block text-[14.5px] font-bold text-on-surface">{title}</span>
               <span className="mt-0.5 block text-[12.5px] text-on-surface-variant">{why}</span>
             </button>

@@ -104,12 +104,11 @@
 
   --md-sys-color-secondary:                 #474747;
   --md-sys-color-on-secondary:              #FFFFFF;
-  /* Selection. M3 uses a pale tone-90 fill here, and on a monochrome palette
-     that put "your pointer is here" and "you chose this" within a few percent
-     of each other. The selected state is now the brand pair at full contrast —
-     the same black-on-white the navigation bar has always used for the tab you
-     are on, which is the one selected state in the app nobody has ever had to
-     squint at. */
+  /* The selection colour. M3's pale tone-90 fill put "your pointer is here"
+     and "you chose this" within a few percent of each other on a monochrome
+     palette, so this is the brand at full contrast. It is spent as a 2px ring
+     rather than a fill — see THE RULE further down — which is why the
+     on-secondary-container beneath it is now only used by the avatar. */
   --md-sys-color-secondary-container:       var(--app-brand-primary);
   --md-sys-color-on-secondary-container:    var(--app-brand-secondary);
 
@@ -620,8 +619,8 @@ input, textarea, [data-selectable] {
      outside it — which reads as the edge thickening without the reflow that
      actually thickening a border would cause. */
   .btn-ghost:not(:disabled):hover { border-color: var(--md-sys-color-on-surface); }
-  .btn-primary:not(:disabled):hover {
-    outline: 1.5px solid var(--md-sys-color-on-surface); outline-offset: 0;
+  .btn-primary:not(:disabled):hover::after {
+    opacity: var(--md-sys-state-hover-state-layer-opacity);
   }
 }
 .pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
@@ -689,37 +688,64 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-surface-variant);
 }
 .chip .chip-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
+/* Selection is a heavy ring in the selection colour, drawn with an inset
+   box-shadow rather than a thicker border: a border change from 1px to 2px
+   moves every chip after it on the row and rewraps the group under your
+   thumb. box-shadow is painted, not laid out, so nothing moves.
+
+   `outline` would have been the other way to do it, and cannot be used here —
+   it is already spoken for by hover, and a control cannot say "you are
+   pointing at me" and "you chose me" with the same mark.
+
+   The label and the checkmark are on-surface, which is the same value the
+   selection colour resolves to in both schemes. Written as two tokens because
+   they are two ideas, even where they agree. */
 .chip-on, .chip-on:hover {
-  border-color: var(--md-sys-color-secondary-container);
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 2px var(--md-sys-color-secondary-container);
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
 }
-.chip-on .chip-check { display: block; }
+.chip-on .chip-check { display: block; color: var(--md-sys-color-secondary-container); }
 
-/* THE RULE: a filled block is a state, an outlined one is an action.
-   Nothing chosen is ever outlined, and nothing you press is ever filled.
+/* THE RULE: a filled block is an action, a heavy ring is a selection.
 
-   .btn-primary was a filled black block, which is now exactly what a selected
-   chip is. Two things that mean opposite things — "this is what you picked"
-   and "press this to act on what you picked" — cannot share a treatment, and
-   on a monochrome palette there is no hue left to separate them with. So the
-   fill goes to state, and buttons take the outline.
+   The previous version of this comment said the opposite, and both readings
+   are internally consistent — what matters is that one of them is applied
+   everywhere. This is the one:
 
-   That leaves primary and ghost both outlined, so the hierarchy between them
-   moves to weight: 2px in on-surface against 1px in outline, 52px tall against
-   44px, and the brand face against the label face. A primary action still
-   wins its screen — it wins by weight rather than by being the only black
-   thing on it. */
+     filled primary        press this            .btn-primary, the nav's
+                                                 current tab
+     heavy ring, 2px       you chose this        .chip-on, .day-on,
+                                                 .segment-on
+     light outline, 1px    a lesser action       .btn-ghost, an unchosen chip
+
+   The navigation bar is the reason it settles this way round. Its current tab
+   has been a filled black pill since long before any of this, nobody has ever
+   misread it, and a rule that requires re-teaching the one control everyone
+   already understands is the wrong rule. So filled means the emphatic thing —
+   which is a button, and the place you are — and selection takes the ring. */
 .btn-primary {
+  position: relative; isolation: isolate;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 52px; cursor: pointer;
-  border: 2px solid var(--md-sys-color-on-surface);
+  border: 0;
   border-radius: var(--md-sys-shape-corner-large);
-  background: transparent;
+  background: var(--md-sys-color-inverse-surface);
   padding: 0 24px;
   font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
   letter-spacing: var(--app-track-tighter);
-  color: var(--md-sys-color-on-surface);
+  color: var(--md-sys-color-inverse-primary);
+}
+/* Its own state layer rather than relying on .pressable, which half the call
+   sites do not carry. currentColor is the label, so the overlay lightens a
+   black button in the light scheme and darkens a white one in the dark — the
+   right direction in both without naming a colour. */
+.btn-primary::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; pointer-events: none;
+  background: currentColor; opacity: 0;
+  transition: opacity var(--md-sys-motion-duration-short2) linear;
 }
 /* Dims the border, not the label. Dropping the whole button to a lower opacity
    takes the text under 4:1, and WCAG exempting disabled controls does not make
@@ -770,9 +796,10 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-surface-variant);
 }
 .day-on {
-  border-color: var(--md-sys-color-secondary-container);
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 2px var(--md-sys-color-secondary-container);
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
 }
 
 /* ==========================================================================
@@ -807,6 +834,16 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-surface-variant);
 }
 .segment:first-child { border-left: 0; }
+/* Filled, not ringed — the one place selection keeps the fill, and it follows
+   THE RULE rather than breaking it. This control is a tablist: it declares
+   role="tablist", it switches which panel is shown, and it is the same idea as
+   the navigation bar, which is filled. A ring here also physically fails: the
+   segments are square cells inside a pill with `overflow: hidden`, so an inset
+   ring is clipped by the rounded cap at each end and leaves a stray vertical
+   line where the ring's edge meets the curve.
+
+   Chips and days are not tabs. They collect answers, nothing is revealed by
+   choosing them, and they take the ring. */
 .segment-on {
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
