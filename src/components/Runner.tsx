@@ -58,22 +58,31 @@ export function Runner({
       <p className="eyebrow mb-3">{subtitle}</p>
       <h1 className="h-page">{title}</h1>
 
-      {/* live progress, dark so the number carries */}
+      {/* Live progress. Drills lead, touches follow.
+          What a player is doing on this screen is working through a list, and
+          the number that answers "how much is left" is the one they are
+          actually moving — a drill at a time. Touches banked led before and
+          could not do that job: it jumps 150 at a time, it is an estimate, and
+          it never reaches a number anyone recognises as finished. The bar has
+          always been drawn from the drill count, so the headline now agrees
+          with the bar underneath it. */}
       <div className="mt-6 rounded-large-increased bg-surface-brand border border-brand-edge p-6 shadow-level3">
         <div className="flex items-end justify-between">
           <div>
             <div className="font-brand text-[40px] font-extrabold leading-none
                             tracking-tightest text-on-surface-brand">
-              {formatTouches(doneTouches)}
+              {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
             </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">touches banked</div>
+            <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
+              drills done
+            </div>
           </div>
           <div className="text-right">
             <div className="font-brand text-[20px] font-bold tracking-tighter text-on-surface-brand">
-              {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
+              {formatTouches(doneTouches)}
             </div>
             <div className="mt-1 text-[11.5px] font-semibold text-on-surface-brand-variant">
-              of {formatTouches(totalTouches)}
+              of {formatTouches(totalTouches)} touches
             </div>
           </div>
         </div>
