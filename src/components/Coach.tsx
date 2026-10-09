@@ -300,7 +300,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
                 {MINUTES.map((m) => (
                   <Chip key={m} on={spec.minutes === m} label={`${m} minutes`}
                     onClick={() => { const n = { ...spec, minutes: m }; setSpec(n); build(n); }}>
-                    {m}<span className="ml-0.5 opacity-60">min</span>
+                    {m} min
                   </Chip>
                 ))}
               </Row>
