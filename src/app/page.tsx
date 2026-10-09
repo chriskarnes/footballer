@@ -13,18 +13,8 @@ export default async function TrainNowPage() {
         <span className="text-[12px] font-semibold text-on-surface-variant">786 drills</span>
       </header>
 
-      {/* No "Train now" kicker: the headline says it and the tab you arrived on
-          is called Train. The 15ch measure is gone with the explicit break —
-          "Start training now" is three words and sets on one line at every
-          width we support, so the manual break was breaking a line that no
-          longer needed breaking. */}
-      <section className="hero">
-        <h1 className="h-hero">Start training now</h1>
-      </section>
-
-      {/* The promise used to live here, above everything, so the page offered
-          one thing and then presented two. It has moved into the coach panel,
-          which is the only mode it describes. */}
+      {/* The headline lives in Coach now: it changes with the step, from
+          "Start training now" to the session you've just made. */}
       <Coach exercises={exercises} />
     </div>
   );

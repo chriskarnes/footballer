@@ -24,3 +24,23 @@ export function BackLink({ href, label }: { href: string; label: string }) {
     </Link>
   );
 }
+
+/**
+ * The same control for a step within a screen, where there is no route to link
+ * to. `label` is what it says; `destination` is what it's called to anything
+ * reading the page out, which keeps the "Back to …" naming above.
+ */
+export function BackButton({
+  onClick, label, destination,
+}: { onClick: () => void; label: string; destination: string }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={`Back to ${destination}`}
+      className="btn-ghost pressable mb-6 max-w-full gap-1.5 pl-3 pr-4">
+      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor"
+           strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}

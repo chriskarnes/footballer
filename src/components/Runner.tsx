@@ -8,10 +8,13 @@ import { useWakeLock } from '@/lib/use-wake-lock';
 import { BackLink } from './BackLink';
 
 export function Runner({
-  title, subtitle, drills, workoutId, sessionRef, back,
+  title, subtitle, drills, workoutId, sessionRef, back, rounds = 1,
 }: {
   title: string; subtitle: string; drills: Exercise[];
   workoutId?: string; sessionRef?: string;
+  /** A short coach circuit is done more than once. A drill is ticked when every
+   *  round of it is done, so only the totals need to know. */
+  rounds?: number;
   /** Where this session was opened from. The runner fills the screen and the tab
    *  bar does not lead back to the program, so without this it is a dead end. */
   back?: { href: string; label: string };
@@ -19,9 +22,9 @@ export function Runner({
   const [done, setDone] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState(false);
 
-  const total = drills.reduce((a, d) => a + d.total_seconds, 0);
-  const totalTouches = drills.reduce((a, d) => a + d.touches, 0);
-  const doneTouches = drills.filter((d) => done.has(d.id)).reduce((a, d) => a + d.touches, 0);
+  const total = drills.reduce((a, d) => a + d.total_seconds, 0) * rounds;
+  const totalTouches = drills.reduce((a, d) => a + d.touches, 0) * rounds;
+  const doneTouches = drills.filter((d) => done.has(d.id)).reduce((a, d) => a + d.touches, 0) * rounds;
   const pct = drills.length ? Math.round((done.size / drills.length) * 100) : 0;
   const allDone = drills.length > 0 && done.size === drills.length;
 

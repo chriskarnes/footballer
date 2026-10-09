@@ -1,10 +1,13 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { buildSession, swapDrill } from '@/lib/session-builder';
+import { decodeSession, encodeSession } from '@/lib/session-url';
 import type { BuiltSession, Exercise, FocusArea, SessionSpec } from '@/lib/types';
 import { FOCUS_LABELS } from '@/lib/types';
 import { SessionCard } from './SessionCard';
 import { Chip, CheckIcon } from './Chip';
+import { BackButton } from './BackLink';
 
 /**
  * Examples are tappable, but they are set as running subtext rather than chips.
@@ -66,47 +69,115 @@ function pickAnyFocus(): FocusArea[] {
 
 const MODES: [Mode, string][] = [['ai', 'Ask the coach'], ['diy', 'Build it myself']];
 
+/**
+ * Train is two steps on one screen: what you want, then the session that came
+ * out of it. They used to be one long page with the session appearing under the
+ * form, which never felt like anything had happened — the result was a preview
+ * of the inputs, not a thing you'd made and were about to do.
+ *
+ * The step lives in the URL (see session-url.ts), not in state, so the back
+ * gesture leaves the session rather than the app, and a refresh keeps it.
+ *
+ * useSearchParams has to sit under Suspense or the page can't be prerendered.
+ * The fallback is the inputs step with no session — which is what the
+ * prerendered page is anyway, since a static render has no query string.
+ */
 export function Coach({ exercises }: { exercises: Exercise[] }) {
+  return (
+    <Suspense fallback={<Train exercises={exercises} params={null} />}>
+      <TrainFromUrl exercises={exercises} />
+    </Suspense>
+  );
+}
+
+function TrainFromUrl({ exercises }: { exercises: Exercise[] }) {
+  return <Train exercises={exercises} params={useSearchParams()} />;
+}
+
+function Train({
+  exercises, params,
+}: { exercises: Exercise[]; params: URLSearchParams | { get(k: string): string | null } | null }) {
+  const decoded = useMemo(() => (params ? decodeSession(params, exercises) : null), [params, exercises]);
+  const built = decoded?.built ?? null;
+
   // Nothing is preselected. A chip lit before you touched anything claims you
   // chose it, and the summary then reported defaults back to you as if they were
   // your answers. Unset place/level/priority still fall back to 'any' inside
   // build(), so the filters behave the same — they just don't pretend.
   const [spec, setSpec] = useState<Partial<SessionSpec>>({});
   const [anyFocus, setAnyFocus] = useState(false);
-  const [built, setBuilt] = useState<BuiltSession | null>(null);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [reply, setReply] = useState('');
   const [mode, setMode] = useState<Mode>(DEFAULT_MODE);
-  const [pendingScroll, setPendingScroll] = useState(false);
+  // Set when a build came back empty. The player stays on the inputs, told why,
+  // rather than being taken to a result step with nothing on it.
+  const [miss, setMiss] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const sessionRef = useRef<HTMLDivElement>(null);
   const tablistRef = useRef<HTMLDivElement>(null);
+  // Whether this visit pushed the result step. If it did, Back is the back
+  // gesture. If the session arrived by URL — a refresh, the runner's back link —
+  // going back would leave Train altogether, so Back replaces instead.
+  const pushed = useRef(false);
 
-  // Runs after the session card is actually in the DOM — on the first build the
-  // ref doesn't exist yet at the moment the request resolves.
+  // A session that arrived by URL fills the inputs it came from, so Back lands
+  // on a form that describes it rather than an empty one. Only what was actually
+  // chosen: the defaults decodeSession fills in would otherwise come back lit,
+  // claiming answers nobody gave. A session made here already has its inputs.
+  const seeded = useRef(false);
   useEffect(() => {
-    if (!pendingScroll || !built) return;
-    setPendingScroll(false);
-    const el = sessionRef.current;
-    if (!el) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  }, [pendingScroll, built]);
+    if (seeded.current || !decoded || !params) return;
+    seeded.current = true;
+    const { spec: s } = decoded.built;
+    setAnyFocus(decoded.anyFocus);
+    setSpec({
+      minutes: s.minutes,
+      focus: decoded.anyFocus ? [] : s.focus,
+      ...(params.get('p') && { place: s.place }),
+      ...(params.get('l') && { level: s.level }),
+      ...(params.get('pr') && { priority: s.priority }),
+    });
+  }, [decoded, params]);
 
   const ready = !!spec.minutes && (anyFocus || !!spec.focus?.length);
 
-  /** Returns whether a session was actually built, so callers can react. */
-  function build(next = spec, useAny = anyFocus): boolean {
+  function build(next = spec, useAny = anyFocus): BuiltSession | null {
     const focus = useAny ? pickAnyFocus() : next.focus;
-    if (!next.minutes || !focus?.length) return false;
-    setBuilt(buildSession(exercises, {
+    if (!next.minutes || !focus?.length) return null;
+    return buildSession(exercises, {
       minutes: next.minutes, focus,
       place: next.place ?? 'any', level: next.level ?? 'any',
       priority: next.priority ?? 'touches',
-    }));
+    });
+  }
+
+  /**
+   * Puts a session in the URL. `push` is the step from inputs to result — a new
+   * screen, so a new history entry, and the top of the page. `replace` is a
+   * refinement on the result step (a swap, another mix): a back gesture should
+   * take you to your choices, not through every mix you passed on.
+   */
+  function show(b: BuiltSession | null, useAny: boolean, how: 'push' | 'replace'): boolean {
+    if (!b) return false;
+    if (!b.drills.length) { setMiss(true); return false; }
+    setMiss(false);
+    seeded.current = true;
+    const url = `?${encodeSession(b, useAny)}`;
+    if (how === 'push') {
+      window.history.pushState(null, '', url);
+      pushed.current = true;
+      window.scrollTo({ top: 0 });
+    } else {
+      window.history.replaceState(null, '', url);
+    }
     return true;
+  }
+
+  function change() {
+    if (pushed.current) { pushed.current = false; window.history.back(); }
+    else window.history.replaceState(null, '', window.location.pathname);
+    window.scrollTo({ top: 0 });
   }
 
   async function ask() {
@@ -127,7 +198,8 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
         setSpec(merged); setReply(data.reply ?? '');
         // Travel to the session only when there IS one. A reply that still needs
         // a follow-up leaves you where you were, with the box still in reach.
-        if (build(merged, anyFocus && !named)) setPendingScroll(true);
+        const useAny = anyFocus && !named;
+        show(build(merged, useAny), useAny, 'push');
       }
       setText('');
     } catch {
@@ -146,16 +218,19 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
 
   const toggleFocus = (f: FocusArea) => {
     const cur = anyFocus ? [] : (spec.focus ?? []);
-    setAnyFocus(false);
+    setAnyFocus(false); setMiss(false);
     setSpec({ ...spec, focus: cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f] });
   };
 
   const chooseAny = () => {
-    const next = !anyFocus;
-    setAnyFocus(next);
+    setAnyFocus(!anyFocus); setMiss(false);
     setSpec({ ...spec, focus: [] });
-    if (next) build({ ...spec, focus: [] }, true);
   };
+
+  /** Chip rows only record the choice now. Building on every tap redrew a
+   *  session under the form while you were still filling it in, which is what
+   *  made the whole screen feel like browsing — Build is when it gets made. */
+  const pick = (n: Partial<SessionSpec>) => { setSpec(n); setMiss(false); };
 
   /**
    * Randomises what you work on, not how long for. Time is the one thing the
@@ -168,7 +243,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
     const next = { ...spec, minutes: spec.minutes ?? SURPRISE_MINUTES, focus: [] };
     setAnyFocus(true);
     setSpec(next);
-    if (build(next, true)) setPendingScroll(true);
+    show(build(next, true), true, 'push');
   }
 
   /** Roving focus across the two segments, which is what `role="tab"` promises. */
@@ -185,8 +260,38 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
     (tablistRef.current?.children[i] as HTMLElement | undefined)?.focus();
   }
 
+  if (built) {
+    const startHref = `/session/custom?${encodeSession(built, anyFocus)}`;
+    return (
+      // Keyed on the step, so arriving here plays the same lift-in a new page
+      // does. This is the "you made something" moment the old layout lacked.
+      <div key="session" className="animate-pop">
+        <div className="mt-6"><BackButton onClick={change} label="Back" destination="your choices" /></div>
+        <section>
+          <h1 className="h-hero">Your {built.spec.minutes}-minute session</h1>
+          {/* What the coach said, if you asked it — it's describing this. */}
+          {reply && (
+            <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">{reply}</p>
+          )}
+        </section>
+        <div className="mt-7">
+          <SessionCard built={built} startHref={startHref}
+            onSwap={(i) => show(swapDrill(exercises, built, i), anyFocus, 'replace')}
+            onShuffle={() => show(build(), anyFocus, 'replace')} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mt-8">
+    <div key="inputs" className="animate-pop">
+      {/* No "Train now" kicker: the headline says it and the tab you arrived on
+          is called Train. */}
+      <section className="hero">
+        <h1 className="h-hero">Start training now</h1>
+      </section>
+
+      <div className="mt-8">
       {/* ---- mode switch ----
           Two inputs to one output, not two steps. Stacked, the form read as the
           fallback for the coach having failed. The session below belongs to
@@ -299,7 +404,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
               <Row label="How long">
                 {MINUTES.map((m) => (
                   <Chip key={m} on={spec.minutes === m} label={`${m} minutes`}
-                    onClick={() => { const n = { ...spec, minutes: m }; setSpec(n); build(n); }}>
+                    onClick={() => pick({ ...spec, minutes: m })}>
                     {m} min
                   </Chip>
                 ))}
@@ -320,13 +425,13 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
                 <Row label="Where">
                   {PLACES.map(([v, l]) => (
                     <Chip key={v} on={spec.place === v}
-                      onClick={() => { const n = { ...spec, place: v }; setSpec(n); build(n); }}>{l}</Chip>
+                      onClick={() => pick({ ...spec, place: v })}>{l}</Chip>
                   ))}
                 </Row>
                 <Row label="Priority">
                   {(['touches', 'balanced'] as const).map((p) => (
                     <Chip key={p} on={spec.priority === p}
-                      onClick={() => { const n = { ...spec, priority: p }; setSpec(n); build(n); }}>
+                      onClick={() => pick({ ...spec, priority: p })}>
                       {p === 'touches' ? 'Max touches' : 'Balanced'}
                     </Chip>
                   ))}
@@ -338,7 +443,7 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
             The arrow does the work the fill used to: a direction glyph says
             "press me" without claiming to be a thing that has been chosen. */}
         <button
-          onClick={() => { if (build()) setPendingScroll(true); }}
+          onClick={() => show(build(), anyFocus, 'push')}
           disabled={!ready}
           className="btn-primary pressable mt-8 w-full"
         >
@@ -352,16 +457,13 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
         </button>
       </div>
 
-      {/* Outside both panels, deliberately: switching mode must not clear a
-          session you already have. It belongs to neither input. */}
-      {built && (
-        <div ref={sessionRef} className="mt-10 scroll-mt-5 animate-pop">
-          <h2 className="h-card mb-3.5">Your session</h2>
-          <SessionCard built={built}
-            onSwap={(i) => setBuilt(swapDrill(exercises, built, i))}
-            onShuffle={() => build()} />
-        </div>
+      {/* Outside both panels: either route can come back empty. */}
+      {miss && (
+        <p role="status" className="hint-in mt-5 pl-1 text-[14px] font-medium text-on-surface">
+          Nothing matched — try a longer session or a different place.
+        </p>
       )}
+      </div>
     </div>
   );
 }

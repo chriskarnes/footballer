@@ -1,15 +1,26 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { BuiltSession } from '@/lib/types';
 import { FOCUS_LABELS, TOUCH_GOAL } from '@/lib/types';
 import { formatTouches } from '@/lib/session-builder';
+import { sessionTitle } from '@/lib/session-url';
 
 export function SessionCard({
-  built, onSwap, onShuffle,
-}: { built: BuiltSession; onSwap: (i: number) => void; onShuffle: () => void }) {
+  built, startHref, onSwap, onShuffle,
+}: {
+  built: BuiltSession;
+  /** Where Start goes — the runner, carrying this exact session. */
+  startHref: string;
+  onSwap: (i: number) => void; onShuffle: () => void;
+}) {
   const [saving, setSaving] = useState<'idle' | 'saving' | 'saved' | 'signin'>('idle');
   const mins = Math.round(built.totalSeconds / 60);
+
+  // "Saved" describes these drills. After a swap or another mix it's a different
+  // session, and the button has to be pressable again.
+  const ids = built.drills.map((d) => d.id).join();
+  useEffect(() => { setSaving((s) => (s === 'saved' ? 'idle' : s)); }, [ids]);
   const pct = Math.min(100, Math.round((built.totalTouches / TOUCH_GOAL) * 100));
   const hit = built.totalTouches >= TOUCH_GOAL;
 
@@ -18,7 +29,7 @@ export function SessionCard({
     const res = await fetch('/api/workouts', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        title: `${built.spec.minutes}-min ${built.spec.focus.map((f) => FOCUS_LABELS[f]).join(' + ')}`,
+        title: sessionTitle(built.spec),
         source: 'coach', spec: built.spec,
         exercise_ids: built.drills.map((d) => d.id),
         planned_minutes: mins, planned_touches: built.totalTouches,
@@ -62,9 +73,41 @@ export function SessionCard({
             ? `Past the ${TOUCH_GOAL.toLocaleString()} goal — a team practice gives most players a few hundred.`
             : `${formatTouches(TOUCH_GOAL - built.totalTouches)} short of ${TOUCH_GOAL.toLocaleString()}.`}
         </p>
+
+        {/* The one thing this screen is for. It sits on the brand block, as
+            Finish does in the runner, so a session opens and closes on the same
+            card — and it's above the fold on a phone, where a button after the
+            drill list was a scroll away from ever being seen. Fill and label
+            swap for the same reason Finish's do: a black button on a black
+            card is not a button. */}
+        <Link href={startHref}
+              className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+          Start session
+          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor"
+               strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6" />
+          </svg>
+        </Link>
       </div>
 
-      <ol className="stagger mt-4 space-y-2.5">
+      {/* Refinements, not exits — both leave you on this step. Directly under
+          Start rather than after the list: they're how you get to a session
+          worth starting, so they belong next to the button, not twelve cards
+          below it. */}
+      <div className="mt-3 flex gap-2.5">
+        <button onClick={onShuffle} className="btn-ghost flex-1">Another mix</button>
+        <button onClick={save} disabled={saving === 'saving' || saving === 'saved'} className="btn-ghost flex-1">
+          {saving === 'saved' ? 'Saved ✓' : saving === 'signin' ? 'Sign in to save' : 'Save'}
+        </button>
+      </div>
+      {saving === 'signin' && (
+        <p className="mt-3 text-center text-[13px] text-on-surface-variant">
+          <Link href="/me" className="font-bold text-primary">Create an account</Link> to keep
+          your history and repeat sessions.
+        </p>
+      )}
+
+      <ol className="stagger mt-6 space-y-2.5">
         {built.drills.map((d, i) => (
           <li key={d.id} className="card p-4">
             <div className="flex items-start gap-3.5">
@@ -108,19 +151,6 @@ export function SessionCard({
           </li>
         ))}
       </ol>
-
-      <div className="mt-5 flex gap-2.5">
-        <button onClick={onShuffle} className="btn-ghost flex-1">Another mix</button>
-        <button onClick={save} disabled={saving === 'saving'} className="btn-ghost flex-1">
-          {saving === 'saved' ? 'Saved ✓' : saving === 'signin' ? 'Sign in to save' : 'Save'}
-        </button>
-      </div>
-      {saving === 'signin' && (
-        <p className="mt-3 text-center text-[13px] text-on-surface-variant">
-          <Link href="/me" className="font-bold text-primary">Create an account</Link> to keep
-          your history and repeat sessions.
-        </p>
-      )}
     </div>
   );
 }
