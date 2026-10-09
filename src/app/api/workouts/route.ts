@@ -20,6 +20,13 @@ export async function POST(req: Request) {
       planned_minutes: body.planned_minutes ?? null,
       planned_touches: body.planned_touches ?? null,
       status: body.status ?? 'planned',
+      // A session finished in the runner arrives already completed, with what
+      // was actually done. completed_at comes from the client because a session
+      // finished signed out is sent later, after sign-in — the time it was
+      // sent is not the time it was played.
+      completed_at: body.status === 'completed' ? (body.completed_at ?? new Date().toISOString()) : null,
+      actual_minutes: body.actual_minutes ?? null,
+      actual_touches: body.actual_touches ?? null,
     })
     .select('id')
     .single();
@@ -27,9 +34,13 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   if (Array.isArray(body.exercise_ids) && body.exercise_ids.length) {
+    // Every drill as served, with the ones ticked off marked done — a session
+    // ended early still records what it was meant to be.
+    const done = new Set<string>(Array.isArray(body.done_ids) ? body.done_ids : []);
     await db.from('workout_items').insert(
       body.exercise_ids.map((id: string, i: number) => ({
         workout_id: data.id, exercise_id: id, position: i,
+        done: done.has(id), done_at: done.has(id) ? (body.completed_at ?? new Date().toISOString()) : null,
       }))
     );
   }

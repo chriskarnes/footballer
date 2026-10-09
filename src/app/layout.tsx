@@ -8,6 +8,7 @@ import './globals.css';
 import { TabBar } from '@/components/TabBar';
 import { InstallNudge } from '@/components/InstallNudge';
 import { ServiceWorker } from '@/components/ServiceWorker';
+import { PendingWorkout } from '@/components/PendingWorkout';
 
 export const metadata: Metadata = {
   title: 'Train.futbol',
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TabBar />
         <InstallNudge />
         <ServiceWorker />
+        <PendingWorkout />
       </body>
     </html>
   );

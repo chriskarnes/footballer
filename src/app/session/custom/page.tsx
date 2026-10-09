@@ -28,5 +28,9 @@ export default async function CustomSessionPage({
   return <Runner title={sessionTitle(built.spec)}
                  subtitle={built.rounds > 1 ? `${drills} · ${built.rounds} rounds` : drills}
                  drills={built.drills} rounds={built.rounds}
-                 back={{ href: `/?${params.toString()}`, label: 'Your session' }} />;
+                 back={{ href: `/?${params.toString()}`, label: 'Your session' }}
+                 // Back goes to the session before you start it; Done goes to a
+                 // fresh Train. Returning to "Your 20-minute session" after
+                 // playing it would offer to start it again.
+                 doneHref="/" />;
 }
