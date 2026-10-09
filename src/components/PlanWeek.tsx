@@ -86,7 +86,7 @@ export function PlanWeek({
 
               {d.session && (
                 <Link href={`/session/${d.session.id}`}
-                  className="btn-primary shrink-0 px-3 py-2 text-xs">
+                  className="btn-primary btn-sm shrink-0">
                   Start
                 </Link>
               )}

@@ -214,8 +214,12 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
       </p>
 
       {/* Focus is shown by the border alone — no shadow bloom on focus. */}
-      <div className="mt-5 flex items-center gap-2 rounded-full border-[1.5px] border-outline-variant bg-surface-container-lowest
+      {/* `outline`, not `outline-variant`: 1.69:1 is a decorative edge, and
+          this is the edge of the main control on the screen. Same border
+          every other field and pill on the site draws. */}
+      <div className="mt-5 flex items-center gap-2 rounded-full border border-outline bg-surface-container-lowest
                       p-1.5 pl-5 transition-colors focus-within:border-primary">
+
         <input
           ref={inputRef}
           value={text} onChange={(e) => setText(e.target.value)}
@@ -232,22 +236,19 @@ export function Coach({ exercises }: { exercises: Exercise[] }) {
         />
         {/* Always present now, rather than appearing with the first keystroke: when
             the box is the main event, the thing you press to use it shouldn't be
-            something you have to discover. Ink fill, gold label — the same "this is
-            an action" signal as btn-primary. */}
+            something you have to discover. */}
         {/* The accessible name has to say what "Go" does, and it has to differ from
             the manual Build button below — two controls sharing one name is a maze
             for anyone navigating by voice or screen reader. */}
-        {/* Outlined, like every other action — see THE RULE in globals.css. It
-            was a filled black pill, and disabled a #F4F4F4 one: the label
-            passed contrast either way, but the disabled control's boundary was
-            1.06:1 against the 3:1 WCAG asks of a control's edge. The border is
-            what carries it in both states now, at two weights. */}
+        {/* A small primary button, because it is the primary action on the
+            screen. It had been a bespoke 2px-ringed pill, which under THE RULE
+            is the mark of something you have chosen — the one control on Train
+            that most needed to say "press me" was wearing the "selected" ring.
+            btn-primary's own :disabled handles the empty state: outlined, muted
+            label, boundary at 4.5:1. */}
         <button onClick={ask} disabled={busy || !text.trim()}
           aria-label="Build a session from what you typed"
-          className="pressable min-h-11 shrink-0 rounded-full border-2 border-on-surface
-                     px-6 font-brand text-[14px] font-bold tracking-tight text-on-surface
-                     disabled:border disabled:border-outline
-                     disabled:text-on-surface-variant">
+          className="btn-primary btn-sm pressable shrink-0">
           {busy ? '···' : 'Go'}
         </button>
       </div>

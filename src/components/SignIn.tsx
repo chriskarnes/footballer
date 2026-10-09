@@ -25,15 +25,19 @@ export function SignIn() {
 
   return (
     <div className="card space-y-3 p-5">
-      <input
-        value={email} onChange={(e) => setEmail(e.target.value)} type="email"
-        placeholder="you@example.com"
-        // inputMode + autoComplete get the right keyboard and offer the saved
-        // address, which is most of what makes a mobile form feel native.
-        inputMode="email" autoComplete="email" enterKeyHint="send"
-        autoCapitalize="none" autoCorrect="off" spellCheck={false}
-        className="w-full rounded-large border border-outline-variant bg-surface-container-low px-4 py-3.5 text-[16px] font-medium outline-none transition focus:border-primary"
-      />
+      {/* The same .text-field the profile form uses. This was its own input
+          with a 16px radius, a low-contrast border and a grey fill — one of
+          three different text fields in the app. */}
+      <label className="text-field">
+        <input
+          value={email} onChange={(e) => setEmail(e.target.value)} type="email"
+          placeholder="you@example.com" aria-label="Email"
+          // inputMode + autoComplete get the right keyboard and offer the saved
+          // address, which is most of what makes a mobile form feel native.
+          inputMode="email" autoComplete="email" enterKeyHint="send"
+          autoCapitalize="none" autoCorrect="off" spellCheck={false}
+        />
+      </label>
       <button onClick={send} className="btn-primary pressable w-full">Email me a sign-in link</button>
       {err && <p className="text-xs text-red-600">{err}</p>}
     </div>

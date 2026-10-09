@@ -126,7 +126,12 @@
   --md-sys-color-error-container:           #E3E3E3;
   --md-sys-color-on-error-container:        #1B1B1B;
 
-  --md-sys-color-surface:                   #FAFAFA;
+  /* The page is white — tone 100, not M3's tone 98. #FAFAFA was an off-white
+     that read as grey next to the white cards and gave the screen a faint
+     cast everywhere. Cards sit on it by elevation (.card) or by outline
+     (.card-flat), neither of which needed the 2% of tone the page was
+     contributing; the containers below still step down from white. */
+  --md-sys-color-surface:                   #FFFFFF;
   --md-sys-color-on-surface:                #1B1B1B;
   --md-sys-color-surface-variant:           #E3E3E3;
   --md-sys-color-on-surface-variant:        #474747;
@@ -137,7 +142,7 @@
   --md-sys-color-surface-container-high:    #E9E9E9;
   --md-sys-color-surface-container-highest: #E3E3E3;
   --md-sys-color-surface-dim:               #DCDCDC;
-  --md-sys-color-surface-bright:            #FAFAFA;
+  --md-sys-color-surface-bright:            #FFFFFF;
 
   --md-sys-color-outline:                   #777777;
   --md-sys-color-outline-variant:           #C7C7C7;
@@ -366,9 +371,14 @@
    MD.SYS.SHAPE — the full M3 scale. Forge used three of the seven steps.
    --r-card was 22px and now snaps to the Expressive large-increased token at
    20px; the 2px is not visible and it buys a named step.
-   --r-btn 16px is already exactly corner-large. M3 buttons default to `full`
-   (pill); the 16px rectangle is Expressive's square button variant, kept
-   because it is what makes .btn-primary read as a block rather than a chip.
+   Buttons are `full` (pill), M3's own default. They were the 16px square
+   variant, kept so .btn-primary would read as a block rather than a chip —
+   but every other control on the screen was already a pill (chips, the
+   segmented switch, the coach box, the back link, the nav), so the rectangle
+   made the buttons the one odd shape out rather than the one emphatic one.
+   What separates a button from a chip now is size and fill, not corner —
+   see SHAPE RULE at the controls section. corner-large is the selectable
+   tile; corner-small is the text field and the tag.
    ========================================================================== */
 :root {
   --md-sys-shape-corner-none:            0;
@@ -601,14 +611,14 @@ input, textarea, [data-selectable] {
 
    Text links are deliberately not in this list: an outline around a run of
    inline text boxes it in a way that reads as a bug. They have underlines. */
-.chip, .segment, .day, .icon-btn, a.card, button.card {
+.chip, .segment, .tile, .icon-btn, a.card, button.card {
   outline: 1.5px solid transparent;
   outline-offset: -1.5px;
   transition: outline-color var(--md-sys-motion-duration-short2);
 }
 @media (hover: hover) {
   .pressable:hover,
-  .chip:hover, .segment:hover, .day:hover, .icon-btn:hover,
+  .chip:hover, .segment:hover, .tile:hover, .icon-btn:hover,
   a.card:hover, button.card:hover {
     outline-color: var(--md-sys-color-on-surface);
   }
@@ -657,10 +667,27 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 
 /* ==========================================================================
    CONTROLS
-   Three jobs, three shapes:
-     .chip         pill,  filter chip            ->  CHOOSE one of these
-     .btn-primary  block, solid inverse-surface  ->  DO the thing
-     .btn-ghost    block, outlined               ->  the lesser action
+
+   SHAPE RULE. Everything you press with a text label is a pill; everything
+   you press that is a box of content is a tile. Within the pills, size says
+   what kind of press it is:
+
+     .chip          36px pill, 1px outline     ->  CHOOSE one of these
+     .btn-ghost     44px pill, 1px outline     ->  the lesser action
+     .btn-primary   52px pill, filled          ->  DO the thing
+     .btn-sm        40px, either button        ->  the same, inside a row
+     .segment       40px pill in a pill track  ->  which MODE you are in
+     .icon-btn      36px circle, tonal fill    ->  a glyph-only action
+     .tile          16px box, 1px outline      ->  CHOOSE one of these,
+                                                   when the choice has a
+                                                   title and a line under it
+
+   Before this, chips and ghost buttons were the same 44px outlined pill and
+   only the text colour told them apart, so "Surprise me" looked like a
+   filter nobody had selected. The chip is now a size down, which is also
+   what M3 does (32dp chip against a 40dp button); 36 rather than 32 keeps
+   the label at 13px without crowding it, and the hit area is restored to
+   44 by a pseudo-element, which is M3's own mechanism for the same gap.
 
    SELECTION CHANGED. Forge carried selection on border and ink alone, on the
    stated grounds that a filled chip becomes an illegible black slab. M3 fills
@@ -679,22 +706,25 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    reads as the edge of the block rather than a ring around it. It stays 1px so
    nothing rewraps under your thumb on select.
 
-   Chips stay at 44px rather than M3's 32dp: M3 gets to its 48dp touch target
-   with an invisible overlay, which is the right call in a component library
-   and the wrong one in a file meant to show real spacing.
    ========================================================================== */
 .chip {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px;
   cursor: pointer; user-select: none;
   border-radius: var(--md-sys-shape-corner-full);
   border: 1px solid var(--md-sys-color-outline);
   background: transparent;
-  padding: 0 16px;
+  padding: 0 14px;
   font-family: var(--md-sys-typescale-label-large-font);
-  font-size: 13.5px; font-weight: 600;
+  font-size: 13px; font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
 }
-.chip .chip-check { width: 18px; height: 18px; margin-left: -4px; display: none; }
+/* The 44px touch target, 4px beyond the drawn 36px on every side. The chip
+   rows are laid out with an 8px gap, so neighbouring targets meet but never
+   overlap. No background, no pointer-events of its own — it only enlarges
+   the parent's hit box. */
+.chip::before { content: ''; position: absolute; inset: -4px; border-radius: inherit; }
+.chip .chip-check { width: 16px; height: 16px; margin-left: -3px; display: none; }
 /* Selection is a heavy ring in the selection colour, drawn with an inset
    box-shadow rather than a thicker border: a border change from 1px to 2px
    moves every chip after it on the row and rewraps the group under your
@@ -730,9 +760,8 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    everywhere. This is the one:
 
      filled primary        press this            .btn-primary, the nav's
-                                                 current tab
-     heavy ring, 2px       you chose this        .chip-on, .day-on,
-                                                 .segment-on
+                                                 current tab, .segment-on
+     heavy ring, 2px       you chose this        .chip-on, .tile-on
      light outline, 1px    a lesser action       .btn-ghost, an unchosen chip
 
    The navigation bar is the reason it settles this way round. Its current tab
@@ -745,7 +774,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 52px; cursor: pointer;
   border: 0;
-  border-radius: var(--md-sys-shape-corner-large);
+  border-radius: var(--md-sys-shape-corner-full);
   background: var(--md-sys-color-inverse-surface);
   padding: 0 24px;
   font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
@@ -770,9 +799,14 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
      exempt from WCAG's 3:1 boundary rule, but the complaint that started this
      was a button nobody could see the edge of, and "it was disabled" is not an
      answer to that. One weight down and a muted label is enough to say
-     unavailable. */
-  border-color: var(--md-sys-color-outline);
-  border-width: 1px;
+     unavailable.
+
+     The whole border shorthand, and the fill cleared: the base rule sets
+     `border: 0`, so setting only -width and -color here left border-style at
+     none and drew nothing — and with the fill still in place the result was
+     a black disc with a grey label, which is what Go looked like empty. */
+  background: transparent;
+  border: 1px solid var(--md-sys-color-outline);
   color: var(--md-sys-color-on-surface-variant); cursor: default;
 }
 
@@ -789,33 +823,60 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    perceptible. One weight below .btn-primary in every dimension: 1px against
    2px, muted against on-surface, 44px against 52px, label face against brand. */
 .btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 44px; cursor: pointer;
-  border-radius: var(--md-sys-shape-corner-large);
+  border-radius: var(--md-sys-shape-corner-full);
   border: 1px solid var(--md-sys-color-outline);
   background: transparent;
-  padding: 14px 20px;
+  padding: 0 20px;
   font-family: var(--md-sys-typescale-label-large-font);
   font-size: var(--md-sys-typescale-label-large-size);
   font-weight: var(--md-sys-typescale-label-large-weight);
   color: var(--md-sys-color-on-surface);
 }
+/* A button that lives inside a row — Start on a plan day, Again on a saved
+   session, Go in the coach box. Same fill and the same rule, one size down
+   so it does not out-weigh the card it sits in. Four call sites were each
+   doing this with their own px/py/text-xs overrides, and no two agreed. */
+.btn-sm {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+}
 }
 
 
-/* Day selector on the Plan screen. This was seven copies of an inline
-   selection style that duplicated .chip's logic — same rule, second
-   implementation, free to drift. It is now the same filled selection. */
-.day {
+/* The selectable tile: a chip for a choice that has more than a word in it.
+   The seven day cells and the three season phases on Plan are both this,
+   and each had been drawing its own — a 2px border that swapped colour on
+   select, so the unselected state wore a heavy grey ring and the selected
+   one a heavy black ring, with nothing between them but tone. It takes
+   exactly the chip's selection now: 1px outline at rest, 2px inset ring
+   when chosen, nothing reflows. Padding and alignment are the call site's.
+
+   This class was `.day`, and nothing used it — Plan had re-implemented it
+   inline. Renamed to say what it is for, so the next tile finds it. */
+.tile {
+  display: block; cursor: pointer;
   border-radius: var(--md-sys-shape-corner-large);
   border: 1px solid var(--md-sys-color-outline);
-  background: transparent;
-  padding: 10px 0; text-align: center; cursor: pointer;
+  background: var(--md-sys-color-surface-container-lowest);
   color: var(--md-sys-color-on-surface-variant);
 }
-.day-on {
+.tile-on {
   border-color: transparent;
   box-shadow: inset 0 0 0 2px var(--md-sys-color-secondary-container);
-  background: transparent;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Glyph-only actions: play a demo, swap a drill. Two sizes and two
+   paddings existed for the same button, 32px on the session card and 36 on
+   the runner. One size, big enough to hit. */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; flex-shrink: 0; cursor: pointer;
+  border: 0; border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-on-surface);
 }
 
@@ -836,30 +897,37 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    dominant-foot picker on Me reuses the same class with radiogroup roles,
    because nothing is revealed by choosing there.
    ========================================================================== */
+/* Built the way the navigation bar is built: an outlined pill track with a
+   little padding, and the current segment its own filled pill inside it.
+   It used to be square cells clipped by the track's `overflow: hidden`, which
+   is where the corner trouble came from — the fill ran out to the track's
+   edge and was cut by the curve, so the selected segment had one round end
+   and one square one, with a sliver of the track's outline showing through
+   the anti-aliasing at the cap. A pill inside a pill never touches the edge,
+   so there is nothing to clip and the two ends match. It is also exactly
+   the shape of the nav, which is the control this one is a cousin of. */
 .segmented {
-  display: flex; width: 100%; overflow: hidden;
+  display: flex; width: 100%; gap: 4px; padding: 4px;
   border: 1px solid var(--md-sys-color-outline);
   border-radius: var(--md-sys-shape-corner-full);
+  background: transparent;
 }
 .segment {
   flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  min-height: 44px; padding: 0 12px; cursor: pointer;
-  border: 0; border-left: 1px solid var(--md-sys-color-outline);
+  min-height: 40px; padding: 0 12px; cursor: pointer;
+  border: 0;
+  border-radius: var(--md-sys-shape-corner-full);
   background: transparent;
   font-family: var(--md-sys-typescale-label-large-font);
   font-size: 14px; font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
 }
-.segment:first-child { border-left: 0; }
 /* Filled, not ringed — the one place selection keeps the fill, and it follows
    THE RULE rather than breaking it. This control is a tablist: it declares
    role="tablist", it switches which panel is shown, and it is the same idea as
-   the navigation bar, which is filled. A ring here also physically fails: the
-   segments are square cells inside a pill with `overflow: hidden`, so an inset
-   ring is clipped by the rounded cap at each end and leaves a stray vertical
-   line where the ring's edge meets the curve.
+   the navigation bar, which is filled.
 
-   Chips and days are not tabs. They collect answers, nothing is revealed by
+   Chips and tiles are not tabs. They collect answers, nothing is revealed by
    choosing them, and they take the ring. */
 .segment-on {
   background: var(--md-sys-color-secondary-container);

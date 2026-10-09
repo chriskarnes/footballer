@@ -87,7 +87,7 @@ export function ProfileCard({
       )}
 
       <Link href="/me/profile"
-            className="btn-ghost mt-4 flex w-full items-center justify-center py-3 text-[13.5px]">
+            className="btn-ghost mt-4 w-full">
         {bare ? 'Set up your profile' : 'Edit profile'}
       </Link>
     </div>

@@ -146,7 +146,7 @@ export default async function MePage() {
                 {w.planned_touches ? ` · ⚽ ${formatTouches(w.planned_touches)}` : ''}
               </div>
             </div>
-            <Link href={`/session/${w.id}?from=history`} className="btn-primary px-3 py-2 text-xs">
+            <Link href={`/session/${w.id}?from=history`} className="btn-primary btn-sm shrink-0">
               Again
             </Link>
           </div>
@@ -161,7 +161,7 @@ export default async function MePage() {
             You&rsquo;ve trained {done.length} times. I can turn what you&rsquo;ve been doing into a
             repeating week — most of the questions are already answered by your history.
           </p>
-          <Link href="/plan" className="btn-primary mt-3 px-4 py-2 text-sm">
+          <Link href="/plan" className="btn-primary btn-sm mt-3">
             Build my weekly schedule →
           </Link>
         </div>
