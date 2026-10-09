@@ -876,13 +876,19 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 
 /* Glyph-only actions: play a demo, swap a drill. Two sizes and two
    paddings existed for the same button, 32px on the session card and 36 on
-   the runner. One size, big enough to hit. */
+   the runner. One size, big enough to hit.
+
+   Layered, like the buttons, so a utility can resize and recolour it: the
+   two beside Start on the brand block are 52px on the brand track, and
+   unlayered this rule silently won and drew them as small white discs. */
+@layer components {
 .icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; flex-shrink: 0; cursor: pointer;
   border: 0; border-radius: var(--md-sys-shape-corner-full);
   background: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-on-surface);
+}
 }
 
 /* ==========================================================================

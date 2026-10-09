@@ -74,38 +74,68 @@ export function SessionCard({
             : `${formatTouches(TOUCH_GOAL - built.totalTouches)} short of ${TOUCH_GOAL.toLocaleString()}.`}
         </p>
 
-        {/* The one thing this screen is for. It sits on the brand block, as
-            Finish does in the runner, so a session opens and closes on the same
-            card — and it's above the fold on a phone, where a button after the
-            drill list was a scroll away from ever being seen. Fill and label
+        {/* Start, and beside it the two ways to get to a session worth
+            starting. Start is the one thing this screen is for: it sits on the
+            brand block, as Finish does in the runner, so a session opens and
+            closes on the same card, above the fold on a phone. Fill and label
             swap for the same reason Finish's do: a black button on a black
-            card is not a button. */}
-        <Link href={startHref}
-              className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
-          Start session
-          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor"
-               strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12h13M13 6l6 6-6 6" />
-          </svg>
-        </Link>
-      </div>
+            card is not a button.
 
-      {/* Refinements, not exits — both leave you on this step. Directly under
-          Start rather than after the list: they're how you get to a session
-          worth starting, so they belong next to the button, not twelve cards
-          below it. */}
-      <div className="mt-3 flex gap-2.5">
-        <button onClick={onShuffle} className="btn-ghost flex-1">Another mix</button>
-        <button onClick={save} disabled={saving === 'saving' || saving === 'saved'} className="btn-ghost flex-1">
-          {saving === 'saved' ? 'Saved ✓' : saving === 'signin' ? 'Sign in to save' : 'Save'}
-        </button>
-      </div>
-      {saving === 'signin' && (
-        <p className="mt-3 text-center text-[13px] text-on-surface-variant">
-          <Link href="/me" className="font-bold text-primary">Create an account</Link> to keep
-          your history and repeat sessions.
+            Another mix and Save were a row of ghost buttons under the card,
+            which gave them the same size and weight as Start's. They're
+            refinements, so they're glyphs now. Another mix uses the same
+            swap arrows as each drill, because it's the same action for the
+            whole session. Both get the brand track as a tonal fill, which is
+            what .icon-btn's surface-container-low is on a white page. */}
+        <div className="mt-5 flex items-center gap-2">
+          {/* "Start", no arrow. The headline above already says what's being
+              started, and the fill says "press me" — the arrow was standing
+              in for a fill when this button was outlined. One word also keeps
+              it on one line beside two glyph buttons at phone width. */}
+          <Link href={startHref}
+                className="btn-primary pressable min-w-0 flex-1 whitespace-nowrap px-4
+                           bg-on-surface-brand text-surface-brand">
+            Start
+          </Link>
+          <button onClick={onShuffle} aria-label="Another mix" title="Another mix"
+                  className="icon-btn pressable h-[52px] w-[52px] bg-brand-track text-on-surface-brand">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true"
+                 stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 8h13l-3-3M20 16H7l3 3" />
+            </svg>
+          </button>
+          <button onClick={save} disabled={saving === 'saving' || saving === 'saved'}
+                  aria-label={saving === 'saved' ? 'Saved to your training' : 'Save to your training'}
+                  title={saving === 'saved' ? 'Saved' : 'Save'}
+                  className="icon-btn pressable h-[52px] w-[52px] bg-brand-track text-on-surface-brand
+                             disabled:cursor-default">
+            {/* A bookmark rather than a word: it fills when this session is
+                kept, which says Saved without a label to change. */}
+            <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true"
+                 fill={saving === 'saved' ? 'currentColor' : 'none'}
+                 stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round">
+              <path d="M6 4h12v16l-6-4.5L6 20z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* A glyph can't say where the session went or why it didn't go, so
+            the outcome is a line of text under the row. role="status" so it's
+            announced too, since the button's label alone changes quietly. */}
+        <p role="status" className="text-[12.5px] font-medium text-on-surface-brand-variant">
+          {saving === 'saved' && (
+            <span className="mt-3 block">
+              Saved to <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">your training</Link>.
+            </span>
+          )}
+          {saving === 'signin' && (
+            <span className="mt-3 block">
+              <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Create an account</Link> to
+              save sessions and repeat them.
+            </span>
+          )}
         </p>
-      )}
+      </div>
 
       <ol className="stagger mt-6 space-y-2.5">
         {built.drills.map((d, i) => (
