@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase/client';
-import { peekWorkout } from '@/lib/pending-workout';
+import { pendingPlan, pendingWorkout } from '@/lib/pending';
 
 export function SignIn() {
   const [email, setEmail] = useState('');
@@ -9,8 +9,13 @@ export function SignIn() {
   const [err, setErr] = useState('');
   // Read after mount: localStorage doesn't exist on the server, and a line that
   // appears only after hydration is better than a hydration mismatch.
-  const [waiting, setWaiting] = useState(false);
-  useEffect(() => { setWaiting(!!peekWorkout()); }, []);
+  const [waiting, setWaiting] = useState<string | null>(null);
+  useEffect(() => {
+    const session = !!pendingWorkout.peek(), week = !!pendingPlan.peek();
+    setWaiting(session && week ? 'Your last session and your week are waiting. Sign in and they’re saved.'
+      : session ? 'Your last session is waiting. Sign in and it’s saved to your training.'
+      : week ? 'Your week is waiting. Sign in and it’s saved as the plan you follow.' : null);
+  }, []);
 
   async function send() {
     setErr('');
@@ -31,7 +36,7 @@ export function SignIn() {
       Check your email for the sign-in link.
       {/* The link has to open in this browser to find the session — say so,
           since a mail app's own browser is where it usually opens. */}
-      {waiting && ' Open it on this phone, in this browser, and your session will be saved.'}
+      {waiting && ' Open it on this phone, in this browser, so what’s waiting can be saved.'}
     </p>
   );
 
@@ -40,7 +45,7 @@ export function SignIn() {
       {/* The reason most people are here: they just finished a session. */}
       {waiting && (
         <p className="text-[14px] font-medium text-on-surface">
-          Your last session is waiting. Sign in and it&rsquo;s saved to your training.
+          {waiting}
         </p>
       )}
       {/* The same .text-field the profile form uses. This was its own input

@@ -1,26 +1,38 @@
-import Link from 'next/link';
 import { getExercises, getSessions } from '@/lib/library';
 import { serverClient } from '@/lib/supabase/server';
 import { derivePrefill, type HistoryRow, type ProfileRow } from '@/lib/plan-builder';
 import { PlanBuilder } from '@/components/PlanBuilder';
-import { PlanWeek } from '@/components/PlanWeek';
-import type { DrillBrief, SessionRow } from '@/lib/types';
+import { SavedWeek } from '@/components/SavedWeek';
+import type { Completion } from '@/lib/plan-today';
+import type { DrillBrief, PlanIntake } from '@/lib/types';
+
+type PlanRow = { id: string; name: string; active: boolean; intake: PlanIntake | null };
 
 /**
  * The recurring order. Deliberately the LAST tab and the biggest ask, so it is
  * never a barrier to a first session.
  *
  * Everything here works signed out — you can build and adjust a week without an
- * account, you just can't keep it. That matches Train Now, and it means the
- * sign-in ask arrives after the value rather than in front of it.
+ * account. Saving one signed out keeps it in the browser until you sign in (see
+ * pending.ts), so the sign-in ask arrives after the value, not in front of it.
+ *
+ * Which screen, from the URL:
+ *   ?edit=<id>   rebuild that saved week
+ *   ?new=1       build another week alongside the ones you have
+ *   ?plan=<id>   look at a saved week you're not following
+ *   (a week)     the builder's result step — see plan-url.ts
+ *   (nothing)    the week you follow, or the builder if there isn't one
  */
 export default async function PlanPage({
   searchParams,
-}: { searchParams: Promise<{ edit?: string }> }) {
-  const { edit } = await searchParams;
+}: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const q = await searchParams;
+  const one = (k: string) => (typeof q[k] === 'string' ? (q[k] as string) : undefined);
+  const edit = one('edit'), view = one('plan'), fresh = !!one('new'), building = !!one('a');
+
   const [sessions, exercises] = await Promise.all([getSessions(), getExercises()]);
 
-  // Slim index rather than the whole 471KB library: the blueprint needs four
+  // Slim index rather than the whole 471KB library: the week needs four
   // fields per drill, and this crosses the wire to a client component.
   const drillsBySession: Record<string, DrillBrief[]> = {};
   for (const e of [...exercises].sort((a, b) => a.exercise_order - b.exercise_order)) {
@@ -33,7 +45,10 @@ export default async function PlanPage({
   let signedIn = false;
   let history: HistoryRow[] = [];
   let profile: ProfileRow | null = null;
-  let saved: { id: string; days: { weekday: number; slot: number; kind: string; session_id: string | null }[] } | null = null;
+  let shown: PlanRow | null = null;
+  let editing: PlanRow | null = null;
+  let days: { weekday: number; slot: number; kind: string; session_id: string | null }[] = [];
+  let completions: Completion[] = [];
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -42,89 +57,49 @@ export default async function PlanPage({
       signedIn = !!auth.user;
 
       if (auth.user) {
-        const [{ data: rows }, { data: prof }, { data: plans }] = await Promise.all([
+        const uid = auth.user.id;
+        // Eight days back covers "this week" in any timezone; the browser
+        // narrows it to its own Monday.
+        const since = new Date(Date.now() - 8 * 86400000).toISOString();
+        const [{ data: rows }, { data: prof }, { data: done }] = await Promise.all([
           db.from('workouts').select('created_at,planned_minutes,actual_minutes,spec,status')
             .order('created_at', { ascending: false }).limit(50),
           db.from('profiles').select('level,equipment,home_only,season_phase,weaknesses')
-            .eq('id', auth.user.id).maybeSingle(),
-          db.from('plans').select('id').eq('user_id', auth.user.id).eq('active', true).limit(1),
+            .eq('id', uid).maybeSingle(),
+          db.from('workouts').select('source_ref,completed_at')
+            .eq('status', 'completed').eq('source', 'library').gte('completed_at', since),
         ]);
         history = rows ?? [];
         profile = prof ?? null;
+        completions = done ?? [];
 
-        if (plans?.length) {
-          const { data: days } = await db.from('plan_days')
+        const pick = (id?: string) => {
+          const base = db.from('plans').select('id,name,active,intake').eq('user_id', uid);
+          return (id ? base.eq('id', id) : base.eq('active', true)).limit(1).maybeSingle();
+        };
+        if (edit) editing = (await pick(edit)).data as PlanRow | null;
+        else if (!fresh && !building) shown = (await pick(view)).data as PlanRow | null;
+
+        if (shown) {
+          const { data } = await db.from('plan_days')
             .select('weekday,slot,kind,session_id')
-            .eq('plan_id', plans[0].id)
-            .order('weekday').order('slot');
-          saved = { id: plans[0].id, days: days ?? [] };
+            .eq('plan_id', shown.id).order('weekday').order('slot');
+          days = data ?? [];
         }
       }
     } catch { /* not configured yet — fall through to the signed-out build */ }
   }
 
-  const prefill = derivePrefill(history, profile);
+  if (shown) {
+    const byId = new Map(sessions.map((s) => [s.id, s]));
+    const rows = days.map((d) => ({ ...d, session: d.session_id ? byId.get(d.session_id) ?? null : null }));
+    return <SavedWeek plan={{ id: shown.id, name: shown.name, active: shown.active }}
+                      rows={rows} drillsBySession={drillsBySession} completions={completions} />;
+  }
 
   return (
-    <div>
-      <p className="eyebrow mb-3">Plan</p>
-      {/* Two words, no explicit break: "Weekly Schedule" sets on one line at
-          375px, and the break that "blueprint" needed would now split a phrase
-          that fits. */}
-      <h1 className="h-hero">Weekly Schedule</h1>
-      <p className="mt-3.5 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
-        A repeating weekly training routine built just for you.
-      </p>
-
-      {saved && !edit
-        ? <SavedWeek days={saved.days} sessions={sessions} drillsBySession={drillsBySession} />
-        : <PlanBuilder sessions={sessions} drillsBySession={drillsBySession}
-            prefill={prefill} signedIn={signedIn} />}
-    </div>
-  );
-}
-
-/** The week as it was saved. Read-only on purpose — this is the thing you follow,
- *  not the thing you fiddle with. Rebuilding is one tap away. */
-function SavedWeek({
-  days, sessions, drillsBySession,
-}: {
-  days: { weekday: number; slot: number; kind: string; session_id: string | null }[];
-  sessions: SessionRow[];
-  drillsBySession: Record<string, DrillBrief[]>;
-}) {
-  const byId = new Map(sessions.map((s) => [s.id, s]));
-  const resolved = days.map((d) => ({ ...d, session: d.session_id ? byId.get(d.session_id) ?? null : null }));
-  const training = resolved.filter((d) => d.kind !== 'rest');
-  const minutes = Math.round(training.reduce((a, d) => a + (d.session?.total_minutes ?? 0), 0));
-  const touches = training.reduce((a, d) => a + (d.session?.touches ?? 0), 0);
-
-  return (
-    <div className="mt-8">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="h-card">This week</h2>
-        <Link href="/plan?edit=1"
-          className="text-[13px] font-semibold text-primary underline underline-offset-4">
-          Rebuild
-        </Link>
-      </div>
-
-      <div className="mt-3.5 flex gap-2.5">
-        <Stat v={String(training.length)} k="sessions" />
-        <Stat v={`${minutes}m`} k="a week" />
-        <Stat v={touches >= 1000 ? `${(touches / 1000).toFixed(1)}k` : String(touches)} k="touches" />
-      </div>
-
-      <PlanWeek rows={resolved} drillsBySession={drillsBySession} />
-    </div>
-  );
-}
-
-function Stat({ v, k }: { v: string; k: string }) {
-  return (
-    <div className="card-flat flex-1 p-3">
-      <div className="font-brand text-[19px] font-bold leading-none tracking-tighter">{v}</div>
-      <div className="mt-1 text-[10.5px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">{k}</div>
-    </div>
+    <PlanBuilder sessions={sessions} drillsBySession={drillsBySession}
+      prefill={derivePrefill(history, profile)} signedIn={signedIn}
+      editing={editing?.intake ? { id: editing.id, name: editing.name, intake: editing.intake } : null} />
   );
 }

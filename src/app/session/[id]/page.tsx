@@ -47,9 +47,16 @@ export default async function SessionPage({
   // Name the program rather than saying "Back": the label should tell you where
   // you land. Falls back to the Library if the program has gone missing, so a
   // stale session id still leaves you somewhere rather than nowhere.
+  //
+  // Unless it was started from your week — from Plan, or from Train's "today"
+  // card — in which case that's where you came from and where Done returns:
+  // landing in a library program you never opened would be a strange way to
+  // finish a session your plan gave you.
   const program = programs.find((p) => p.id === s.program_id);
-  const back = program
-    ? { href: `/library/${program.id}`, label: program.name }
+  const back =
+    from === 'plan' ? { href: '/plan', label: 'Your week' }
+    : from === 'train' ? { href: '/', label: 'Train' }
+    : program ? { href: `/library/${program.id}`, label: program.name }
     : { href: '/library', label: 'Library' };
 
   return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills}

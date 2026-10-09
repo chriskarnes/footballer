@@ -82,21 +82,27 @@ const MODES: [Mode, string][] = [['ai', 'Ask the coach'], ['diy', 'Build it myse
  * The fallback is the inputs step with no session — which is what the
  * prerendered page is anyway, since a static render has no query string.
  */
-export function Coach({ exercises }: { exercises: Exercise[] }) {
+export function Coach({ exercises, planCard }: { exercises: Exercise[]; planCard?: React.ReactNode }) {
   return (
-    <Suspense fallback={<Train exercises={exercises} params={null} />}>
-      <TrainFromUrl exercises={exercises} />
+    <Suspense fallback={<Train exercises={exercises} planCard={planCard} params={null} />}>
+      <TrainFromUrl exercises={exercises} planCard={planCard} />
     </Suspense>
   );
 }
 
-function TrainFromUrl({ exercises }: { exercises: Exercise[] }) {
-  return <Train exercises={exercises} params={useSearchParams()} />;
+function TrainFromUrl(props: { exercises: Exercise[]; planCard?: React.ReactNode }) {
+  return <Train {...props} params={useSearchParams()} />;
 }
 
 function Train({
-  exercises, params,
-}: { exercises: Exercise[]; params: URLSearchParams | { get(k: string): string | null } | null }) {
+  exercises, planCard, params,
+}: {
+  exercises: Exercise[];
+  /** "Today on your plan" — shown on the questions step only; on the result
+   *  step you've already chosen what to do today. */
+  planCard?: React.ReactNode;
+  params: URLSearchParams | { get(k: string): string | null } | null;
+}) {
   const decoded = useMemo(() => (params ? decodeSession(params, exercises) : null), [params, exercises]);
   const built = decoded?.built ?? null;
 
@@ -290,6 +296,8 @@ function Train({
       <section className="hero">
         <h1 className="h-hero">Start training now</h1>
       </section>
+
+      {planCard}
 
       <div className="mt-8">
       {/* ---- mode switch ----

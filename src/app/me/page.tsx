@@ -5,6 +5,7 @@ import { SignIn } from '@/components/SignIn';
 import { SignOut } from '@/components/SignOut';
 import { ProfileCard } from '@/components/ProfileCard';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
+import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -31,7 +32,7 @@ export default async function MePage() {
   let user = null as null | { id: string; email?: string };
   let workouts: any[] = [];
   let profile: ProfileValues | null = null;
-  let hasPlan = false;
+  let plans: SavedPlan[] = [];
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -39,15 +40,16 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [{ data: rows }, prof, { data: plans }] = await Promise.all([
+        const [{ data: rows }, prof, { data: planRows }] = await Promise.all([
           db.from('workouts').select('*')
             .order('created_at', { ascending: false }).limit(25),
           readProfile(db, user.id),
-          db.from('plans').select('id').eq('user_id', user.id).eq('active', true).limit(1),
+          db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
+            .order('active', { ascending: false }).order('created_at', { ascending: false }),
         ]);
         workouts = rows ?? [];
         profile = prof;
-        hasPlan = !!plans?.length;
+        plans = planRows ?? [];
       }
     } catch { /* not configured yet */ }
   }
@@ -105,27 +107,10 @@ export default async function MePage() {
         </div>
       </section>
 
-      {/* The saved week, when there is one. A link rather than a copy of the
-          grid: /plan is where a week is read and changed, and two places
-          showing the same seven days is two places to keep in step. */}
-      {hasPlan && (
-        <section className="mt-9">
-          <p className="eyebrow mb-3">Your weekly schedule</p>
-          <Link href="/plan" className="card pressable flex items-center gap-4 p-4">
-            <div className="min-w-0 flex-1">
-              <div className="h-card">The week you saved</div>
-              <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
-                Repeating — open it to follow or change it
-              </div>
-            </div>
-            <svg viewBox="0 0 24 24" aria-hidden="true"
-                 className="h-4 w-4 shrink-0 text-on-surface-variant" fill="none"
-                 stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-              <path d="M9 6l6 6-6 6" />
-            </svg>
-          </Link>
-        </section>
-      )}
+      {/* Every saved week, the followed one first. A list rather than a copy
+          of any grid: /plan is where a week is read, this is where weeks are
+          named, switched between and cleared out. */}
+      {!!plans.length && <SavedPlans plans={plans} />}
 
       <section className="mt-9">
       <p className="eyebrow mb-3">Do it again</p>
@@ -154,7 +139,7 @@ export default async function MePage() {
       </div>
       </section>
 
-      {done.length >= 3 && (
+      {done.length >= 3 && !plans.length && (
         <div className="mt-9 rounded-large-increased border border-primary bg-primary-container p-5">
           <div className="h-card">Make this a weekly routine?</div>
           <p className="mt-1 text-sm text-on-surface-variant">

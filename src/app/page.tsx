@@ -1,6 +1,8 @@
 import { getExercises } from '@/lib/library';
 import { Coach } from '@/components/Coach';
 import { Brand } from '@/components/Brand';
+import { TodayOnPlan } from '@/components/TodayOnPlan';
+import { Suspense } from 'react';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
 export default async function TrainNowPage() {
@@ -15,7 +17,11 @@ export default async function TrainNowPage() {
 
       {/* The headline lives in Coach now: it changes with the step, from
           "Start training now" to the session you've just made. */}
-      <Coach exercises={exercises} />
+      {/* Today's session from the week you follow, if you follow one. Under
+          its own Suspense so signed-out visitors — most of them — never wait
+          on the account lookup it needs. */}
+      <Coach exercises={exercises}
+             planCard={<Suspense fallback={null}><TodayOnPlan /></Suspense>} />
     </div>
   );
 }

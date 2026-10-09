@@ -204,9 +204,13 @@ export function buildPlan(
     days.push({ ...slot, session: best, reason: reasonFor(best, intake) });
   }
 
+  return withTotals(intake, days);
+}
+
+/** The totals and the honesty note, from whatever days a week ended up with. */
+function withTotals(intake: PlanIntake, days: PlannedDay[]): BuiltPlan {
   const chosen = days.map((d) => d.session).filter((x): x is SessionRow => !!x);
   const covered = new Set(chosen.flatMap((x) => x.focus_areas));
-
   return {
     intake,
     days,
@@ -214,6 +218,75 @@ export function buildPlan(
     totalTouches: chosen.reduce((a, x) => a + x.touches, 0),
     uncovered: intake.weaknesses.filter((w) => !covered.has(w)),
   };
+}
+
+/**
+ * Swap one day's session for another that fits it, leaving the rest of the
+ * week alone — the plan's version of swapping a drill on Train. Shuffle redraws
+ * the whole week, which is the wrong tool for "not Tuesday's".
+ *
+ * Draws from the top of the ranking rather than taking the single best, or the
+ * swap would just hand back the session the week was built with. Never picks a
+ * session already elsewhere in the week; if nothing else fits, the day stays.
+ */
+export function swapPlanDay(
+  sessions: SessionRow[], plan: BuiltPlan, index: number, seed = Math.random(),
+): BuiltPlan {
+  const day = plan.days[index];
+  if (!day || day.kind === 'rest') return plan;
+  const { intake } = plan;
+  const target = intake.targetMinutes ?? PHASE_MINUTES[intake.seasonPhase];
+
+  const used = new Set(plan.days.map((d) => d.session?.id).filter(Boolean));
+  const coverage = new Map<FocusArea, number>();
+  plan.days.forEach((d, i) => {
+    if (i === index || !d.session) return;
+    intake.weaknesses.forEach((w) => {
+      if (d.session!.focus_areas.includes(w)) coverage.set(w, (coverage.get(w) ?? 0) + 1);
+    });
+  });
+
+  const pool = sessions
+    .filter((x) => eligible(x, intake, day.kind) && !used.has(x.id))
+    .map((x) => [score(x, intake, target, coverage, day.kind), x] as const)
+    .sort((a, b) => b[0] - a[0])
+    .map(([, x]) => x);
+  if (!pool.length) return plan;
+
+  const top = pool.slice(0, Math.max(3, Math.ceil(pool.length * 0.2)));
+  const next = top[Math.floor(seed * top.length) % top.length];
+  const days = [...plan.days];
+  days[index] = { ...day, session: next, reason: reasonFor(next, intake) };
+  return withTotals(intake, days);
+}
+
+/**
+ * A week rebuilt from its answers and the sessions it settled on — what the
+ * URL carries, and what a saved plan stores. The slots come from the answers;
+ * the sessions come from `ids`, in slot order, so swaps survive a refresh. An
+ * id the library no longer has leaves that day empty rather than inventing one.
+ */
+export function planFromIds(
+  sessions: SessionRow[], intake: PlanIntake, ids: (string | null)[],
+): BuiltPlan {
+  const byId = new Map(sessions.map((x) => [x.id, x]));
+  let i = 0;
+  const days: PlannedDay[] = slotsFor(intake.availability, intake.injured).map((slot) => {
+    if (slot.kind === 'rest') return { ...slot, session: null, reason: 'Rest' };
+    const id = ids[i++];
+    const session = id ? byId.get(id) ?? null : null;
+    return {
+      ...slot, session,
+      reason: session ? reasonFor(session, intake) : 'Nothing in the library fits this day',
+    };
+  });
+  return withTotals(intake, days);
+}
+
+/** What a new plan is called until someone renames it. The season is the thing
+ *  a player is most likely to keep more than one week for. */
+export function defaultPlanName(intake: PlanIntake): string {
+  return { off: 'Off-season week', pre: 'Pre-season week', in: 'In-season week' }[intake.seasonPhase];
 }
 
 /* ---- prefill ------------------------------------------------------------ */

@@ -6,12 +6,12 @@ import { FOCUS_LABELS } from '@/lib/types';
 import { formatTouches } from '@/lib/session-builder';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
-import { stashWorkout } from '@/lib/pending-workout';
+import { pendingWorkout } from '@/lib/pending';
 import { BackLink } from './BackLink';
 
 type Phase = 'running' | 'confirm-end' | 'finished';
 /** What became of the finished session. `signin` means it's waiting in this
- *  browser for an account — see pending-workout.ts. */
+ *  browser for an account — see pending.ts. */
 type Save = 'saving' | 'saved' | 'signin' | 'error';
 
 /**
@@ -95,7 +95,7 @@ export function Runner({
       // This used to say "Saved to your history" whatever came back, and Train
       // needs no account — so most first sessions were reported saved and
       // weren't. A signed-out finish is kept in this browser until sign-in.
-      if (res.status === 401 && !workoutId) { stashWorkout(body); setSave('signin'); }
+      if (res.status === 401 && !workoutId) { pendingWorkout.stash(body); setSave('signin'); }
       else setSave(res.ok ? 'saved' : 'error');
     } catch { setSave('error'); }
   }
