@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "forge-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "PATH=/Users/christiankarnes/.nvm/versions/node/v22.23.2/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        "npm", "run", "dev"
+      ],
       "port": 3000
     }
   ]
