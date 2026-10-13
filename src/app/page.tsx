@@ -21,7 +21,7 @@ export default async function TrainNowPage() {
           its own Suspense so signed-out visitors — most of them — never wait
           on the account lookup it needs. */}
       <Coach exercises={exercises}
-             planCard={<Suspense fallback={null}><TodayOnPlan /></Suspense>} />
+             planCard={<Suspense key="today-on-plan" fallback={null}><TodayOnPlan /></Suspense>} />
     </div>
   );
 }

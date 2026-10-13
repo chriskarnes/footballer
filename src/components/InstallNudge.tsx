@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { haptic } from '@/lib/haptics';
+import { announceInstallable, INSTALL_ASK } from '@/lib/install';
 
 /**
  * The "put me on your home screen" prompt.
@@ -48,23 +49,34 @@ export function InstallNudge() {
 
   useEffect(() => {
     if (isStandalone()) return;                      // already installed
-    if (localStorage.getItem(DISMISSED)) return;     // asked once, that's enough
 
-    const visits = Number(localStorage.getItem(VISITS) ?? 0) + 1;
-    localStorage.setItem(VISITS, String(visits));
-
+    // Dismissing stops it opening by itself, not the install itself: Me's
+    // Account section can still ask for it (see install.ts), so the platform
+    // is detected either way.
     const onPrompt = (e: Event) => {
       e.preventDefault();                            // suppress Chrome's own mini-bar
       setPrompt(e as InstallPromptEvent);
       setPlatform('android');
+      announceInstallable();
     };
     window.addEventListener('beforeinstallprompt', onPrompt);
+    if (isIOS()) { setPlatform('ios'); announceInstallable(); }
 
-    if (isIOS()) setPlatform('ios');
+    const onAsk = () => setOpen(true);
+    window.addEventListener(INSTALL_ASK, onAsk);
 
-    // Let the page settle before anything slides over it.
-    const t = setTimeout(() => { if (visits >= SHOW_AFTER_VISITS) setOpen(true); }, 1800);
-    return () => { window.removeEventListener('beforeinstallprompt', onPrompt); clearTimeout(t); };
+    let t: ReturnType<typeof setTimeout> | undefined;
+    if (!localStorage.getItem(DISMISSED)) {          // asked once, that's enough
+      const visits = Number(localStorage.getItem(VISITS) ?? 0) + 1;
+      localStorage.setItem(VISITS, String(visits));
+      // Let the page settle before anything slides over it.
+      t = setTimeout(() => { if (visits >= SHOW_AFTER_VISITS) setOpen(true); }, 1800);
+    }
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener(INSTALL_ASK, onAsk);
+      clearTimeout(t);
+    };
   }, []);
 
   const close = () => {

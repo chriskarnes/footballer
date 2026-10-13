@@ -96,12 +96,16 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
                   <div className="mt-1 flex items-center gap-2 text-[12.5px] font-medium text-on-surface-variant">
                     {p.active
                       ? <span className="tag tag-accent">Following</span>
-                      : <span>Saved {new Date(p.created_at).toLocaleDateString()}</span>}
+                      : <span>Saved {savedOn(p.created_at)}</span>}
                   </div>
                 </Link>
+                {/* A text button rather than a third pill on the row, which
+                    left the plan's own name three letters long. */}
                 {!p.active && (
                   <button type="button" onClick={() => follow(p.id)} disabled={busy}
-                          className="btn-ghost shrink-0 px-4">Follow</button>
+                          className="pressable shrink-0 px-1 text-[13px] font-semibold text-primary underline underline-offset-4">
+                    Follow
+                  </button>
                 )}
                 <button type="button" onClick={() => { setDraft(p.name); setRenaming(p.id); setDeleting(null); }}
                         aria-label={`Rename ${p.name}`} title="Rename"
@@ -127,4 +131,10 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
       <Link href="/plan?new=1" className="btn-ghost pressable mt-3 w-full">Build another week</Link>
     </section>
   );
+}
+
+/** "3 Sep", the same on the server and in the browser — a locale-default
+ *  date rendered "9/3/2026" in one and could disagree with the other. */
+function savedOn(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 }

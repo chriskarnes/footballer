@@ -11,7 +11,9 @@ import { browserClient } from '@/lib/supabase/client';
  * router.refresh() rather than a reload: the session cookie is cleared by the
  * client, and the server components have to be re-rendered for Me to notice.
  */
-export function SignOut() {
+export function SignOut({
+  className = 'pressable text-[13px] font-semibold text-on-surface-variant underline underline-offset-4',
+}: { className?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -28,7 +30,7 @@ export function SignOut() {
 
   return (
     <button type="button" onClick={out} disabled={busy}
-            className="pressable text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+            className={className}>
       {busy ? 'Signing out…' : 'Sign out'}
     </button>
   );

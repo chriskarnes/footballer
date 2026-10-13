@@ -49,7 +49,10 @@ export function ProfileCard({
   const bare = !name && !rows.length;
 
   return (
-    <div className="card mt-6 p-5">
+    <>
+      {/* The page's headline: who this is. Me was the one tab without one —
+          it opened on a small label and a Sign out link. The name is the
+          headline, at the size every other tab's is. */}
       <div className="flex items-center gap-4">
         {/* Initials, not a silhouette. The same brand pair a selected chip
             uses, so the avatar is made of roles the rest of the app spends
@@ -61,35 +64,37 @@ export function ProfileCard({
           {initials(name, email)}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="h-card break-words">{name || email || 'Your profile'}</div>
-          {name && email && (
-            <p className="mt-0.5 truncate text-[12.5px] text-on-surface-variant">{email}</p>
+          <h1 className="h-hero break-words">{name || 'Your training'}</h1>
+          {email && (
+            <p className="mt-1 truncate text-[13px] text-on-surface-variant">{email}</p>
           )}
         </div>
       </div>
 
-      {rows.length > 0 && (
-        <dl className="mt-4 space-y-2 border-t border-outline-variant pt-4">
-          {rows.map(([label, value]) => (
-            <div key={label} className="flex items-baseline gap-3">
-              <dt className="eyebrow w-[68px] shrink-0">{label}</dt>
-              <dd className="min-w-0 flex-1 text-[14px] font-medium text-on-surface">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
+      <div className="card mt-6 p-5">
+        {rows.length > 0 && (
+          <dl className="space-y-2">
+            {rows.map(([label, value]) => (
+              <div key={label} className="flex items-baseline gap-3">
+                <dt className="eyebrow w-[68px] shrink-0">{label}</dt>
+                <dd className="min-w-0 flex-1 text-[14px] font-medium text-on-surface">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
 
-      {bare && (
-        <p className="mt-4 text-[13.5px] leading-snug text-on-surface-variant">
-          Nothing here yet. Four questions — your age, where you play, and which foot
-          you favour — change what every session you build contains.
-        </p>
-      )}
+        {!rows.length && (
+          <p className="text-[13.5px] leading-snug text-on-surface-variant">
+            {bare
+              ? 'Nothing here yet. Four questions — your age, where you play, and which foot you favour — change what every session you build contains.'
+              : 'Add where you play and which foot you favour — both change what a session contains.'}
+          </p>
+        )}
 
-      <Link href="/me/profile"
-            className="btn-ghost mt-4 w-full">
-        {bare ? 'Set up your profile' : 'Edit profile'}
-      </Link>
-    </div>
+        <Link href="/me/profile" className="btn-ghost mt-4 w-full">
+          {bare ? 'Set up your profile' : 'Edit profile'}
+        </Link>
+      </div>
+    </>
   );
 }

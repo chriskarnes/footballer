@@ -71,3 +71,18 @@ export async function PATCH(req: Request) {
   }
   return NextResponse.json({ ok: true });
 }
+
+/** Remove a saved session — the ones kept from Train to do later. A finished
+ *  session is history and isn't deleted from here. */
+export async function DELETE(req: Request) {
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
+
+  const id = new URL(req.url).searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+  const { error } = await db.from('workouts').delete()
+    .eq('id', id).eq('user_id', user.id).neq('status', 'completed');
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ ok: true });
+}

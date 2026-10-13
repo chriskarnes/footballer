@@ -30,8 +30,15 @@ export default async function SessionPage({
       if (w) {
         const byId = new Map(exercises.map((e) => [e.id, e]));
         const drills = (w.exercise_ids as string[]).map((id) => byId.get(id)).filter(Boolean) as Exercise[];
-        return <Runner title={w.title} subtitle="Repeat of a saved session"
-                       drills={drills} workoutId={w.id}
+        // A saved session is finished by marking that row complete. A finished
+        // one is done again as a new session — passing its id made the runner
+        // PATCH the old row, so doing a session twice overwrote the first time.
+        const again = w.status === 'completed';
+        return <Runner title={w.title}
+                       subtitle={again ? 'Doing it again' : 'Saved session'}
+                       drills={drills}
+                       workoutId={again ? undefined : w.id}
+                       sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
                        back={{ href: '/me', label: 'Your training' }} />;
       }
     } catch { /* fall through to library lookup */ }
