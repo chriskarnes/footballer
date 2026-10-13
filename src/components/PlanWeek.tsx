@@ -25,7 +25,7 @@ export interface WeekRow {
  *
  * Two modes, by what the week is for. While it's being built, each day has a
  * swap — the same glyph a drill has on Train — and nothing to start, because
- * Save is the action on that screen. Once it's followed, each day has Start,
+ * Save is the action on that screen. Once it's active, each day has Start,
  * a tick once it's done this week, and today is marked.
  */
 export function PlanWeek({
@@ -34,9 +34,9 @@ export function PlanWeek({
   rows: WeekRow[]; drillsBySession: Record<string, DrillBrief[]>;
   /** Building: swap this day's session. Its index is into `rows`. */
   onSwap?: (index: number) => void;
-  /** Following: the days already done this week, by dayKey. */
+  /** Active: the days already done this week, by dayKey. */
   done?: Set<string>;
-  /** Following: today's weekday, once the browser has said what day it is. */
+  /** Active: today's weekday, once the browser has said what day it is. */
   today?: number | null;
 }) {
   const [open, setOpen] = useState<string | null>(null);

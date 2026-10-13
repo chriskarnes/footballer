@@ -19,9 +19,9 @@ type PlanRow = { id: string; name: string; active: boolean; intake: PlanIntake |
  * Which screen, from the URL:
  *   ?edit=<id>   rebuild that saved week
  *   ?new=1       build another week alongside the ones you have
- *   ?plan=<id>   look at a saved week you're not following
+ *   ?plan=<id>   look at an inactive saved week
  *   (a week)     the builder's result step — see plan-url.ts
- *   (nothing)    the week you follow, or the builder if there isn't one
+ *   (nothing)    the active week, or the builder if there isn't one
  */
 export default async function PlanPage({
   searchParams,

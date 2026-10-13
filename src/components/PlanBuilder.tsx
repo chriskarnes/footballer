@@ -163,8 +163,8 @@ function Builder({
 
   async function saveWeek(week: BuiltPlan) {
     const days = planDayRows(week, '');
-    // Signed out, the week is kept in this browser and saved — as the week
-    // you follow — once you sign in. It used to say it "won't be here
+    // Signed out, the week is kept in this browser and saved — as the active
+    // week — once you sign in. It used to say it "won't be here
     // tomorrow", which was true and the end of it.
     if (!signedIn) {
       pendingPlan.stash({ intake: week.intake, days, name: defaultPlanName(week.intake) });
@@ -183,7 +183,7 @@ function Builder({
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `save failed (${res.status})`);
       }
-      // To the saved week, which is where a saved week is followed from.
+      // To the saved week, which is where a week is trained from.
       router.push(editing ? `/plan?plan=${editing.id}` : '/plan');
     } catch (e) {
       setSave('error');
@@ -240,7 +240,7 @@ function Builder({
             {save === 'signin' && (
               <span className="mt-4 block">
                 <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> and
-                this week is saved as the plan you follow.
+                this week is saved as your active plan.
               </span>
             )}
             {save === 'error' && <span className="mt-4 block">Couldn&rsquo;t save: {error}</span>}

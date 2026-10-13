@@ -1029,6 +1029,26 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    phone-scroll[inert] guard — went with it rather than sitting here unused.
    Recoverable from design/train-futbol-harness-m3.html if the decision reverses. */
 
+/* The confirmation sheet — <ConfirmSheet />. Not that sheet back: this one
+   holds two buttons and a sentence, for the few actions worth a second tap
+   (switching the active plan, deleting one). A native <dialog> opened with
+   showModal(), so it sits in the top layer — clear of the page-in transform,
+   which would otherwise trap anything fixed — and gets focus trapping, Escape
+   and the backdrop for free. Bottom-anchored, at the page's own width, the
+   same place the install sheet rises from. */
+.confirm-sheet {
+  margin: auto auto 0; width: 100%; max-width: 32rem;
+  max-height: none; border: 0; background: transparent; color: inherit;
+  padding: 0 16px max(20px, env(safe-area-inset-bottom));
+}
+.confirm-sheet::backdrop { background: color-mix(in srgb, #000 32%, transparent); }
+
+/* Rises into place. Shared with the install sheet, whose class pointed at
+   nothing until now. */
+@keyframes sheetIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.sheet-in { animation: sheetIn var(--md-sys-motion-duration-medium2, 250ms) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+@media (prefers-reduced-motion: reduce) { .sheet-in { animation: none; } }
+
 
 /* The floating tab bar's frosted fill.
    NOT a Tailwind opacity modifier. `bg-surface-container-lowest/85` compiles to

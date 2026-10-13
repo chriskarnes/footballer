@@ -14,7 +14,7 @@ export function SignIn() {
     const session = !!pendingWorkout.peek(), week = !!pendingPlan.peek();
     setWaiting(session && week ? 'Your last session and your week are waiting. Sign in and they’re saved.'
       : session ? 'Your last session is waiting. Sign in and it’s saved to your training.'
-      : week ? 'Your week is waiting. Sign in and it’s saved as the plan you follow.' : null);
+      : week ? 'Your week is waiting. Sign in and it’s saved as your active plan.' : null);
   }, []);
 
   async function send() {

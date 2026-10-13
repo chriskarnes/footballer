@@ -3,12 +3,13 @@ import { serverClient } from '@/lib/supabase/server';
 
 /**
  * Saved weeks. A player can keep several — an off-season week and an in-season
- * one, say — and follows one at a time: that's `active`, and it's the week the
- * Plan tab and Train's "today" card read.
+ * one, say — and one at a time is active: the week the Plan tab and Train's
+ * "today" card read. (`follow` in the bodies below means "make active"; the
+ * word predates the Active/Inactive naming.)
  *
- *   POST    a new week, followed unless `follow: false`
+ *   POST    a new week, made active unless `follow: false`
  *   PUT     a rebuilt week: same plan, same name, new answers and days
- *   PATCH   rename, or switch which week is followed
+ *   PATCH   rename, or switch which week is active
  *   DELETE  one week, by ?id=
  */
 
@@ -46,8 +47,8 @@ export async function POST(req: Request) {
   const bad = invalid(intake, days);
   if (bad) return bad;
 
-  // Following a new week stops following the old one. The old one is kept —
-  // it's a saved plan now, not a retired one.
+  // Making a new week active makes the old one inactive. It's kept — an
+  // inactive plan, not a retired one.
   if (follow) await db.from('plans').update({ active: false }).eq('user_id', user.id).eq('active', true);
 
   const { data: plan, error } = await db.from('plans')
@@ -65,8 +66,8 @@ export async function POST(req: Request) {
   return NextResponse.json({ id: plan.id });
 }
 
-/** Rebuild in place. The plan keeps its id, name and followed state, so a week
- *  you renamed and follow is still that week after you change Tuesday. */
+/** Rebuild in place. The plan keeps its id, name and active state, so a week
+ *  you renamed and made active is still that week after you change Tuesday. */
 export async function PUT(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();

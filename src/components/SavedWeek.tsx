@@ -8,17 +8,18 @@ import { formatTouches } from '@/lib/session-builder';
 import { dayKey, weekState, type Completion } from '@/lib/plan-today';
 import { PlanWeek, type WeekRow } from './PlanWeek';
 import { BackLink } from './BackLink';
+import { ConfirmSheet } from './ConfirmSheet';
 
 const FULL_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 /**
- * A saved week. Read-only on purpose — this is the thing you follow, not the
+ * A saved week. Read-only on purpose — this is the week you train to, not the
  * thing you fiddle with; Rebuild is one tap away.
  *
- * The followed week leads with today, because "what am I doing today" is the
+ * The active week leads with today, because "what am I doing today" is the
  * question this tab gets opened to answer, and the old screen made you find
- * today in a list of seven and work out what you'd already done. A week that's
- * saved but not followed shows the same list with Follow in place of today.
+ * today in a list of seven and work out what you'd already done. An inactive
+ * week shows the same list with Make active in place of today.
  */
 export function SavedWeek({
   plan, rows, drillsBySession, completions,
@@ -33,7 +34,8 @@ export function SavedWeek({
   // arrive after mount. See plan-today.ts.
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { setNow(new Date()); }, []);
-  const [following, setFollowing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   const state = now && plan.active
     ? weekState(rows.map((r) => ({ ...r, session_id: r.session?.id ?? null })), completions, now)
@@ -44,14 +46,14 @@ export function SavedWeek({
   const minutes = Math.round(training.reduce((a, d) => a + (d.session?.total_minutes ?? 0), 0));
   const touches = training.reduce((a, d) => a + (d.session?.touches ?? 0), 0);
 
-  async function follow() {
-    setFollowing(true);
+  async function activate() {
+    setSwitching(true);
     const res = await fetch('/api/plans', {
       method: 'PATCH', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ id: plan.id, follow: true }),
-    });
-    if (res.ok) router.push('/plan');
-    else setFollowing(false);
+    }).catch(() => null);
+    if (res?.ok) router.push('/plan');
+    else setSwitching(false);
   }
 
   return (
@@ -59,7 +61,7 @@ export function SavedWeek({
       {/* The way to every saved week, and to renaming one. Plan is a tab, but
           the list of plans lives with the rest of your account. */}
       <BackLink href="/me#plans" label="Your plans" />
-      <p className="eyebrow mb-3">{plan.active ? 'Following' : 'Saved week'}</p>
+      <p className="eyebrow mb-3">{plan.active ? 'Active plan' : 'Inactive plan'}</p>
       <h1 className="h-hero">{plan.name}</h1>
       <p className="mt-3 text-[14px] font-medium text-on-surface-variant">
         {training.length} session{training.length === 1 ? '' : 's'} · {minutes} min · {formatTouches(touches)} touches a week
@@ -72,15 +74,19 @@ export function SavedWeek({
       {!plan.active && (
         <div className="mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
           <p className="text-[14px] font-medium text-on-surface-brand">
-            You&rsquo;re not following this week. Follow it and it&rsquo;s the one Plan and Train
+            This week isn&rsquo;t active. Make it active and it&rsquo;s the one Plan and Train
             show you each day.
           </p>
-          <button onClick={follow} disabled={following}
+          <button onClick={() => setConfirming(true)}
                   className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
-            {following ? 'Switching…' : 'Follow this week'}
+            Make active
           </button>
         </div>
       )}
+      <ConfirmSheet open={confirming} title={`Make ${plan.name} active?`}
+        body="Your current active plan becomes inactive. It stays in your plans, and you can switch back any time."
+        confirmLabel="Make active" busy={switching}
+        onConfirm={activate} onCancel={() => setConfirming(false)} />
 
       <h2 className="h-card mt-9">The week</h2>
       <PlanWeek rows={rows} drillsBySession={drillsBySession}

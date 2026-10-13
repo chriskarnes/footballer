@@ -2,24 +2,34 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckIcon } from './Chip';
+import { ConfirmSheet } from './ConfirmSheet';
 
 export type SavedPlan = { id: string; name: string; active: boolean; created_at: string };
 
 /**
- * Every saved week, by name, with the one you follow marked. Before this, Me
- * had a single card reading "The week you saved" — the plan's name was stored
- * and never shown, and saving a new week quietly hid the old one.
+ * Every saved week, one of them active. The active week is the one the Plan
+ * tab opens to, Train's "today" card reads, and This week measures.
  *
- * Renaming happens here, in place: it's an account-level thing to do to a
- * plan, not something to do mid-week on the Plan tab.
+ * The list works like a set of radio buttons, because that's what it is: one
+ * and only one is chosen. Each row leads with the choice — an empty circle for
+ * an inactive week, a filled one with a tick for the active week, the same
+ * check a chosen segment wears — and the active week also takes the selection
+ * ring and sits first. "Follow" said none of that; it was a word to learn.
+ *
+ * Switching is a second tap, in a sheet that names both weeks: changing which
+ * week runs your Plan tab and your Train card is worth being sure of, and the
+ * week that stops being active doesn't go anywhere.
  */
 export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
   const router = useRouter();
   const [plans, setPlans] = useState(initial);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [switching, setSwitching] = useState<SavedPlan | null>(null);
+  const [deleting, setDeleting] = useState<SavedPlan | null>(null);
   const [busy, setBusy] = useState(false);
+  const active = plans.find((p) => p.active);
 
   async function call(method: 'PATCH' | 'DELETE', body: Record<string, unknown>) {
     setBusy(true);
@@ -41,16 +51,19 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
     }
   }
 
-  async function follow(id: string) {
-    if (await call('PATCH', { id, follow: true })) {
-      setPlans((ps) => ps.map((p) => ({ ...p, active: p.id === id })));
+  async function activate(plan: SavedPlan) {
+    if (await call('PATCH', { id: plan.id, follow: true })) {
+      // The active week moves to the top, where it's read first.
+      setPlans((ps) => ps.map((p) => ({ ...p, active: p.id === plan.id }))
+        .sort((a, b) => Number(b.active) - Number(a.active)));
+      setSwitching(null);
       router.refresh();
     }
   }
 
-  async function remove(id: string) {
-    if (await call('DELETE', { id })) {
-      setPlans((ps) => ps.filter((p) => p.id !== id));
+  async function remove(plan: SavedPlan) {
+    if (await call('DELETE', { id: plan.id })) {
+      setPlans((ps) => ps.filter((p) => p.id !== plan.id));
       setDeleting(null);
       router.refresh();
     }
@@ -59,9 +72,13 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
   return (
     <section id="plans" className="mt-9 scroll-mt-5">
       <p className="eyebrow mb-3">Your plans</p>
-      <ul className="space-y-2">
+      <ul role="radiogroup" aria-label="Active weekly plan" className="space-y-2">
         {plans.map((p) => (
-          <li key={p.id} className="card p-4">
+          <li key={p.id}
+              // The selection ring: the mark of a chosen thing everywhere else
+              // in the app, so the active week reads as chosen before its tag
+              // is read.
+              className={`card p-4 ${p.active ? 'outline outline-2 -outline-offset-2 outline-secondary-container' : ''}`}>
             {renaming === p.id ? (
               <form onSubmit={(e) => { e.preventDefault(); rename(p.id); }}>
                 <label className="text-field">
@@ -78,36 +95,32 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
                   </button>
                 </div>
               </form>
-            ) : deleting === p.id ? (
-              <div>
-                <p className="text-[14px] font-medium text-on-surface">
-                  Delete {p.name}? Sessions you&rsquo;ve done stay in your history.
-                </p>
-                <div className="mt-3 flex gap-2.5">
-                  <button type="button" onClick={() => setDeleting(null)} className="btn-ghost flex-1">Keep it</button>
-                  <button type="button" onClick={() => remove(p.id)} disabled={busy}
-                          className="btn-primary btn-sm flex-1">Delete</button>
-                </div>
-              </div>
             ) : (
               <div className="flex items-center gap-3">
+                <button type="button" role="radio" aria-checked={p.active}
+                        aria-label={p.active ? `${p.name} is active` : `Make ${p.name} active`}
+                        onClick={() => { if (!p.active) setSwitching(p); }}
+                        className={`pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-full
+                                    ${p.active ? 'cursor-default' : ''}`}>
+                  <span aria-hidden="true"
+                        className={`flex h-6 w-6 items-center justify-center rounded-full
+                          ${p.active
+                            ? 'bg-secondary-container text-on-secondary-container'
+                            : 'border-2 border-outline'}`}>
+                    {p.active && <CheckIcon className="h-3.5 w-3.5" />}
+                  </span>
+                </button>
+
                 <Link href={p.active ? '/plan' : `/plan?plan=${p.id}`} className="min-w-0 flex-1">
                   <div className="h-card truncate">{p.name}</div>
                   <div className="mt-1 flex items-center gap-2 text-[12.5px] font-medium text-on-surface-variant">
                     {p.active
-                      ? <span className="tag tag-accent">Following</span>
-                      : <span>Saved {savedOn(p.created_at)}</span>}
+                      ? <span className="tag tag-accent">Active</span>
+                      : <><span className="tag">Inactive</span><span>Saved {savedOn(p.created_at)}</span></>}
                   </div>
                 </Link>
-                {/* A text button rather than a third pill on the row, which
-                    left the plan's own name three letters long. */}
-                {!p.active && (
-                  <button type="button" onClick={() => follow(p.id)} disabled={busy}
-                          className="pressable shrink-0 px-1 text-[13px] font-semibold text-primary underline underline-offset-4">
-                    Follow
-                  </button>
-                )}
-                <button type="button" onClick={() => { setDraft(p.name); setRenaming(p.id); setDeleting(null); }}
+
+                <button type="button" onClick={() => { setDraft(p.name); setRenaming(p.id); }}
                         aria-label={`Rename ${p.name}`} title="Rename"
                         className="icon-btn pressable text-on-surface-variant hover:text-on-surface">
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true"
@@ -115,7 +128,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
                     <path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" />
                   </svg>
                 </button>
-                <button type="button" onClick={() => { setDeleting(p.id); setRenaming(null); }}
+                <button type="button" onClick={() => setDeleting(p)}
                         aria-label={`Delete ${p.name}`} title="Delete"
                         className="icon-btn pressable text-on-surface-variant hover:text-on-surface">
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true"
@@ -129,6 +142,26 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
         ))}
       </ul>
       <Link href="/plan?new=1" className="btn-ghost pressable mt-3 w-full">Build another week</Link>
+
+      <ConfirmSheet
+        open={!!switching}
+        title={`Make ${switching?.name ?? ''} active?`}
+        body={active
+          ? <>{active.name} becomes inactive. It stays in your plans, and you can switch back any time.</>
+          : <>Plan and Train will show you this week each day.</>}
+        confirmLabel="Make active" busy={busy}
+        onConfirm={() => switching && activate(switching)}
+        onCancel={() => setSwitching(null)} />
+
+      <ConfirmSheet
+        open={!!deleting}
+        title={`Delete ${deleting?.name ?? ''}?`}
+        body={deleting?.active
+          ? <>This is your active plan, so you&rsquo;ll have none until you make another one active. Sessions you&rsquo;ve done stay in your history.</>
+          : <>Sessions you&rsquo;ve done stay in your history.</>}
+        confirmLabel="Delete" busy={busy}
+        onConfirm={() => deleting && remove(deleting)}
+        onCancel={() => setDeleting(null)} />
     </section>
   );
 }

@@ -75,5 +75,5 @@ function slot(key: string, endpoint: string) {
 
 /** A session finished in the runner. */
 export const pendingWorkout = slot('forge.pendingWorkout', '/api/workouts');
-/** A week built on Plan. Sent as a new plan that becomes the one followed. */
+/** A week built on Plan. Sent as a new plan that becomes the active one. */
 export const pendingPlan = slot('forge.pendingPlan', '/api/plans');

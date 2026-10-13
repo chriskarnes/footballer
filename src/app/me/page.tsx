@@ -17,7 +17,7 @@ import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
  * it reads, top to bottom:
  *
  *   who you are      the name as the headline, then the profile
- *   this week        sessions, minutes, touches, the streak, the followed week
+ *   this week        sessions, minutes, touches, the streak, the active week
  *   saved sessions   kept from Train to do later
  *   your plans       every saved week
  *   history          the last five, and See all
@@ -63,10 +63,10 @@ export default async function MePage() {
         workouts = rows;
         profile = prof;
         plans = planRows ?? [];
-        const followed = plans.find((p) => p.active);
-        if (followed) {
+        const activePlan = plans.find((p) => p.active);
+        if (activePlan) {
           const { data: days } = await db.from('plan_days')
-            .select('weekday,slot,kind,session_id').eq('plan_id', followed.id);
+            .select('weekday,slot,kind,session_id').eq('plan_id', activePlan.id);
           planDays = days ?? [];
         }
       }
@@ -99,7 +99,7 @@ export default async function MePage() {
 
   const finished = finishedRows(workouts);
   const saved = workouts.filter((w) => w.status !== 'completed').map(toRow);
-  const followed = plans.find((p) => p.active);
+  const activePlan = plans.find((p) => p.active);
   const allTime = {
     sessions: finished.length,
     minutes: finished.reduce((a, w) => a + w.minutes, 0),
@@ -115,7 +115,7 @@ export default async function MePage() {
       <ProfileCard profile={profile} email={user.email} />
 
       <ThisWeek finished={finished.map(toFinished)} allTime={allTime}
-        plan={followed ? { name: followed.name, days: planDays, completions } : null} />
+        plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />
 
       {/* Kept from Train for later. Starting one and finishing it moves it
           down into history; removing it is for the ones you won't. */}
@@ -126,7 +126,7 @@ export default async function MePage() {
         </section>
       )}
 
-      {/* Every saved week, the followed one first. */}
+      {/* Every saved week, the active one first. */}
       {!!plans.length && <SavedPlans plans={plans} />}
 
       {/* The invitation to a plan, once there's enough history to build one

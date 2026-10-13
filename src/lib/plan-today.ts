@@ -1,5 +1,5 @@
 /**
- * Where a followed week stands today: which day it is, which sessions are
+ * Where the active week stands today: which day it is, which sessions are
  * already done this week, and what's next.
  *
  * Run in the browser, never on the server. "Today" and "this week" are the

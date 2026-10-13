@@ -17,7 +17,7 @@ export default async function TrainNowPage() {
 
       {/* The headline lives in Coach now: it changes with the step, from
           "Start training now" to the session you've just made. */}
-      {/* Today's session from the week you follow, if you follow one. Under
+      {/* Today's session from your active week, if there is one. Under
           its own Suspense so signed-out visitors — most of them — never wait
           on the account lookup it needs. */}
       <Coach exercises={exercises}

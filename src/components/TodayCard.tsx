@@ -8,7 +8,7 @@ type Brief = { id: string; name: string; total_minutes: number };
 
 /**
  * The card itself. An ordinary card, not the brand block: on Train the coach
- * box is the main event, and someone following a plan still often wants
+ * box is the main event, and someone with an active plan still often wants
  * something else today. Start is there for when they don't.
  *
  * Renders after mount, because what "today" is depends on the player's clock —
