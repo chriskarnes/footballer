@@ -1,3 +1,4 @@
+import { guideFor, plainRest } from './speed-guide';
 import type { Exercise, FocusArea } from './types';
 
 /**
@@ -452,15 +453,26 @@ export function sessionSeconds(s: SpeedSession) {
  * stable per session + position, so history can name what was done.
  */
 export function asExercise(s: SpeedSession, drill: SpeedDrill, i: number): Exercise {
+  // The player's version of the drill, where it's been written: a plain name,
+  // the steps, how hard. See speed-guide.ts. Unwritten drills keep the coach's
+  // name and just the cue, as before.
+  const found = guideFor(drill.name);
+  const g = found?.guide;
+  const fill = (t: string) => t
+    .replace('{sets}', drill.sets).replace('{reps}', drill.reps).replace('{rest}', plainRest(drill.rest));
   return {
     id: `${s.id}__d${String(i + 1).padStart(2, '0')}`,
     session_id: s.id,
     program_id: `speed__${s.phase}`,
-    name: drill.name,
+    name: g ? (found!.detail ? `${g.plain} (${found!.detail})` : g.plain) : drill.name,
+    also_called: g?.coach,
+    how: g?.how,
+    effort: g?.effort,
+    amount: g?.amount ? fill(g.amount) : undefined,
     exercise_order: i + 1,
     sets: drill.sets,
     reps_time: drill.reps,
-    rest: drill.rest,
+    rest: plainRest(drill.rest),
     total_seconds: drill.seconds,
     work_seconds: Math.round(drill.seconds * 0.4),
     total_minutes: Math.round(drill.seconds / 6) / 10,

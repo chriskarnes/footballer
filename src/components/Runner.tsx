@@ -7,6 +7,7 @@ import { formatTouches } from '@/lib/session-builder';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { pendingWorkout } from '@/lib/pending';
+import { EFFORT } from '@/lib/speed-guide';
 import { BackLink } from './BackLink';
 
 type Phase = 'running' | 'confirm-end' | 'finished';
@@ -49,6 +50,9 @@ export function Runner({
   const [phase, setPhase] = useState<Phase>('running');
   const [save, setSave] = useState<Save>('saving');
   const [played, setPlayed] = useState(0);
+  // Which drill's "How to do it" is open. One at a time: the list is the
+  // thing being worked through, and two sets of steps open push it apart.
+  const [howOpen, setHowOpen] = useState<string | null>(null);
   const openedAt = useRef(Date.now());
   const startedAt = useRef<number | null>(null);
 
@@ -284,18 +288,67 @@ export function Runner({
               </div>
               <div className="min-w-0 flex-1">
                 <div className={`h-card ${on ? 'line-through' : ''}`}>{d.name}</div>
+                {/* The coach's word for it, under the player's — they'll hear
+                    it at training, so it's taught rather than hidden. */}
+                {d.also_called && (
+                  <div className="mt-0.5 text-[12px] text-on-surface-variant">Coaches call it &ldquo;{d.also_called}&rdquo;</div>
+                )}
                 <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
-                  {d.sets} × {d.reps_time}{d.rest && d.rest !== '-' ? ` · rest ${d.rest}` : ''}
+                  {/* "rest 1 min", but just "walk back" — a rest that's an
+                      instruction rather than a time doesn't take "rest". */}
+                  {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
+                    ? (/^\d/.test(d.rest) ? ` · rest ${d.rest}` : ` · ${d.rest}`) : ''}`}
                 </div>
                 {/* The one thing to think about at speed. Only the speed module
                     sets it; library drills say it in their video. */}
                 {d.cue && (
-                  <div className="mt-1.5 text-[13px] font-semibold italic">&ldquo;{d.cue}&rdquo;</div>
+                  <div className="mt-1.5 text-[13px] font-semibold">
+                    Think about: <span className="italic">&ldquo;{d.cue}&rdquo;</span>
+                  </div>
                 )}
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                  <span className="tag tag-accent">{FOCUS_LABELS[d.primary_focus]}</span>
+                  {d.effort && <span className="tag tag-accent">{EFFORT[d.effort].label}</span>}
+                  <span className={`tag ${d.effort ? '' : 'tag-accent'}`}>{FOCUS_LABELS[d.primary_focus]}</span>
                   {!!d.touches && <span className="tag">{formatTouches(d.touches)} touches</span>}
                 </div>
+
+                {/* The steps, for drills with no video to show them. Closed by
+                    default so the list stays a list; the tap stops here rather
+                    than ticking the drill off. */}
+                {!!d.how?.length && (
+                  <>
+                    <button type="button" aria-expanded={howOpen === d.id}
+                            onClick={(e) => { e.stopPropagation(); setHowOpen(howOpen === d.id ? null : d.id); }}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            className="pressable mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-on-surface underline underline-offset-4">
+                      How to do it
+                      <svg viewBox="0 0 24 24" aria-hidden="true"
+                           className={`h-3.5 w-3.5 transition-transform duration-200 ${howOpen === d.id ? 'rotate-180' : ''}`}
+                           fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                    {howOpen === d.id && (
+                      <div className="hint-in mt-2.5 border-t border-outline-variant pt-3"
+                           onClick={(e) => e.stopPropagation()}>
+                        <ol className="space-y-2">
+                          {d.how.map((step, n) => (
+                            <li key={n} className="flex gap-2.5 text-[13.5px] leading-snug text-on-surface">
+                              <span className="w-4 shrink-0 font-brand text-[12px] font-bold text-on-surface-variant">{n + 1}</span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                        {d.effort && (
+                          <p className="mt-3 text-[12.5px] text-on-surface-variant">
+                            <span className="font-semibold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
+                            {EFFORT[d.effort].means}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               {d.video_url && (
                 <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"

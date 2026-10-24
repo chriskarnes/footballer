@@ -34,6 +34,14 @@ export interface Exercise {
   /** One coaching cue, shown under the drill. Set by the speed module; the
    *  parsed library has none, so it stays optional. */
   cue?: string;
+  /** Set by the speed module from speed-guide.ts, which explains drills that
+   *  have no video. All optional — the library has a video instead. */
+  how?: string[];
+  /** The coach's name for the drill, when `name` is the plain one. */
+  also_called?: string;
+  effort?: 'easy' | 'steady' | 'fast' | 'max';
+  /** Replaces "sets × reps · rest" when that doesn't read. */
+  amount?: string;
 }
 
 export interface SessionRow {
