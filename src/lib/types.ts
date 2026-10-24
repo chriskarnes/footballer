@@ -31,6 +31,9 @@ export interface Exercise {
   category: string;
   video_url: string | null;
   duration_confidence: 'high' | 'medium' | 'low';
+  /** One coaching cue, shown under the drill. Set by the speed module; the
+   *  parsed library has none, so it stays optional. */
+  cue?: string;
 }
 
 export interface SessionRow {

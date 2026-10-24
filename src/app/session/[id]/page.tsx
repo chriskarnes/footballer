@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getExercises, getPrograms, getSessions } from '@/lib/library';
 import { Runner } from '@/components/Runner';
 import { serverClient } from '@/lib/supabase/server';
@@ -24,24 +24,33 @@ export default async function SessionPage({
   const exercises = await getExercises();
 
   if (from === 'history') {
+    let speedRef: string | null = null;
     try {
       const db = await serverClient();
       const { data: w } = await db.from('workouts').select('*').eq('id', id).single();
       if (w) {
-        const byId = new Map(exercises.map((e) => [e.id, e]));
-        const drills = (w.exercise_ids as string[]).map((id) => byId.get(id)).filter(Boolean) as Exercise[];
-        // A saved session is finished by marking that row complete. A finished
-        // one is done again as a new session — passing its id made the runner
-        // PATCH the old row, so doing a session twice overwrote the first time.
-        const again = w.status === 'completed';
-        return <Runner title={w.title}
-                       subtitle={again ? 'Doing it again' : 'Saved session'}
-                       drills={drills}
-                       workoutId={again ? undefined : w.id}
-                       sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
-                       back={{ href: '/me', label: 'Your training' }} />;
+        // A speed session's drills live in lib/speed.ts, not the library, so
+        // its runner is the one that can rebuild them. redirect() throws, and
+        // the catch below would swallow it, so it happens after the try.
+        if (w.source === 'speed' && w.source_ref) {
+          speedRef = w.source_ref;
+        } else {
+          const byId = new Map(exercises.map((e) => [e.id, e]));
+          const drills = (w.exercise_ids as string[]).map((id) => byId.get(id)).filter(Boolean) as Exercise[];
+          // A saved session is finished by marking that row complete. A finished
+          // one is done again as a new session — passing its id made the runner
+          // PATCH the old row, so doing a session twice overwrote the first time.
+          const again = w.status === 'completed';
+          return <Runner title={w.title}
+                         subtitle={again ? 'Doing it again' : 'Saved session'}
+                         drills={drills}
+                         workoutId={again ? undefined : w.id}
+                         sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
+                         back={{ href: '/me', label: 'Your training' }} />;
+        }
       }
     } catch { /* fall through to library lookup */ }
+    if (speedRef) redirect(`/speed/session/${speedRef}?from=history`);
   }
 
   const [sessions, programs] = await Promise.all([getSessions(), getPrograms()]);

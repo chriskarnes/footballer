@@ -1,0 +1,99 @@
+import Link from 'next/link';
+import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS } from '@/lib/speed';
+
+/**
+ * Speed is the fourth door: a long-term program rather than a session or a
+ * week. It reads top to bottom as the year, the block, and the week — the
+ * three clocks a player is on at once.
+ */
+export default function SpeedPage() {
+  return (
+    <div className="animate-pop">
+      <p className="eyebrow mb-3">Speed</p>
+      <h1 className="h-hero">Speed &amp; Stamina</h1>
+      <p className="mt-3.5 text-[15px] text-on-surface-variant">
+        A 12-month program for 13–16 year olds. Four phases, each three 4-week blocks,
+        each block ending in a test day. {SPEED_SESSIONS.length} sessions.
+      </p>
+
+      {/* The two things to press first: today's test, and the science that
+          backs the plan. Test day is the reorder counter of this module. */}
+      <div className="mt-6 grid grid-cols-2 gap-2.5">
+        <Link href="/speed/test" className="card pressable p-4">
+          <div className="h-card">Test day</div>
+          <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">Your card and bests</div>
+        </Link>
+        <Link href="/speed/science" className="card pressable p-4">
+          <div className="h-card">The science</div>
+          <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">13 papers, read plainly</div>
+        </Link>
+      </div>
+
+      <section className="mt-9">
+        <p className="eyebrow mb-3">The year</p>
+        <div className="stagger grid grid-cols-1 gap-2.5">
+          {PHASES.map((p) => (
+            <Link key={p.id} href={`/speed/${p.id}`}
+              className="card pressable flex items-center gap-4 p-4">
+              <span className="font-brand text-[13px] font-bold text-on-surface-variant">
+                {String(p.number).padStart(2, '0')}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="h-card truncate">{p.name}</div>
+                <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
+                  {p.months} · 3 blocks · {SPEED_SESSIONS.filter((s) => s.phase === p.id).length} sessions
+                </div>
+              </div>
+              <svg viewBox="0 0 24 24" aria-hidden="true"
+                   className="h-4 w-4 shrink-0 text-on-surface-variant" fill="none"
+                   stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-9">
+        <p className="eyebrow mb-3">Every block</p>
+        <div className="card-flat divide-y divide-outline-variant">
+          {BLOCK_WEEKS.map((w) => (
+            <div key={w.week} className="flex items-start gap-4 p-4">
+              <span className="font-brand text-[13px] font-bold text-on-surface-variant">W{w.week}</span>
+              <div className="min-w-0 flex-1">
+                <div className="h-card">{w.name}</div>
+                <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">{w.load}</div>
+              </div>
+              <span className="text-[11.5px] font-semibold text-on-surface-variant">{w.feel}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-on-surface-variant">
+          A new drill every four weeks, a number to beat every four weeks. The test result sets
+          the next block&rsquo;s spacing, distances and sets, so the plan is always the athlete&rsquo;s own.
+        </p>
+      </section>
+
+      <section className="mt-9">
+        <p className="eyebrow mb-3">Every week</p>
+        <div className="card-flat divide-y divide-outline-variant">
+          {WEEK_TEMPLATE.map((t) => (
+            <div key={t.day} className="flex items-center gap-4 p-4">
+              <span className="w-8 font-brand text-[13px] font-bold text-on-surface-variant">{t.day}</span>
+              <div className={`min-w-0 flex-1 text-[14px] font-semibold ${t.kind ? '' : 'text-on-surface-variant'}`}>
+                {t.label}
+              </div>
+              {!!t.minutes && (
+                <span className="font-brand text-[13px] font-bold tracking-tighter">{t.minutes}m</span>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-on-surface-variant">
+          Speed is trained fresh: sprints come first, after the warm-up, with full rest.
+          In-season, Mon and Thu shrink to 30 minutes and Fri is dropped after a midweek match.
+        </p>
+      </section>
+    </div>
+  );
+}

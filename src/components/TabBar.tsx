@@ -9,6 +9,7 @@ const TABS = [
   { href: '/',        label: 'Train',   d: 'M13 3 4 14h7l-1 7 9-11h-7l1-7Z' },
   { href: '/library', label: 'Library', d: 'M4 5h16M4 12h16M4 19h9' },
   { href: '/plan',    label: 'Plan',    d: 'M4 5h16v16H4zM16 3v4M8 3v4M4 11h16' },
+  { href: '/speed',   label: 'Speed',   d: 'M3 12h7l-2 7 9-11h-7l2-7zM14 4l6 1M15 20l5-1' },
   { href: '/me',      label: 'Me',      d: 'M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
 ];
 

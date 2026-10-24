@@ -27,10 +27,14 @@ function playedMinutes(startedAt: number | null, openedAt: number, plannedSecond
 }
 
 export function Runner({
-  title, subtitle, drills, workoutId, sessionRef, back, doneHref, rounds = 1,
+  title, subtitle, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
 }: {
   title: string; subtitle: string; drills: Exercise[];
   workoutId?: string; sessionRef?: string;
+  /** Where the drills came from. Defaults to library when there's a sessionRef,
+   *  coach otherwise. 'speed' drills aren't library rows, so history keeps the
+   *  session but not per-drill ticks — see /api/workouts. */
+  source?: 'library' | 'coach' | 'speed';
   /** A short coach circuit is done more than once. A drill is ticked when every
    *  round of it is done, so only the totals need to know. */
   rounds?: number;
@@ -82,7 +86,7 @@ export function Runner({
     const doneIds = drills.filter((d) => done.has(d.id)).map((d) => d.id);
     const body = workoutId
       ? { id: workoutId, doneIds, actual_minutes: minutes, actual_touches: doneTouches }
-      : { title, source: sessionRef ? 'library' : 'coach', source_ref: sessionRef,
+      : { title, source: source ?? (sessionRef ? 'library' : 'coach'), source_ref: sessionRef,
           exercise_ids: drills.map((d) => d.id), done_ids: doneIds,
           planned_minutes: Math.round(total / 60), planned_touches: totalTouches,
           actual_minutes: minutes, actual_touches: doneTouches,
@@ -205,9 +209,12 @@ export function Runner({
           {/* Touches, at one weight and in the quiet tone. The banked count used
               to sit above this in bold white, which put a second headline
               number on a card that only has room for one. */}
-          <div className="text-right text-[11.5px] font-semibold text-on-surface-brand-variant">
-            {formatTouches(doneTouches)} of {formatTouches(totalTouches)} touches
-          </div>
+          {/* A speed session has no ball; "0 of 0 touches" is noise there. */}
+          {!!totalTouches && (
+            <div className="text-right text-[11.5px] font-semibold text-on-surface-brand-variant">
+              {formatTouches(doneTouches)} of {formatTouches(totalTouches)} touches
+            </div>
+          )}
         </div>
         <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-brand-track">
           <div className="h-full rounded-full bg-on-surface-brand transition-all duration-500"
@@ -280,6 +287,11 @@ export function Runner({
                 <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
                   {d.sets} × {d.reps_time}{d.rest && d.rest !== '-' ? ` · rest ${d.rest}` : ''}
                 </div>
+                {/* The one thing to think about at speed. Only the speed module
+                    sets it; library drills say it in their video. */}
+                {d.cue && (
+                  <div className="mt-1.5 text-[13px] font-semibold italic">&ldquo;{d.cue}&rdquo;</div>
+                )}
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                   <span className="tag tag-accent">{FOCUS_LABELS[d.primary_focus]}</span>
                   {!!d.touches && <span className="tag">{formatTouches(d.touches)} touches</span>}

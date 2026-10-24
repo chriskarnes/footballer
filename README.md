@@ -178,6 +178,8 @@ src/
     session/[id]/             The runner: tick drills off, bank touches
     me/                       Sign-in, history, "do it again"
     plan/                     Weekly blueprint (stub — see PLAN.md)
+    speed/                    Speed & stamina: a 12-month program, 4 phases × 3 blocks,
+                              each block closed by a test day; sessions play in the Runner
     offline/                  Shown by the service worker with no connection
     template.tsx              Route-change animation (remounts per navigation)
     manifest.ts               Served at /manifest.webmanifest
@@ -188,6 +190,8 @@ src/
     ServiceWorker.tsx         Registers /sw.js in production only
   lib/
     session-builder.ts        ← portable: drill selection, swap, touch maths
+    speed.ts                  ← portable: the speed program, tests, rules, sources
+    speed-card.ts             The athlete's test-day card, kept in the browser
     types.ts                  ← portable: the domain model
     haptics.ts                ← portable: no-ops on iOS, honestly
     use-wake-lock.ts          Keeps the screen on mid-session
