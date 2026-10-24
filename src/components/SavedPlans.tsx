@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckIcon } from './Chip';
 import { ConfirmSheet } from './ConfirmSheet';
 
 export type SavedPlan = { id: string; name: string; active: boolean; created_at: string };
@@ -11,11 +10,12 @@ export type SavedPlan = { id: string; name: string; active: boolean; created_at:
  * Every saved week, one of them active. The active week is the one the Plan
  * tab opens to, Train's "today" card reads, and This week measures.
  *
- * The list works like a set of radio buttons, because that's what it is: one
- * and only one is chosen. Each row leads with the choice — an empty circle for
- * an inactive week, a filled one with a tick for the active week, the same
- * check a chosen segment wears — and the active week also takes the selection
- * ring and sits first. "Follow" said none of that; it was a word to learn.
+ * Each row has a calendar button — the Plan tab's own calendar, so the two
+ * read as the same thing. Inactive, it's the grey tonal button rename and
+ * delete use: something you can press. Active, it's filled, with a tick in
+ * it: filled is what's in effect, everywhere in this app, and the tick is a
+ * second difference that doesn't depend on telling grey from black. The
+ * active week also sits first. No tags — the button says it.
  *
  * Switching is a second tap, in a sheet that names both weeks: changing which
  * week runs your Plan tab and your Train card is worth being sure of, and the
@@ -74,11 +74,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
       <p className="eyebrow mb-3">Your plans</p>
       <ul role="radiogroup" aria-label="Active weekly plan" className="space-y-2">
         {plans.map((p) => (
-          <li key={p.id}
-              // The selection ring: the mark of a chosen thing everywhere else
-              // in the app, so the active week reads as chosen before its tag
-              // is read.
-              className={`card p-4 ${p.active ? 'outline outline-2 -outline-offset-2 outline-secondary-container' : ''}`}>
+          <li key={p.id} className="card p-4">
             {renaming === p.id ? (
               <form onSubmit={(e) => { e.preventDefault(); rename(p.id); }}>
                 <label className="text-field">
@@ -97,28 +93,24 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
               </form>
             ) : (
               <div className="flex items-center gap-3">
-                <button type="button" role="radio" aria-checked={p.active}
-                        aria-label={p.active ? `${p.name} is active` : `Make ${p.name} active`}
-                        onClick={() => { if (!p.active) setSwitching(p); }}
-                        className={`pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-full
-                                    ${p.active ? 'cursor-default' : ''}`}>
-                  <span aria-hidden="true"
-                        className={`flex h-6 w-6 items-center justify-center rounded-full
-                          ${p.active
-                            ? 'bg-secondary-container text-on-secondary-container'
-                            : 'border-2 border-outline'}`}>
-                    {p.active && <CheckIcon className="h-3.5 w-3.5" />}
-                  </span>
-                </button>
-
                 <Link href={p.active ? '/plan' : `/plan?plan=${p.id}`} className="min-w-0 flex-1">
                   <div className="h-card truncate">{p.name}</div>
-                  <div className="mt-1 flex items-center gap-2 text-[12.5px] font-medium text-on-surface-variant">
-                    {p.active
-                      ? <span className="tag tag-accent">Active</span>
-                      : <><span className="tag">Inactive</span><span>Saved {savedOn(p.created_at)}</span></>}
+                  <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
+                    {p.active ? 'Active' : `Saved ${savedOn(p.created_at)}`}
                   </div>
                 </Link>
+
+                {/* Still a radio to anything reading the page out: one of these
+                    is checked, and choosing another unchecks it. */}
+                <button type="button" role="radio" aria-checked={p.active}
+                        aria-label={p.active ? `${p.name} is active` : `Make ${p.name} active`}
+                        title={p.active ? 'Active' : 'Make active'}
+                        onClick={() => { if (!p.active) setSwitching(p); }}
+                        className={`icon-btn pressable ${p.active
+                          ? 'cursor-default bg-secondary-container text-on-secondary-container'
+                          : 'text-on-surface-variant hover:text-on-surface'}`}>
+                  <CalendarIcon checked={p.active} />
+                </button>
 
                 <button type="button" onClick={() => { setDraft(p.name); setRenaming(p.id); }}
                         aria-label={`Rename ${p.name}`} title="Rename"
@@ -170,4 +162,15 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
  *  date rendered "9/3/2026" in one and could disagree with the other. */
 function savedOn(iso: string): string {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+}
+
+/** The Plan tab's calendar, with a tick in it for the active week. */
+function CalendarIcon({ checked }: { checked: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true"
+         stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 5h16v16H4zM16 3v4M8 3v4M4 11h16" />
+      {checked && <path d="M9 16l2 2 4-4" />}
+    </svg>
+  );
 }
