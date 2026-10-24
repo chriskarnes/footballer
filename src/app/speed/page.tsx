@@ -1,12 +1,31 @@
 import Link from 'next/link';
-import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS } from '@/lib/speed';
+import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS, SOURCES } from '@/lib/speed';
+import { serverClient } from '@/lib/supabase/server';
+import { SpeedYear } from '@/components/SpeedYear';
 
 /**
- * Speed is the fourth door: a long-term program rather than a session or a
- * week. It reads top to bottom as the year, the block, and the week — the
- * three clocks a player is on at once.
+ * Speed is a long-term program rather than a session or a week. It leads with
+ * where you are in it — today, this week (SpeedYear) — and below that reads
+ * as the reference: the year, the block, and the week, the three clocks a
+ * player is on at once.
  */
-export default function SpeedPage() {
+export default async function SpeedPage() {
+  // Finished speed sessions from the last eight days, to tick this week off.
+  // Signed out there are none, and the year runs without ticks.
+  let completions: { source_ref: string | null; completed_at: string | null }[] = [];
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
+      const db = await serverClient();
+      const { data: auth } = await db.auth.getUser();
+      if (auth.user) {
+        const since = new Date(Date.now() - 8 * 86400000).toISOString();
+        const { data } = await db.from('workouts').select('source_ref,completed_at')
+          .eq('status', 'completed').eq('source', 'speed').gte('completed_at', since);
+        completions = data ?? [];
+      }
+    } catch { /* not configured */ }
+  }
+
   return (
     <div className="animate-pop">
       <p className="eyebrow mb-3">Speed</p>
@@ -15,6 +34,8 @@ export default function SpeedPage() {
         A 12-month program for 13–16 year olds. Four phases, each three 4-week blocks,
         each block ending in a test day. {SPEED_SESSIONS.length} sessions.
       </p>
+
+      <SpeedYear completions={completions} />
 
       {/* The two things to press first: today's test, and the science that
           backs the plan. Test day is the reorder counter of this module. */}
@@ -25,7 +46,7 @@ export default function SpeedPage() {
         </Link>
         <Link href="/speed/science" className="card pressable p-4">
           <div className="h-card">The science</div>
-          <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">13 papers, read plainly</div>
+          <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">{SOURCES.length} papers, read plainly</div>
         </Link>
       </div>
 

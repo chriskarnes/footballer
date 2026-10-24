@@ -966,7 +966,8 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   display: block; margin-bottom: 6px;
   font-size: 13px; font-weight: 600; color: var(--md-sys-color-on-surface-variant);
 }
-.text-field input {
+/* select too: the test-day card picks a phase and block in the same field. */
+.text-field input, .text-field select {
   width: 100%; min-height: 52px; padding: 0 16px;
   border: 1px solid var(--md-sys-color-outline);
   border-radius: var(--md-sys-shape-corner-small);
@@ -977,7 +978,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   color: var(--md-sys-color-on-surface);
 }
 .text-field input::placeholder { color: var(--md-sys-color-on-surface-variant); }
-.text-field input:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
+.text-field input:focus-visible, .text-field select:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
 /* A field that is shown but cannot be edited. It keeps the outlined shape so
    it still reads as "this is one of the fields", and loses the white fill so
    it does not read as "type here". Still focusable and still announced — see

@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { BackLink } from './BackLink';
+import { ConfirmSheet } from './ConfirmSheet';
 import { haptic } from '@/lib/haptics';
 import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS } from '@/lib/speed';
 import { bests, heightGain, useSpeedCard, type TestEntry } from '@/lib/speed-card';
+import { position, useYearStart } from '@/lib/speed-year';
 
 type Screen = 'card' | 'entry';
 
@@ -19,6 +21,7 @@ const fmt = (v: number, unit: string) => unit === 's' ? v.toFixed(2) : String(Ma
 export function SpeedTestCard() {
   const { entries, ready, add, remove } = useSpeedCard();
   const [screen, setScreen] = useState<Screen>('card');
+  const [removing, setRemoving] = useState(false);
 
   if (screen === 'entry') {
     return <Entry onDone={(e) => { add(e); haptic('success'); setScreen('card'); }}
@@ -115,11 +118,16 @@ export function SpeedTestCard() {
             </table>
           </div>
           {last && (
-            <button type="button" onClick={() => { if (confirm(`Remove the ${last.date} test day?`)) remove(last.date); }}
-                    className="btn-ghost pressable mt-3">
+            <button type="button" onClick={() => setRemoving(true)} className="btn-ghost pressable mt-3">
               Remove last test day
             </button>
           )}
+          {/* The app's confirmation rather than the browser's, which on a
+              phone is a system alert that looks like nothing else here. */}
+          <ConfirmSheet open={removing && !!last} title={`Remove the ${last?.date ?? ''} test day?`}
+            body="Its numbers come off your card and your bests are worked out again without them."
+            confirmLabel="Remove" onCancel={() => setRemoving(false)}
+            onConfirm={() => { if (last) remove(last.date); setRemoving(false); }} />
         </section>
       )}
 
@@ -162,9 +170,17 @@ export function SpeedTestCard() {
 }
 
 function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel: () => void }) {
+  // Which block this test closes, from the year if one has been started —
+  // the athlete shouldn't have to know they're in Build, block 2.
+  const { start } = useYearStart();
+  const at = start ? position(start) : null;
   const [date, setDate] = useState(today());
   const [phase, setPhase] = useState(PHASES[0].id);
   const [block, setBlock] = useState<1 | 2 | 3>(1);
+  const [seeded, setSeeded] = useState(false);
+  if (!seeded && at?.state === 'running') {
+    setSeeded(true); setPhase(at.phase.id); setBlock(at.block);
+  }
   const [vals, setVals] = useState<Record<string, string>>({});
   const [height, setHeight] = useState('');
   const [note, setNote] = useState('');
@@ -179,9 +195,10 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
     onDone({ date, label: `${p.name} · block ${block}`, values, height: num(height), note: note.trim() || undefined });
   }
 
-  // Every input is 16px (text-base) so iOS doesn't zoom on focus. inputMode
-  // decimal brings up the number pad with a point on it.
-  const field = 'mt-1.5 w-full rounded-[14px] border border-outline-variant bg-surface-container-low px-4 py-3 text-base font-semibold tabular-nums';
+  // The app's own .text-field, as the profile and sign-in use: 16px so iOS
+  // doesn't zoom on focus. inputMode decimal brings up the number pad with a
+  // point on it.
+  const field = 'tabular-nums';
 
   return (
     <div className="animate-pop">
@@ -192,18 +209,18 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-2.5">
-        <label className="block text-[12.5px] font-semibold text-on-surface-variant">
-          Date
+        <label className="text-field">
+          <span>Date</span>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
         </label>
-        <label className="block text-[12.5px] font-semibold text-on-surface-variant">
-          Block
+        <label className="text-field">
+          <span>Block</span>
           <select value={block} onChange={(e) => setBlock(Number(e.target.value) as 1 | 2 | 3)} className={field}>
             <option value={1}>Block 1</option><option value={2}>Block 2</option><option value={3}>Block 3</option>
           </select>
         </label>
-        <label className="col-span-2 block text-[12.5px] font-semibold text-on-surface-variant">
-          Phase
+        <label className="text-field col-span-2">
+          <span>Phase</span>
           <select value={phase} onChange={(e) => setPhase(e.target.value as typeof phase)} className={field}>
             {PHASES.map((p) => <option key={p.id} value={p.id}>{p.number} · {p.name}</option>)}
           </select>
@@ -212,26 +229,26 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
 
       <div className="mt-6 space-y-3">
         {TESTS.map((t) => (
-          <label key={t.id} className="block text-[12.5px] font-semibold text-on-surface-variant">
-            {t.name} <span className="font-medium">({t.unit})</span>
+          <label key={t.id} className="text-field">
+            <span>{t.name} ({t.unit})</span>
             <input inputMode="decimal" placeholder={t.unit === 's' ? '0.00' : '0'}
                    value={vals[t.id] ?? ''} onChange={(e) => setVals({ ...vals, [t.id]: e.target.value })}
                    className={field} />
           </label>
         ))}
-        <label className="block text-[12.5px] font-semibold text-on-surface-variant">
-          {HEIGHT_TEST.name} <span className="font-medium">(cm)</span>
+        <label className="text-field">
+          <span>{HEIGHT_TEST.name} (cm)</span>
           <input inputMode="decimal" placeholder="0" value={height} onChange={(e) => setHeight(e.target.value)} className={field} />
         </label>
-        <label className="block text-[12.5px] font-semibold text-on-surface-variant">
-          Note <span className="font-medium">(optional)</span>
+        <label className="text-field">
+          <span>Note (optional)</span>
           <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Wet grass, late night, new boots…" className={field} />
         </label>
       </div>
 
       <div className="mt-6 flex gap-2.5">
         <button type="button" onClick={onCancel} className="btn-ghost pressable min-h-[52px] flex-1">Cancel</button>
-        <button type="button" onClick={save} disabled={!any} className="btn-primary pressable flex-1 disabled:opacity-40">
+        <button type="button" onClick={save} disabled={!any} className="btn-primary pressable flex-1">
           Save to card
         </button>
       </div>

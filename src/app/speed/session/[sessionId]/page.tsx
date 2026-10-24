@@ -20,8 +20,11 @@ export default async function SpeedSessionPage({
   if (!s) notFound();
   const phase = phaseById(s.phase)!;
 
-  const back = from === 'history'
-    ? { href: '/me', label: 'Your training' }
+  // Back goes where you came from: history, the Speed tab's "today", or the
+  // phase you were browsing.
+  const back =
+    from === 'history' ? { href: '/me', label: 'Your training' }
+    : from === 'speed' ? { href: '/speed', label: 'Speed' }
     : { href: `/speed/${phase.id}`, label: phase.name };
 
   return (
