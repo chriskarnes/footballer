@@ -36,11 +36,16 @@ export const SHOWN_LEVELS = ['Beginner', 'Advanced', 'Elite', 'Position-Specific
  * apart. The schedule becomes a section heading and a label; the title is
  * what the card is called. Names without the pattern pass through untouched.
  */
-export function splitSessionName(name: string): { weeks: string | null; day: number | null; title: string } {
+export function splitSessionName(name: string): {
+  weeks: string | null; weekCount: number; day: number | null; title: string;
+} {
   const m = name.match(/^Weeks?\s*(\d+)\s*-\s*(\d+)\s*\(Day\s*(\d+)\)\s*(.*)$/i);
-  if (!m) return { weeks: null, day: null, title: name };
+  if (!m) return { weeks: null, weekCount: 1, day: null, title: name };
   const day = Number(m[3]);
-  return { weeks: `Weeks ${m[1]}–${m[2]}`, day, title: m[4].trim() || `Day ${day}` };
+  return {
+    weeks: `Weeks ${m[1]}–${m[2]}`, weekCount: Number(m[2]) - Number(m[1]) + 1,
+    day, title: m[4].trim() || `Day ${day}`,
+  };
 }
 
 /** 435 → "7 h 15 min"; 59 → "59 min". */

@@ -1,9 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getExercises, getPrograms, getSessions } from '@/lib/library';
+import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
 import { PROGRAM_BLURBS, SHOWN_LEVELS, formatMinutes, splitSessionName } from '@/lib/program-copy';
+import { serverClient } from '@/lib/supabase/server';
 import { BackLink } from '@/components/BackLink';
+import { BlockSection, BlockStrip, SessionList, type Block, type CardSession } from '@/components/ProgramSessions';
 
 const KID: Record<string, string> = {
   'Technical': 'Ball Skills', 'Physical': 'Speed & Strength',
@@ -11,36 +12,55 @@ const KID: Record<string, string> = {
 };
 
 /**
- * A program: what it is, how big it is, and its sessions in order.
- *
- * The header is three things — the name, one line on what it does, and its
- * size as three numbers — where it had been a level that was usually just
- * "General", a coloured run-on stat line and four lines of PDF text.
+ * A program: what it is, how big it is, where you are in it, and its sessions.
  *
  * Session names in the source carry their schedule ("Weeks 1-4 (Day 1) Ball
- * Control + Juggling"). The schedule is lifted out: the weeks become a
- * heading over the sessions they cover, the day a small label, and the card
- * is titled with what the session is.
+ * Control + Juggling"), which means "do Days 1–4 every week, for four weeks"
+ * — and nothing said so. Programs built that way are drawn as blocks on a
+ * timeline, each saying it repeats, with a strip at the top for the shape of
+ * the whole thing. Programs without blocks are a numbered list of the same
+ * cards.
+ *
+ * Signed in, finished library sessions from history give each card its
+ * progress and pick the one session that is next; that card is the only
+ * brand block on the page. Signed out, the first card says "Start here".
  */
 export default async function ProgramPage({ params }: { params: Promise<{ programId: string }> }) {
   const { programId } = await params;
-  const [programs, sessions, exercises] = await Promise.all([
-    getPrograms(), getSessions(), getExercises(),
-  ]);
+  const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);
   const program = programs.find((p) => p.id === programId);
   if (!program) notFound();
 
   const mine = sessions.filter((s) => s.program_id === program.id)
     .sort((a, b) => a.sort_order - b.sort_order);
+  const done = await finishedCounts(mine.map((s) => s.id));
+  const signedIn = done !== null;
 
-  // Consecutive sessions that share a "Weeks x–y" go under one heading.
-  const groups: { weeks: string | null; items: { s: typeof mine[number]; i: number }[] }[] = [];
-  mine.forEach((s, i) => {
-    const { weeks } = splitSessionName(s.name);
-    const last = groups[groups.length - 1];
-    if (last && last.weeks === weeks) last.items.push({ s, i });
-    else groups.push({ weeks, items: [{ s, i }] });
+  const cards: (CardSession & { weeks: string | null; weekCount: number })[] = mine.map((s, i) => {
+    const { weeks, weekCount, day, title } = splitSessionName(s.name);
+    const label = day ? `Day ${day}` : `Session ${i + 1}`;
+    return {
+      id: s.id, weeks, weekCount, title, label: title === label ? null : label,
+      minutes: s.total_minutes, touches: s.touches, focus: s.focus_areas,
+      done: done ? done.get(s.id) ?? 0 : null, target: weekCount,
+    };
   });
+
+  // Consecutive sessions sharing a "Weeks x–y" are one block.
+  const blocks: Block[] = [];
+  for (const c of cards) {
+    const last = blocks[blocks.length - 1];
+    if (c.weeks && last?.weeks === c.weeks) last.sessions.push(c);
+    else if (c.weeks) blocks.push({ n: blocks.length + 1, weeks: c.weeks, weekCount: c.weekCount, sessions: [c] });
+  }
+  const blocked = blocks.length > 1 && cards.every((c) => c.weeks);
+
+  // Next is the first session, in program order, not yet done as often as
+  // its block asks. Signed out there is no history, so it is the first one.
+  const next = signedIn ? cards.find((c) => (c.done ?? 0) < c.target) ?? null : cards[0] ?? null;
+  const featured = signedIn ? 'next' as const : 'start' as const;
+  // "You're here" needs history; signed out, no block claims it.
+  const currentBlock = signedIn && next ? blocks.find((b) => b.sessions.some((s) => s.id === next.id))?.n ?? 0 : 0;
 
   const blurb = PROGRAM_BLURBS[program.id];
   const level = SHOWN_LEVELS.includes(program.level) ? program.level : null;
@@ -56,49 +76,49 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
       )}
 
       <dl className="mt-6 flex divide-x divide-outline-variant">
-        <Stat value={String(mine.length)} label="sessions" first />
-        <Stat value={formatMinutes(program.total_minutes)} label="in total" />
+        {blocked
+          ? <Stat value={`${blocks.reduce((a, b) => a + b.weekCount, 0)} weeks`} label={`${blocks.length} blocks`} first />
+          : <Stat value={String(mine.length)} label="sessions" first />}
+        {blocked && <Stat value={`${blocks[0].sessions.length} a week`} label="sessions" />}
+        {!blocked && <Stat value={formatMinutes(program.total_minutes)} label="in total" />}
         {!!program.touches && <Stat value={formatTouches(program.touches)} label="touches" />}
       </dl>
 
-      <div className="mt-10 space-y-9">
-        {groups.map((g, gi) => (
-          <section key={gi}>
-            {g.weeks && <h2 className="eyebrow mb-3">{g.weeks}</h2>}
-            <ol className="stagger space-y-3">
-              {g.items.map(({ s, i }) => {
-                const { day, title } = splitSessionName(s.name);
-                const label = day ? `Day ${day}` : `Session ${i + 1}`;
-                const drills = exercises.filter((e) => e.session_id === s.id).length;
-                const meta = [
-                  formatMinutes(s.total_minutes),
-                  `${drills} drill${drills === 1 ? '' : 's'}`,
-                  s.touches ? `${formatTouches(s.touches)} touches` : null,
-                ].filter(Boolean).join(' · ');
-                return (
-                  <li key={s.id}>
-                    <Link href={`/session/${s.id}`} className="card pressable flex items-center gap-4 px-5 py-5">
-                      <div className="min-w-0 flex-1">
-                        {title !== label && (
-                          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-variant">{label}</p>
-                        )}
-                        <h3 className="h-card mt-1 leading-snug">{title}</h3>
-                        <p className="mt-2 text-[13px] text-on-surface-variant">{meta}</p>
-                      </div>
-                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 shrink-0 text-on-surface-variant"
-                           fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 6l6 6-6 6" />
-                      </svg>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-        ))}
-      </div>
+      {blocked ? (
+        <>
+          <BlockStrip blocks={blocks} current={currentBlock} signedIn={signedIn} />
+          <div className="mt-10 space-y-12">
+            {blocks.map((b, i) => (
+              <BlockSection key={b.n} block={b} last={i === blocks.length - 1} current={b.n === currentBlock}
+                            nextId={next?.id ?? null} featured={featured} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <SessionList sessions={cards} nextId={next?.id ?? null} featured={featured} />
+      )}
     </div>
   );
+}
+
+/**
+ * How many times each of these sessions has been finished, or null signed
+ * out. A failure of any kind is "signed out": the page is still the program.
+ */
+async function finishedCounts(ids: string[]): Promise<Map<string, number> | null> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+  try {
+    const db = await serverClient();
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return null;
+    const { data } = await db.from('workouts').select('source_ref')
+      .eq('user_id', user.id).eq('source', 'library').eq('status', 'completed').in('source_ref', ids);
+    const n = new Map<string, number>();
+    (data ?? []).forEach((w: { source_ref: string }) => n.set(w.source_ref, (n.get(w.source_ref) ?? 0) + 1));
+    return n;
+  } catch {
+    return null;
+  }
 }
 
 function Stat({ value, label, first }: { value: string; label: string; first?: boolean }) {
