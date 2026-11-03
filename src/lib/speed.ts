@@ -1,4 +1,4 @@
-import { guideFor, plainRest } from './speed-guide';
+import { demoUrl, guideFor, plainRest } from './speed-guide';
 import type { Exercise, FocusArea } from './types';
 
 /**
@@ -487,7 +487,9 @@ export function asExercise(s: SpeedSession, drill: SpeedDrill, i: number): Exerc
     gym_required: false,
     level: 'any',
     category: 'Speed',
-    video_url: null,
+    // A demonstration: the drill's own clip, or a YouTube search for it.
+    // The Runner's play button shows whenever this is set.
+    video_url: demoUrl(drill.name),
     duration_confidence: 'medium',
     cue: drill.cue,
   };

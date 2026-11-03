@@ -345,6 +345,17 @@ export function Runner({
                             {EFFORT[d.effort].means}
                           </p>
                         )}
+                        {/* The play glyph in the corner is easy to miss under a
+                            list of steps; the words are not. */}
+                        {d.video_url && (
+                          <a href={d.video_url} target="_blank" rel="noopener"
+                             className="btn-ghost pressable mt-3 gap-2">
+                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                            Watch it done
+                          </a>
+                        )}
                       </div>
                     )}
                   </>

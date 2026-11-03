@@ -45,12 +45,19 @@ export interface DrillGuide {
   /** Leave off the detail after the comma in the drill's name. For details
    *  that are jargon ("5–8% grade") and are explained in the steps instead. */
   dropDetail?: boolean;
+  /** A filmed demonstration of this drill. Until there is one, demoUrl()
+   *  opens a YouTube search for it. */
+  video?: string;
+  /** What to search for, when the coach's name alone would not find it
+   *  ("Raise" finds nothing; "dynamic warm up jog shuffle carioca" does). */
+  search?: string;
 }
 
 export const GUIDE: Record<string, DrillGuide> = {
   /* ---- warm-up: every speed session ---- */
   'Raise: jog, shuffle, backpedal, carioca': {
     plain: 'Warm-up 1: get moving', coach: 'Raise', effort: 'easy',
+    search: 'dynamic warm up jog side shuffle backpedal carioca',
     amount: '20 m of each, one after the other',
     how: [
       'Jog 20 m.',
@@ -61,6 +68,7 @@ export const GUIDE: Record<string, DrillGuide> = {
   },
   'Activate: glute bridge, ring walks, single-leg balance, calf raise': {
     plain: 'Warm-up 2: wake your muscles up', coach: 'Activate', effort: 'easy',
+    search: 'glute bridge single leg balance calf raise warm up',
     amount: 'Each one once, in this order',
     how: [
       'Glute bridge × 10: lie on your back with your knees bent. Push your hips up and squeeze your bum at the top.',
@@ -71,6 +79,7 @@ export const GUIDE: Record<string, DrillGuide> = {
   },
   'Mobilize: walking lunge with twist, leg swings, inchworm, hip opener': {
     plain: 'Warm-up 3: loosen up', coach: 'Mobilize', effort: 'easy',
+    search: 'walking lunge twist leg swings inchworm hip opener warm up',
     amount: 'Each one once, in this order',
     how: [
       'Walking lunges with a twist × 8: step into a lunge, then turn your upper body towards your front leg.',
@@ -637,6 +646,21 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
 };
+
+/**
+ * Where to see the drill done. The drill's own video when one has been
+ * filmed; otherwise a YouTube search for the coach's name of it, which lands
+ * on real demonstrations and can never go stale. To film your own: set
+ * `video` on the entry and this returns it instead.
+ */
+export function demoUrl(name: string): string {
+  const found = guideFor(name);
+  const g = found?.guide;
+  if (g?.video) return g.video;
+  const base = name.split(',')[0].trim();
+  const q = g?.search ?? `${g?.coach ?? base} drill`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
+}
 
 /** The guide for a drill, if it has been written yet. */
 export function guideFor(name: string): { guide: DrillGuide; detail?: string } | null {
