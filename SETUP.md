@@ -140,6 +140,16 @@ The app ships unbranded. To give it a club's name, colours and logo:
 4. In the app: **Me → Brand settings** (or go to `/admin`). Pick one of the eight kits
    or enter custom colours, upload a crest, and Save. **Reset to unbranded** undoes all of it.
 
+### 8. Calendar subscriptions (optional)
+
+Lets a player subscribe to their training in Apple, Google or Outlook Calendar.
+Supabase → **SQL Editor** → paste `supabase/migrations/0003_calendar.sql` → **Run**.
+A **Calendar** card then appears on Me for signed-in players.
+
+To test: Mac Calendar can subscribe to a local link (File → New Calendar Subscription →
+`http://localhost:3000/cal/<token>.ics`, refresh every 5 minutes). Google Calendar can only
+reach a deployed site, and refreshes on its own schedule — up to a day.
+
 ---
 
 ## What this costs

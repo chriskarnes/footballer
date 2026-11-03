@@ -5,7 +5,8 @@ import { ConfirmSheet } from './ConfirmSheet';
 import { haptic } from '@/lib/haptics';
 import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS } from '@/lib/speed';
 import { bests, heightGain, useSpeedCard, type TestEntry } from '@/lib/speed-card';
-import { position, useYearStart } from '@/lib/speed-year';
+import { position } from '@/lib/speed-year';
+import { useYearStart } from '@/lib/use-year-start';
 
 type Screen = 'card' | 'entry';
 

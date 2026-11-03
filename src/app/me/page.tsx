@@ -10,6 +10,7 @@ import type { DayRow } from '@/lib/plan-today';
 import pkg from '../../../package.json';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
+import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -48,6 +49,9 @@ export default async function MePage() {
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
   let isAdmin = false;
+  // undefined: the calendar table doesn't exist yet (migration 0003), so no
+  // section. null: it does, and this player hasn't turned it on.
+  let calendar: CalendarFeed | null | undefined;
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -55,15 +59,18 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, { data: admin }] = await Promise.all([
+        const [rows, prof, { data: planRows }, { data: admin }, cal] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
             .order('active', { ascending: false }).order('created_at', { ascending: false }),
           // Errors (no migration 0002 yet) read as "not an admin".
           db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
+          db.from('calendar_feeds').select('token, include_plan, include_speed, start_time, time_zone')
+            .eq('user_id', user.id).maybeSingle(),
         ]);
         isAdmin = !!admin;
+        if (!cal.error) calendar = cal.data ?? null;
         workouts = rows;
         profile = prof;
         plans = planRows ?? [];
@@ -165,6 +172,8 @@ export default async function MePage() {
           </p>
         )}
       </section>
+
+      {calendar !== undefined && <CalendarSection initial={calendar} />}
 
       <AccountSection email={user.email} version={pkg.version} isAdmin={isAdmin} />
     </div>

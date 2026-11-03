@@ -1,5 +1,3 @@
-'use client';
-import { useEffect, useState } from 'react';
 import { PHASES, sessionsFor, WEEK_TEMPLATE, BLOCK_WEEKS, type PhaseId, type SpeedSession } from './speed';
 
 /**
@@ -11,9 +9,11 @@ import { PHASES, sessionsFor, WEEK_TEMPLATE, BLOCK_WEEKS, type PhaseId, type Spe
  * made today. Now they start the year once and the module counts weeks.
  *
  * All that's stored is the Monday the year started on and the phase it
- * started at, in this browser — like the test-day card, because the module
- * works signed out. Position is arithmetic on today's date, in local time
- * (the athlete's Monday, not the server's).
+ * started at: in this browser, because the module works signed out, and on
+ * the profile when signed in, so the calendar feed can see it. Position is
+ * arithmetic on a date in the athlete's local time (their Monday, not the
+ * server's). No React here — the feed runs this on the server; the hook is
+ * in use-year-start.ts.
  */
 
 export interface YearStart {
@@ -24,7 +24,7 @@ export interface YearStart {
   phase: PhaseId;
 }
 
-const KEY = 'forge.speed.year.v1';
+export const YEAR_KEY = 'forge.speed.year.v1';
 const DAY_MS = 86400000;
 
 /** Midnight of the local Monday on or before `d`. */
@@ -113,28 +113,4 @@ export function weekPlan(pos: Extract<Position, { state: 'running' }>): DayPlan[
     const session = sessions.find((s) => s.kind === t.kind)!;
     return { day: t.day, weekday, type: 'session', session };
   });
-}
-
-/** Reading and writing the start, after mount — localStorage doesn't exist on
- *  the server, and a missing or blocked store just means "not started". */
-export function useYearStart() {
-  const [start, setStart] = useState<YearStart | null>(null);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      const v = raw ? JSON.parse(raw) : null;
-      if (v && typeof v.monday === 'string' && PHASES.some((p) => p.id === v.phase)) setStart(v);
-    } catch { /* not started */ }
-    setReady(true);
-  }, []);
-
-  const save = (next: YearStart | null) => {
-    setStart(next);
-    try {
-      if (next) localStorage.setItem(KEY, JSON.stringify(next));
-      else localStorage.removeItem(KEY);
-    } catch { /* private mode: it lasts this visit */ }
-  };
-  return { start, ready, save };
 }

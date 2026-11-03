@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { PHASES, sessionSeconds, KIND_LABELS, type PhaseId } from '@/lib/speed';
 import {
-  isoDate, mondayOf, phaseForMonth, position, useYearStart, weekPlan, type DayPlan,
+  isoDate, mondayOf, phaseForMonth, position, weekPlan, type DayPlan,
 } from '@/lib/speed-year';
+import { useYearStart } from '@/lib/use-year-start';
 import { Chip } from './Chip';
 import { ConfirmSheet } from './ConfirmSheet';
 
