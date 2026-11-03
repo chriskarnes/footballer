@@ -56,6 +56,7 @@ export interface DrillGuide {
 export const GUIDE: Record<string, DrillGuide> = {
   /* ---- warm-up: every speed session ---- */
   'Raise: jog, shuffle, backpedal, carioca': {
+    video: 'https://www.youtube.com/watch?v=Igh4M6IQHFI',
     plain: 'Warm-up 1: get moving', coach: 'Raise', effort: 'easy',
     search: 'dynamic warm up jog side shuffle backpedal carioca',
     amount: '20 m of each, one after the other',
@@ -67,6 +68,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Activate: glute bridge, ring walks, single-leg balance, calf raise': {
+    video: 'https://www.youtube.com/watch?v=n6JiF2jp2Ns',
     plain: 'Warm-up 2: wake your muscles up', coach: 'Activate', effort: 'easy',
     search: 'glute bridge single leg balance calf raise warm up',
     amount: 'Each one once, in this order',
@@ -78,6 +80,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Mobilize: walking lunge with twist, leg swings, inchworm, hip opener': {
+    video: 'https://www.youtube.com/watch?v=ZdjbHDobyPc',
     plain: 'Warm-up 3: loosen up', coach: 'Mobilize', effort: 'easy',
     search: 'walking lunge twist leg swings inchworm hip opener warm up',
     amount: 'Each one once, in this order',
@@ -89,6 +92,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Potentiate: A-skip, B-skip, high knees, straight-leg bound': {
+    video: 'https://www.youtube.com/watch?v=PcWsOM144xo',
     plain: 'Warm-up 4: fast drills', coach: 'Potentiate', effort: 'steady',
     amount: '20 m of each, twice through',
     how: [
@@ -110,6 +114,7 @@ export const GUIDE: Record<string, DrillGuide> = {
 
   /* ---- Foundation ---- */
   'Wall drill': {
+    video: 'https://www.youtube.com/watch?v=Qt6q--Lx4KM',
     plain: 'Wall drill', effort: 'steady',
     how: [
       'Lean into a wall with your hands at shoulder height and your arms straight. Your body is a straight line from head to heels.',
@@ -118,6 +123,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Falling start': {
+    video: 'https://www.youtube.com/watch?v=3X4hDM7T95g',
     plain: 'Falling starts', effort: 'max',
     how: [
       'Stand tall at the line, feet together, up on your toes.',
@@ -126,6 +132,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '2-point start': {
+    video: 'https://www.youtube.com/watch?v=96Idqyl7_1U',
     plain: 'Standing sprint start', coach: '2-point start', effort: 'max',
     how: [
       'One foot just behind the line, the other a foot-length back.',
@@ -134,6 +141,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '3-point start': {
+    video: 'https://www.youtube.com/watch?v=-Ihg0il6gtw',
     plain: 'Sprint start, one hand down', coach: '3-point start', effort: 'max',
     how: [
       'Front foot just behind the line, back foot a foot-length behind it.',
@@ -142,6 +150,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Ankling and dribbles': {
+    video: 'https://www.youtube.com/watch?v=es_7EB9ki8w',
     plain: 'Quick-feet walks', coach: 'Ankling and dribbles', effort: 'steady',
     how: [
       'Walk forward taking tiny steps with your legs almost straight.',
@@ -150,6 +159,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'A-march and A-skip': {
+    video: 'https://www.youtube.com/watch?v=c8il_EjiBWQ',
     plain: 'High-knee march, then skip', coach: 'A-march and A-skip', effort: 'steady',
     how: [
       'March: lift one knee to hip height with your toes pulled up, then push that foot down under your hip. Swap legs.',
@@ -158,6 +168,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'A-skip and B-skip': {
+    video: 'https://www.youtube.com/watch?v=PcWsOM144xo',
     plain: 'Skips: high knee, then leg reach', coach: 'A-skip and B-skip', effort: 'steady',
     how: [
       'High-knee skip: skip forward, lifting one knee to hip height, toes pulled up. Snap the foot down under your hip.',
@@ -166,6 +177,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Low hurdle step-overs': {
+    video: 'https://www.youtube.com/watch?v=tNUOffrxRSA',
     plain: 'Mini-hurdle step-overs', effort: 'steady',
     how: [
       'Set out 6 mini hurdles about one step apart.',
@@ -174,6 +186,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Stick run': {
+    video: 'https://www.youtube.com/watch?v=-tO48It7GUY',
     plain: 'Run through sticks', effort: 'fast',
     how: [
       'Lay 6 sticks or flat markers on the ground, spaced as shown.',
@@ -182,6 +195,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Agility ring quick feet: in-in-out': {
+    video: 'https://www.youtube.com/watch?v=l-h5lJIzRw4',
     plain: 'Quick feet through rings', coach: 'In-in-out', effort: 'fast',
     how: [
       'Lay 6 rings in a line and stand side-on to them.',
@@ -190,6 +204,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Partner push-release start': {
+    video: 'https://www.youtube.com/watch?v=etF5mQT-UyU',
     plain: 'Partner-held sprint start', coach: 'Push-release start', effort: 'max',
     how: [
       'Put a towel around your waist. Your partner stands behind you holding both ends.',
@@ -214,6 +229,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Standing start': {
+    video: 'https://www.youtube.com/watch?v=96Idqyl7_1U',
     plain: 'Standing start', effort: 'max',
     how: [
       'Stand behind the line with one foot forward.',
@@ -230,6 +246,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Tempo run at 70%': {
+    video: 'https://www.youtube.com/watch?v=xsMHh9WNDzc',
     plain: 'Steady runs', coach: 'Tempo runs', effort: 'steady',
     how: [
       'Run 60 m at a steady pace — quicker than a jog, nowhere near a sprint.',
@@ -238,6 +255,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '4v4 small-sided game': {
+    video: 'https://www.youtube.com/watch?v=CzlZgdRrYhg',
     plain: '4 v 4 game', effort: 'fast',
     how: [
       'Mark a small pitch about 30 m by 20 m with two small goals or gates.',
@@ -246,6 +264,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Box squat, split squat, single-leg glute bridge': {
+    video: 'https://www.youtube.com/watch?v=REflwhg0jNs',
     plain: 'Leg strength', effort: 'steady',
     amount: '{sets} rounds, {reps} · rest {rest} between rounds',
     how: [
@@ -263,6 +282,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Pogo hops': {
+    video: 'https://www.youtube.com/watch?v=c2LBofIzUqs',
     plain: 'Ankle bounces', coach: 'Pogo hops', effort: 'fast',
     how: [
       'Stand tall with your feet hip-width apart.',
@@ -271,6 +291,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Low hurdle hops': {
+    video: 'https://www.youtube.com/watch?v=JMFiIyLLAlk',
     plain: 'Mini-hurdle jumps', effort: 'fast',
     how: [
       'Line up 6 mini hurdles about a stride apart.',
@@ -279,6 +300,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Skip for height': {
+    video: 'https://www.youtube.com/watch?v=iJGycGF-iQE',
     plain: 'Power skips', effort: 'fast',
     how: [
       'Skip forward, driving one knee up and pushing hard off the other foot.',
@@ -288,6 +310,7 @@ export const GUIDE: Record<string, DrillGuide> = {
   },
   /* ---- Build, Power and In-season ---- */
   'Flying 10 m, 20 m build-in': {
+    video: 'https://www.youtube.com/watch?v=F7BlhM7k5o0',
     plain: 'Flying 10s', coach: 'Flying 10 m', effort: 'max',
     how: [
       'Put out cones at 0 m, 20 m and 30 m.',
@@ -296,6 +319,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Flying 20 m, 25 m build-in': {
+    video: 'https://www.youtube.com/watch?v=F7BlhM7k5o0',
     plain: 'Flying 20s', coach: 'Flying 20 m', effort: 'max',
     how: [
       'Put out cones at 0 m, 25 m and 45 m.',
@@ -304,6 +328,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Build-fly-relax': {
+    video: 'https://www.youtube.com/shorts/XFvdoTGTFmk',
     plain: 'Build, sprint, float', coach: 'Build-fly-relax', effort: 'max',
     how: [
       'Mark out three 20 m zones in a row.',
@@ -312,6 +337,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Wicket run': {
+    video: 'https://www.youtube.com/watch?v=SYi8CH32ZSA',
     plain: 'Mini-hurdle runs', coach: 'Wicket run', effort: 'fast',
     how: [
       'Put 8 mini hurdles in a line, spaced as shown.',
@@ -320,6 +346,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Hill sprint': {
+    video: 'https://www.youtube.com/watch?v=VzHQUh5jzsI',
     plain: 'Hill sprints', effort: 'max', dropDetail: true,
     how: [
       'Find a gentle slope — about as steep as a wheelchair ramp. If you end up clawing on your toes, it’s too steep.',
@@ -343,6 +370,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Band or sled sprint, under 10% bodyweight': {
+    video: 'https://www.youtube.com/watch?v=cFsP42jtBvU',
     plain: 'Sprints pulling a light weight', coach: 'Resisted sprint', effort: 'max',
     how: [
       'Use a light sled, or a band round your waist held by a partner behind you.',
@@ -358,6 +386,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Bend sprint around a 10 m arc': {
+    video: 'https://www.youtube.com/watch?v=Ty01B1O6JZE',
     plain: 'Curved sprints', coach: 'Bend sprint', effort: 'max',
     how: [
       'Put cones in a curve, like the edge of a circle 10 m across.',
@@ -366,6 +395,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Repeat sprints at 90%': {
+    video: 'https://www.youtube.com/watch?v=ggF6T7150nA',
     plain: 'Repeat sprints', coach: 'RSA', effort: 'fast', dropDetail: true,
     amount: '{sets} sets of {reps}, 20 s between sprints · rest {rest} between sets',
     how: [
@@ -383,6 +413,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Tempo run at 75%': {
+    video: 'https://www.youtube.com/watch?v=xsMHh9WNDzc',
     plain: 'Steady 100s', coach: 'Tempo runs', effort: 'steady',
     how: [
       'Run 100 m at a steady pace, a little quicker than your 60 m steady runs.',
@@ -391,6 +422,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '5-10-5 shuttle': {
+    video: 'https://www.youtube.com/watch?v=LJcWjNMISc0',
     plain: '5-10-5 shuttle', effort: 'max',
     how: [
       'Put three cones in a line, 5 m apart. Start at the middle one.',
@@ -399,6 +431,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '45-degree cut': {
+    video: 'https://www.youtube.com/watch?v=YyBMVaxWFsM',
     plain: 'Sharp-angle cuts', coach: '45-degree cut', effort: 'max',
     how: [
       'Sprint 5 m to a cone.',
@@ -407,6 +440,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Coach-pointed cut': {
+    video: 'https://www.youtube.com/watch?v=TZC-Pl_quoc',
     plain: 'Cut when they point', effort: 'max',
     how: [
       'Run towards your partner or coach.',
@@ -415,6 +449,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'L-drill': {
+    video: 'https://www.youtube.com/watch?v=_KtUvR2zcNU',
     plain: 'L-drill', effort: 'max',
     how: [
       'Put three cones in an L shape: two 5 m apart in a line, and the third 5 m to the side of the second.',
@@ -423,6 +458,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Mirror drill in pairs': {
+    video: 'https://www.youtube.com/watch?v=LLVucGoai_E',
     plain: 'Mirror game', effort: 'max',
     how: [
       'Face a partner about 2 m apart.',
@@ -431,6 +467,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Pass and react: receive, turn on a call, sprint 15 m': {
+    video: 'https://www.youtube.com/watch?v=vsy2CiHG6A0',
     plain: 'Receive, turn and go', effort: 'max',
     how: [
       'Your partner passes to you.',
@@ -439,6 +476,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Dribble-sprint: 10 m dribble into 20 m sprint': {
+    video: 'https://www.youtube.com/watch?v=LfbPnZmlhto',
     plain: 'Dribble, then sprint', effort: 'max',
     how: [
       'Dribble 10 m with the ball close to your feet.',
@@ -447,6 +485,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '20 m sprint onto a played ball, one touch, finish': {
+    video: 'https://www.youtube.com/watch?v=mykQ2f4FRwg',
     plain: 'Sprint onto a pass and shoot', effort: 'max',
     how: [
       'Your partner plays the ball into space in front of you.',
@@ -455,6 +494,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '1v1 shadowing with the ball': {
+    video: 'https://www.youtube.com/watch?v=l6TWYB1wRjc',
     plain: '1 v 1 shadowing', effort: 'fast',
     how: [
       'In a small square, one player has the ball and the other defends.',
@@ -463,6 +503,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '1v1 to goal': {
+    video: 'https://www.youtube.com/watch?v=ZsQc4ovGOpo',
     plain: '1 v 1 to goal', effort: 'fast',
     how: [
       'One attacker with the ball, one defender, one goal.',
@@ -471,6 +512,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '1v1 to goal from a 10 m sprint': {
+    video: 'https://www.youtube.com/watch?v=ZsQc4ovGOpo',
     plain: 'Race, then 1 v 1', effort: 'max',
     how: [
       'Two players start side by side, 10 m from a ball.',
@@ -479,6 +521,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '3v3 small-sided game': {
+    video: 'https://www.youtube.com/watch?v=CzlZgdRrYhg',
     plain: '3 v 3 game', effort: 'fast',
     how: [
       'Play 3 against 3 on a small pitch with small goals.',
@@ -495,6 +538,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '2v2 transition game': {
+    video: 'https://www.youtube.com/watch?v=Wy8BFM0K-TQ',
     plain: '2 v 2 quick-switch game', coach: 'Transition game', effort: 'fast',
     how: [
       'Play 2 against 2 on a small pitch with two goals, in 30-second bursts.',
@@ -502,6 +546,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   '4v4 plus goalkeepers': {
+    video: 'https://www.youtube.com/watch?v=CzlZgdRrYhg',
     plain: '4 v 4 with goalkeepers', effort: 'fast',
     how: [
       'Play 4 against 4 with a goalkeeper in each goal.',
@@ -517,6 +562,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Bounding for distance': {
+    video: 'https://www.youtube.com/watch?v=eIjuMzIFREs',
     plain: 'Big bounds', coach: 'Bounding', effort: 'fast',
     how: [
       'Run with long, exaggerated strides — push off one foot and land on the other.',
@@ -525,6 +571,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Lateral bound': {
+    video: 'https://www.youtube.com/watch?v=niEGdFUQ6sY',
     plain: 'Side jumps on one leg', coach: 'Lateral bound', effort: 'fast',
     how: [
       'Stand on your right leg.',
@@ -533,6 +580,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Single-leg hop and stick': {
+    video: 'https://www.youtube.com/watch?v=KyKbb1fJntE',
     plain: 'Hop and freeze', coach: 'Hop and stick', effort: 'steady',
     how: [
       'Stand on one leg.',
@@ -541,6 +589,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Drop and stick': {
+    video: 'https://www.youtube.com/watch?v=wV3ozV9mcgo',
     plain: 'Step off and land', coach: 'Drop and stick', effort: 'steady',
     how: [
       'Stand on the box.',
@@ -549,6 +598,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Depth jump to vertical': {
+    video: 'https://www.youtube.com/watch?v=bMHL5xqKn3E',
     plain: 'Drop and jump', coach: 'Depth jump', effort: 'max',
     how: [
       'Stand on the box and step off — don’t jump.',
@@ -557,6 +607,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Hurdle hops': {
+    video: 'https://www.youtube.com/watch?v=JMFiIyLLAlk',
     plain: 'Hurdle jumps', effort: 'fast',
     how: [
       'Line up mini hurdles at the height shown, about a stride apart.',
@@ -573,6 +624,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Standing long jump': {
+    video: 'https://www.youtube.com/watch?v=dVgtvAXeBQw',
     plain: 'Standing long jump', effort: 'max',
     how: [
       'Stand at the line with your feet hip-width apart.',
@@ -589,6 +641,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Rear-foot-elevated split squat': {
+    video: 'https://www.youtube.com/watch?v=4-qkLYDckys',
     plain: 'Back-foot-up split squat', coach: 'Bulgarian split squat', effort: 'steady',
     how: [
       'Rest the top of your back foot on a bench behind you. Put your front foot well forward.',
@@ -597,6 +650,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Single-leg Romanian deadlift': {
+    video: 'https://www.youtube.com/watch?v=DPFnfAUCvTA',
     plain: 'One-leg reach', coach: 'Single-leg RDL', effort: 'steady',
     how: [
       'Stand on one leg with the knee slightly bent.',
@@ -605,6 +659,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Single-leg squat to bench': {
+    video: 'https://www.youtube.com/watch?v=3-ZE3O7qlw8',
     plain: 'One-leg squat to a bench', effort: 'steady',
     how: [
       'Stand in front of a bench on one leg, with the other leg held out in front.',
@@ -621,6 +676,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Nordic curl eccentric': {
+    video: 'https://www.youtube.com/watch?v=mYfTCoOoX74',
     plain: 'Nordic curls (lowering)', coach: 'Nordic curl', effort: 'steady',
     how: [
       'Kneel on something soft. A partner holds your ankles down firmly.',
@@ -629,6 +685,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Copenhagen side plank': {
+    video: 'https://www.youtube.com/watch?v=gsWpUFyVRyM',
     plain: 'Side plank on a bench', coach: 'Copenhagen plank', effort: 'steady',
     how: [
       'Lie on your side next to a bench. Rest the inside of your top knee on it. Use your ankle once that gets easy.',
@@ -637,6 +694,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     ],
   },
   'Split squat, single-leg RDL, Nordic eccentric': {
+    video: 'https://www.youtube.com/watch?v=REflwhg0jNs',
     plain: 'Leg strength: three exercises', effort: 'steady',
     amount: '{sets} rounds: 8 split squats, 8 one-leg reaches, 5 Nordic curls · rest {rest}',
     how: [
