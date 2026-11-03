@@ -76,23 +76,25 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
   const today = days[pos.today];
   const next = days.find((d): d is Exclude<DayPlan, { type: 'off' }> => d.weekday > pos.today && d.type !== 'off');
 
+  // The card answers one question — what do I do now — and in this order:
+  // the session, how long, the button. Where you are in the year is the
+  // footer, in the player's words ("Foundation, week 1 of 48"); the block
+  // number and the week's name ("learn") are the planner's arithmetic and
+  // live on the phase page. Week progress is the dots, not a bar and a
+  // count and a week number saying it three times — and the list below
+  // ticks off each day anyway.
   return (
     <>
       <Card>
-        <Eyebrow>
-          Phase {pos.phase.number} · {pos.phase.name} · Block {pos.block} · Week {pos.week}, {pos.weekName.toLowerCase()}
-        </Eyebrow>
-
         {today.type === 'session' && !isDone(today) && (
           <>
-            <p className="mt-3 text-[12.5px] font-semibold text-on-surface-brand-variant">Today · {FULL_DAY[pos.today]}</p>
+            <Eyebrow>Today</Eyebrow>
             <Big>{today.session.name}</Big>
-            <p className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
-              {KIND_LABELS[today.session.kind]} · {Math.round(sessionSeconds(today.session) / 60)} min
-              {today.session.sprintMetres ? ` · ${today.session.sprintMetres} m sprinting` : ''}
+            <p className="mt-1 text-[14px] font-medium text-on-surface-brand-variant">
+              {Math.round(sessionSeconds(today.session) / 60)} min · {KIND_LABELS[today.session.kind]}
             </p>
             <Link href={`/speed/session/${today.session.id}?from=speed`}
-                  className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                  className="btn-primary pressable mt-6 w-full bg-on-surface-brand text-surface-brand">
               Start
             </Link>
           </>
@@ -100,13 +102,13 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
 
         {today.type === 'test' && (
           <>
-            <p className="mt-3 text-[12.5px] font-semibold text-on-surface-brand-variant">Today · {FULL_DAY[pos.today]}</p>
+            <Eyebrow>Today</Eyebrow>
             <Big>Test day</Big>
-            <p className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
-              The normal warm-up, then the five tests. Height too.
+            <p className="mt-1 text-[14px] font-medium text-on-surface-brand-variant">
+              Warm up, then the five tests.
             </p>
             <Link href="/speed/test"
-                  className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                  className="btn-primary pressable mt-6 w-full bg-on-surface-brand text-surface-brand">
               Record your tests
             </Link>
           </>
@@ -114,26 +116,25 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
 
         {(today.type === 'off' || isDone(today)) && (
           <>
-            <Big>{isDone(today) ? 'Done for today' : 'Off today'}</Big>
-            <p className="mt-2 text-[13.5px] font-medium text-on-surface-brand-variant">
+            <Big>{isDone(today) ? 'Done for today' : 'Rest day'}</Big>
+            <p className="mt-1 text-[14px] font-medium text-on-surface-brand-variant">
               {next
-                ? `Next up: ${next.day} — ${next.type === 'test' ? 'test day' : next.session.name}`
+                ? `Next: ${next.type === 'test' ? 'test day' : next.session.name}, ${FULL_DAY[next.weekday]}`
                 : 'That’s the week. Next week starts Monday.'}
             </p>
           </>
         )}
 
-        <div className="mt-6 flex items-baseline justify-between text-[12px] font-semibold text-on-surface-brand-variant">
-          <span>This week</span>
-          <span>{doneCount} of {training.length} done</span>
+        <div className="mt-6 flex items-center justify-between gap-4 border-t border-brand-track pt-4">
+          <span className="truncate text-[12.5px] font-medium text-on-surface-brand-variant">
+            {pos.phase.name} · week {pos.weekOfYear + 1} of {pos.totalWeeks}
+          </span>
+          <span className="flex shrink-0 gap-1.5" role="img" aria-label={`${doneCount} of ${training.length} done this week`}>
+            {training.map((d) => (
+              <span key={d.day} className={`h-2 w-2 rounded-full ${isDone(d) ? 'bg-brand-accent' : 'bg-brand-track'}`} />
+            ))}
+          </span>
         </div>
-        <div className="mt-2 h-[6px] overflow-hidden rounded-full bg-brand-track">
-          <div className="h-full rounded-full bg-on-surface-brand transition-all duration-700"
-               style={{ width: `${training.length ? Math.round((doneCount / training.length) * 100) : 0}%` }} />
-        </div>
-        <p className="mt-3 text-[11.5px] font-medium text-on-surface-brand-variant">
-          Week {pos.weekOfYear + 1} of {pos.totalWeeks}
-        </p>
       </Card>
 
       {/* The week, Monday to Sunday, so today sits among the days around it. */}
@@ -243,10 +244,10 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[12px] font-semibold text-on-surface-brand-variant">{children}</p>
+  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-accent">{children}</p>
 );
 const Big = ({ children }: { children: React.ReactNode }) => (
-  <p className="mt-2 font-brand text-[26px] font-extrabold leading-tight tracking-tight text-on-surface-brand">{children}</p>
+  <p className="font-brand text-[30px] font-extrabold leading-tight tracking-tight text-on-surface-brand">{children}</p>
 );
 
 function DayLabel({ day, today, muted }: { day: string; today: boolean; muted?: boolean }) {

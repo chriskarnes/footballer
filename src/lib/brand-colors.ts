@@ -73,8 +73,11 @@ export function brandTokens(primary: string, accent: string) {
   // page, so they get a version of the primary that clears 4.5:1 there.
   const ink = ensure(P, PAGE_LIGHT);
   const quiet = ensure(mix(onP, P, 0.25), P);
-  const accentOnBlock = contrast(accent, P) >= 3 ? (accent.toUpperCase() as Hex) : quiet;
-  const subtext = contrast(accent, P) >= 4.5 ? (accent.toUpperCase() as Hex) : quiet;
+  // The trim is spent sparingly — a label, the progress fill — and never on
+  // secondary text: a card where every second line is gold has no second
+  // line. It is held to 4.5:1 because the one label it colours is small.
+  const accentOnBlock = contrast(accent, P) >= 3 ? ensure(accent, P) : quiet;
+  const subtext = quiet;
 
   // Library category cards: three depths of the brand, white text on all of
   // them, darkest first so the stack still reads as three distinct cards.

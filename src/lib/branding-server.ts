@@ -19,6 +19,10 @@ const anon = () =>
  * Read on every page by the root layout, so it is cached until an admin saves
  * (the save calls updateTag). Any failure — no keys, no migration — is the
  * unbranded app, never an error page.
+ *
+ * The five minutes is a backstop, not the mechanism: a cached "no brand" from
+ * before the migration ran, or a row edited in the SQL editor, would otherwise
+ * never be read again, since only a save through /admin expires the tag.
  */
 export const getBranding = unstable_cache(
   async (): Promise<Branding | null> => {
@@ -32,7 +36,7 @@ export const getBranding = unstable_cache(
     }
   },
   ['branding'],
-  { tags: [BRANDING_TAG] },
+  { tags: [BRANDING_TAG], revalidate: 300 },
 );
 
 export const getLogo = unstable_cache(
@@ -43,5 +47,5 @@ export const getLogo = unstable_cache(
     return { type: data.logo_type, data: data.logo_data };
   },
   ['branding-logo'],
-  { tags: [BRANDING_TAG] },
+  { tags: [BRANDING_TAG], revalidate: 300 },
 );
