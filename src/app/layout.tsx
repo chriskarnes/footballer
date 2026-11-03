@@ -9,8 +9,16 @@ import { TabBar } from '@/components/TabBar';
 import { InstallNudge } from '@/components/InstallNudge';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { PendingSaves } from '@/components/PendingSaves';
+import { getBranding } from '@/lib/branding-server';
+import { brandCss } from '@/lib/brand-colors';
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const name = (await getBranding())?.name ?? 'Train.futbol';
+  return { ...metadata, title: name, applicationName: name,
+           appleWebApp: { ...metadata.appleWebApp, title: name } };
+}
+
+const metadata = {
   title: 'Train.futbol',
   description: 'Individual soccer training. 786 drills, built around your time and your weaknesses.',
   manifest: '/manifest.webmanifest',
@@ -37,7 +45,7 @@ export const metadata: Metadata = {
   // Next emits the modern `mobile-web-app-capable` from appleWebApp.capable above;
   // older iOS only reads the vendor-prefixed name, so it is added by hand.
   other: { 'apple-mobile-web-app-capable': 'yes' },
-};
+} satisfies Metadata;
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -57,10 +65,15 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const brand = await getBranding();
   return (
     <html lang="en">
       <body className="pad-nav min-h-dvh antialiased">
+        {/* The admin's colours, as overrides of the brand tokens in
+            globals.css. In the body so it lands after the stylesheet and wins
+            at equal specificity. Values are validated #RRGGBB, never raw input. */}
+        {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
         <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">{children}</main>
         <TabBar />
         <InstallNudge />

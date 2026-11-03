@@ -47,6 +47,7 @@ export default async function MePage() {
   let profile: ProfileValues | null = null;
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
+  let isAdmin = false;
 
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
@@ -54,12 +55,15 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }] = await Promise.all([
+        const [rows, prof, { data: planRows }, { data: admin }] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
             .order('active', { ascending: false }).order('created_at', { ascending: false }),
+          // Errors (no migration 0002 yet) read as "not an admin".
+          db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
         ]);
+        isAdmin = !!admin;
         workouts = rows;
         profile = prof;
         plans = planRows ?? [];
@@ -162,7 +166,7 @@ export default async function MePage() {
         )}
       </section>
 
-      <AccountSection email={user.email} version={pkg.version} />
+      <AccountSection email={user.email} version={pkg.version} isAdmin={isAdmin} />
     </div>
   );
 }

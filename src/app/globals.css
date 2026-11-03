@@ -284,6 +284,9 @@
   --app-on-surface-brand:         var(--app-brand-secondary);
   --app-on-surface-brand-variant: #ABABAB;   /* 7.4:1 on the block */
   --app-brand-track:              #474747;   /* progress track on the block */
+  /* The trim: the progress fill on the block. Unbranded it is just the
+     on-colour; a palette from /admin gives it a second hue. */
+  --app-brand-accent:             var(--app-brand-secondary);
   --app-brand-edge:               transparent;
 
   --app-inverse-on-surface-variant: #ABABAB;

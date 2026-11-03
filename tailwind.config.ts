@@ -68,6 +68,7 @@ const config: Config = {
         'on-surface-brand-variant':         'var(--app-on-surface-brand-variant)',
         'brand-track':                      'var(--app-brand-track)',
         'brand-edge':                       'var(--app-brand-edge)',
+        'brand-accent':                     'var(--app-brand-accent)',
         'app-inverse-on-surface-variant': 'var(--app-inverse-on-surface-variant)',
         'app-inverse-outline-variant':    'var(--app-inverse-outline-variant)',
         'app-category-technical':         'var(--app-category-technical)',

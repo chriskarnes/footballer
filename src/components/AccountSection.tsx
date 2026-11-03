@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { askToInstall, watchInstallable } from '@/lib/install';
 import { SignOut } from './SignOut';
 
@@ -12,7 +13,7 @@ import { SignOut } from './SignOut';
  * the third visit; it only appears where installing is possible and hasn't
  * happened.
  */
-export function AccountSection({ email, version }: { email?: string; version: string }) {
+export function AccountSection({ email, version, isAdmin }: { email?: string; version: string; isAdmin?: boolean }) {
   const [installable, setInstallable] = useState(false);
   useEffect(() => watchInstallable(setInstallable), []);
 
@@ -32,6 +33,16 @@ export function AccountSection({ email, version }: { email?: string; version: st
               </svg>
             </Row>
           </button>
+        )}
+        {isAdmin && (
+          <Link href="/admin" className="pressable block">
+            <Row label="Brand settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
+                   fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </Row>
+          </Link>
         )}
         {/* The whole row is the button, like the row above it. */}
         <SignOut className="pressable flex min-h-[52px] w-full items-center px-4 text-left

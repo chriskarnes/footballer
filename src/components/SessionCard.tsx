@@ -65,7 +65,7 @@ export function SessionCard({
         </div>
 
         <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-brand-track">
-          <div className="h-full rounded-full bg-on-surface-brand transition-all duration-700"
+          <div className="h-full rounded-full bg-brand-accent transition-all duration-700"
                style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-2.5 text-[12px] font-medium text-on-surface-brand-variant">

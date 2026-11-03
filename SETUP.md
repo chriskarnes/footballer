@@ -125,6 +125,21 @@ The chips work without it; this is only for the free-text box. Get a key at
 [console.anthropic.com](https://console.anthropic.com), add credit, then add
 `ANTHROPIC_API_KEY` to Vercel's environment variables and redeploy.
 
+### 7. Branding (optional)
+
+The app ships unbranded. To give it a club's name, colours and logo:
+
+1. Supabase → **SQL Editor** → paste `supabase/migrations/0002_branding.sql` → **Run**.
+2. Sign in to the app once with the account that will manage the brand.
+3. Make that account an admin (back in the SQL Editor):
+
+   ```sql
+   insert into admins (user_id) select id from auth.users where email = 'you@example.com';
+   ```
+
+4. In the app: **Me → Brand settings** (or go to `/admin`). Pick one of the eight kits
+   or enter custom colours, upload a crest, and Save. **Reset to unbranded** undoes all of it.
+
 ---
 
 ## What this costs
