@@ -7,7 +7,7 @@ import Link from 'next/link';
  */
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   return (
-    <div className="safe-x flex min-h-dvh flex-col">
+    <div className="safe-x flex min-h-dvh flex-col overflow-x-clip">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
         <Link href="/" className="font-brand text-[20px] tracking-tighter text-on-surface">
           <span className="font-extrabold">Train</span><span className="font-medium text-on-surface-variant">.futbol</span>

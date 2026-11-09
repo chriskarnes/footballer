@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
+import { PhotoBand, PhotoHero } from '@/components/site/Photo';
+import strike from '@/assets/site/strike.jpg';
+import teams from '@/assets/site/teams.jpg';
 
 export const metadata = {
   title: 'Train.futbol: at-home training, set by your trainer',
@@ -10,7 +13,7 @@ export const metadata = {
 export default function SiteHome() {
   return (
     <>
-      <section className="pt-14 sm:pt-20">
+      <PhotoHero photo={strike} alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%">
         <h1 className="max-w-[16ch] font-brand text-[44px] font-extrabold leading-[1.02] tracking-tightest text-on-surface sm:text-[64px]">
           The training between training.
         </h1>
@@ -18,7 +21,7 @@ export default function SiteHome() {
           You set the week. Your players do the work at home, with a ball and a bit of wall.
           You see who got it done.
         </p>
-      </section>
+      </PhotoHero>
 
       <section className="mt-12 grid gap-4 sm:grid-cols-2">
         <Door href="/trainers" eyebrow="I'm a trainer" title="Run your training here"
@@ -26,6 +29,11 @@ export default function SiteHome() {
         <Door href="/players" eyebrow="I'm a player or parent" title="Find your trainer"
               body="Get the sessions your trainer has set for you, and tick them off as you go." cta="Find my trainer" />
       </section>
+
+      <PhotoBand photo={teams} alt="Young players from two teams around a goal during a match" position="45% 55%"
+                 eyebrow="For trainers who work across clubs" title="Different teams on Saturday. Your homework on Tuesday.">
+        Your players wear different shirts at the weekend. Between sessions, they&rsquo;re all working on what you set them.
+      </PhotoBand>
 
       <section className="mt-24">
         <SectionHead eyebrow="How it works" title="One trainer, their players, one week at a time." />

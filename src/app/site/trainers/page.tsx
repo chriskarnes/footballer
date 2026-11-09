@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { PriceCalc } from '@/components/site/PriceCalc';
+import { PhotoHero } from '@/components/site/Photo';
+import group from '@/assets/site/group.jpg';
 
 export const metadata = {
   title: 'For trainers · Train.futbol',
@@ -16,7 +18,7 @@ export const metadata = {
 export default function TrainersPage() {
   return (
     <>
-      <section className="pt-14 sm:pt-20">
+      <PhotoHero photo={group} alt="A trainer laughing with a group of young players in training bibs" position="72% 30%">
         <p className="eyebrow mb-4">For private trainers</p>
         <h1 className="max-w-[18ch] font-brand text-[40px] font-extrabold leading-[1.04] tracking-tightest text-on-surface sm:text-[56px]">
           Your players, training between sessions.
@@ -29,7 +31,7 @@ export default function TrainersPage() {
           <Link href="/start" className="btn-primary pressable">Get started</Link>
           <a href="#pricing" className="btn-ghost pressable">See pricing</a>
         </div>
-      </section>
+      </PhotoHero>
 
       <section className="mt-24">
         <SectionHead eyebrow="How it fits together" title="Your training, on their phones." />

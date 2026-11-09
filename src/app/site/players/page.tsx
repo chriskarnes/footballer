@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { FindTrainer } from '@/components/site/FindTrainer';
+import { PhotoHero } from '@/components/site/Photo';
+import celebrate from '@/assets/site/celebrate.jpg';
 
 export const metadata = {
   title: 'For players · Train.futbol',
@@ -14,7 +16,7 @@ export const metadata = {
 export default function PlayersPage() {
   return (
     <>
-      <section className="pt-14 sm:pt-20">
+      <PhotoHero photo={celebrate} alt="Young players in navy kits celebrating a goal together" position="62% 35%">
         <p className="eyebrow mb-4">For players and parents</p>
         <h1 className="max-w-[16ch] font-brand text-[40px] font-extrabold leading-[1.04] tracking-tightest text-on-surface sm:text-[56px]">
           Find your trainer.
@@ -28,7 +30,7 @@ export default function PlayersPage() {
             <b className="text-on-surface">Got a link from your trainer?</b> Just open it. It takes you straight in, no asking needed.
           </p>
         </div>
-      </section>
+      </PhotoHero>
 
       <section className="mt-24">
         <SectionHead eyebrow="What you get" title="A plan for the days you're not at practice." />
