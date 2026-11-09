@@ -33,10 +33,10 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Speed drills are not library rows, and workout_items.exercise_id is a
-  // foreign key to exercises — so a speed session keeps its ids on the workout
-  // row (text[], no FK) and skips the per-drill ticks.
-  if (body.source !== 'speed' && Array.isArray(body.exercise_ids) && body.exercise_ids.length) {
+  // Speed and trainer drills are not library rows, and workout_items.exercise_id
+  // is a foreign key to exercises — so those sessions keep their ids on the
+  // workout row (text[], no FK) and skip the per-drill ticks.
+  if ((body.source === 'library' || body.source === 'coach' || !body.source) && Array.isArray(body.exercise_ids) && body.exercise_ids.length) {
     // Every drill as served, with the ones ticked off marked done — a session
     // ended early still records what it was meant to be.
     const done = new Set<string>(Array.isArray(body.done_ids) ? body.done_ids : []);

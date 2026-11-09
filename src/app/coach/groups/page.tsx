@@ -1,0 +1,89 @@
+import Link from 'next/link';
+import { staffOnly } from '@/components/coach/Gate';
+import { CoachNav } from '@/components/coach/CoachNav';
+import { Pending } from '@/components/coach/Pending';
+import { loadContent } from '@/lib/academy-data';
+import { loadPlayers } from '@/lib/coach-data';
+import { meetingLabel, programWeek } from '@/lib/academy-week';
+import { localDate } from '@/lib/progress';
+
+export const metadata = { title: 'Groups', robots: { index: false } };
+
+/**
+ * The academy's groups. A group is a label: players can be in several, and
+ * each one brings its program's week with it.
+ */
+export default async function GroupsPage() {
+  const gate = await staffOnly('/coach/groups');
+  if ('page' in gate) return gate.page;
+  const { db, academy } = gate.viewer;
+  const [c, { players }] = await Promise.all([loadContent(db, academy.id), loadPlayers(db, academy)]);
+  const today = localDate(new Date(), academy.timeZone);
+  const active = c.groups.filter((g) => !g.archived);
+  const archived = c.groups.filter((g) => g.archived);
+  const inAny = new Set(c.memberships.map((m) => m.user_id));
+  const solo = players.filter((p) => !inAny.has(p.user_id)).length;
+
+  return (
+    <div className="animate-pop">
+      <CoachNav at="/coach/groups" />
+      {!c.ready && <Pending />}
+
+      <div className="mb-3 mt-8 flex items-baseline justify-between">
+        <p className="eyebrow">Groups · {active.length}</p>
+        <Link href="/coach/groups/new" className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New group</Link>
+      </div>
+
+      {active.length ? (
+        <ul className="space-y-2.5">
+          {active.map((g) => {
+            const members = players.filter((p) => c.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id));
+            const behind = members.filter((p) => p.progress.status !== 'good').length;
+            const program = c.programs.find((p) => p.id === g.program_id);
+            const n = program && g.starts_on ? programWeek(g.starts_on, program.weeks, today) : null;
+            const when = meetingLabel(g);
+            return (
+              <li key={g.id}>
+                <Link href={`/coach/groups/${g.id}`} className="card pressable block p-4">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="truncate text-[15px] font-bold text-on-surface">{g.name}</span>
+                    <span className="shrink-0 text-[12.5px] text-on-surface-variant">{members.length} {members.length === 1 ? 'player' : 'players'}</span>
+                  </div>
+                  <p className="mt-1 text-[13px] text-on-surface-variant">
+                    {[when, program ? (n ? `${program.name} · Week ${n} of ${program.weeks}` : `${program.name} · ${g.starts_on && g.starts_on > today ? 'not started' : 'finished'}`) : 'No program'].filter(Boolean).join(' · ')}
+                  </p>
+                  {!!behind && <p className="mt-1 text-[13px] font-semibold text-on-surface">{behind} behind this week</p>}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="card-flat p-5">
+          <div className="h-card">No groups yet</div>
+          <p className="mt-1 text-[13.5px] leading-relaxed text-on-surface-variant">
+            A group is players who train together, like &ldquo;U12 Tuesday&rdquo;. Give it a program and everyone in it gets that week&rsquo;s homework. A player can be in more than one.
+          </p>
+          <Link href="/coach/groups/new" className="btn-ghost btn-sm pressable mt-4">Make a group</Link>
+        </div>
+      )}
+
+      {!!players.length && (
+        <p className="mt-4 pl-1 text-[13px] text-on-surface-variant">
+          {solo ? `${solo} ${solo === 1 ? 'player isn’t' : 'players aren’t'} in a group. Give them a program from their page.` : 'Every player is in at least one group.'}
+        </p>
+      )}
+
+      {!!archived.length && (
+        <details className="mt-8">
+          <summary className="cursor-pointer text-[13.5px] font-semibold text-on-surface-variant">Finished groups · {archived.length}</summary>
+          <ul className="card mt-3 divide-y divide-outline-variant">
+            {archived.map((g) => (
+              <li key={g.id}><Link href={`/coach/groups/${g.id}`} className="block px-4 py-3 text-[14px] font-semibold text-on-surface">{g.name}</Link></li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </div>
+  );
+}

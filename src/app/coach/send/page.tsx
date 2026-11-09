@@ -3,6 +3,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { NoteComposer } from '@/components/coach/NoteComposer';
 import { loadPlayers } from '@/lib/coach-data';
 import { byAttention } from '@/lib/progress';
+import { loadContent } from '@/lib/academy-data';
 
 export const metadata = { title: 'Send a note', robots: { index: false } };
 
@@ -11,13 +12,18 @@ export const metadata = { title: 'Send a note', robots: { index: false } };
  * player picked; `&kind=nudge` also starts with a nudge written for them,
  * from what the dashboard knows about their week.
  */
-export default async function SendPage({ searchParams }: { searchParams: Promise<{ to?: string; kind?: string }> }) {
+export default async function SendPage({ searchParams }: { searchParams: Promise<{ to?: string; kind?: string; group?: string }> }) {
   const gate = await staffOnly('/coach/send');
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
-  const { to, kind } = await searchParams;
+  const { to, kind, group } = await searchParams;
 
-  const { players } = await loadPlayers(db, academy, { days: 14 });
+  const [{ players }, c] = await Promise.all([loadPlayers(db, academy, { days: 14 }), loadContent(db, academy.id)]);
+  const groups = c.groups.filter((g) => !g.archived).map((g) => ({
+    id: g.id, name: g.name,
+    members: c.memberships.filter((m) => m.group_id === g.id && players.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
+  }));
+  const inGroup = groups.find((g) => g.id === group);
   players.sort(byAttention);
   const target = players.find((p) => p.user_id === to);
   const nudge = kind === 'nudge' && target;
@@ -34,17 +40,19 @@ export default async function SendPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="animate-pop">
-      <BackLink href={target ? `/coach/players/${target.user_id}` : '/coach'} label={target ? target.name : 'Players'} />
-      <h1 className="h-page">{nudge ? `Nudge ${target.first}` : target ? `Note to ${target.first}` : 'Send a note'}</h1>
+      <BackLink href={target ? `/coach/players/${target.user_id}` : inGroup ? `/coach/groups/${inGroup.id}` : '/coach'}
+                label={target ? target.name : inGroup ? inGroup.name : 'Players'} />
+      <h1 className="h-page">{nudge ? `Nudge ${target.first}` : target ? `Note to ${target.first}` : inGroup ? `Note to ${inGroup.name}` : 'Send a note'}</h1>
       <p className="mt-2 max-w-[38ch] text-[13.5px] leading-relaxed text-on-surface-variant">
         Players see it in the app and can&rsquo;t reply. Every trainer at {academy.name} can see what&rsquo;s sent.
       </p>
       <NoteComposer
         players={players.map((p) => ({ id: p.user_id, name: p.name }))}
-        initialTo={target ? [target.user_id] : []}
+        groups={groups}
+        initialTo={target ? [target.user_id] : inGroup ? inGroup.members : []}
         initialBody={draft}
         kind={nudge ? 'nudge' : 'note'}
-        back={target ? `/coach/players/${target.user_id}` : '/coach'} />
+        back={target ? `/coach/players/${target.user_id}` : inGroup ? `/coach/groups/${inGroup.id}` : '/coach'} />
     </div>
   );
 }

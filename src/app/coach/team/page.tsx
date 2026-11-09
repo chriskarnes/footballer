@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BackLink } from '@/components/BackLink';
+import { CoachNav } from '@/components/coach/CoachNav';
 import { staffOnly } from '@/components/coach/Gate';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { ROOT_DOMAIN } from '@/lib/tenant';
@@ -27,8 +27,8 @@ export default async function TeamPage() {
 
   return (
     <div className="animate-pop">
-      <BackLink href="/coach" label="Players" />
-      <p className="eyebrow mb-3">{academy.slug}.{ROOT_DOMAIN}</p>
+      <CoachNav at="/coach/team" />
+      <p className="eyebrow mb-3 mt-8">{academy.slug}.{ROOT_DOMAIN}</p>
       <h1 className="h-page">{academy.name}</h1>
 
       <section className="mt-8">

@@ -16,8 +16,9 @@ const QUICK = [
  * picked, so a note to the whole group is one tap; picking players narrows
  * it. The players who need attention are listed first.
  */
-export function NoteComposer({ players, initialTo, initialBody, kind, back }: {
-  players: P[]; initialTo: string[]; initialBody: string; kind: 'note' | 'nudge'; back: string;
+export function NoteComposer({ players, groups = [], initialTo, initialBody, kind, back }: {
+  players: P[]; groups?: { id: string; name: string; members: string[] }[];
+  initialTo: string[]; initialBody: string; kind: 'note' | 'nudge'; back: string;
 }) {
   const [to, setTo] = useState<string[]>(initialTo);
   const [body, setBody] = useState(initialBody);
@@ -38,6 +39,15 @@ export function NoteComposer({ players, initialTo, initialBody, kind, back }: {
   return (
     <div className="mt-6">
       <p className="eyebrow mb-2.5">To</p>
+      {/* A group picks its players; the names below show who that is. */}
+      {!!groups.length && (
+        <div className="mb-2.5 flex flex-wrap gap-2">
+          {groups.filter((g) => g.members.length).map((g) => {
+            const on = g.members.length === to.length && g.members.every((m) => to.includes(m));
+            return <Chip key={g.id} on={on} onClick={() => setTo(on ? [] : g.members)}>{g.name} ({g.members.length})</Chip>;
+          })}
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <Chip on={everyone} onClick={() => setTo([])}>Everyone ({players.length})</Chip>
         {players.map((p) => (

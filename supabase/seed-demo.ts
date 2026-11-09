@@ -55,6 +55,35 @@ const NOTES = [
   { daysAgo: 3, body: 'Sofia, that weak-foot work is paying off. Keep it going!', to: ['Sofia'], seenBy: 1 },
 ];
 
+/**
+ * The trainer's own content for the groups demo. Original, generic drills
+ * written for this seed: nothing from the licensed library, which other
+ * academies can't see.
+ */
+const DRILLS = [
+  { key: 'wall', name: 'Wall passes, both feet', amount: '50 each foot', minutes: 6, focus: 'passing', how: 'Two-touch against a wall from 3 metres.\nControl across your body, then pass.\nStep back a metre when it feels easy.' },
+  { key: 'cones', name: 'Five-cone weave', amount: '6 runs', minutes: 5, focus: 'dribbling', how: 'Five cones a stride apart in a line.\nWeave through using only the outside of your foot, then the inside.\nHead up at the last cone.' },
+  { key: 'juggle', name: 'Juggling ladder', amount: 'Beat your best', minutes: 5, focus: 'juggling', how: 'Feet only. Count your best run.\nThen try thighs, then alternate feet.' },
+  { key: 'turns', name: 'Turn and go', amount: '10 each way', minutes: 6, focus: 'first_touch', how: 'Toss the ball against a wall, check your shoulder, turn with your first touch.\nAccelerate three steps after every turn.' },
+  { key: 'finish', name: 'Corner finishing', amount: '20 shots', minutes: 8, focus: 'finishing', how: 'Aim for a target in each bottom corner.\nAlternate feet. Placement over power.' },
+  { key: 'tick', name: 'Toe taps and rolls', amount: '3 × 45 s', minutes: 4, focus: 'ball_mastery', how: 'Toe taps on top of the ball, then sole rolls side to side.\nStay on the balls of your feet.' },
+];
+const PROGRAM = {
+  name: 'Foundations', weeks: 8, description: 'Touch, turning and passing at home, two short sessions a week.',
+  sessions: [
+    { week: 1, name: 'Touch and pass', drills: ['tick', 'wall', 'cones'] },
+    { week: 1, name: 'Turn and finish', drills: ['juggle', 'turns', 'finish'] },
+    { week: 3, name: 'Both feet', drills: ['tick', 'wall', 'turns'] },
+    { week: 3, name: 'Weave and shoot', drills: ['juggle', 'cones', 'finish'] },
+  ],
+};
+const GROUPS = [
+  { name: 'U12 Tuesday', weekday: 1, time: '17:30', members: ['Liam', 'Noah', 'Jayden', 'Olivia'], weeksIn: 3 },
+  { name: 'Finishing', weekday: 3, time: '18:00', members: ['Ava', 'Mateo', 'Liam'], weeksIn: 1 },
+];
+/** Group homework done this week, by session index in PROGRAM for the current week. */
+const GROUP_DONE: Record<string, number[]> = { Liam: [0, 1], Olivia: [0], Ava: [0] };
+
 // ---------------------------------------------------------------- dates ---
 const TZ = 'America/New_York';
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -169,6 +198,8 @@ async function main() {
     console.log(`  ${p.first.padEnd(7)} ${trained.length} sessions`);
   }
 
+  await seedGroups(academy.id, owner?.user_id ?? null, ids);
+
   // Notes: replace the sample ones, keep anything a real trainer wrote.
   const sample = Object.values(ids);
   const { data: old } = await db.from('note_recipients').select('note_id').in('user_id', sample);
@@ -192,6 +223,57 @@ async function main() {
   }
 
   console.log(`Seeded ${PLAYERS.length} players into ${academy.name} (${slug}).`);
+}
+
+/** Drills, a program and two groups. Replaces its own by name each run. */
+async function seedGroups(academyId: string, ownerId: string | null, ids: Record<string, string>) {
+  const probe = await db.from('academy_programs').select('id').limit(1);
+  if (probe.error) { console.log('  (groups skipped: run migration 0007 first)'); return; }
+
+  await must(db.from('groups').delete().eq('academy_id', academyId).in('name', GROUPS.map((g) => g.name)), 'clear groups');
+  await must(db.from('academy_programs').delete().eq('academy_id', academyId).eq('name', PROGRAM.name), 'clear program');
+  await must(db.from('drills').delete().eq('academy_id', academyId).in('name', DRILLS.map((d) => d.name)), 'clear drills');
+
+  const drills = await must(db.from('drills').insert(DRILLS.map(({ key: _k, ...d }) => ({ ...d, academy_id: academyId, created_by: ownerId })))
+    .select('id, name'), 'drills');
+  const drillId = (key: string) => drills!.find((d) => d.name === DRILLS.find((x) => x.key === key)!.name)!.id;
+
+  const program = await must(db.from('academy_programs').insert({
+    academy_id: academyId, name: PROGRAM.name, weeks: PROGRAM.weeks, description: PROGRAM.description,
+  }).select('id').single(), 'program');
+  const sessions = await must(db.from('academy_sessions').insert(PROGRAM.sessions.map((x, i) => ({
+    academy_id: academyId, program_id: program!.id, week: x.week, position: i % 2, name: x.name, drill_ids: x.drills.map(drillId),
+  }))).select('id, week, position'), 'sessions');
+
+  for (const g of GROUPS) {
+    const startsOn = addDays(monday, -7 * (g.weeksIn - 1));
+    const group = await must(db.from('groups').insert({
+      academy_id: academyId, name: g.name, meets_weekday: g.weekday, meets_time: g.time, program_id: program!.id, starts_on: startsOn,
+    }).select('id').single(), 'group');
+    await must(db.from('group_members').insert(g.members.map((m) => ({ group_id: group!.id, academy_id: academyId, user_id: ids[m] }))), 'members');
+  }
+
+  // This week's homework (weeks 1-2 use week 1's sessions, 3+ use week 3's)
+  // for the longer-running group, ticked for a few players.
+  const week = GROUPS[0].weeksIn >= 3 ? 3 : 1;
+  const current = sessions!.filter((x) => x.week === week).sort((a, b) => a.position - b.position);
+  const rows = Object.entries(GROUP_DONE).flatMap(([first, done], n) => done.map((idx, k) => {
+    const s = current[idx];
+    const at = evening(addDays(monday, Math.min(weekday(today), k)), n * 13 + k);
+    return {
+      user_id: ids[first], title: PROGRAM.sessions[PROGRAM.sessions.findIndex((x) => x.week === week) + idx].name,
+      source: 'academy', source_ref: s.id, planned_minutes: 15, actual_minutes: 15, planned_touches: 0, actual_touches: 0,
+      status: 'completed', completed_at: at, created_at: at,
+    };
+  }));
+  if (rows.length) await must(db.from('workouts').insert(rows), 'group workouts');
+
+  // One "just for you" drill, so the dashboard shows what that looks like.
+  await must(db.from('addons').insert({
+    academy_id: academyId, user_id: ids.Noah, drill_id: drillId('turns'), week_of: monday, created_by: ownerId,
+    note: 'Noah, check your shoulder before every turn. Ten each way and you\'re done.',
+  }), 'addon');
+  console.log(`  groups  ${GROUPS.map((g) => g.name).join(', ')}`);
 }
 
 main().catch((e) => { console.error(e.message ?? e); process.exit(1); });

@@ -1,0 +1,93 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { BackLink } from '@/components/BackLink';
+import { staffOnly } from '@/components/coach/Gate';
+import { ProgramForm } from '@/components/coach/ProgramForm';
+import { CopyWeek } from '@/components/coach/CopyWeek';
+import { loadContent } from '@/lib/academy-data';
+import { sessionsForWeek } from '@/lib/academy-week';
+
+export const metadata = { title: 'Program', robots: { index: false } };
+
+/**
+ * A program, week by week. Built weeks list their sessions; an unbuilt week
+ * says which week it repeats, so a trainer can see exactly what a player in
+ * week 5 gets without building weeks 2 to 5.
+ */
+export default async function ProgramPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const gate = await staffOnly(`/coach/programs/${id}`);
+  if ('page' in gate) return gate.page;
+  const { db, academy } = gate.viewer;
+  const c = await loadContent(db, academy.id);
+  const p = c.programs.find((x) => x.id === id);
+  if (!p) notFound();
+
+  const drills = new Map(c.drills.map((d) => [d.id, d]));
+  const groups = c.groups.filter((g) => g.program_id === p.id && !g.archived);
+  const players = c.playerPrograms.filter((x) => x.program_id === p.id).length;
+  const built = new Set(c.sessions.filter((s) => s.program_id === p.id).map((s) => s.week));
+
+  return (
+    <div className="animate-pop">
+      <BackLink href="/coach/content" label="Programs" />
+      <p className="eyebrow mb-3">{p.weeks} weeks</p>
+      <h1 className="h-page">{p.name}</h1>
+      {p.description && <p className="mt-2 max-w-[40ch] text-[14px] leading-relaxed text-on-surface-variant">{p.description}</p>}
+      <p className="mt-3 text-[13.5px] text-on-surface-variant">
+        {groups.length || players
+          ? <>Used by {[...groups.map((g) => g.name), players ? `${players} ${players === 1 ? 'player' : 'players'} on their own` : ''].filter(Boolean).join(', ')}</>
+          : 'Not given to anyone yet. Add it to a group, or to a player from their page.'}
+      </p>
+
+      <ol className="mt-7 space-y-3">
+        {Array.from({ length: p.weeks }, (_, i) => i + 1).map((n) => {
+          const own = built.has(n);
+          const shown = sessionsForWeek(c.sessions, p.id, n);
+          const repeats = !own && shown.length ? shown[0].week : null;
+          return (
+            <li key={n} id={`week-${n}`} className={own ? 'card p-5' : 'card-flat p-5'}>
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="h-card">Week {n}</div>
+                <span className="text-[12.5px] text-on-surface-variant">
+                  {own ? `${shown.length} ${shown.length === 1 ? 'session' : 'sessions'}` : repeats ? `Repeats week ${repeats}` : 'Nothing yet'}
+                </span>
+              </div>
+              {own && (
+                <ul className="mt-3 divide-y divide-outline-variant border-t border-outline-variant">
+                  {shown.map((s) => {
+                    const mins = s.drill_ids.reduce((a, d) => a + (drills.get(d)?.minutes ?? 0), 0);
+                    return (
+                      <li key={s.id}>
+                        <Link href={`/coach/programs/${p.id}/session?id=${s.id}`} className="flex items-center justify-between gap-3 py-3">
+                          <span className="min-w-0">
+                            <span className="block truncate text-[14.5px] font-semibold text-on-surface">{s.name}</span>
+                            <span className="block truncate text-[12.5px] text-on-surface-variant">
+                              {s.drill_ids.map((d) => drills.get(d)?.name).filter(Boolean).join(', ')}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-[12.5px] text-on-surface-variant">{mins} min</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link href={`/coach/programs/${p.id}/session?week=${n}`} className="btn-ghost btn-sm pressable">
+                  {own ? 'Add a session' : repeats ? `Change week ${n}` : 'Build this week'}
+                </Link>
+                {own && n < p.weeks && !built.has(n + 1) && <CopyWeek programId={p.id} from={n} to={n + 1} />}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      <details className="mt-9">
+        <summary className="cursor-pointer text-[14px] font-semibold text-on-surface">Name, length and description</summary>
+        <div className="mt-5"><ProgramForm program={p} /></div>
+      </details>
+    </div>
+  );
+}

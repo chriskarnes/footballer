@@ -35,7 +35,7 @@ export function Runner({
   /** Where the drills came from. Defaults to library when there's a sessionRef,
    *  coach otherwise. 'speed' drills aren't library rows, so history keeps the
    *  session but not per-drill ticks — see /api/workouts. */
-  source?: 'library' | 'coach' | 'speed';
+  source?: 'library' | 'coach' | 'speed' | 'academy' | 'addon';
   /** A short coach circuit is done more than once. A drill is ticked when every
    *  round of it is done, so only the totals need to know. */
   rounds?: number;
@@ -149,8 +149,9 @@ export function Runner({
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-brand-edge pt-5">
-            <Metric v={formatTouches(doneTouches)} unit="ball touches" />
+          {/* Trainers' own drills don't count touches: say minutes only. */}
+          <div className={`mt-6 grid gap-4 border-t border-brand-edge pt-5 ${doneTouches ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {!!doneTouches && <Metric v={formatTouches(doneTouches)} unit="ball touches" />}
             <Metric v={`${played}`} unit={played === 1 ? 'minute' : 'minutes'} />
           </div>
 

@@ -6,6 +6,8 @@ import { Brand } from '@/components/Brand';
 import { TodayOnPlan } from '@/components/TodayOnPlan';
 import { Suspense } from 'react';
 import { NoteBanner } from '@/components/NoteBanner';
+import { TrainerWeek } from '@/components/TrainerWeek';
+import { getMyWeek } from '@/lib/player-week';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
 export default async function TrainNowPage() {
@@ -23,6 +25,9 @@ export default async function TrainNowPage() {
           Suspense, so signed-out visitors never wait on the lookup. */}
       <Suspense fallback={null}><NoteBanner /></Suspense>
 
+      {/* The trainer's week, when they've set one, before anything to build. */}
+      <Suspense fallback={null}><MyTrainerWeek /></Suspense>
+
       {/* The headline lives in Coach now: it changes with the step, from
           "Start training now" to the session you've just made. */}
       {/* Today's session from your active week, if there is one. Under
@@ -32,4 +37,9 @@ export default async function TrainNowPage() {
              planCard={<Suspense key="today-on-plan" fallback={null}><TodayOnPlan /></Suspense>} />
     </div>
   );
+}
+
+async function MyTrainerWeek() {
+  const week = await getMyWeek().catch(() => null);
+  return week ? <div className="mb-10 mt-2"><TrainerWeek week={week} /></div> : null;
 }

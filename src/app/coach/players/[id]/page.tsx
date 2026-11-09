@@ -5,7 +5,9 @@ import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { RemovePlayer } from '@/components/coach/RemovePlayer';
 import { loadPlayers } from '@/lib/coach-data';
-import { localDate, sinceLabel } from '@/lib/progress';
+import { localDate, mondayOf, sinceLabel } from '@/lib/progress';
+import { loadContent } from '@/lib/academy-data';
+import { PlayerTraining } from '@/components/coach/PlayerTraining';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
@@ -26,8 +28,9 @@ export default async function PlayerPage({ params, searchParams }: {
   const { db, academy } = gate.viewer;
   const { sent } = await searchParams;
 
+  const content = await loadContent(db, academy.id);
   const [{ players }, { data: notes }] = await Promise.all([
-    loadPlayers(db, academy, { player: id, days: 120 }),
+    loadPlayers(db, academy, { player: id, days: 120, content }),
     db.from('note_recipients')
       .select('seen_at, notes!inner(id, body, kind, author_name, created_at, academy_id)')
       .eq('user_id', id).eq('notes.academy_id', academy.id),
@@ -62,7 +65,21 @@ export default async function PlayerPage({ params, searchParams }: {
         <Link href={`/coach/send?to=${p.user_id}`} className="btn-ghost pressable">Write a note</Link>
       </div>
 
-      <section className="card mt-6 p-5">
+      {content.ready && (
+        <div className="mt-8">
+          <PlayerTraining
+            userId={p.user_id} first={p.first} week={p.week} drills={content.drills}
+            groups={content.groups.filter((g) => !g.archived).map((g) => ({ id: g.id, name: g.name,
+              member: content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id) }))}
+            programs={content.programs}
+            own={content.playerPrograms.filter((x) => x.user_id === p.user_id).map((x) => ({
+              ...x, label: content.programs.find((pr) => pr.id === x.program_id)?.name ?? 'Program' }))}
+            addons={content.addons.filter((a) => a.user_id === p.user_id && a.week_of === mondayOf(localDate(new Date(), tz))).map((a) => ({
+              id: a.id, note: a.note, name: content.drills.find((d) => d.id === a.drill_id)?.name ?? 'Drill' }))} />
+        </div>
+      )}
+
+      <section className="card mt-9 p-5">
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-[13px] text-on-surface-variant">

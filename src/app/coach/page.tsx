@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Brand } from '@/components/Brand';
 import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { JoinRequests, type JoinRequest } from '@/components/coach/JoinRequests';
+import { CoachNav } from '@/components/coach/CoachNav';
+import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
 import { ago } from '@/lib/notes';
 import { byAttention, detailOf } from '@/lib/progress';
@@ -17,20 +18,27 @@ export const metadata = { title: 'Coach', robots: { index: false } };
  * question a trainer opens this with. The list is sorted worst first, so the
  * players to act on are at the top and the Nudge button is next to them.
  */
-export default async function CoachPage({ searchParams }: { searchParams: Promise<{ sent?: string }> }) {
+export default async function CoachPage({ searchParams }: { searchParams: Promise<{ sent?: string; group?: string }> }) {
   const gate = await staffOnly('/coach');
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
-  const { sent } = await searchParams;
+  const { sent, group } = await searchParams;
+  const content = await loadContent(db, academy.id);
 
-  const [{ players, error }, { data: invite }, { data: asking }] = await Promise.all([
-    loadPlayers(db, academy),
+  const [{ players: all, error }, { data: invite }, { data: asking }] = await Promise.all([
+    loadPlayers(db, academy, { content }),
     db.from('academy_invites').select('code').eq('academy_id', academy.id).eq('role', 'player').maybeSingle(),
     // Before 0006 runs the table isn't there; that's an error, read as none.
     db.from('join_requests').select('user_id, name, message, created_at').eq('academy_id', academy.id)
       .order('created_at', { ascending: true }),
   ]);
-  players.sort(byAttention);
+  all.sort(byAttention);
+  // A group narrows the list (and the headline) to its players.
+  const groups = content.groups.filter((g) => !g.archived);
+  const inGroup = groups.find((g) => g.id === group);
+  const players = inGroup
+    ? all.filter((p) => content.memberships.some((m) => m.group_id === inGroup.id && m.user_id === p.user_id))
+    : all;
 
   const needs = players.filter((p) => p.progress.status !== 'good').length;
   const trained = players.filter((p) => p.progress.done > 0).length;
@@ -39,12 +47,18 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="animate-pop">
-      <header className="app-bar">
-        <Brand small />
-        <Link href="/coach/team" className="text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">Team</Link>
-      </header>
+      <CoachNav at="/coach" />
 
-      <p className="eyebrow mb-3 mt-8">This week</p>
+      {!!groups.length && (
+        <nav className="scroll-x -mx-5 mt-5 flex gap-2 px-5" aria-label="Filter by group">
+          <Link href="/coach" className={`chip shrink-0 ${!inGroup ? 'chip-on' : ''}`}>Everyone</Link>
+          {groups.map((g) => (
+            <Link key={g.id} href={`/coach?group=${g.id}`} className={`chip shrink-0 ${inGroup?.id === g.id ? 'chip-on' : ''}`}>{g.name}</Link>
+          ))}
+        </nav>
+      )}
+
+      <p className="eyebrow mb-3 mt-8">{inGroup ? `${inGroup.name} · this week` : 'This week'}</p>
       <h1 className="h-page">
         {!players.length ? 'No players yet'
           : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
@@ -66,7 +80,9 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
             <Stat value={sessions} label={sessions === 1 ? 'session' : 'sessions'} />
             <Stat value={minutes} label="minutes" />
           </div>
-          <Link href="/coach/send" className="btn-ghost pressable mt-4 w-full">Send a note to everyone</Link>
+          <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost pressable mt-4 w-full">
+            {inGroup ? `Send a note to ${inGroup.name}` : 'Send a note to everyone'}
+          </Link>
         </>
       )}
 
@@ -79,6 +95,9 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
             <li key={p.user_id} className="card flex items-center gap-3 py-4 pl-4 pr-3">
               <Link href={`/coach/players/${p.user_id}`} className="min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-bold text-on-surface">{p.name}</span>
+                {!inGroup && !!p.groups.length && (
+                  <span className="block truncate text-[12px] font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
+                )}
                 <span className="mt-1 flex items-center gap-2 text-[13px] text-on-surface-variant">
                   <StatusDot status={p.progress.status} />
                   <span className="truncate">
