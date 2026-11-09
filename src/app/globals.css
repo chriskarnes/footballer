@@ -988,7 +988,17 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   font-family: var(--md-ref-typeface-plain); font-size: 16px;
   color: var(--md-sys-color-on-surface);
 }
-.text-field input::placeholder { color: var(--md-sys-color-on-surface-variant); }
+/* A textarea keeps the same box; it grows downward instead of sitting at 52px. */
+.text-field textarea {
+  display: block; width: 100%; padding: 14px 16px; resize: none;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-lowest);
+  font-family: var(--md-ref-typeface-plain); font-size: 16px; line-height: 1.45;
+  color: var(--md-sys-color-on-surface);
+}
+.text-field input::placeholder, .text-field textarea::placeholder { color: var(--md-sys-color-on-surface-variant); }
+.text-field textarea:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
 .text-field input:focus-visible, .text-field select:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
 /* A field that is shown but cannot be edited. It keeps the outlined shape so
    it still reads as "this is one of the fields", and loses the white fill so

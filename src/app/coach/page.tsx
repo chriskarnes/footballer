@@ -4,7 +4,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { loadPlayers } from '@/lib/coach-data';
-import { byAttention, sinceLabel } from '@/lib/progress';
+import { byAttention, detailOf } from '@/lib/progress';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
 
@@ -39,7 +39,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         <Link href="/coach/team" className="text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">Team</Link>
       </header>
 
-      <p className="eyebrow mb-3">This week</p>
+      <p className="eyebrow mb-3 mt-8">This week</p>
       <h1 className="h-page">
         {!players.length ? 'No players yet'
           : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
@@ -66,38 +66,40 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       {error && <p className="mt-4 text-[13px] text-on-surface-variant">Couldn&rsquo;t load players: {error}</p>}
 
       <ul className="mt-6 space-y-2.5">
-        {players.map((p) => (
-          <li key={p.user_id} className="card flex items-center gap-3 p-4">
-            <Link href={`/coach/players/${p.user_id}`} className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <StatusDot status={p.progress.status} />
-                <span className="truncate text-[15px] font-bold text-on-surface">{p.name}</span>
-              </div>
-              <div className="mt-1 pl-[18px] text-[12.5px] text-on-surface-variant">
-                <span className="font-semibold text-on-surface">{p.progress.reason}</span>
-                {' · '}
-                {p.progress.hasPlan ? `${p.progress.done} of ${p.progress.planned}` : `${p.progress.done} this week`}
-                {' · '}last {sinceLabel(p.progress.daysSince)}
-              </div>
-              <div className="mt-2.5 pl-[18px]"><WeekDots week={p.progress.week} /></div>
-            </Link>
-            {p.progress.status !== 'good' && (
-              <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-primary btn-sm pressable shrink-0">
-                Nudge
+        {players.map((p) => {
+          const detail = detailOf(p.progress);
+          return (
+            <li key={p.user_id} className="card flex items-center gap-3 py-4 pl-4 pr-3">
+              <Link href={`/coach/players/${p.user_id}`} className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-bold text-on-surface">{p.name}</span>
+                <span className="mt-1 flex items-center gap-2 text-[13px] text-on-surface-variant">
+                  <StatusDot status={p.progress.status} />
+                  <span className="truncate">
+                    <span className="font-semibold text-on-surface">{p.progress.reason}</span>
+                    {detail && <> · {detail}</>}
+                  </span>
+                </span>
+                <span className="mt-3 block"><WeekDots week={p.progress.week} /></span>
               </Link>
-            )}
-          </li>
-        ))}
+              {p.progress.status !== 'good' && (
+                <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-ghost btn-sm pressable shrink-0">
+                  Nudge
+                </Link>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <section className="mt-9">
         <p className="eyebrow mb-3">Add players</p>
         <div className="card p-5">
-          <p className="text-[13.5px] leading-snug text-on-surface-variant">
-            Send this link to a player or their parent. They sign in with their email and they&rsquo;re on your list.
+          <div className="h-card">Invite link</div>
+          <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+            Text it to a player or a parent. They sign in with their email and appear here.
           </p>
           {invite?.code
-            ? <InviteLink path={`/join/${invite.code}`} role="player" academyId={academy.id} />
+            ? <InviteLink path={`/join/${invite.code}`} role="player" canRotate={false} />
             : <p className="mt-3 text-[13px]">No invite link yet.</p>}
         </div>
       </section>

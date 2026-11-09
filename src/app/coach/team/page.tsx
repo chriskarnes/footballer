@@ -35,36 +35,38 @@ export default async function TeamPage() {
         <p className="eyebrow mb-3">Trainers</p>
         <ul className="card divide-y divide-outline-variant">
           {((staff ?? []) as Staff[]).map((s) => (
-            <li key={s.user_id} className="flex min-h-[52px] items-center justify-between gap-4 px-4">
+            <li key={s.user_id} className="flex items-center justify-between gap-4 px-4 py-3.5">
               <span className="min-w-0">
                 <span className="block truncate text-[14px] font-semibold text-on-surface">{s.display_name || s.email}</span>
-                {s.display_name && <span className="block truncate text-[12px] text-on-surface-variant">{s.email}</span>}
+                {s.display_name && <span className="mt-0.5 block truncate text-[12.5px] text-on-surface-variant">{s.email}</span>}
               </span>
-              <span className="tag shrink-0">{s.role === 'owner' ? 'Owner' : 'Trainer'}</span>
+              <span className="shrink-0 text-[12.5px] font-semibold text-on-surface-variant">{s.role === 'owner' ? 'Owner' : 'Trainer'}</span>
             </li>
           ))}
         </ul>
       </section>
 
       <section className="mt-9">
-        <p className="eyebrow mb-3">Invite players</p>
-        <div className="card p-5">
-          <p className="text-[13.5px] leading-snug text-on-surface-variant">For players and parents. They join as players.</p>
-          {code('player') && <InviteLink path={`/join/${code('player')}`} role="player" />}
+        <p className="eyebrow mb-3">Invite links</p>
+        <div className="space-y-3">
+          <div className="card p-5">
+            <div className="h-card">Players</div>
+            <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+              Text it to a player or a parent. They sign in with their email and join your list.
+            </p>
+            {code('player') && <InviteLink path={`/join/${code('player')}`} role="player" />}
+          </div>
+          {owner && (
+            <div className="card p-5">
+              <div className="h-card">Trainers</div>
+              <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+                Only for people who coach with you. Trainers see every player and every note.
+              </p>
+              {code('trainer') && <InviteLink path={`/join/${code('trainer')}`} role="trainer" />}
+            </div>
+          )}
         </div>
       </section>
-
-      {owner && (
-        <section className="mt-9">
-          <p className="eyebrow mb-3">Invite a trainer</p>
-          <div className="card p-5">
-            <p className="text-[13.5px] leading-snug text-on-surface-variant">
-              Only send this to people who coach with you. Trainers see every player and their notes.
-            </p>
-            {code('trainer') && <InviteLink path={`/join/${code('trainer')}`} role="trainer" />}
-          </div>
-        </section>
-      )}
 
       {canBrand && (
         <Link href="/admin" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SignIn } from '@/components/SignIn';
+import { Brand } from '@/components/Brand';
 import { JoinButton } from '@/components/JoinButton';
 import { getViewer } from '@/lib/viewer';
 import { academyOrigin } from '@/lib/tenant';
@@ -27,7 +28,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     return (
       <Shell eyebrow="Invite">
         <h1 className="h-page">This link doesn&rsquo;t work</h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">
+        <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
           It may have been replaced with a new one. Ask your trainer to send it again.
         </p>
       </Shell>
@@ -45,34 +46,41 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
   const already = v.role && (v.role !== 'player' || role === 'player');
 
   return (
-    <Shell eyebrow={name}>
-      <h1 className="h-hero">Join {name}</h1>
-      <p className="mt-3.5 max-w-[32ch] text-[15px] leading-relaxed text-on-surface-variant">
-        {role === 'trainer'
-          ? 'You’ll see every player’s progress and can send them notes.'
-          : 'Your trainer will see the sessions you finish and can send you notes. Everything else works as before.'}
-      </p>
-      <div className="mt-6">
+    <div className="animate-pop">
+      <header className="app-bar"><Brand small /></header>
+      <div className="mt-10">
+        <p className="eyebrow mb-3">{role === 'trainer' ? 'Trainer invite' : 'You’re invited'}</p>
+        <h1 className="h-page">Join {name}</h1>
+        <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
+          {role === 'trainer'
+            ? 'See every player’s progress this week, and send them notes.'
+            : 'Train with your own sessions, and your trainer sees what you finish.'}
+        </p>
+      </div>
+      <div className="mt-7">
         {!v.user ? (
-          <>
-            <p className="mb-3 text-[13.5px] text-on-surface-variant">Sign in with your email to join as {as}.</p>
-            <SignIn next={`/join/${code}`} />
-          </>
+          <SignIn next={`/join/${code}`} title={`Join as ${as}`} button="Email me a link" />
         ) : already ? (
-          <>
-            <p className="text-[15px] font-semibold text-on-surface">You&rsquo;re already in.</p>
+          <div className="card p-5">
+            <div className="h-card">You&rsquo;re already in</div>
+            <p className="mt-1 text-[13.5px] text-on-surface-variant">Signed in as {v.user.email}.</p>
             <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>
-          </>
+          </div>
         ) : (
           <JoinButton code={code} label={`Join as ${as}`} email={v.user.email ?? ''} />
         )}
       </div>
-    </Shell>
+    </div>
   );
 }
 
 function Shell({ eyebrow, children }: { eyebrow: string; children: React.ReactNode }) {
-  return <div className="animate-pop pt-8"><p className="eyebrow mb-3">{eyebrow}</p>{children}</div>;
+  return (
+    <div className="animate-pop">
+      <header className="app-bar"><Brand small /></header>
+      <div className="mt-10"><p className="eyebrow mb-3">{eyebrow}</p>{children}</div>
+    </div>
+  );
 }

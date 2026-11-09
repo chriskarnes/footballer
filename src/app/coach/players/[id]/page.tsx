@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
-import { StatusDot, WeekDots, STATUS_BG } from '@/components/coach/WeekDots';
+import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { RemovePlayer } from '@/components/coach/RemovePlayer';
 import { loadPlayers } from '@/lib/coach-data';
 import { localDate, sinceLabel } from '@/lib/progress';
@@ -46,11 +46,10 @@ export default async function PlayerPage({ params, searchParams }: {
       <BackLink href="/coach" label="Players" />
       {about && <p className="eyebrow mb-3">{about}</p>}
       <h1 className="h-page">{p.name}</h1>
-      <div className="mt-2 flex items-center gap-2 text-[14px]">
+      <p className="mt-2 flex items-center gap-2 text-[14px] text-on-surface-variant">
         <StatusDot status={pr.status} />
-        <span className="font-semibold text-on-surface">{pr.reason}</span>
-        <span className="text-on-surface-variant">· last trained {sinceLabel(pr.daysSince)}</span>
-      </div>
+        <span><b className="font-semibold text-on-surface">{pr.reason}</b> · last trained {sinceLabel(pr.daysSince)}</span>
+      </p>
 
       {sent && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
@@ -67,14 +66,10 @@ export default async function PlayerPage({ params, searchParams }: {
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-[13px] text-on-surface-variant">
-            {pr.hasPlan ? `${pr.done} of ${pr.planned} sessions` : `${pr.done} sessions`} · {pr.minutesThisWeek} min
+            {pr.hasPlan ? `${pr.done} of ${pr.planned}` : pr.done} · {pr.minutesThisWeek} min
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
-        <p className="mt-4 text-[12px] text-on-surface-variant">
-          {p.plan_name ? <>Following <b className="text-on-surface">{p.plan_name}</b>. Filled: trained. Red ring: a planned day missed.</>
-                       : 'No weekly plan yet, so there’s nothing to be behind on. Filled: trained.'}
-        </p>
       </section>
 
       <section className="card mt-3 p-5">
@@ -84,21 +79,16 @@ export default async function PlayerPage({ params, searchParams }: {
         </div>
         <div className="mt-4 flex h-28 gap-3" role="img"
              aria-label={pr.weeks.map((w) => `${w.done} sessions`).join(', ')}>
-          {pr.weeks.map((w, i) => {
-            const short = pr.hasPlan && w.done < w.planned;
-            return (
-              <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
-                <span className="text-[12px] font-bold text-on-surface">{w.done}</span>
-                <div className="relative w-full flex-1">
-                  {pr.hasPlan && <div className="absolute inset-x-0 bottom-0 rounded-md border border-dashed border-outline-variant"
-                                      style={{ height: `${(w.planned / max) * 100}%` }} />}
-                  <div className={`absolute inset-x-1 bottom-0 rounded-md ${i === 3 ? 'bg-on-surface' : short ? STATUS_BG.warn : 'bg-on-surface-variant'}`}
-                       style={{ height: `${(w.done / max) * 100}%` }} />
-                </div>
-                <span className="text-[11px] text-on-surface-variant">{i === 3 ? 'This wk' : `${3 - i} ago`}</span>
+          {pr.weeks.map((w, i) => (
+            <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
+              <span className="text-[12px] font-bold text-on-surface">{w.done}</span>
+              <div className="relative w-full flex-1">
+                <div className={`absolute inset-x-1 bottom-0 rounded-md ${i === 3 ? 'bg-on-surface' : 'bg-surface-container-highest'}`}
+                     style={{ height: `${Math.max(4, (w.done / max) * 100)}%` }} />
               </div>
-            );
-          })}
+              <span className="text-[11px] text-on-surface-variant">{i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} wks ago`}</span>
+            </div>
+          ))}
         </div>
       </section>
 

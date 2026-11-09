@@ -35,13 +35,12 @@ export default async function SendPage({ searchParams }: { searchParams: Promise
   return (
     <div className="animate-pop">
       <BackLink href={target ? `/coach/players/${target.user_id}` : '/coach'} label={target ? target.name : 'Players'} />
-      <p className="eyebrow mb-3">{nudge ? 'Nudge' : 'Note'}</p>
-      <h1 className="h-page">{target ? `To ${target.first}` : 'Send a note'}</h1>
+      <h1 className="h-page">{nudge ? `Nudge ${target.first}` : target ? `Note to ${target.first}` : 'Send a note'}</h1>
       <p className="mt-2 max-w-[38ch] text-[13.5px] leading-relaxed text-on-surface-variant">
         Players see it in the app and can&rsquo;t reply. Every trainer at {academy.name} can see what&rsquo;s sent.
       </p>
       <NoteComposer
-        players={players.map((p) => ({ id: p.user_id, name: p.name, status: p.progress.status }))}
+        players={players.map((p) => ({ id: p.user_id, name: p.name }))}
         initialTo={target ? [target.user_id] : []}
         initialBody={draft}
         kind={nudge ? 'nudge' : 'note'}

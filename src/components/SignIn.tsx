@@ -3,10 +3,20 @@ import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase/client';
 import { pendingPlan, pendingWorkout } from '@/lib/pending';
 
-/** `next` is where the emailed link lands once it has signed you in. */
-export function SignIn({ next = '/me' }: { next?: string }) {
+/**
+ * Email in, magic link out. One card, both states: the form, then "check your
+ * email" in the same place, so the page doesn't jump when it's sent.
+ *
+ * `next` is where the emailed link lands once it has signed you in. `title`
+ * heads the card when the page around it doesn't already say what this is
+ * for — the join page uses it for "Join as a player".
+ */
+export function SignIn({ next = '/me', title, button = 'Email me a sign-in link' }: {
+  next?: string; title?: string; button?: string;
+}) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   // Read after mount: localStorage doesn't exist on the server, and a line that
   // appears only after hydration is better than a hydration mismatch.
@@ -19,39 +29,46 @@ export function SignIn({ next = '/me' }: { next?: string }) {
   }, []);
 
   async function send() {
-    setErr('');
+    if (!email.trim()) return setErr('Enter your email first.');
+    setErr(''); setBusy(true);
     try {
       const db = browserClient();
       const { error } = await db.auth.signInWithOtp({
-        email,
+        email: email.trim(),
         options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
       if (error) setErr(error.message); else setSent(true);
     } catch {
-      setErr('Supabase not configured yet — add your keys to .env.local');
+      setErr('Sign-in isn’t set up yet. Add the Supabase keys to .env.local.');
+    } finally {
+      setBusy(false);
     }
   }
 
   if (sent) return (
-    <p className="text-sm">
-      Check your email for the sign-in link.
-      {/* The link has to open in this browser to find the session — say so,
-          since a mail app's own browser is where it usually opens. */}
-      {waiting && ' Open it on this phone, in this browser, so what’s waiting can be saved.'}
-    </p>
+    <div className="card p-5" role="status">
+      <div className="h-card">Check your email</div>
+      <p className="mt-1.5 text-[14px] leading-relaxed text-on-surface-variant">
+        We sent a sign-in link to <b className="font-semibold text-on-surface">{email.trim()}</b>.
+        {/* The link has to open in this browser to find the session — say so,
+            since a mail app's own browser is where it usually opens. */}
+        {' '}Open it on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.
+      </p>
+      <button type="button" onClick={() => { setSent(false); setErr(''); }}
+              className="mt-4 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+        Use a different email
+      </button>
+    </div>
   );
 
   return (
-    <div className="card space-y-3 p-5">
+    <form className="card p-5" onSubmit={(e) => { e.preventDefault(); send(); }}>
+      {title && <div className="h-card mb-1">{title}</div>}
       {/* The reason most people are here: they just finished a session. */}
-      {waiting && (
-        <p className="text-[14px] font-medium text-on-surface">
-          {waiting}
-        </p>
-      )}
-      {/* The same .text-field the profile form uses. This was its own input
-          with a 16px radius, a low-contrast border and a grey fill — one of
-          three different text fields in the app. */}
+      {waiting && <p className="mb-1 text-[14px] font-medium leading-snug text-on-surface">{waiting}</p>}
+      <p className="mb-4 text-[13.5px] leading-snug text-on-surface-variant">
+        No password. We&rsquo;ll email you a link that signs you in.
+      </p>
       <label className="text-field">
         <input
           value={email} onChange={(e) => setEmail(e.target.value)} type="email"
@@ -62,8 +79,10 @@ export function SignIn({ next = '/me' }: { next?: string }) {
           autoCapitalize="none" autoCorrect="off" spellCheck={false}
         />
       </label>
-      <button onClick={send} className="btn-primary pressable w-full">Email me a sign-in link</button>
-      {err && <p className="text-xs text-red-600">{err}</p>}
-    </div>
+      <button type="submit" disabled={busy} className="btn-primary pressable mt-3 w-full">
+        {busy ? 'Sending…' : button}
+      </button>
+      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+    </form>
   );
 }

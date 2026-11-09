@@ -114,3 +114,14 @@ export function byAttention<T extends { progress: Progress; name: string }>(a: T
     || (b.progress.daysSince ?? 1e9) - (a.progress.daysSince ?? 1e9)
     || a.name.localeCompare(b.name);
 }
+
+/**
+ * The second line under a player's name: the week's count, or when they last
+ * trained — whichever the reason doesn't already say. "Quiet 13 days" needs
+ * nothing after it; "On track" needs the count.
+ */
+export function detailOf(p: Progress): string | null {
+  if (p.daysSince === null || p.daysSince >= 10) return null;
+  if (p.hasPlan) return `${p.done} of ${p.planned} this week`;
+  return p.reason.startsWith('Quiet') ? null : `last trained ${sinceLabel(p.daysSince)}`;
+}

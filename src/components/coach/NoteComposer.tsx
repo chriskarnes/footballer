@@ -2,10 +2,8 @@
 import { useState, useTransition } from 'react';
 import { Chip } from '@/components/Chip';
 import { sendNote } from '@/app/coach/actions';
-import type { Status } from '@/lib/progress';
-import { StatusDot } from './WeekDots';
 
-type P = { id: string; name: string; status: Status };
+type P = { id: string; name: string };
 
 const QUICK = [
   'Great work this week. Keep it going!',
@@ -43,23 +41,20 @@ export function NoteComposer({ players, initialTo, initialBody, kind, back }: {
       <div className="flex flex-wrap gap-2">
         <Chip on={everyone} onClick={() => setTo([])}>Everyone ({players.length})</Chip>
         {players.map((p) => (
-          <Chip key={p.id} on={to.includes(p.id)} onClick={() => toggle(p.id)}>
-            <StatusDot status={p.status} className="mr-0.5" />{p.name}
-          </Chip>
+          <Chip key={p.id} on={to.includes(p.id)} onClick={() => toggle(p.id)}>{p.name}</Chip>
         ))}
       </div>
 
       <p className="eyebrow mb-2.5 mt-6">Message</p>
       <label className="text-field">
         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={1000}
-                  aria-label="Message" placeholder="Write a note…"
-                  className="w-full resize-none bg-transparent py-3 leading-snug" />
+                  aria-label="Message" placeholder="Write a note…" />
       </label>
       {!body && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 card-flat divide-y divide-outline-variant overflow-hidden">
           {QUICK.map((q) => (
             <button key={q} type="button" onClick={() => setBody(q)}
-                    className="chip pressable text-left">{q}</button>
+                    className="pressable block w-full px-4 py-3 text-left text-[14px] text-on-surface">{q}</button>
           ))}
         </div>
       )}

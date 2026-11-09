@@ -5,11 +5,11 @@ import { rotateInvite } from '@/app/coach/actions';
 
 /**
  * An invite link with the ways a trainer actually sends one: the phone's
- * share sheet (straight into a text to a parent), or copy. "New link" is for
+ * share sheet (straight into a text to a parent), or copy. Replacing it is for
  * a link that's got around too far — the old one stops working.
  */
 export function InviteLink({ path, role, canRotate = true }: {
-  path: string; role: 'player' | 'trainer'; academyId?: string; canRotate?: boolean;
+  path: string; role: 'player' | 'trainer'; canRotate?: boolean;
 }) {
   const [current, setCurrent] = useState(path);
   const [origin, setOrigin] = useState('');
@@ -21,6 +21,8 @@ export function InviteLink({ path, role, canRotate = true }: {
   useEffect(() => { setOrigin(window.location.origin); setCanShare(typeof navigator.share === 'function'); }, []);
 
   const url = `${origin}${current}`;
+  // Shown without the scheme: shorter, and it's how people say an address.
+  const shown = url.replace(/^https?:\/\//, '') || current;
 
   async function copy() {
     try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
@@ -29,7 +31,7 @@ export function InviteLink({ path, role, canRotate = true }: {
 
   return (
     <div className="mt-4">
-      <div className="card-flat select-all break-all px-4 py-3 font-mono text-[12.5px] text-on-surface">{url || current}</div>
+      <div className="card-flat select-all break-all px-4 py-3 text-[14px] font-semibold text-on-surface">{shown}</div>
       <div className="mt-2.5 grid grid-cols-2 gap-2.5">
         {canShare
           ? <button type="button" className="btn-primary btn-sm pressable"
@@ -40,9 +42,9 @@ export function InviteLink({ path, role, canRotate = true }: {
         </button>
       </div>
       {canRotate && (
-        <button type="button" className="mt-3 text-[12.5px] font-semibold text-on-surface-variant underline underline-offset-4"
+        <button type="button" className="mt-4 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4"
                 onClick={() => setConfirm(true)}>
-          New link
+          Replace this link
         </button>
       )}
       {err && <p role="status" className="mt-2 text-[12.5px] font-semibold text-on-surface">{err}</p>}
