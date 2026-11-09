@@ -29,7 +29,7 @@ export default function TrainersPage() {
           are the ones who touch a ball on the other days. Set them the work, and see who&rsquo;s doing it.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/start" className="btn-lime">Get started &rarr;</Link>
+          <Link href="/start" className="btn-lime">Get started</Link>
           <a href="#pricing" className="btn-ghost pressable">See pricing</a>
         </div>
       </SiteHero>

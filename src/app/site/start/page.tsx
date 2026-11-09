@@ -17,7 +17,7 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
     <SiteHero>
       <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr]">
         <div>
-          <span className="marker">Get started</span>
+          <span className="marker">Get started as a trainer</span>
           <h1 className="site-wide mt-5 max-w-[12ch] text-[38px] uppercase leading-[.94] text-white sm:text-[54px]">
             Tell us how you <Lime>train.</Lime>
           </h1>

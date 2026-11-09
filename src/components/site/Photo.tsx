@@ -118,7 +118,7 @@ export function DarkCta({ title, children, href, cta }: {
            style={{ background: 'radial-gradient(70% 90% at 100% 0%, rgba(200,240,60,.18), transparent 60%)' }} />
       <h2 className="site-wide max-w-[16ch] text-[32px] uppercase leading-[.98] text-white sm:text-[46px]">{title}</h2>
       <p className="mt-4 max-w-[34rem] text-[16px] leading-relaxed text-site-mint">{children}</p>
-      <Link href={href} className="btn-lime mt-8">{cta} &rarr;</Link>
+      <Link href={href} className="btn-lime mt-8">{cta}</Link>
     </section>
   );
 }

@@ -68,7 +68,8 @@ function Door({ href, eyebrow, title, body, cta, dark }: { href: string; eyebrow
       <span className={`text-[11.5px] font-extrabold uppercase tracking-[.16em] ${dark ? 'text-site-lime' : 'text-site-ink/70'}`}>{eyebrow}</span>
       <span className="site-wide mt-3 text-[26px] uppercase leading-[1] sm:text-[30px]">{title}</span>
       <span className={`mt-3 max-w-[30ch] text-[15px] leading-relaxed ${dark ? 'text-site-mint' : 'text-site-ink/80'}`}>{body}</span>
-      <span className="mt-7 text-[14px] font-extrabold">{cta} <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span></span>
+      <span className={`mt-7 inline-flex min-h-[44px] items-center self-start rounded-full border px-5 text-[14px] font-bold transition-colors
+        ${dark ? 'border-white/45 text-white group-hover:bg-white/10' : 'border-site-ink/45 text-site-ink group-hover:bg-site-ink/[.06]'}`}>{cta}</span>
     </Link>
   );
 }

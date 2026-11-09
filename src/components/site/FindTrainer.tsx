@@ -45,7 +45,7 @@ export function FindTrainer() {
                       {[r.city, `${r.slug}.${ROOT_DOMAIN}`].filter(Boolean).join(' · ')}
                     </span>
                   </span>
-                  <span className="shrink-0 text-[13.5px] font-bold text-on-surface">Ask to join &rarr;</span>
+                  <span className="btn-ghost btn-sm shrink-0">Ask to join</span>
                 </a>
               </li>
             ))}

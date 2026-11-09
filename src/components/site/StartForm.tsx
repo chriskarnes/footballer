@@ -81,7 +81,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
 
       {state?.error && <p role="alert" className="text-[14px] font-semibold text-on-surface">{state.error}</p>}
 
-      <button type="submit" disabled={pending} className="btn-primary pressable w-full sm:w-auto">
+      <button type="submit" disabled={pending} className="btn-lime w-full sm:w-auto">
         {pending ? 'Sending…' : 'Send'}
       </button>
     </form>
