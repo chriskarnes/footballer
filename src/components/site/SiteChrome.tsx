@@ -24,7 +24,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 sm:px-8">{children}</main>
       {/* And closes dark. */}
       <footer className="relative isolate mt-24 overflow-hidden bg-site-ink text-[13px] text-site-mint">
-        <div className="mx-auto w-full max-w-5xl px-5 pb-6 pt-12 sm:px-8">
+        <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <span>At-home training, set by your trainer.</span>
             <span className="flex gap-5">
@@ -33,7 +33,6 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
               <Link href="/start" className="font-semibold text-white">Get started</Link>
             </span>
           </div>
-          <div aria-hidden className="ghost-word mt-10 text-[15vw] sm:text-[124px]">TRAIN.FUTBOL</div>
         </div>
       </footer>
     </div>

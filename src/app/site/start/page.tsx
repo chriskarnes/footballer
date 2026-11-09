@@ -14,7 +14,7 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
   const { slug } = await searchParams;
   const claim = slug && /^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$/.test(slug) ? slug : '';
   return (
-    <SiteHero ghost="KICK OFF">
+    <SiteHero>
       <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr]">
         <div>
           <span className="marker">Get started</span>

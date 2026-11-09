@@ -19,10 +19,7 @@ export default function TrainersPage() {
   return (
     <>
       <SiteHero photo={group} alt="A trainer laughing with a group of young players in training bibs" position="72% 30%"
-                ghost="TRAINERS" cards={[
-                  { kind: 'stat', big: '8/10', sub: 'Trained this week', at: { top: 380, left: '66%' } },
-                  { kind: 'done', title: 'Weave and shoot', sub: 'Liam · Saturday · done', at: { top: 20, right: -12 } },
-                ]}>
+                cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 3 of 5 this week', at: { top: 40, right: -12 } }]}>
         <span className="marker">For private trainers</span>
         <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
           Your players, training <Lime>between sessions.</Lime>
@@ -108,7 +105,7 @@ export default function TrainersPage() {
         </dl>
       </section>
 
-      <DarkCta ghost="GO" title="Ready when you are." href="/start" cta="Get started">
+      <DarkCta title="Ready when you are." href="/start" cta="Get started">
         Tell us how you train. We&rsquo;ll set up your page and your first sessions with you, then you send your players the link.
       </DarkCta>
     </>

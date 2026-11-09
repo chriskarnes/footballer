@@ -14,10 +14,7 @@ export default function SiteHome() {
   return (
     <>
       <SiteHero photo={strike} alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%"
-                ghost="BETWEEN" cards={[
-                  { kind: 'done', title: 'Touch and pass', sub: 'Tuesday · 15 min · done', at: { top: 40, right: -12 } },
-                  { kind: 'stat', big: '3/4', sub: 'This week', at: { top: 330, left: '57%' } },
-                ]}>
+                cards={[{ kind: 'done', title: 'Touch and pass', sub: 'Tuesday · 15 min · done', at: { top: 40, right: -12 } }]}>
         <span className="marker">At-home training</span>
         <h1 className="site-wide mt-5 max-w-[13ch] text-[42px] uppercase leading-[.94] text-white sm:text-[68px]">
           The training <Lime>between</Lime> training.
@@ -56,7 +53,7 @@ export default function SiteHome() {
         </ol>
       </section>
 
-      <DarkCta ghost="TUESDAY" title="Set next week tonight." href="/start" cta="Get started">
+      <DarkCta title="Set next week tonight." href="/start" cta="Get started">
         Tell us how you train. We&rsquo;ll set up your page and your first sessions with you.
         Already training with someone? <Link href="/players" className="font-semibold text-white underline underline-offset-4">Find your trainer</Link>.
       </DarkCta>
@@ -67,7 +64,7 @@ export default function SiteHome() {
 function Door({ href, eyebrow, title, body, cta, dark }: { href: string; eyebrow: string; title: string; body: string; cta: string; dark?: boolean }) {
   return (
     <Link href={href} className={`pressable group relative flex flex-col overflow-hidden rounded-[26px] p-7 sm:p-9
-      shadow-[0_30px_60px_-30px_rgba(7,29,23,.55)] ${dark ? 'bg-site-pitch text-white ring-1 ring-white/10' : 'bg-site-lime text-site-ink'}`}>
+      shadow-[0_8px_24px_-16px_rgba(7,29,23,.3)] ${dark ? 'bg-site-pitch text-white ring-1 ring-white/10' : 'bg-site-lime text-site-ink'}`}>
       <span className={`text-[11.5px] font-extrabold uppercase tracking-[.16em] ${dark ? 'text-site-lime' : 'text-site-ink/70'}`}>{eyebrow}</span>
       <span className="site-wide mt-3 text-[26px] uppercase leading-[1] sm:text-[30px]">{title}</span>
       <span className={`mt-3 max-w-[30ch] text-[15px] leading-relaxed ${dark ? 'text-site-mint' : 'text-site-ink/80'}`}>{body}</span>

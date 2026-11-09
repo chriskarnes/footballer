@@ -17,10 +17,7 @@ export default function PlayersPage() {
   return (
     <>
       <SiteHero photo={celebrate} alt="Young players in navy kits celebrating a goal together" position="62% 35%"
-                ghost="PLAYERS" cards={[
-                  { kind: 'done', title: 'Juggling ladder', sub: 'Your trainer saw it', at: { top: 20, right: -12 } },
-                  { kind: 'stat', big: '15', sub: 'Minutes a day', at: { top: 340, left: '62%' } },
-                ]}>
+                cards={[{ kind: 'done', title: 'Both feet', sub: 'Wed · 24 min · U12 Tuesday', at: { top: 40, right: -12 } }]}>
         <span className="marker">For players and parents</span>
         <h1 className="site-wide mt-5 max-w-[12ch] text-[40px] uppercase leading-[.94] text-white sm:text-[64px]">
           Find your <Lime>trainer.</Lime>
