@@ -25,7 +25,7 @@ export function TabBar({ academyId }: { academyId: string | null }) {
   const role = useAcademyRole(academyId, path.startsWith('/coach'));
   const tabs = role === 'owner' || role === 'trainer' ? [COACH, ...TABS] : TABS;
   // An invite is one decision; the app's tabs are for after it.
-  if (path.startsWith('/join')) return null;
+  if (path.startsWith('/join') || path === '/request') return null;
   return (
     // safe-b keeps the bar clear of the iPhone home indicator; without it the pill
     // sits underneath the gesture area and taps land on the wrong thing.

@@ -3,7 +3,9 @@ import { Brand } from '@/components/Brand';
 import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { InviteLink } from '@/components/coach/InviteLink';
+import { JoinRequests, type JoinRequest } from '@/components/coach/JoinRequests';
 import { loadPlayers } from '@/lib/coach-data';
+import { ago } from '@/lib/notes';
 import { byAttention, detailOf } from '@/lib/progress';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
@@ -21,9 +23,12 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const { db, academy } = gate.viewer;
   const { sent } = await searchParams;
 
-  const [{ players, error }, { data: invite }] = await Promise.all([
+  const [{ players, error }, { data: invite }, { data: asking }] = await Promise.all([
     loadPlayers(db, academy),
     db.from('academy_invites').select('code').eq('academy_id', academy.id).eq('role', 'player').maybeSingle(),
+    // Before 0006 runs the table isn't there; that's an error, read as none.
+    db.from('join_requests').select('user_id, name, message, created_at').eq('academy_id', academy.id)
+      .order('created_at', { ascending: true }),
   ]);
   players.sort(byAttention);
 
@@ -51,6 +56,8 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           Note sent. Players see it next time they open the app.
         </p>
       )}
+
+      {!!asking?.length && <JoinRequests requests={(asking as Omit<JoinRequest, 'when'>[]).map((r) => ({ ...r, when: ago(r.created_at) }))} />}
 
       {!!players.length && (
         <>

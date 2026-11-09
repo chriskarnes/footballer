@@ -12,6 +12,9 @@ import { PendingSaves } from '@/components/PendingSaves';
 import { getAcademy } from '@/lib/branding-server';
 import { ROOT_DOMAIN } from '@/lib/tenant';
 import { brandCss } from '@/lib/brand-colors';
+import { headers } from 'next/headers';
+import { SiteChrome } from '@/components/site/SiteChrome';
+import { Unclaimed } from '@/components/site/Unclaimed';
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = (await getAcademy()).academy?.branding.name ?? 'Train.futbol';
@@ -67,22 +70,29 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // The marketing pages (see proxy.ts): their own header and footer, wider,
+  // and none of the app's tab bar or install prompts.
+  if ((await headers()).get('x-site')) {
+    return (
+      <html lang="en">
+        <body className="min-h-dvh antialiased"><SiteChrome>{children}</SiteChrome></body>
+      </html>
+    );
+  }
   const { slug, academy } = await getAcademy();
   const brand = academy?.branding;
   // A subdomain nobody has claimed: say so, rather than serve an unbranded
   // app at an address that looks like someone's.
   if (slug && academy === null) {
+    const h = await headers();
+    const host = (h.get('x-forwarded-host') ?? h.get('host') ?? '').toLowerCase();
+    const local = /(^|\.)localhost(:\d+)?$/.test(host);
+    const port = host.match(/:(\d+)$/)?.[1];
+    const root = local ? `http://localhost${port ? `:${port}` : ''}` : `https://${ROOT_DOMAIN}`;
     return (
       <html lang="en">
         <body className="min-h-dvh antialiased">
-          <main className="safe-t safe-x mx-auto w-full max-w-lg px-5 pt-16">
-            <p className="eyebrow mb-3">{slug}.{ROOT_DOMAIN}</p>
-            <h1 className="h-page">No academy here yet</h1>
-            <p className="mt-3 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
-              Check the address your trainer sent you. If you&rsquo;re a trainer, this name is free.
-            </p>
-            <a href={`https://${ROOT_DOMAIN}`} className="btn-ghost pressable mt-6">Go to {ROOT_DOMAIN}</a>
-          </main>
+          <Unclaimed slug={slug} root={root} rootLabel={local ? 'localhost' : ROOT_DOMAIN} />
         </body>
       </html>
     );

@@ -52,3 +52,13 @@ export async function removeMember(userId: string) {
   revalidatePath('/coach', 'layout');
   return { ok: true as const };
 }
+
+/** Let a player in who asked to join, or turn them away. */
+export async function answerJoinRequest(userId: string, approve: boolean) {
+  const v = await staff();
+  if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
+  const { error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve });
+  if (error) return { ok: false as const, error: error.message };
+  revalidatePath('/coach', 'layout');
+  return { ok: true as const };
+}
