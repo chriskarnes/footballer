@@ -26,6 +26,9 @@ const config: Config = {
         plain: ['var(--md-ref-typeface-plain)'],
       },
       colors: {
+        /* The marketing site's fixed palette: see the MARKETING SITE block in globals.css. */
+        site: { ink: 'var(--site-ink)', pitch: 'var(--site-pitch)', moss: 'var(--site-moss)',
+                mint: 'var(--site-mint)', paper: 'var(--site-paper)', lime: 'var(--site-lime)' },
         surface:                     'var(--md-sys-color-surface)',
         primary:                     'var(--md-sys-color-primary)',
         'on-primary':                'var(--md-sys-color-on-primary)',

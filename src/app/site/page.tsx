@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
-import { PhotoBand, PhotoHero } from '@/components/site/Photo';
+import { DarkCta, Lime, PhotoBand, SiteHero } from '@/components/site/Photo';
 import strike from '@/assets/site/strike.jpg';
 import teams from '@/assets/site/teams.jpg';
 
@@ -13,25 +13,31 @@ export const metadata = {
 export default function SiteHome() {
   return (
     <>
-      <PhotoHero photo={strike} alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%">
-        <h1 className="max-w-[16ch] font-brand text-[44px] font-extrabold leading-[1.02] tracking-tightest text-on-surface sm:text-[64px]">
-          The training between training.
+      <SiteHero photo={strike} alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%"
+                ghost="BETWEEN" cards={[
+                  { kind: 'done', title: 'Touch and pass', sub: 'Tuesday · 15 min · done', at: { top: 40, right: -12 } },
+                  { kind: 'stat', big: '3/4', sub: 'This week', at: { top: 330, left: '57%' } },
+                ]}>
+        <span className="marker">At-home training</span>
+        <h1 className="site-wide mt-5 max-w-[13ch] text-[42px] uppercase leading-[.94] text-white sm:text-[68px]">
+          The training <Lime>between</Lime> training.
         </h1>
-        <p className="mt-5 max-w-[34rem] text-[17px] leading-relaxed text-on-surface-variant sm:text-[19px]">
+        <p className="mt-6 max-w-[30rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
           You set the week. Your players do the work at home, with a ball and a bit of wall.
           You see who got it done.
         </p>
-      </PhotoHero>
+      </SiteHero>
 
-      <section className="mt-12 grid gap-4 sm:grid-cols-2">
-        <Door href="/trainers" eyebrow="I'm a trainer" title="Run your training here"
+      {/* The two doors sit across the fold, half in the dark and half out. */}
+      <section className="relative -mt-24 grid gap-4 sm:-mt-28 sm:grid-cols-2">
+        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Run your training here"
               body="Set at-home work for every player you train, see who did it, and nudge the ones who didn't." cta="How it works" />
         <Door href="/players" eyebrow="I'm a player or parent" title="Find your trainer"
               body="Get the sessions your trainer has set for you, and tick them off as you go." cta="Find my trainer" />
       </section>
 
       <PhotoBand photo={teams} alt="Young players from two teams around a goal during a match" position="45% 55%"
-                 eyebrow="For trainers who work across clubs" title="Different teams on Saturday. Your homework on Tuesday.">
+                 eyebrow="Trainers who work across clubs" title="Different teams on Saturday. Your homework on Tuesday.">
         Your players wear different shirts at the weekend. Between sessions, they&rsquo;re all working on what you set them.
       </PhotoBand>
 
@@ -49,17 +55,23 @@ export default function SiteHome() {
           </Step>
         </ol>
       </section>
+
+      <DarkCta ghost="TUESDAY" title="Set next week tonight." href="/start" cta="Get started">
+        Tell us how you train. We&rsquo;ll set up your page and your first sessions with you.
+        Already training with someone? <Link href="/players" className="font-semibold text-white underline underline-offset-4">Find your trainer</Link>.
+      </DarkCta>
     </>
   );
 }
 
-function Door({ href, eyebrow, title, body, cta }: { href: string; eyebrow: string; title: string; body: string; cta: string }) {
+function Door({ href, eyebrow, title, body, cta, dark }: { href: string; eyebrow: string; title: string; body: string; cta: string; dark?: boolean }) {
   return (
-    <Link href={href} className="card pressable flex flex-col p-6 sm:p-8">
-      <span className="eyebrow">{eyebrow}</span>
-      <span className="mt-3 font-brand text-[26px] font-extrabold leading-tight tracking-tighter text-on-surface">{title}</span>
-      <span className="mt-2 max-w-[30ch] text-[15px] leading-relaxed text-on-surface-variant">{body}</span>
-      <span className="mt-6 text-[14px] font-bold text-on-surface">{cta} &rarr;</span>
+    <Link href={href} className={`pressable group relative flex flex-col overflow-hidden rounded-[26px] p-7 sm:p-9
+      shadow-[0_30px_60px_-30px_rgba(7,29,23,.55)] ${dark ? 'bg-site-pitch text-white ring-1 ring-white/10' : 'bg-site-lime text-site-ink'}`}>
+      <span className={`text-[11.5px] font-extrabold uppercase tracking-[.16em] ${dark ? 'text-site-lime' : 'text-site-ink/70'}`}>{eyebrow}</span>
+      <span className="site-wide mt-3 text-[26px] uppercase leading-[1] sm:text-[30px]">{title}</span>
+      <span className={`mt-3 max-w-[30ch] text-[15px] leading-relaxed ${dark ? 'text-site-mint' : 'text-site-ink/80'}`}>{body}</span>
+      <span className="mt-7 text-[14px] font-extrabold">{cta} <span className="inline-block transition-transform group-hover:translate-x-1">&rarr;</span></span>
     </Link>
   );
 }

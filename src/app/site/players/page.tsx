@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { FindTrainer } from '@/components/site/FindTrainer';
-import { PhotoHero } from '@/components/site/Photo';
+import { Lime, SiteHero } from '@/components/site/Photo';
 import celebrate from '@/assets/site/celebrate.jpg';
 
 export const metadata = {
@@ -16,12 +16,16 @@ export const metadata = {
 export default function PlayersPage() {
   return (
     <>
-      <PhotoHero photo={celebrate} alt="Young players in navy kits celebrating a goal together" position="62% 35%">
-        <p className="eyebrow mb-4">For players and parents</p>
-        <h1 className="max-w-[16ch] font-brand text-[40px] font-extrabold leading-[1.04] tracking-tightest text-on-surface sm:text-[56px]">
-          Find your trainer.
+      <SiteHero photo={celebrate} alt="Young players in navy kits celebrating a goal together" position="62% 35%"
+                ghost="PLAYERS" cards={[
+                  { kind: 'done', title: 'Juggling ladder', sub: 'Your trainer saw it', at: { top: 20, right: -12 } },
+                  { kind: 'stat', big: '15', sub: 'Minutes a day', at: { top: 340, left: '62%' } },
+                ]}>
+        <span className="marker">For players and parents</span>
+        <h1 className="site-wide mt-5 max-w-[12ch] text-[40px] uppercase leading-[.94] text-white sm:text-[64px]">
+          Find your <Lime>trainer.</Lime>
         </h1>
-        <p className="mt-5 max-w-[34rem] text-[17px] leading-relaxed text-on-surface-variant sm:text-[19px]">
+        <p className="mt-6 max-w-[32rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
           Every trainer here has their own page. Find yours, ask to join, and your sessions appear as soon as they let you in.
         </p>
         <div className="mt-8 max-w-[34rem]">
@@ -30,7 +34,7 @@ export default function PlayersPage() {
             <b className="text-on-surface">Got a link from your trainer?</b> Just open it. It takes you straight in, no asking needed.
           </p>
         </div>
-      </PhotoHero>
+      </SiteHero>
 
       <section className="mt-24">
         <SectionHead eyebrow="What you get" title="A plan for the days you're not at practice." />

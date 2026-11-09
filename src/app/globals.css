@@ -1142,3 +1142,80 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
             mask-composite: intersect;
   }
 }
+
+/* ==========================================================================
+   MARKETING SITE — the one place the product gets to be loud. Fixed colours
+   (the site is always light at the root, see layout.tsx): deep pitch green
+   at the top of every page, fading into light paper, closed by a dark
+   footer. Lime is the accent; mint is how photos read on the dark.
+   ========================================================================== */
+:root {
+  --site-ink:   #071D17;
+  --site-pitch: #0D3026;
+  --site-moss:  #3D6B58;
+  --site-mint:  #CFE8D9;
+  --site-paper: #F2F7F3;
+  --site-lime:  #C8F03C;
+}
+
+/* The dark top of a site page. The app's own components (fields, buttons,
+   cards) work here unchanged: these re-point their tokens at the green. */
+.site-dark { color-scheme: dark;
+  --md-sys-color-surface:                   var(--site-ink);
+  --md-sys-color-on-surface:                #FFFFFF;
+  --md-sys-color-on-surface-variant:        #B9D3C5;
+  --md-sys-color-surface-container-lowest:  rgba(255,255,255,.06);
+  --md-sys-color-surface-container-low:     rgba(255,255,255,.08);
+  --md-sys-color-surface-container:         rgba(255,255,255,.10);
+  --md-sys-color-surface-container-high:    rgba(255,255,255,.14);
+  --md-sys-color-outline:                   rgba(207,232,217,.42);
+  --md-sys-color-outline-variant:           rgba(207,232,217,.18);
+  --md-sys-color-inverse-surface:           var(--site-lime);
+  --md-sys-color-inverse-on-surface:        var(--site-ink);
+  --md-sys-color-primary:                   var(--site-lime);
+  --md-sys-color-on-primary:                var(--site-ink);
+  --md-sys-elevation-level1:                none;
+  color: #FFFFFF;
+}
+.site-dark .card, .site-dark .card-flat { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(207,232,217,.16); }
+.site-dark .text-field input, .site-dark .text-field select, .site-dark .text-field textarea { color: #FFFFFF; }
+.site-dark .text-field input::placeholder, .site-dark .text-field textarea::placeholder { color: rgba(207,232,217,.55); }
+.site-dark .text-field select option { color: #111; }
+
+/* Duotone: the photo in greys screened onto the shadow colour (black lands
+   on dark green), then the highlight colour multiplied over it (white lands
+   on mint or lime). Two inks, like a printed poster. Built dark-first, so
+   while the photo loads the box is green, not a flat block of mint. */
+/* Positioned by its user (always absolute), so no `position` here: it would win over Tailwind's. */
+.duotone { overflow: hidden; background: var(--duo-lo, var(--site-ink)); }
+.duotone img { filter: grayscale(1) contrast(1.2) brightness(1.02); mix-blend-mode: screen; }
+.duotone::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: var(--duo-hi, var(--site-mint)); mix-blend-mode: multiply; }
+.duotone-lime { --duo-hi: var(--site-lime); --duo-lo: #0B2A21; }
+
+/* Film grain, so a photo reads as print rather than a snapshot. */
+.grain::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: .22;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* Wide display type: Roboto Flex at its widest. */
+.site-wide { font-family: var(--md-ref-typeface-brand); font-stretch: 151%; font-weight: 900; letter-spacing: -.02em; }
+
+/* The giant word behind a hero: light on the green, gone by the paper. */
+.ghost-word { font-family: var(--md-ref-typeface-brand); font-stretch: 151%; font-weight: 900;
+  line-height: .78; letter-spacing: -.045em; white-space: nowrap; user-select: none;
+  background: linear-gradient(to bottom, rgba(207,232,217,.30) 0%, rgba(207,232,217,.10) 55%, rgba(61,107,88,.06) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* A strip of lime tape behind a label. */
+.marker { display: inline-block; padding: 5px 12px 4px; background: var(--site-lime); color: var(--site-ink);
+  font-family: var(--md-ref-typeface-brand); font-stretch: 140%; font-weight: 800; font-size: 11.5px;
+  letter-spacing: .14em; text-transform: uppercase; transform: rotate(-1.5deg);
+  clip-path: polygon(1% 8%, 99% 0, 100% 88%, 0 100%); }
+
+.btn-lime { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px;
+  padding: 0 26px; border-radius: 999px; background: var(--site-lime); color: var(--site-ink);
+  font-weight: 800; font-size: 15px; transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow: 0 0 0 0 rgba(200,240,60,.0); }
+.btn-lime:hover { transform: translateY(-1px); box-shadow: 0 10px 30px -8px rgba(200,240,60,.55); }

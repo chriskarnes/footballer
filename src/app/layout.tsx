@@ -74,8 +74,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // and none of the app's tab bar or install prompts.
   if ((await headers()).get('x-site')) {
     return (
-      <html lang="en">
-        <body className="min-h-dvh antialiased"><SiteChrome>{children}</SiteChrome></body>
+      // Always the light scheme at the root: the site sets its own dark parts
+      // (.site-dark), so a dark-mode phone sees the same green-to-paper page.
+      <html lang="en" data-theme="light">
+        <body className="min-h-dvh bg-site-paper antialiased"><SiteChrome>{children}</SiteChrome></body>
       </html>
     );
   }

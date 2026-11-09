@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { PriceCalc } from '@/components/site/PriceCalc';
-import { PhotoHero } from '@/components/site/Photo';
+import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
 import group from '@/assets/site/group.jpg';
 
 export const metadata = {
@@ -18,20 +18,24 @@ export const metadata = {
 export default function TrainersPage() {
   return (
     <>
-      <PhotoHero photo={group} alt="A trainer laughing with a group of young players in training bibs" position="72% 30%">
-        <p className="eyebrow mb-4">For private trainers</p>
-        <h1 className="max-w-[18ch] font-brand text-[40px] font-extrabold leading-[1.04] tracking-tightest text-on-surface sm:text-[56px]">
-          Your players, training between sessions.
+      <SiteHero photo={group} alt="A trainer laughing with a group of young players in training bibs" position="72% 30%"
+                ghost="TRAINERS" cards={[
+                  { kind: 'stat', big: '8/10', sub: 'Trained this week', at: { top: 380, left: '66%' } },
+                  { kind: 'done', title: 'Weave and shoot', sub: 'Liam · Saturday · done', at: { top: 20, right: -12 } },
+                ]}>
+        <span className="marker">For private trainers</span>
+        <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
+          Your players, training <Lime>between sessions.</Lime>
         </h1>
-        <p className="mt-5 max-w-[36rem] text-[17px] leading-relaxed text-on-surface-variant sm:text-[19px]">
+        <p className="mt-6 max-w-[32rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
           You see them once or twice a week, and they play for different teams the rest of it. The players who get better
           are the ones who touch a ball on the other days. Set them the work, and see who&rsquo;s doing it.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/start" className="btn-primary pressable">Get started</Link>
+          <Link href="/start" className="btn-lime">Get started &rarr;</Link>
           <a href="#pricing" className="btn-ghost pressable">See pricing</a>
         </div>
-      </PhotoHero>
+      </SiteHero>
 
       <section className="mt-24">
         <SectionHead eyebrow="How it fits together" title="Your training, on their phones." />
@@ -104,13 +108,9 @@ export default function TrainersPage() {
         </dl>
       </section>
 
-      <section className="mt-24 card p-8 sm:p-10">
-        <h2 className="font-brand text-[28px] font-extrabold leading-tight tracking-tighter text-on-surface sm:text-[34px]">Ready when you are.</h2>
-        <p className="mt-3 max-w-[34rem] text-[16px] leading-relaxed text-on-surface-variant">
-          Tell us how you train. We&rsquo;ll set up your page and your first sessions with you, then you send your players the link.
-        </p>
-        <Link href="/start" className="btn-primary pressable mt-6">Get started</Link>
-      </section>
+      <DarkCta ghost="GO" title="Ready when you are." href="/start" cta="Get started">
+        Tell us how you train. We&rsquo;ll set up your page and your first sessions with you, then you send your players the link.
+      </DarkCta>
     </>
   );
 }

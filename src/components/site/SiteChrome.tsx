@@ -8,25 +8,32 @@ import Link from 'next/link';
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   return (
     <div className="safe-x flex min-h-dvh flex-col overflow-x-clip">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
-        <Link href="/" className="font-brand text-[20px] tracking-tighter text-on-surface">
-          <span className="font-extrabold">Train</span><span className="font-medium text-on-surface-variant">.futbol</span>
-        </Link>
-        <nav className="flex items-center gap-5 text-[14px] font-semibold text-on-surface">
-          <Link href="/trainers" className="hidden sm:inline">Trainers</Link>
-          <Link href="/players" className="hidden sm:inline">Players</Link>
-          <Link href="/start" className="btn-ghost btn-sm pressable">Get started</Link>
-        </nav>
-      </header>
+      {/* On the green: every page opens dark (see SiteHero). */}
+      <div className="site-dark bg-site-ink">
+        <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
+          <Link href="/" className="font-brand text-[20px] tracking-tighter text-white">
+            <span className="font-extrabold">Train</span><span className="font-medium text-site-lime">.futbol</span>
+          </Link>
+          <nav className="flex items-center gap-5 text-[14px] font-semibold text-white/85">
+            <Link href="/trainers" className="hidden hover:text-white sm:inline">Trainers</Link>
+            <Link href="/players" className="hidden hover:text-white sm:inline">Players</Link>
+            <Link href="/start" className="rounded-full bg-site-lime px-4 py-2 text-[13.5px] font-extrabold text-site-ink">Get started</Link>
+          </nav>
+        </header>
+      </div>
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 sm:px-8">{children}</main>
-      <footer className="mx-auto mt-24 w-full max-w-5xl border-t border-outline-variant px-5 py-8 text-[13px] text-on-surface-variant sm:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <span>Train.futbol: at-home training, set by your trainer.</span>
-          <span className="flex gap-5">
-            <Link href="/trainers" className="font-semibold text-on-surface">Trainers</Link>
-            <Link href="/players" className="font-semibold text-on-surface">Players</Link>
-            <Link href="/start" className="font-semibold text-on-surface">Get started</Link>
-          </span>
+      {/* And closes dark. */}
+      <footer className="relative isolate mt-24 overflow-hidden bg-site-ink text-[13px] text-site-mint">
+        <div className="mx-auto w-full max-w-5xl px-5 pb-6 pt-12 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <span>At-home training, set by your trainer.</span>
+            <span className="flex gap-5">
+              <Link href="/trainers" className="font-semibold text-white">Trainers</Link>
+              <Link href="/players" className="font-semibold text-white">Players</Link>
+              <Link href="/start" className="font-semibold text-white">Get started</Link>
+            </span>
+          </div>
+          <div aria-hidden className="ghost-word mt-10 text-[15vw] sm:text-[124px]">TRAIN.FUTBOL</div>
         </div>
       </footer>
     </div>
@@ -37,8 +44,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 export function SectionHead({ eyebrow, title, children }: { eyebrow: string; title: string; children?: React.ReactNode }) {
   return (
     <div className="max-w-[40rem]">
-      <p className="eyebrow mb-3">{eyebrow}</p>
-      <h2 className="font-brand text-[28px] font-extrabold leading-[1.1] tracking-tighter text-on-surface sm:text-[34px]">{title}</h2>
+      <span className="marker mb-4">{eyebrow}</span>
+      <h2 className="font-brand text-[30px] font-extrabold leading-[1.06] tracking-tighter text-site-ink sm:text-[38px]">{title}</h2>
       {children && <p className="mt-3 text-[16px] leading-relaxed text-on-surface-variant">{children}</p>}
     </div>
   );
@@ -47,10 +54,11 @@ export function SectionHead({ eyebrow, title, children }: { eyebrow: string; tit
 /** A numbered step in a three-across row. */
 export function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
-    <li className="card-flat p-6">
-      <span className="font-brand text-[15px] font-extrabold text-on-surface-variant">{n}</span>
-      <h3 className="h-card mt-2 text-on-surface">{title}</h3>
-      <p className="mt-2 text-[14.5px] leading-relaxed text-on-surface-variant">{children}</p>
+    <li className="card-flat relative overflow-hidden p-6">
+      <span aria-hidden className="site-wide pointer-events-none absolute right-4 top-3 text-[64px] leading-none text-site-mint">{n}</span>
+      <span className="relative font-brand text-[13px] font-extrabold uppercase tracking-[.14em] text-site-moss">Step {n}</span>
+      <h3 className="h-card relative mt-2 text-on-surface">{title}</h3>
+      <p className="relative mt-2 text-[14.5px] leading-relaxed text-on-surface-variant">{children}</p>
     </li>
   );
 }
