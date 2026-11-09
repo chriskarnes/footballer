@@ -12,6 +12,8 @@ export type MyWeek = {
   today: number;
   /** A program description, when one program is the week. */
   about: string | null;
+  /** Their soccer days, or null if they haven't said. */
+  schedule: { club: number[]; game: number | null } | null;
 };
 
 /**
@@ -38,5 +40,9 @@ export const getMyWeek = cache(async (): Promise<MyWeek | null> => {
     groups: mine.map((g) => ({ name: g.name, when: meetingLabel(g) })),
     today: (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7,
     about,
+    schedule: (() => {
+      const s = c.schedules.find((x) => x.user_id === v.user!.id);
+      return s ? { club: s.club_days, game: s.game_day } : null;
+    })(),
   };
 });

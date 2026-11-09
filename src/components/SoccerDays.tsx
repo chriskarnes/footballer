@@ -1,0 +1,97 @@
+'use client';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { saveSoccerDays } from '@/app/schedule-actions';
+import { soccerLabel } from '@/lib/soccer-days';
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+type Day = 'free' | 'club' | 'game';
+
+/**
+ * "Which days do you already have soccer?" Seven buttons; a tap goes free →
+ * club → game → free. One game day at most: picking a new one frees the old.
+ * The trainer's sessions then go on the free days.
+ *
+ * `userId` saves for one of a trainer's players instead of the viewer.
+ */
+export function SoccerDays({ club = [], game = null, userId, onDone, cta = 'Save' }: {
+  club?: number[]; game?: number | null; userId?: string; onDone?: () => void; cta?: string;
+}) {
+  const [days, setDays] = useState<Day[]>(DAYS.map((_, i) => (i === game ? 'game' : club.includes(i) ? 'club' : 'free')));
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const router = useRouter();
+
+  const tap = (i: number) => setDays((ds) => ds.map((d, j) => {
+    if (j !== i) return ds[i] === 'club' && d === 'game' ? 'free' : d;
+    return d === 'free' ? 'club' : d === 'club' ? 'game' : 'free';
+  }));
+
+  const save = () => start(async () => {
+    setError(null);
+    const r = await saveSoccerDays({
+      club: days.flatMap((d, i) => (d === 'club' ? [i] : [])),
+      game: days.indexOf('game') >= 0 ? days.indexOf('game') : null,
+      userId,
+    });
+    if (!r.ok) { setError(r.error); return; }
+    router.refresh();
+    onDone?.();
+  });
+
+  return (
+    <div>
+      <div className="grid grid-cols-7 gap-1.5" role="group" aria-label="Your soccer days">
+        {DAYS.map((label, i) => {
+          const d = days[i];
+          return (
+            <button key={label} type="button" onClick={() => tap(i)} aria-pressed={d !== 'free'}
+                    aria-label={`${label}: ${d === 'free' ? 'free' : d === 'club' ? 'club training' : 'game'}`}
+                    className={`pressable flex min-h-[56px] flex-col items-center justify-center rounded-xl border text-[13px] font-bold transition-colors
+                      ${d === 'free' ? 'border-outline text-on-surface'
+                        : d === 'club' ? 'border-on-surface bg-on-surface text-surface'
+                        : 'border-on-surface bg-surface text-on-surface ring-2 ring-inset ring-on-surface'}`}>
+              {label}
+              <span className={`mt-0.5 text-[10.5px] font-semibold ${d === 'free' ? 'text-on-surface-variant' : ''}`}>
+                {d === 'free' ? '·' : d === 'club' ? 'Club' : 'Game'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-[12.5px] text-on-surface-variant">Tap once for club training, twice for a game.</p>
+      {error && <p role="alert" className="mt-2 text-[13px] font-semibold text-on-surface">{error}</p>}
+      <button type="button" onClick={save} disabled={pending} className="btn-primary btn-sm pressable mt-4">
+        {pending ? 'Saving…' : cta}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Their soccer days in a line, with Change to open the picker. With nothing
+ * set, the picker is open, with a line on why it's worth a tap.
+ */
+export function SoccerDaysPanel({ club, game, set }: { club: number[]; game: number | null; set: boolean }) {
+  const [open, setOpen] = useState(!set);
+  const label = soccerLabel(club, game);
+  if (!open) {
+    return (
+      <p className="flex items-center justify-between gap-3 pl-1 text-[13px] text-on-surface-variant">
+        <span><b className="font-semibold text-on-surface">Your soccer</b> · {label ?? 'No club days'}</span>
+        <button type="button" onClick={() => setOpen(true)} className="shrink-0 font-semibold text-on-surface underline underline-offset-4">Change</button>
+      </p>
+    );
+  }
+  return (
+    <div className="card p-5">
+      <div className="h-card">Which days do you already have soccer?</div>
+      <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+        Club training and games. Your trainer&rsquo;s sessions go on the other days.
+      </p>
+      <div className="mt-4">
+        <SoccerDays club={club} game={game} onDone={() => setOpen(false)} cta={set ? 'Save' : 'Fit my week'} />
+      </div>
+    </div>
+  );
+}

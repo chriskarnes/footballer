@@ -8,6 +8,8 @@ import { loadPlayers } from '@/lib/coach-data';
 import { localDate, mondayOf, sinceLabel } from '@/lib/progress';
 import { loadContent } from '@/lib/academy-data';
 import { PlayerTraining } from '@/components/coach/PlayerTraining';
+import { SoccerDays } from '@/components/SoccerDays';
+import { soccerLabel } from '@/lib/soccer-days';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
@@ -38,6 +40,7 @@ export default async function PlayerPage({ params, searchParams }: {
   const p = players[0];
   if (!p) notFound();
   const pr = p.progress;
+  const soccer = content.schedules.find((x) => x.user_id === p.user_id);
   const tz = academy.timeZone;
   const max = Math.max(1, ...pr.weeks.map((w) => Math.max(w.done, w.planned)));
   const sentNotes = ((notes ?? []) as unknown as { seen_at: string | null; notes: { id: string; body: string; kind: string; author_name: string; created_at: string } }[])
@@ -93,6 +96,17 @@ export default async function PlayerPage({ params, searchParams }: {
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
+      </section>
+
+      <section className="card mt-3 p-5">
+        <div className="h-card">Their soccer</div>
+        <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
+          {soccer ? soccerLabel(soccer.club_days, soccer.game_day) ?? 'No club days.' : `${p.first} hasn’t said yet.`} Sessions go on the other days.
+          Set it here if a parent tells you at practice.
+        </p>
+        <div className="mt-4">
+          <SoccerDays club={soccer?.club_days ?? []} game={soccer?.game_day ?? null} userId={p.user_id} />
+        </div>
       </section>
 
       <section className="card mt-3 p-5">

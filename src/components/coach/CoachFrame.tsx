@@ -14,6 +14,8 @@ import { haptic } from '@/lib/haptics';
 const PLACES = [
   { href: '/coach',         label: 'Players',  match: ['/coach', '/coach/players', '/coach/send'],
     d: 'M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
+  { href: '/coach/week',    label: 'Week',     match: ['/coach/week'],
+    d: 'M4 5h16v15H4zM16 3v4M8 3v4M4 10h16M9 10v10M14 10v10' },
   { href: '/coach/groups',  label: 'Groups',   match: ['/coach/groups'],
     d: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0' },
   { href: '/coach/content', label: 'Programs', match: ['/coach/content', '/coach/programs'],
@@ -25,7 +27,7 @@ const PLACES = [
 ] as const;
 
 // Pages that use the width: tables and two-column views.
-const WIDE = [/^\/coach$/, /^\/coach\/groups$/, /^\/coach\/content$/, /^\/coach\/drills$/, /^\/coach\/players\/[^/]+$/];
+const WIDE = [/^\/coach$/, /^\/coach\/week$/, /^\/coach\/groups$/, /^\/coach\/content$/, /^\/coach\/drills$/, /^\/coach\/players\/[^/]+$/];
 
 function isOn(path: string, match: readonly string[]) {
   return match.some((m) => m === '/coach' ? path === '/coach' : path === m || path.startsWith(`${m}/`));

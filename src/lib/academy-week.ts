@@ -12,11 +12,19 @@ import { addDays, localDate, mondayOf, weekdayOf } from './progress';
 
 export type ProgramRow = { id: string; name: string; weeks: number };
 export type SessionRow = { id: string; program_id: string; week: number; position: number; name: string; drill_ids: string[] };
-export type DrillRow = { id: string; name: string; amount: string | null; minutes: number; focus: string | null; video_url: string | null; how: string | null };
+export type DrillRow = { id: string; name: string; amount: string | null; minutes: number; focus: string | null; focus_areas?: string[]; video_url: string | null; how: string | null };
+
+/** Everything a drill works on: its tags, or its one focus from before tags. */
+export const drillTags = (d: Pick<DrillRow, 'focus' | 'focus_areas'>): string[] =>
+  d.focus_areas?.length ? d.focus_areas : d.focus ? [d.focus] : [];
 export type GroupRow = { id: string; name: string; meets_weekday: number | null; meets_time: string | null; program_id: string | null; starts_on: string | null; archived?: boolean };
 export type PlayerProgramRow = { user_id: string; program_id: string; starts_on: string };
 export type AddonRow = { id: string; user_id: string; drill_id: string; note: string | null; week_of: string };
 export type CompletionRow = { source: string; source_ref: string | null; completed_at: string | null };
+/** The days a player already has soccer: club training, and a game. 0 = Monday. */
+export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null };
+/** One item moved to another day, for one week. */
+export type MoveRow = { user_id: string; week_of: string; item_key: string; weekday: number };
 
 export type WeekItem = {
   /** Stable within the week: what completion and keys use. */
@@ -30,6 +38,10 @@ export type WeekItem = {
   /** Labels to show as the source: group names, or null for personal. */
   groups: string[];
   weekday: number;
+  /** The player moved it here this week. */
+  moved?: boolean;
+  /** Where the app put it, before any move. */
+  placed?: number;
   minutes: number;
   drills: number;
   note?: string | null;
@@ -50,17 +62,44 @@ export function sessionsForWeek(all: SessionRow[], programId: string, n: number)
   return mine.filter((s) => s.week === week).sort((a, b) => a.position - b.position);
 }
 
+const WEEK = [0, 1, 2, 3, 4, 5, 6];
+
 /**
- * Days to do `count` sessions on: spread through the week, away from the day
- * the group meets (that's training already). Without a meeting day, spread
- * from Monday.
+ * Days to do `count` sessions on, around the soccer a player already has.
+ *
+ * Never on a game day. Not on club or group days while there are free days
+ * enough; not the day after a game either, if that can be helped. Then
+ * spread out across what's left, so two sessions aren't back to back when
+ * they needn't be. With no soccer days known, it's just spread through the
+ * week.
  */
-export function spreadDays(count: number, meets: number | null): number[] {
-  const free = [0, 1, 2, 3, 4, 5, 6].filter((d) => d !== meets);
-  // Start the day after the meeting, so homework follows the session.
-  const start = meets === null ? 0 : Math.max(0, free.findIndex((d) => d > meets));
-  const order = [...free.slice(start), ...free.slice(0, start)];
-  return Array.from({ length: count }, (_, i) => order[Math.floor((i * order.length) / count)] ?? order[0]).sort((a, b) => a - b);
+export function placeDays(count: number, busy: { club?: number[]; game?: number | null; meets?: number[] } = {}): number[] {
+  if (count <= 0) return [];
+  const game = busy.game ?? null;
+  const taken = new Set([...(busy.club ?? []), ...(busy.meets ?? []), ...(game === null ? [] : [game])]);
+  const afterGame = game === null ? null : (game + 1) % 7;
+  const tiers = [
+    WEEK.filter((d) => !taken.has(d) && d !== afterGame),
+    WEEK.filter((d) => !taken.has(d)),
+    WEEK.filter((d) => d !== game),
+    WEEK,
+  ];
+  // Fill from the best days down: every day of a tier before any of the next.
+  const picked: number[] = [];
+  for (const tier of tiers) {
+    const open = tier.filter((d) => !picked.includes(d));
+    const need = count - picked.length;
+    picked.push(...(open.length <= need ? open : spread(open, need)));
+    if (picked.length >= count) break;
+  }
+  // More sessions than days: doubles, from the start of the list.
+  for (let i = 0; picked.length < count; i++) picked.push(picked[i]);
+  return picked.sort((a, b) => a - b);
+}
+
+/** n of `days`, evenly through them and centred: 2 of 7 lands Tue and Fri, not Mon and Thu. */
+function spread(days: number[], n: number) {
+  return Array.from({ length: n }, (_, i) => days[Math.floor(((i + 0.5) * days.length) / n)]);
 }
 
 export function buildWeek(input: {
@@ -74,6 +113,8 @@ export function buildWeek(input: {
   drills: DrillRow[];
   addons: AddonRow[];
   completions: CompletionRow[];
+  schedules?: ScheduleRow[];
+  moves?: MoveRow[];
   tz?: string;
 }): WeekItem[] {
   const { userId, today } = input;
@@ -89,7 +130,10 @@ export function buildWeek(input: {
   const myGroups = input.groups.filter((g) => !g.archived
     && input.memberships.some((m) => m.group_id === g.id && m.user_id === userId));
 
-  const addProgram = (programId: string, startsOn: string, label: string | null, meets: number | null) => {
+  // Each program's sessions, kept apart until every program is in, so the
+  // days are chosen for the whole week at once rather than program by program.
+  const runs: WeekItem[][] = [];
+  const addProgram = (programId: string, startsOn: string, label: string | null) => {
     const p = programs.get(programId);
     if (!p) return;
     const n = programWeek(startsOn, p.weeks, today);
@@ -103,18 +147,29 @@ export function buildWeek(input: {
       if (label) for (const it of seen.get(sig)!) if (!it.groups.includes(label)) it.groups.push(label);
       return;
     }
-    const days = spreadDays(list.length, meets);
-    const made = list.map((s, i) => ({
+    const made = list.map((s) => ({
       key: `s:${s.id}`, kind: 'session' as const, ref: s.id, title: s.name,
       from: `${p.name} · Week ${n} of ${p.weeks}`, groups: label ? [label] : [],
-      weekday: days[i], minutes: minutesOf(s.drill_ids), drills: s.drill_ids.length, done: false,
+      weekday: 0, minutes: minutesOf(s.drill_ids), drills: s.drill_ids.length, done: false,
     }));
     seen.set(sig, made);
-    items.push(...made);
+    runs.push(made);
   };
 
-  for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name, g.meets_weekday);
-  for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null, null);
+  for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);
+  for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null);
+
+  // Programs take turns, so two programs share the week instead of one
+  // taking the early days; then the turns go on the days that fit.
+  const order: WeekItem[] = [];
+  for (let i = 0; runs.some((r) => i < r.length); i++) for (const r of runs) if (i < r.length) order.push(r[i]);
+  const mine = input.schedules?.find((x) => x.user_id === userId);
+  const days = placeDays(order.length, {
+    club: mine?.club_days ?? [], game: mine?.game_day ?? null,
+    meets: myGroups.map((g) => g.meets_weekday).filter((d): d is number => d !== null),
+  });
+  order.forEach((it, i) => { it.weekday = days[i]; });
+  items.push(...order);
 
   for (const a of input.addons.filter((x) => x.user_id === userId && x.week_of === monday)) {
     const d = drills.get(a.drill_id);
@@ -123,6 +178,13 @@ export function buildWeek(input: {
       key: `a:${a.id}`, kind: 'addon', ref: a.id, title: d.name, from: 'Just for you', groups: [],
       weekday: weekdayOf(today), minutes: d.minutes, drills: 1, note: a.note, done: false,
     });
+  }
+
+  // The player's own moves for this week win.
+  for (const m of input.moves ?? []) {
+    if (m.user_id !== userId || m.week_of !== monday) continue;
+    const it = items.find((x) => x.key === m.item_key);
+    if (it && it.weekday !== m.weekday) { it.placed = it.weekday; it.weekday = m.weekday; it.moved = true; }
   }
 
   // Ticks: each finished run this week ticks one matching item.

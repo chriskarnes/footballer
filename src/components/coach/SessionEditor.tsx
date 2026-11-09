@@ -1,20 +1,29 @@
 'use client';
-import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { saveSession, deleteSession } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import type { DrillRow } from '@/lib/academy-week';
 import { Field, FormError } from './Field';
+import { DrillForm } from './DrillForm';
 
 /**
  * A session: a name and drills in order. Tap a drill to add it, use the
  * arrows to reorder. The total time is the sum of the drills.
+ *
+ * A drill that doesn't exist yet is written right here: the form opens in
+ * place of the drill list, and saving puts the new drill at the end of the
+ * session. Nothing typed so far is lost, because the page never changes.
  */
-export function SessionEditor({ programId, week, session, drills, newDrillHref }: {
+export function SessionEditor({ programId, week, session, drills: given }: {
   programId: string; week: number;
   session?: { id: string; name: string; drill_ids: string[] };
-  drills: DrillRow[]; newDrillHref: string;
+  drills: DrillRow[];
 }) {
+  // Drills written here, until the page's own list catches up.
+  const [made, setMade] = useState<DrillRow[]>([]);
+  const [writing, setWriting] = useState(false);
+  const drills = useMemo(() => [...given, ...made.filter((m) => !given.some((g) => g.id === m.id))]
+    .sort((a, b) => a.name.localeCompare(b.name)), [given, made]);
   const [name, setName] = useState(session?.name ?? '');
   const [ids, setIds] = useState<string[]>(session?.drill_ids ?? []);
   const [q, setQ] = useState('');
@@ -63,8 +72,15 @@ export function SessionEditor({ programId, week, session, drills, newDrillHref }
       <section>
         <div className="mb-2 flex items-baseline justify-between">
           <p className="eyebrow">Your drills</p>
-          <Link href={newDrillHref} className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New drill</Link>
+          {!writing && <button type="button" onClick={() => setWriting(true)} className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New drill</button>}
         </div>
+        {writing ? (
+          <div className="card p-5">
+            <div className="h-card mb-4">New drill</div>
+            <DrillForm back="" onCancel={() => setWriting(false)}
+                       onSaved={(d) => { setMade((m) => [...m, d]); setIds((xs) => [...xs, d.id]); setWriting(false); }} />
+          </div>
+        ) : <>
         {drills.length > 6 && (
           <label className="text-field mb-2"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a drill" /></label>
         )}
@@ -85,9 +101,10 @@ export function SessionEditor({ programId, week, session, drills, newDrillHref }
           </ul>
         ) : (
           <p className="card-flat px-4 py-3 text-[13.5px] text-on-surface-variant">
-            No drills yet. <Link href={newDrillHref} className="font-semibold text-on-surface underline underline-offset-4">Add your first</Link>.
+            No drills yet. <button type="button" onClick={() => setWriting(true)} className="font-semibold text-on-surface underline underline-offset-4">Add your first</button>.
           </p>
         )}
+        </>}
       </section>
 
       <FormError error={err} />

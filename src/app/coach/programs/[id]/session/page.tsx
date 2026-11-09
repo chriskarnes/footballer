@@ -21,15 +21,13 @@ export default async function SessionEditPage({ params, searchParams }: {
   const session = q.id ? c.sessions.find((s) => s.id === q.id && s.program_id === p.id) : undefined;
   if (q.id && !session) notFound();
   const week = session?.week ?? Math.max(1, Math.min(p.weeks, Number(q.week) || 1));
-  const here = `/coach/programs/${p.id}/session?${session ? `id=${session.id}` : `week=${week}`}`;
 
   return (
     <div className="animate-pop">
       <BackLink href={`/coach/programs/${p.id}`} label={p.name} />
       <p className="eyebrow mb-3">Week {week}</p>
       <h1 className="h-page mb-6">{session ? session.name : 'New session'}</h1>
-      <SessionEditor programId={p.id} week={week} session={session} drills={c.drills}
-                     newDrillHref={`/coach/drills/new?back=${encodeURIComponent(here)}`} />
+      <SessionEditor programId={p.id} week={week} session={session} drills={c.drills} />
     </div>
   );
 }

@@ -200,6 +200,21 @@ async function main() {
 
   await seedGroups(academy.id, owner?.user_id ?? null, ids);
 
+  // Soccer days (0008) for most of them, so the week shows sessions placed
+  // around club and game days. Jayden and Mateo are left to be asked.
+  const SOCCER: Record<string, { club: number[]; game: number }> = {
+    Liam: { club: [0, 3], game: 5 }, Olivia: { club: [1, 3], game: 5 }, Ava: { club: [0, 2], game: 6 },
+    Noah: { club: [1, 3], game: 5 }, Sofia: { club: [1, 3], game: 6 }, Emma: { club: [0, 2], game: 5 },
+  };
+  const sched = await db.from('player_schedules').upsert(Object.entries(SOCCER).map(([first, x]) => ({
+    user_id: ids[first], club_days: x.club, game_day: x.game, updated_at: new Date().toISOString(),
+  })));
+  if (sched.error) console.log('  (soccer days skipped: run migration 0008)');
+  else {
+    await db.from('player_schedules').delete().in('user_id', ['Jayden', 'Mateo'].map((f) => ids[f]));
+    await db.from('session_moves').delete().in('user_id', sample0(ids));
+  }
+
   // Notes: replace the sample ones, keep anything a real trainer wrote.
   const sample = Object.values(ids);
   const { data: old } = await db.from('note_recipients').select('note_id').in('user_id', sample);
@@ -224,6 +239,8 @@ async function main() {
 
   console.log(`Seeded ${PLAYERS.length} players into ${academy.name} (${slug}).`);
 }
+
+const sample0 = (ids: Record<string, string>) => Object.values(ids);
 
 /** Drills, a program and two groups. Replaces its own by name each run. */
 async function seedGroups(academyId: string, ownerId: string | null, ids: Record<string, string>) {

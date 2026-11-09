@@ -1,4 +1,5 @@
 'use server';
+import { drillTags } from '@/lib/academy-week';
 import { GoogleGenAI } from '@google/genai';
 import { getViewer } from '@/lib/viewer';
 import { loadContent } from '@/lib/academy-data';
@@ -52,7 +53,7 @@ export async function suggestAddon(userId: string): Promise<Suggestion> {
         days_since_last: p.progress.daysSince,
       };
       const drills = pool.map((d) => ({ id: d.id, name: d.name, amount: d.amount, minutes: d.minutes,
-        focus: d.focus ? FOCUS_LABELS[d.focus as FocusArea] ?? d.focus : null }));
+        works_on: drillTags(d).map((t) => FOCUS_LABELS[t as FocusArea] ?? t) }));
       const res = await ai.models.generateContent({
         model: process.env.GEMINI_MODEL || 'gemini-flash-latest',
         contents: `Player:\n${JSON.stringify(facts)}\n\nThe trainer's drills:\n${JSON.stringify(drills)}`,

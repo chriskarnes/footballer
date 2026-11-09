@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { mondayOf, localDate } from '@/lib/progress';
+import { FOCUS_LABELS } from '@/lib/types';
+import type { DrillRow } from '@/lib/academy-week';
 
 /**
  * Writes for the trainer's own content (drills, programs, sessions), groups,
@@ -16,7 +18,7 @@ async function staff() {
   return v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> };
 }
 
-type Result = { ok: true; id?: string } | { ok: false; error: string };
+type Result = { ok: true; id?: string; drill?: DrillRow } | { ok: false; error: string };
 const fail = (e: unknown): Result => ({ ok: false, error: e instanceof Error ? e.message : String(e) });
 const str = (f: FormData, k: string, max: number) => String(f.get(k) ?? '').trim().slice(0, max);
 const done = () => revalidatePath('/', 'layout');
@@ -33,26 +35,41 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
   try {
     const v = await staff();
     const id = str(f, 'id', 40);
+    // Known focus areas only, once each, in the order picked.
+    const tags = [...new Set(f.getAll('focus').map(String))].filter((t) => t in FOCUS_LABELS).slice(0, 3);
     const row = {
       academy_id: v.academy.id,
       name: str(f, 'name', 80),
       amount: str(f, 'amount', 80) || null,
       minutes: Math.max(1, Math.min(120, Number(f.get('minutes')) || 5)),
-      focus: str(f, 'focus', 30) || null,
+      focus: tags[0] ?? null,
+      focus_areas: tags,
       video_url: videoUrl(str(f, 'video_url', 300)),
       how: str(f, 'how', 1000) || null,
     };
     if (!row.name) return { ok: false, error: 'Give the drill a name.' };
     if (str(f, 'video_url', 300) && !row.video_url) return { ok: false, error: 'That video link doesn’t look right.' };
-    const q = id
-      ? v.db.from('drills').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
-      : v.db.from('drills').insert({ ...row, created_by: v.user.id }).select('id').single();
-    const { data, error } = await q;
+    const write = (r: Partial<typeof row>) => id
+      ? v.db.from('drills').update(r).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
+      : v.db.from('drills').insert({ ...r, created_by: v.user.id }).select('id').single();
+    let { data, error } = await write(row);
+    // Before migration 0008 there's no focus_areas column: keep the main one.
+    if (error && /focus_areas/.test(error.message)) {
+      const { focus_areas: _tags, ...plain } = row;
+      ({ data, error } = await write(plain));
+    }
     if (error) return { ok: false, error: error.message };
     done();
     const back = str(f, 'back', 200);
+    // A new drill from the Drills page goes to its own page, which offers to
+    // put it in sessions.
+    if (!id && back === '/coach/drills' && data?.id) redirect(`/coach/drills/${data.id}?new=1`);
     if (back.startsWith('/coach')) redirect(back);
-    return { ok: true, id: data.id };
+    // No back: saved from inside another editor, which takes the drill as is.
+    return { ok: true, id: data?.id, drill: data?.id ? {
+      id: data.id, name: row.name, amount: row.amount, minutes: row.minutes, focus: row.focus,
+      focus_areas: row.focus_areas, video_url: row.video_url, how: row.how,
+    } : undefined };
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
@@ -236,4 +253,29 @@ export async function removeAddon(id: string): Promise<Result> {
 
 function isRedirect(e: unknown) {
   return typeof e === 'object' && e !== null && 'digest' in e && String((e as { digest: unknown }).digest).startsWith('NEXT_REDIRECT');
+}
+
+/**
+ * Which sessions a drill is in, set from the drill's side: ticked sessions get
+ * it at the end if they don't have it, unticked ones lose it. Sessions it was
+ * already in keep it where it was.
+ */
+export async function setDrillSessions(drillId: string, sessionIds: string[]): Promise<Result> {
+  try {
+    const v = await staff();
+    const want = new Set(sessionIds);
+    const { data: sessions, error } = await v.db.from('academy_sessions').select('id, drill_ids').eq('academy_id', v.academy.id);
+    if (error) return { ok: false, error: error.message };
+    for (const s of (sessions ?? []) as { id: string; drill_ids: string[] }[]) {
+      const has = s.drill_ids.includes(drillId);
+      if (has === want.has(s.id)) continue;
+      if (!has && s.drill_ids.length >= 30) return { ok: false, error: 'One of those sessions is full (30 drills).' };
+      const drill_ids = has ? s.drill_ids.filter((d) => d !== drillId) : [...s.drill_ids, drillId];
+      if (!drill_ids.length) return { ok: false, error: 'A session needs at least one drill: that would empty one.' };
+      const { error: e } = await v.db.from('academy_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
+      if (e) return { ok: false, error: e.message };
+    }
+    done();
+    return { ok: true };
+  } catch (e) { return fail(e); }
 }

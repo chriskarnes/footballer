@@ -5,6 +5,7 @@ import { PageHead } from '@/components/coach/PageHead';
 import { loadContent } from '@/lib/academy-data';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 import { youtubeId } from '@/lib/video';
+import { drillTags, type DrillRow } from '@/lib/academy-week';
 
 export const metadata = { title: 'Drills', robots: { index: false } };
 
@@ -75,7 +76,7 @@ export default async function DrillsPage() {
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d.name}</span>
                       <span className="mt-0.5 block truncate text-[12.5px] text-on-surface-variant">
-                        {[d.amount, `${d.minutes} min`, d.focus && (FOCUS_LABELS[d.focus as FocusArea] ?? d.focus)].filter(Boolean).join(' · ')}
+                        {[d.amount, `${d.minutes} min`, tagLabels(d)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
                     {d.video_url && <span className="shrink-0 text-[12px] font-semibold text-on-surface-variant">{youtubeId(d.video_url) ? 'Video' : 'Link'}</span>}
@@ -100,7 +101,7 @@ export default async function DrillsPage() {
                         </td>
                         <td className="px-5 py-3.5 text-on-surface-variant">{d.amount || '—'}</td>
                         <td className="px-5 py-3.5 text-on-surface-variant">{d.minutes} min</td>
-                        <td className="px-5 py-3.5 text-on-surface-variant">{d.focus ? (FOCUS_LABELS[d.focus as FocusArea] ?? d.focus) : '—'}</td>
+                        <td className="px-5 py-3.5 text-on-surface-variant">{tagLabels(d) || '—'}</td>
                         <td className="px-5 py-3.5 text-on-surface-variant">{d.video_url ? (youtubeId(d.video_url) ? 'YouTube' : 'Link') : '—'}</td>
                         <td className="px-5 py-3.5 text-on-surface-variant">{n || '—'}</td>
                       </tr>
@@ -123,3 +124,5 @@ export default async function DrillsPage() {
 function Th({ children }: { children: React.ReactNode }) {
   return <th scope="col" className="px-5 py-3 font-semibold">{children}</th>;
 }
+
+const tagLabels = (d: DrillRow) => drillTags(d).map((t) => FOCUS_LABELS[t as FocusArea] ?? t).join(', ');
