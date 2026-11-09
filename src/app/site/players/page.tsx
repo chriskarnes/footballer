@@ -20,7 +20,7 @@ export default function PlayersPage() {
           Find your trainer.
         </h1>
         <p className="mt-5 max-w-[34rem] text-[17px] leading-relaxed text-on-surface-variant sm:text-[19px]">
-          Every trainer here has their own academy. Find yours, ask to join, and your sessions appear as soon as they let you in.
+          Every trainer here has their own page. Find yours, ask to join, and your sessions appear as soon as they let you in.
         </p>
         <div className="mt-8 max-w-[34rem]">
           <FindTrainer />
@@ -48,7 +48,7 @@ export default function PlayersPage() {
       <section className="mt-24 card-flat p-8">
         <h2 className="h-card text-on-surface">Don&rsquo;t have a trainer here yet?</h2>
         <p className="mt-2 max-w-[36rem] text-[15px] leading-relaxed text-on-surface-variant">
-          We&rsquo;re just getting started, so there aren&rsquo;t many academies to browse yet. If you train with someone,
+          We&rsquo;re just getting started, so there aren&rsquo;t many trainers to browse yet. If you train with someone,
           send them this page. If you are someone&rsquo;s trainer, <Link href="/trainers" className="font-semibold text-on-surface underline underline-offset-4">start here</Link>.
         </p>
       </section>

@@ -2,11 +2,11 @@ import { StartForm } from '@/components/site/StartForm';
 
 export const metadata = {
   title: 'Get started · Train.futbol',
-  description: 'Tell us about your training group and we’ll set up your academy with you.',
+  description: 'Tell us how you train and we’ll set up your page with you.',
 };
 
 /**
- * Asked, not signed up: academies are set up by hand for now, so every one
+ * Asked, not signed up: trainers are set up by hand for now, so every page
  * opens with sessions in it. The form is the start of that conversation.
  */
 export default async function StartPage({ searchParams }: { searchParams: Promise<{ slug?: string }> }) {
@@ -17,10 +17,10 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
       <div>
         <p className="eyebrow mb-4">Get started</p>
         <h1 className="max-w-[14ch] font-brand text-[40px] font-extrabold leading-[1.04] tracking-tightest text-on-surface sm:text-[52px]">
-          Tell us about your group.
+          Tell us how you train.
         </h1>
         <p className="mt-5 max-w-[30rem] text-[17px] leading-relaxed text-on-surface-variant">
-          We set every academy up with its trainer, so nobody opens it to an empty page. Here&rsquo;s what happens:
+          We set every page up with its trainer, so no player opens it to find nothing there. Here&rsquo;s what happens:
         </p>
         <ol className="mt-6 max-w-[30rem] space-y-4 text-[15px] leading-relaxed text-on-surface-variant">
           <li><b className="text-on-surface">A short call.</b> What you train, who, and how often you see them.</li>

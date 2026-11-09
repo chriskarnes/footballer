@@ -9,8 +9,9 @@ export const metadata = {
 
 /**
  * For trainers: what it is in their own terms, what it costs, and how to
- * start. No product vocabulary; an academy is "your club", trainers are "your
- * staff", players are "your squad".
+ * start. Written for independent trainers whose players come from different
+ * teams, not for clubs: no "academy", "club", "staff" or "squad". An academy
+ * is "your page", its players are "your players".
  */
 export default function TrainersPage() {
   return (
@@ -21,8 +22,8 @@ export default function TrainersPage() {
           Your players, training between sessions.
         </h1>
         <p className="mt-5 max-w-[36rem] text-[17px] leading-relaxed text-on-surface-variant sm:text-[19px]">
-          You see them once or twice a week. The players who get better are the ones who touch a ball on the other days.
-          Set them the work, and see who&rsquo;s doing it.
+          You see them once or twice a week, and they play for different teams the rest of it. The players who get better
+          are the ones who touch a ball on the other days. Set them the work, and see who&rsquo;s doing it.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/start" className="btn-primary pressable">Get started</Link>
@@ -31,19 +32,19 @@ export default function TrainersPage() {
       </section>
 
       <section className="mt-24">
-        <SectionHead eyebrow="How it fits together" title="Think of it as your club, on their phones." />
+        <SectionHead eyebrow="How it fits together" title="Your training, on their phones." />
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Piece title="Your academy" tag="The club">
-            One home for your training group, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
-            Your name and colours on it, not ours.
+          <Piece title="Your page" tag="Your name on it">
+            One home for everyone you train, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
+            Your name and colours on it, not ours, and not a club&rsquo;s.
           </Piece>
-          <Piece title="Your trainers" tag="The staff">
-            Just you, or you plus a couple of coaches who help run your sessions. Everyone on your staff sees every player,
-            so it doesn&rsquo;t matter who ran Tuesday&rsquo;s session.
+          <Piece title="Your players" tag="From any team">
+            You send one link. Players (or their parents) open it, sign in with an email, and they&rsquo;re on your list,
+            whichever team they play for. No app store, no passwords.
           </Piece>
-          <Piece title="Your players" tag="The squad">
-            You send one link. Players (or their parents) open it, sign in with an email, and they&rsquo;re on your list.
-            No app store, no passwords.
+          <Piece title="Groups and 1-to-1s" tag="However you train">
+            Run small groups at a set time, see players one to one, or both. A player can be in more than one group,
+            and each still gets a week that feels like their own.
           </Piece>
           <Piece title="Their week" tag="The homework">
             Two or three short sessions a week: drills, reps and a timer. They tick each one off when it&rsquo;s done.
@@ -54,11 +55,11 @@ export default function TrainersPage() {
       <section className="mt-24">
         <SectionHead eyebrow="Your side" title="Who trained this week, at a glance." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
-          <Step n="1" title="See the squad">
+          <Step n="1" title="See everyone">
             Each player&rsquo;s week in one line: on track, one behind, or not seen since Tuesday. The ones who need a word are at the top.
           </Step>
           <Step n="2" title="Send a nudge">
-            One tap writes it for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). Or a note to the whole squad.
+            One tap writes it for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). Or a note to a whole group.
           </Step>
           <Step n="3" title="No group chat">
             Notes go one way, trainer to player. Nobody replies, nothing to moderate, and every note is kept.
@@ -93,10 +94,10 @@ export default function TrainersPage() {
             Make your first session an introduction: a short video of you, what the next few weeks are for, and one easy drill to finish.
           </Faq>
           <Faq q="Who sees what?">
-            You and your coaches see all your players&rsquo; training. Players see only their own, plus the notes you send them. Other academies see nothing.
+            You, and anyone you add to help run your sessions, see all your players&rsquo; training. Players see only their own, plus the notes you send them. Other trainers see nothing, and neither do your players&rsquo; clubs.
           </Faq>
           <Faq q="Can I just sign up now?">
-            We&rsquo;re setting academies up by hand for now, so every one starts with sessions in it. Tell us about yours and we&rsquo;ll be in touch within a day.
+            We&rsquo;re setting trainers up by hand for now, so every page starts with sessions in it. Tell us how you train and we&rsquo;ll be in touch within a day.
           </Faq>
         </dl>
       </section>
@@ -104,7 +105,7 @@ export default function TrainersPage() {
       <section className="mt-24 card p-8 sm:p-10">
         <h2 className="font-brand text-[28px] font-extrabold leading-tight tracking-tighter text-on-surface sm:text-[34px]">Ready when you are.</h2>
         <p className="mt-3 max-w-[34rem] text-[16px] leading-relaxed text-on-surface-variant">
-          Tell us about your group. We&rsquo;ll set up your academy and your first sessions with you, then you send your players the link.
+          Tell us how you train. We&rsquo;ll set up your page and your first sessions with you, then you send your players the link.
         </p>
         <Link href="/start" className="btn-primary pressable mt-6">Get started</Link>
       </section>

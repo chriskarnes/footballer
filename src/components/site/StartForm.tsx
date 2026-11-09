@@ -21,7 +21,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
       <div className="card p-6 sm:p-8" role="status">
         <h2 className="h-card text-on-surface">Thanks. We&rsquo;ll be in touch.</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
-          Expect an email within a day. We&rsquo;ll set up your academy together and get your first sessions in before you send it to anyone.
+          Expect an email within a day. We&rsquo;ll set up your page together and get your first sessions in before you send it to anyone.
         </p>
       </div>
     );
@@ -34,7 +34,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
         <Field label="Email"><input name="email" type="email" required autoComplete="email" /></Field>
       </div>
 
-      <Field label="Academy name" hint="What your players call you. You can change it later.">
+      <Field label="Name on your page" hint="Your own name or your training business. You can change it later.">
         <input name="academy" required maxLength={40} value={academy} onChange={(e) => setAcademy(e.target.value)}
                placeholder="e.g. Riverside Skills" />
       </Field>

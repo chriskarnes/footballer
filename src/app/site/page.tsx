@@ -21,7 +21,7 @@ export default function SiteHome() {
       </section>
 
       <section className="mt-12 grid gap-4 sm:grid-cols-2">
-        <Door href="/trainers" eyebrow="I'm a trainer" title="Run your academy here"
+        <Door href="/trainers" eyebrow="I'm a trainer" title="Run your training here"
               body="Set at-home work for every player you train, see who did it, and nudge the ones who didn't." cta="How it works" />
         <Door href="/players" eyebrow="I'm a player or parent" title="Find your trainer"
               body="Get the sessions your trainer has set for you, and tick them off as you go." cta="Find my trainer" />

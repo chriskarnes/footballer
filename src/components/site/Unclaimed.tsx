@@ -22,7 +22,7 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
               {slug}<span className="font-medium text-on-surface-variant">.{rootLabel}</span>
             </h1>
             <p className="mt-4 max-w-[30rem] text-[16px] leading-relaxed text-on-surface-variant sm:text-[17px]">
-              This address doesn&rsquo;t belong to an academy. Which one are you?
+              This address doesn&rsquo;t belong to a trainer yet. Which one are you?
             </p>
           </div>
         </section>
@@ -40,7 +40,7 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
             <span className="eyebrow">I&rsquo;m a trainer</span>
             <h2 className="h-card mt-3 text-on-surface">This name is free</h2>
             <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Make it your academy&rsquo;s home: your players open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.
+              Make it your page: your players open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.
             </p>
             <a href={`${root}/start?slug=${encodeURIComponent(slug)}`} className="btn-ghost pressable mt-5 w-full">Claim this address</a>
           </div>

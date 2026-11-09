@@ -21,7 +21,7 @@ export async function requestAcademy(_: unknown, form: FormData): Promise<{ ok: 
   const email = pick(form.get('email'), 200);
   const academy = pick(form.get('academy'), 40);
   const slug = pick(form.get('slug'), 30).toLowerCase();
-  if (!name || !email || !academy) return { ok: false, error: 'Fill in your name, email and academy name.' };
+  if (!name || !email || !academy) return { ok: false, error: 'Fill in your name, your email and the name for your page.' };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'That email doesn’t look right.' };
   if (slug && !/^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$/.test(slug)) {
     return { ok: false, error: 'The address can use letters, numbers and dashes, 3 to 30 long.' };

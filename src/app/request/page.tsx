@@ -16,7 +16,7 @@ export default async function RequestPage() {
     return (
       <div className="pt-10">
         <h1 className="h-page">Open your trainer&rsquo;s address</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">Asking to join happens on the academy&rsquo;s own page.</p>
+        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">Asking to join happens on your trainer&rsquo;s own page.</p>
       </div>
     );
   }
