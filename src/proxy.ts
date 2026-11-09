@@ -3,7 +3,7 @@ import { ROOT_DOMAIN, slugFromHost } from '@/lib/tenant';
 
 /**
  * The marketing site lives on the bare domain. Its pages are files under
- * app/site; here the bare domain's `/`, `/coaches`, `/players` and `/start`
+ * app/site; here the bare domain's `/`, `/trainers`, `/players` and `/start`
  * are served from there, and the layout is told (x-site) to drop the app's
  * tab bar for them.
  *
@@ -14,13 +14,15 @@ import { ROOT_DOMAIN, slugFromHost } from '@/lib/tenant';
  * Everything else on the bare domain — calendar feeds, auth callbacks — is
  * untouched. On an academy's subdomain none of this runs: its `/` is the app.
  */
-const PAGES = ['/coaches', '/players', '/start'];
+const PAGES = ['/trainers', '/players', '/start'];
 
 export function proxy(req: NextRequest) {
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   if (slugFromHost(host)) return NextResponse.next();
 
   const { pathname } = req.nextUrl;
+  // The trainers page was /coaches for a day; keep old links working.
+  if (pathname === '/coaches') return NextResponse.redirect(new URL('/trainers', req.url), 308);
   const name = host.toLowerCase().replace(/:\d+$/, '');
   const apex = name === ROOT_DOMAIN || name === `www.${ROOT_DOMAIN}`;
 
@@ -40,5 +42,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/coaches/:path*', '/players/:path*', '/start/:path*', '/site/:path*'],
+  matcher: ['/', '/coaches', '/trainers/:path*', '/players/:path*', '/start/:path*', '/site/:path*'],
 };

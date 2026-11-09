@@ -3,7 +3,7 @@ import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { PriceCalc } from '@/components/site/PriceCalc';
 
 export const metadata = {
-  title: 'For coaches · Train.futbol',
+  title: 'For trainers · Train.futbol',
   description: 'Set at-home training for your players, see who did it, and nudge the ones who didn’t. $5 a player a month.',
 };
 
@@ -12,11 +12,11 @@ export const metadata = {
  * start. No product vocabulary; an academy is "your club", trainers are "your
  * staff", players are "your squad".
  */
-export default function CoachesPage() {
+export default function TrainersPage() {
   return (
     <>
       <section className="pt-14 sm:pt-20">
-        <p className="eyebrow mb-4">For coaches and private trainers</p>
+        <p className="eyebrow mb-4">For private trainers</p>
         <h1 className="max-w-[18ch] font-brand text-[40px] font-extrabold leading-[1.04] tracking-tightest text-on-surface sm:text-[56px]">
           Your players, training between sessions.
         </h1>
@@ -38,7 +38,7 @@ export default function CoachesPage() {
             Your name and colours on it, not ours.
           </Piece>
           <Piece title="Your trainers" tag="The staff">
-            Just you, or you and two or three coaches you work with. Every coach sees every player,
+            Just you, or you plus a couple of coaches who help run your sessions. Everyone on your staff sees every player,
             so it doesn&rsquo;t matter who ran Tuesday&rsquo;s session.
           </Piece>
           <Piece title="Your players" tag="The squad">
@@ -61,7 +61,7 @@ export default function CoachesPage() {
             One tap writes it for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). Or a note to the whole squad.
           </Step>
           <Step n="3" title="No group chat">
-            Notes go one way, coach to player. Nobody replies, nothing to moderate, and every note is kept.
+            Notes go one way, trainer to player. Nobody replies, nothing to moderate, and every note is kept.
           </Step>
         </ol>
       </section>
@@ -84,7 +84,7 @@ export default function CoachesPage() {
         <SectionHead eyebrow="Questions" title="Before you ask." />
         <dl className="mt-8 max-w-[44rem] divide-y divide-outline-variant border-y border-outline-variant">
           <Faq q="I only have a handful of drills. Is that enough?">
-            Yes. Most coaches start with three or four sessions they already run, and add as they go. We set up your first sessions with you.
+            Yes. Most trainers start with three or four sessions they already run, and add as they go. We set up your first sessions with you.
           </Faq>
           <Faq q="My drills are already on YouTube.">
             Good. Paste the link and it plays inside the session. If you&rsquo;d rather film new ones, a phone held sideways is plenty.
@@ -93,7 +93,7 @@ export default function CoachesPage() {
             Make your first session an introduction: a short video of you, what the next few weeks are for, and one easy drill to finish.
           </Faq>
           <Faq q="Who sees what?">
-            Your coaches see all your players&rsquo; training. Players see only their own, plus the notes you send them. Other academies see nothing.
+            You and your coaches see all your players&rsquo; training. Players see only their own, plus the notes you send them. Other academies see nothing.
           </Faq>
           <Faq q="Can I just sign up now?">
             We&rsquo;re setting academies up by hand for now, so every one starts with sessions in it. Tell us about yours and we&rsquo;ll be in touch within a day.

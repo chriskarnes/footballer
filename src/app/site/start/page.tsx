@@ -20,10 +20,10 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
           Tell us about your group.
         </h1>
         <p className="mt-5 max-w-[30rem] text-[17px] leading-relaxed text-on-surface-variant">
-          We set every academy up with its coach, so nobody opens it to an empty page. Here&rsquo;s what happens:
+          We set every academy up with its trainer, so nobody opens it to an empty page. Here&rsquo;s what happens:
         </p>
         <ol className="mt-6 max-w-[30rem] space-y-4 text-[15px] leading-relaxed text-on-surface-variant">
-          <li><b className="text-on-surface">A short call.</b> What you coach, who, and how often you see them.</li>
+          <li><b className="text-on-surface">A short call.</b> What you train, who, and how often you see them.</li>
           <li><b className="text-on-surface">Your first sessions.</b> We build three or four together from the drills you already use, with your YouTube clips or new ones filmed on your phone.</li>
           <li><b className="text-on-surface">Your link.</b> Send it to your players. They&rsquo;re in.</li>
         </ol>

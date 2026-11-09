@@ -1,8 +1,8 @@
 /**
  * What an unclaimed subdomain shows. Most people who land here are a player
- * with a mistyped link, so that's the first door; the second is a coach who
- * might want the name. The address itself is the headline, set on an empty
- * pitch, because "nobody's here yet" is the whole message.
+ * with a mistyped link, so that's the first door; the second is a trainer
+ * who might want the name. The address itself is the headline, set on an empty pitch,
+ * because "nobody's here yet" is the whole message.
  */
 export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: string; rootLabel: string }) {
   return (
@@ -32,12 +32,12 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
             <span className="eyebrow">I&rsquo;m a player or parent</span>
             <h2 className="h-card mt-3 text-on-surface">The link might be off</h2>
             <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Check the address your coach sent you. A letter out and you end up here. Or search for them by name.
+              Check the address your trainer sent you. A letter out and you end up here. Or search for them by name.
             </p>
             <a href={`${root}/players`} className="btn-primary pressable mt-5 w-full">Find my trainer</a>
           </div>
           <div className="card flex flex-col p-6">
-            <span className="eyebrow">I&rsquo;m a coach</span>
+            <span className="eyebrow">I&rsquo;m a trainer</span>
             <h2 className="h-card mt-3 text-on-surface">This name is free</h2>
             <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
               Make it your academy&rsquo;s home: your players open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.

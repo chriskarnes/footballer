@@ -13,18 +13,18 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
           <span className="font-extrabold">Train</span><span className="font-medium text-on-surface-variant">.futbol</span>
         </Link>
         <nav className="flex items-center gap-5 text-[14px] font-semibold text-on-surface">
+          <Link href="/trainers" className="hidden sm:inline">Trainers</Link>
           <Link href="/players" className="hidden sm:inline">Players</Link>
-          <Link href="/coaches" className="hidden sm:inline">Coaches</Link>
           <Link href="/start" className="btn-ghost btn-sm pressable">Get started</Link>
         </nav>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 sm:px-8">{children}</main>
       <footer className="mx-auto mt-24 w-full max-w-5xl border-t border-outline-variant px-5 py-8 text-[13px] text-on-surface-variant sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <span>Train.futbol: at-home training, set by your coach.</span>
+          <span>Train.futbol: at-home training, set by your trainer.</span>
           <span className="flex gap-5">
+            <Link href="/trainers" className="font-semibold text-on-surface">Trainers</Link>
             <Link href="/players" className="font-semibold text-on-surface">Players</Link>
-            <Link href="/coaches" className="font-semibold text-on-surface">Coaches</Link>
             <Link href="/start" className="font-semibold text-on-surface">Get started</Link>
           </span>
         </div>

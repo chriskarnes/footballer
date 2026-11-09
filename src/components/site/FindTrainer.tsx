@@ -29,7 +29,7 @@ export function FindTrainer() {
       <label className="text-field">
         <span>Your trainer, their academy, or your town</span>
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off"
-               placeholder="e.g. Riverside, or Coach Mike" />
+               placeholder="e.g. Riverside, or Mike Evans" />
       </label>
 
       <div aria-live="polite" className="mt-4">
@@ -53,7 +53,7 @@ export function FindTrainer() {
         )}
         {results && results.length === 0 && !busy && (
           <p className="card-flat px-5 py-4 text-[14.5px] leading-relaxed text-on-surface-variant">
-            No academy by that name yet. Check the spelling, or ask your coach for their link.
+            No academy by that name yet. Check the spelling, or ask your trainer for their link.
           </p>
         )}
       </div>

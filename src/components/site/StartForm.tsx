@@ -58,7 +58,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
             <option>1–10</option><option>11–25</option><option>26–50</option><option>50+</option>
           </select>
         </Field>
-        <Field label="How many coaches, you included?">
+        <Field label="How many trainers or coaches, you included?">
           <select name="trainers" defaultValue="">
             <option value="" disabled>Choose one</option>
             <option>Just me</option><option>2–4</option><option>5+</option>
@@ -76,7 +76,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
       </Field>
 
       <Field label="Anything else?" hint="Optional.">
-        <textarea name="message" rows={3} maxLength={2000} placeholder="Ages, what you coach, links to your YouTube…" />
+        <textarea name="message" rows={3} maxLength={2000} placeholder="Ages, what you work on, links to your YouTube…" />
       </Field>
 
       {state?.error && <p role="alert" className="text-[14px] font-semibold text-on-surface">{state.error}</p>}
