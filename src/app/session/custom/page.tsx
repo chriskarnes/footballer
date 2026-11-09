@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import { libraryAllowed } from '@/lib/branding-server';
+import { LibraryLocked } from '@/components/LibraryLocked';
 import { getExercises } from '@/lib/library';
 import { Runner } from '@/components/Runner';
 import { decodeSession, sessionTitle } from '@/lib/session-url';
@@ -15,6 +17,7 @@ export default async function CustomSessionPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   const raw = await searchParams;
   const params = new URLSearchParams(
     Object.entries(raw).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v]] : [])),

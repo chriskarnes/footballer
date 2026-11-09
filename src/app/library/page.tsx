@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { libraryAllowed } from '@/lib/branding-server';
+import { LibraryLocked } from '@/components/LibraryLocked';
 import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
 
@@ -24,6 +26,7 @@ const KID: Record<string, string> = {
 };
 
 export default async function LibraryPage() {
+  if (!(await libraryAllowed())) return <LibraryLocked title="Library" />;
   const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);
   const categories = ['Technical', 'Physical', 'Finishing & Crossing'];
 

@@ -11,6 +11,8 @@ import pkg from '../../../package.json';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
 import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection';
+import { NoteBanner } from '@/components/NoteBanner';
+import { getViewer } from '@/lib/viewer';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -48,7 +50,8 @@ export default async function MePage() {
   let profile: ProfileValues | null = null;
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
-  let isAdmin = false;
+  let canBrand = false;
+  let role: string | null = null;
   // undefined: the calendar table doesn't exist yet (migration 0003), so no
   // section. null: it does, and this player hasn't turned it on.
   let calendar: CalendarFeed | null | undefined;
@@ -59,17 +62,17 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, { data: admin }, cal] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
             .order('active', { ascending: false }).order('created_at', { ascending: false }),
-          // Errors (no migration 0002 yet) read as "not an admin".
-          db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
+          getViewer(),
           db.from('calendar_feeds').select('token, include_plan, include_speed, start_time, time_zone')
             .eq('user_id', user.id).maybeSingle(),
         ]);
-        isAdmin = !!admin;
+        canBrand = viewer.canBrand;
+        role = viewer.role;
         if (!cal.error) calendar = cal.data ?? null;
         workouts = rows;
         profile = prof;
@@ -122,6 +125,7 @@ export default async function MePage() {
 
   return (
     <div>
+      <NoteBanner />
       <p className="eyebrow mb-3">Your training</p>
       <ProfileCard profile={profile} email={user.email} />
 
@@ -175,7 +179,7 @@ export default async function MePage() {
 
       {calendar !== undefined && <CalendarSection initial={calendar} />}
 
-      <AccountSection email={user.email} version={pkg.version} isAdmin={isAdmin} />
+      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={role} />
     </div>
   );
 }

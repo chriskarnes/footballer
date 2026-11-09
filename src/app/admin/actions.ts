@@ -1,60 +1,70 @@
 'use server';
 import { revalidatePath, updateTag } from 'next/cache';
-import { serverClient } from '@/lib/supabase/server';
-import { BRANDING_TAG } from '@/lib/branding-server';
+import { academyTag } from '@/lib/branding-server';
+import { getViewer } from '@/lib/viewer';
 import { isHex } from '@/lib/brand-colors';
 import { LOGO_MAX_BYTES, LOGO_TYPES, PALETTES } from '@/lib/branding';
 
 type Result = { ok: true } | { ok: false, error: string };
 
 /**
- * Every action re-checks admin itself. The page hiding the form is a courtesy;
- * a Server Action is a public endpoint. RLS checks it a third time, so a bug
- * here fails closed at the database rather than open.
+ * Every action re-checks itself. The page hiding the form is a courtesy; a
+ * Server Action is a public endpoint. RLS checks it a third time (owner or
+ * platform admin), so a bug here fails closed at the database.
+ *
+ * The academy is the one this request came in on — the subdomain — never an
+ * id the browser sends.
  */
-async function adminDb() {
-  const db = await serverClient();
-  const { data: { user } } = await db.auth.getUser();
-  if (!user) return { error: 'Sign in first.' } as const;
-  const { data } = await db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
-  if (!data) return { error: 'This account is not an admin.' } as const;
-  return { db, user } as const;
+async function brandDb() {
+  const v = await getViewer();
+  if (!v.academy) return { error: 'Open your academy’s own address to brand it.' } as const;
+  if (!v.user) return { error: 'Sign in first.' } as const;
+  if (!v.canBrand) return { error: 'Only the academy’s owner can change its brand.' } as const;
+  return { db: v.db, user: v.user, academy: v.academy } as const;
 }
 
 /** Saved, so every page picks it up on its next render — not just this one. */
-function published() {
-  updateTag(BRANDING_TAG);
+function published(slug: string) {
+  updateTag(academyTag(slug));
   revalidatePath('/', 'layout');
+}
+
+type Auth = Exclude<Awaited<ReturnType<typeof brandDb>>, { error: string }>;
+
+async function write(auth: Auth, patch: Record<string, unknown>): Promise<Result> {
+  const { error } = await auth.db.from('academies')
+    .update({ ...patch, updated_at: new Date().toISOString(), updated_by: auth.user.id })
+    .eq('id', auth.academy.id);
+  if (error) return { ok: false, error: error.message };
+  published(auth.academy.slug);
+  return { ok: true };
 }
 
 export async function saveBranding(input: {
   name: string; paletteId: string | null; primary: string | null; accent: string | null;
 }): Promise<Result> {
-  const auth = await adminDb();
+  const auth = await brandDb();
   if ('error' in auth) return { ok: false, error: auth.error! };
 
-  const name = input.name.trim().slice(0, 40) || null;
+  // An academy always has a name; an empty box keeps the one it has.
+  const name = input.name.trim().slice(0, 40) || auth.academy.name;
   // Null colours are "Unbranded" picked in the panel: keep the monochrome
-  // scheme, keep any name and logo.
+  // scheme, keep the name and logo.
   const colours = input.primary !== null || input.accent !== null;
   if (colours && (!isHex(input.primary) || !isHex(input.accent))) {
     return { ok: false, error: 'Colours must be #RRGGBB.' };
   }
   const paletteId = PALETTES.some((p) => p.id === input.paletteId) ? input.paletteId : null;
 
-  const { error } = await auth.db.from('branding').update({
-    enabled: true, name, palette_id: colours ? paletteId : null,
+  return write(auth, {
+    name, palette_id: colours ? paletteId : null,
     primary_color: colours ? input.primary!.toUpperCase() : null,
     accent_color: colours ? input.accent!.toUpperCase() : null,
-    updated_at: new Date().toISOString(), updated_by: auth.user.id,
-  }).eq('id', 1);
-  if (error) return { ok: false, error: error.message };
-  published();
-  return { ok: true };
+  });
 }
 
 export async function uploadLogo(form: FormData): Promise<Result> {
-  const auth = await adminDb();
+  const auth = await brandDb();
   if ('error' in auth) return { ok: false, error: auth.error! };
 
   const file = form.get('logo');
@@ -63,35 +73,18 @@ export async function uploadLogo(form: FormData): Promise<Result> {
   if (file.size > LOGO_MAX_BYTES) return { ok: false, error: 'Keep the logo under 512 KB.' };
 
   const data = Buffer.from(await file.arrayBuffer()).toString('base64');
-  const { error } = await auth.db.from('branding').update({
-    enabled: true, logo_type: file.type, logo_data: data,
-    updated_at: new Date().toISOString(), updated_by: auth.user.id,
-  }).eq('id', 1);
-  if (error) return { ok: false, error: error.message };
-  published();
-  return { ok: true };
+  return write(auth, { logo_type: file.type, logo_data: data });
 }
 
 export async function removeLogo(): Promise<Result> {
-  const auth = await adminDb();
+  const auth = await brandDb();
   if ('error' in auth) return { ok: false, error: auth.error! };
-  const { error } = await auth.db.from('branding').update({
-    logo_type: null, logo_data: null, updated_at: new Date().toISOString(), updated_by: auth.user.id,
-  }).eq('id', 1);
-  if (error) return { ok: false, error: error.message };
-  published();
-  return { ok: true };
+  return write(auth, { logo_type: null, logo_data: null });
 }
 
-/** Back to the unbranded app. Everything is cleared, not just switched off. */
+/** Back to the monochrome app, logo gone. The academy keeps its name. */
 export async function resetBranding(): Promise<Result> {
-  const auth = await adminDb();
+  const auth = await brandDb();
   if ('error' in auth) return { ok: false, error: auth.error! };
-  const { error } = await auth.db.from('branding').update({
-    enabled: false, name: null, palette_id: null, primary_color: null, accent_color: null,
-    logo_type: null, logo_data: null, updated_at: new Date().toISOString(), updated_by: auth.user.id,
-  }).eq('id', 1);
-  if (error) return { ok: false, error: error.message };
-  published();
-  return { ok: true };
+  return write(auth, { palette_id: null, primary_color: null, accent_color: null, logo_type: null, logo_data: null });
 }

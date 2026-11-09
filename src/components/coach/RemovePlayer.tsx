@@ -1,0 +1,31 @@
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { removeMember } from '@/app/coach/actions';
+
+/** At the very bottom, behind a confirmation: it's rare and it's final. */
+export function RemovePlayer({ userId, name }: { userId: string; name: string }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const router = useRouter();
+  return (
+    <div className="mt-9 border-t border-outline-variant pt-4">
+      <button type="button" onClick={() => setOpen(true)}
+              className="text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+        Remove {name} from the academy
+      </button>
+      {err && <p role="status" className="mt-2 text-[12.5px] font-semibold text-on-surface">{err}</p>}
+      <ConfirmSheet open={open} busy={busy} title={`Remove ${name}?`} confirmLabel="Remove"
+        body={`${name} leaves your list and stops getting notes. Their own training history stays with their account.`}
+        onCancel={() => setOpen(false)}
+        onConfirm={async () => {
+          setBusy(true);
+          const r = await removeMember(userId);
+          setBusy(false); setOpen(false);
+          if (r.ok) router.push('/coach'); else setErr(r.error);
+        }} />
+    </div>
+  );
+}

@@ -289,6 +289,14 @@
   --app-brand-accent:             var(--app-brand-secondary);
   --app-brand-edge:               transparent;
 
+  /* Player status on the trainer dashboard — the one place the app needs hue
+     regardless of brand. Only ever a dot or a bar beside a written label, so
+     colour never carries the meaning alone; mid tones that read on both
+     schemes. */
+  --app-status-good: #1F9D57;
+  --app-status-warn: #E0A100;
+  --app-status-bad:  #D9443B;
+
   --app-inverse-on-surface-variant: #ABABAB;
   --app-inverse-outline-variant:    #474747;
   /* Retuned for Roboto Flex. Sora is a narrow geometric that tolerated

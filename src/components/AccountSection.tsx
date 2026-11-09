@@ -13,7 +13,9 @@ import { SignOut } from './SignOut';
  * the third visit; it only appears where installing is possible and hasn't
  * happened.
  */
-export function AccountSection({ email, version, isAdmin }: { email?: string; version: string; isAdmin?: boolean }) {
+export function AccountSection({ email, version, canBrand, role }: {
+  email?: string; version: string; canBrand?: boolean; role?: string | null;
+}) {
   const [installable, setInstallable] = useState(false);
   useEffect(() => watchInstallable(setInstallable), []);
 
@@ -34,7 +36,27 @@ export function AccountSection({ email, version, isAdmin }: { email?: string; ve
             </Row>
           </button>
         )}
-        {isAdmin && (
+        {role === 'player' && (
+          <Link href="/me/notes" className="pressable block">
+            <Row label="Notes from your trainer">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
+                   fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </Row>
+          </Link>
+        )}
+        {(role === 'owner' || role === 'trainer') && (
+          <Link href="/coach" className="pressable block">
+            <Row label="Your players">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
+                   fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </Row>
+          </Link>
+        )}
+        {canBrand && (
           <Link href="/admin" className="pressable block">
             <Row label="Brand settings">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"

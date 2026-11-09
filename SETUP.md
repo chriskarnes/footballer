@@ -150,6 +150,29 @@ To test: Mac Calendar can subscribe to a local link (File → New Calendar Subsc
 `http://localhost:3000/cal/<token>.ics`, refresh every 5 minutes). Google Calendar can only
 reach a deployed site, and refreshes on its own schedule — up to a day.
 
+### 9. Academies (trainer businesses)
+
+Each trainer business is an academy on its own subdomain: `mike.train.futbol`.
+
+1. Supabase → **SQL Editor** → run `supabase/migrations/0004_academies.sql`, then
+   `0005_library_access.sql`. Your existing brand becomes the `demo` academy; admins own it.
+2. Vercel → **Settings → Domains** → add `*.train.futbol` (needs Vercel's nameservers), and
+   Supabase → **Authentication → URL Configuration** → add `https://*.train.futbol/**`.
+3. A new academy, from the SQL editor:
+
+   ```sql
+   select create_academy('mike', 'Mike''s Training',
+     (select id from auth.users where email = 'mike@example.com'));
+   ```
+
+   The owner then finds invite links under **Coach → Team**, and brands it at `/admin`.
+4. Sample players for a demo: `npm run seed:demo` (or `npm run seed:demo -- mike`). Re-run on
+   the morning of a demo so "this week" is this week.
+
+The drill library (everything but Speed & Stamina) is licensed for the `demo` academy only.
+New academies get Speed and a placeholder until trainers can add their own programs; don't
+turn `library_access` on for anyone else.
+
 ---
 
 ## What this costs

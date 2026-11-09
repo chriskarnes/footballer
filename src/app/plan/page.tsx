@@ -1,4 +1,6 @@
 import { getExercises, getSessions } from '@/lib/library';
+import { libraryAllowed } from '@/lib/branding-server';
+import { LibraryLocked } from '@/components/LibraryLocked';
 import { serverClient } from '@/lib/supabase/server';
 import { derivePrefill, type HistoryRow, type ProfileRow } from '@/lib/plan-builder';
 import { PlanBuilder } from '@/components/PlanBuilder';
@@ -27,6 +29,7 @@ export default async function PlanPage({
   searchParams,
 }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const q = await searchParams;
+  if (!(await libraryAllowed())) return <LibraryLocked title="Plan" />;
   const one = (k: string) => (typeof q[k] === 'string' ? (q[k] as string) : undefined);
   const edit = one('edit'), view = one('plan'), fresh = !!one('new'), building = !!one('a');
 

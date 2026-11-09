@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase/client';
 import { pendingPlan, pendingWorkout } from '@/lib/pending';
 
-export function SignIn() {
+/** `next` is where the emailed link lands once it has signed you in. */
+export function SignIn({ next = '/me' }: { next?: string }) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState('');
@@ -23,7 +24,7 @@ export function SignIn() {
       const db = browserClient();
       const { error } = await db.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/me` },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
       if (error) setErr(error.message); else setSent(true);
     } catch {

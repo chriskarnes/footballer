@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { libraryAllowed } from '@/lib/branding-server';
+import { LibraryLocked } from '@/components/LibraryLocked';
 import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
 import { PROGRAM_BLURBS, SHOWN_LEVELS, formatMinutes, splitSessionName } from '@/lib/program-copy';
@@ -27,6 +29,7 @@ const KID: Record<string, string> = {
  */
 export default async function ProgramPage({ params }: { params: Promise<{ programId: string }> }) {
   const { programId } = await params;
+  if (!(await libraryAllowed())) return <LibraryLocked title="Library" />;
   const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);
   const program = programs.find((p) => p.id === programId);
   if (!program) notFound();

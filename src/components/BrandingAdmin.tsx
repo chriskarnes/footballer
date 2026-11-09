@@ -97,8 +97,8 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
     const r = await resetBranding();
     setResetting(false);
     if (!r.ok) return setStatus({ tone: 'err', text: r.error });
-    setName(''); setChoice('none'); setLogo(null);
-    setStatus({ tone: 'ok', text: 'Back to unbranded.' });
+    setChoice('none'); setLogo(null);
+    setStatus({ tone: 'ok', text: 'Back to black and white.' });
     router.refresh();
   }
 
@@ -215,12 +215,12 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
         )}
         <button type="button" onClick={() => setResetting(true)}
                 className="mt-6 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
-          Reset to unbranded
+          Clear colours and logo
         </button>
       </div>
 
-      <ConfirmSheet open={resetting} title="Reset to unbranded?"
-        body="Clears the name, colours and logo. Every player goes back to the black-and-white Train.futbol."
+      <ConfirmSheet open={resetting} title="Clear colours and logo?"
+        body="Your players go back to the black-and-white app. The academy keeps its name."
         confirmLabel="Reset" onConfirm={reset} onCancel={() => setResetting(false)} />
     </div>
   );

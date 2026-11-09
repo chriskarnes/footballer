@@ -1,4 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
+import { libraryAllowed } from '@/lib/branding-server';
+import { LibraryLocked } from '@/components/LibraryLocked';
 import { getExercises, getPrograms, getSessions } from '@/lib/library';
 import { Runner } from '@/components/Runner';
 import { serverClient } from '@/lib/supabase/server';
@@ -19,6 +21,7 @@ export default async function SessionPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
+  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   const { id } = await params;
   const { from } = await searchParams;
   const exercises = await getExercises();

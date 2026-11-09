@@ -1,4 +1,5 @@
 import { getSessions } from '@/lib/library';
+import { libraryAllowed } from '@/lib/branding-server';
 import { serverClient } from '@/lib/supabase/server';
 import { TodayCard } from './TodayCard';
 
@@ -11,7 +12,7 @@ import { TodayCard } from './TodayCard';
  * plan, it renders nothing, and the rest of Train never waits on it.
  */
 export async function TodayOnPlan() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !(await libraryAllowed())) return null;
   try {
     const db = await serverClient();
     const { data: auth } = await db.auth.getUser();
