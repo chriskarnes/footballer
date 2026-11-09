@@ -51,14 +51,14 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
 
       <Field label="Town or area"><input name="city" maxLength={60} placeholder="e.g. Austin, TX" /></Field>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid items-end gap-5 sm:grid-cols-2">
         <Field label="How many players?">
           <select name="players" defaultValue="">
             <option value="" disabled>Choose one</option>
             <option>1–10</option><option>11–25</option><option>26–50</option><option>50+</option>
           </select>
         </Field>
-        <Field label="How many trainers or coaches, you included?">
+        <Field label="Trainers, you included?">
           <select name="trainers" defaultValue="">
             <option value="" disabled>Choose one</option>
             <option>Just me</option><option>2–4</option><option>5+</option>

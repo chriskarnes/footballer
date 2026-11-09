@@ -69,7 +69,7 @@ function Door({ href, eyebrow, title, body, cta, dark }: { href: string; eyebrow
       <span className="site-wide mt-3 text-[26px] uppercase leading-[1] sm:text-[30px]">{title}</span>
       <span className={`mt-3 max-w-[30ch] text-[15px] leading-relaxed ${dark ? 'text-site-mint' : 'text-site-ink/80'}`}>{body}</span>
       <span className={`mt-7 inline-flex min-h-[44px] items-center self-start rounded-full border px-5 text-[14px] font-bold transition-colors
-        ${dark ? 'border-white/45 text-white group-hover:bg-white/10' : 'border-site-ink/45 text-site-ink group-hover:bg-site-ink/[.06]'}`}>{cta}</span>
+        ${dark ? 'border-white/45 text-white group-hover:bg-white/10' : 'border-site-ink text-site-ink group-hover:bg-site-ink/[.08]'}`}>{cta}</span>
     </Link>
   );
 }

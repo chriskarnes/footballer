@@ -27,8 +27,10 @@ const config: Config = {
       },
       colors: {
         /* The marketing site's fixed palette: see the MARKETING SITE block in globals.css. */
-        site: { ink: 'var(--site-ink)', pitch: 'var(--site-pitch)', moss: 'var(--site-moss)',
-                mint: 'var(--site-mint)', paper: 'var(--site-paper)', lime: 'var(--site-lime)' },
+        // Hex, not var(): Tailwind can only apply /opacity (border-site-ink/45) to
+        // literal colours. Keep in step with the --site-* variables in globals.css.
+        site: { ink: '#071D17', pitch: '#0D3026', moss: '#3D6B58',
+                mint: '#CFE8D9', paper: '#F2F7F3', lime: '#C8F03C' },
         surface:                     'var(--md-sys-color-surface)',
         primary:                     'var(--md-sys-color-primary)',
         'on-primary':                'var(--md-sys-color-on-primary)',

@@ -997,6 +997,13 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   font-family: var(--md-ref-typeface-plain); font-size: 16px; line-height: 1.45;
   color: var(--md-sys-color-on-surface);
 }
+/* Our own chevron, inset from the edge: the native one sat flush against the
+   right border and read as falling out of the box. */
+.text-field select {
+  appearance: none; -webkit-appearance: none; padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235F6B66' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center; background-size: 12px 8px;
+}
 .text-field input::placeholder, .text-field textarea::placeholder { color: var(--md-sys-color-on-surface-variant); }
 .text-field textarea:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
 .text-field input:focus-visible, .text-field select:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
@@ -1184,6 +1191,9 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 .site-dark .text-field input, .site-dark .text-field select, .site-dark .text-field textarea { color: #FFFFFF; }
 .site-dark .text-field input::placeholder, .site-dark .text-field textarea::placeholder { color: rgba(207,232,217,.55); }
 .site-dark .text-field select option { color: #111; }
+.site-dark .text-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23CFE8D9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
 
 /* Duotone: the photo in greys screened onto the shadow colour (black lands
    on dark green), then the highlight colour multiplied over it (white lands
