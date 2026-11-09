@@ -15,6 +15,8 @@ import { brandCss } from '@/lib/brand-colors';
 import { headers } from 'next/headers';
 import { SiteChrome } from '@/components/site/SiteChrome';
 import { Unclaimed } from '@/components/site/Unclaimed';
+import { CoachFrame } from '@/components/coach/CoachFrame';
+import { Brand } from '@/components/Brand';
 
 export async function generateMetadata(): Promise<Metadata> {
   const name = (await getAcademy()).academy?.branding.name ?? 'Train.futbol';
@@ -95,6 +97,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <html lang="en">
         <body className="min-h-dvh antialiased">
           <Unclaimed slug={slug} root={root} rootLabel={local ? 'localhost' : ROOT_DOMAIN} />
+        </body>
+      </html>
+    );
+  }
+  // The trainer area (see proxy.ts): its own frame, wider on desktop, and
+  // none of the player tabs.
+  if ((await headers()).get('x-area') === 'coach') {
+    return (
+      <html lang="en">
+        <body className="min-h-dvh antialiased">
+          {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
+          <CoachFrame brand={<Brand small />}>{children}</CoachFrame>
+          <ServiceWorker />
+          <PendingSaves />
         </body>
       </html>
     );

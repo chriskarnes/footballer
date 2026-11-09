@@ -45,7 +45,8 @@ export default async function PlayerPage({ params, searchParams }: {
   const about = [p.positions?.join(', '), p.age_band && (AGE[p.age_band] ?? p.age_band)].filter(Boolean).join(' · ');
 
   return (
-    <div className="animate-pop">
+    <div className="animate-pop lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-x-10">
+     <div className="min-w-0">
       <BackLink href="/coach" label="Players" />
       {about && <p className="eyebrow mb-3">{about}</p>}
       <h1 className="h-page">{p.name}</h1>
@@ -79,7 +80,12 @@ export default async function PlayerPage({ params, searchParams }: {
         </div>
       )}
 
-      <section className="card mt-9 p-5">
+      <div className="hidden lg:block"><RemovePlayer userId={p.user_id} name={p.first} /></div>
+     </div>
+
+     {/* On a laptop, how they're doing sits beside what they're set. */}
+     <aside className="min-w-0 lg:pt-[68px]">
+      <section className="card mt-9 p-5 lg:mt-0">
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-[13px] text-on-surface-variant">
@@ -142,7 +148,8 @@ export default async function PlayerPage({ params, searchParams }: {
         ) : <p className="pl-1 text-[13.5px] text-on-surface-variant">No notes yet.</p>}
       </section>
 
-      <RemovePlayer userId={p.user_id} name={p.first} />
+      <div className="lg:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>
+     </aside>
     </div>
   );
 }

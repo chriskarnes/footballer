@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import { staffOnly } from '@/components/coach/Gate';
-import { CoachNav } from '@/components/coach/CoachNav';
 import { loadContent } from '@/lib/academy-data';
-import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
-import { youtubeId } from '@/lib/video';
 import { Pending } from '@/components/coach/Pending';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Programs', robots: { index: false } };
 
 /**
- * What the academy teaches: its programs (weeks of at-home sessions), and
- * the drills those sessions are made of.
+ * The trainer's programs: runs of weeks of at-home sessions. The drills those
+ * sessions are made of have their own page (/coach/drills).
  */
 export default async function ContentPage() {
   const gate = await staffOnly('/coach/content');
@@ -20,14 +18,12 @@ export default async function ContentPage() {
 
   return (
     <div className="animate-pop">
-      <CoachNav at="/coach/content" />
       {!c.ready && <Pending />}
 
-      <section className="mt-8">
-        <div className="mb-3 flex items-baseline justify-between">
-          <p className="eyebrow">Programs</p>
-          <Link href="/coach/programs/new" className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New program</Link>
-        </div>
+      <PageHead title="Programs" action={<Link href="/coach/programs/new" className="btn-primary btn-sm pressable">New program</Link>}>
+        Runs of weeks: what your players do at home between sessions.
+      </PageHead>
+      <section className="mt-6">
         {c.programs.length ? (
           <ul className="card divide-y divide-outline-variant">
             {c.programs.map((p) => {
@@ -57,33 +53,6 @@ export default async function ContentPage() {
         )}
       </section>
 
-      <section className="mt-9">
-        <div className="mb-3 flex items-baseline justify-between">
-          <p className="eyebrow">Drills · {c.drills.length}</p>
-          <Link href="/coach/drills/new" className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New drill</Link>
-        </div>
-        {c.drills.length ? (
-          <ul className="card divide-y divide-outline-variant">
-            {c.drills.map((d) => (
-              <li key={d.id}>
-                <Link href={`/coach/drills/${d.id}`} className="flex items-center justify-between gap-4 px-4 py-3.5">
-                  <span className="min-w-0">
-                    <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d.name}</span>
-                    <span className="mt-0.5 block truncate text-[12.5px] text-on-surface-variant">
-                      {[d.amount, `${d.minutes} min`, d.focus && (FOCUS_LABELS[d.focus as FocusArea] ?? d.focus)].filter(Boolean).join(' · ')}
-                    </span>
-                  </span>
-                  {d.video_url && <span className="shrink-0 text-[12px] font-semibold text-on-surface-variant">{youtubeId(d.video_url) ? 'Video' : 'Link'}</span>}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Empty title="No drills yet" href="/coach/drills/new" cta="Add a drill">
-            Start with the ones you always use. A name and &ldquo;3 × 50 each foot&rdquo; is enough; a YouTube link is a bonus.
-          </Empty>
-        )}
-      </section>
     </div>
   );
 }

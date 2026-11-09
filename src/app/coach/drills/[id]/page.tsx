@@ -16,9 +16,9 @@ export default async function DrillPage({ params }: { params: Promise<{ id: stri
   if (!data) notFound();
   return (
     <div className="animate-pop">
-      <BackLink href="/coach/content" label="Programs" />
+      <BackLink href="/coach/drills" label="Drills" />
       <h1 className="h-page mb-6">{data.name}</h1>
-      <DrillForm drill={data as DrillRow} back="/coach/content" />
+      <DrillForm drill={data as DrillRow} back="/coach/drills" />
     </div>
   );
 }

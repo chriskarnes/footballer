@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { staffOnly } from '@/components/coach/Gate';
-import { CoachNav } from '@/components/coach/CoachNav';
 import { Pending } from '@/components/coach/Pending';
+import { PageHead } from '@/components/coach/PageHead';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
 import { meetingLabel, programWeek } from '@/lib/academy-week';
@@ -26,16 +26,16 @@ export default async function GroupsPage() {
 
   return (
     <div className="animate-pop">
-      <CoachNav at="/coach/groups" />
       {!c.ready && <Pending />}
 
-      <div className="mb-3 mt-8 flex items-baseline justify-between">
-        <p className="eyebrow">Groups · {active.length}</p>
-        <Link href="/coach/groups/new" className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New group</Link>
-      </div>
+      <PageHead title="Groups" eyebrow={`${active.length} ${active.length === 1 ? 'group' : 'groups'}`}
+                action={<Link href="/coach/groups/new" className="btn-primary btn-sm pressable">New group</Link>}>
+        A label for players you train together. Each group brings its program&rsquo;s week with it.
+      </PageHead>
+      <div className="mt-6" />
 
       {active.length ? (
-        <ul className="space-y-2.5">
+        <ul className="grid gap-2.5 lg:grid-cols-2">
           {active.map((g) => {
             const members = players.filter((p) => c.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id));
             const behind = members.filter((p) => p.progress.status !== 'good').length;

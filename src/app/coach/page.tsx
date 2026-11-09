@@ -3,11 +3,11 @@ import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { JoinRequests, type JoinRequest } from '@/components/coach/JoinRequests';
-import { CoachNav } from '@/components/coach/CoachNav';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
 import { ago } from '@/lib/notes';
-import { byAttention, detailOf } from '@/lib/progress';
+import { byAttention, detailOf, sinceLabel } from '@/lib/progress';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
 
@@ -45,25 +45,18 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const sessions = players.reduce((a, p) => a + p.progress.done, 0);
   const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
+  const headline = !players.length ? 'No players yet'
+    : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
+    : 'Everyone’s on track';
+
   return (
     <div className="animate-pop">
-      <CoachNav at="/coach" />
-
-      {!!groups.length && (
-        <nav className="scroll-x -mx-5 mt-5 flex gap-2 px-5" aria-label="Filter by group">
-          <Link href="/coach" className={`chip shrink-0 ${!inGroup ? 'chip-on' : ''}`}>Everyone</Link>
-          {groups.map((g) => (
-            <Link key={g.id} href={`/coach?group=${g.id}`} className={`chip shrink-0 ${inGroup?.id === g.id ? 'chip-on' : ''}`}>{g.name}</Link>
-          ))}
-        </nav>
-      )}
-
-      <p className="eyebrow mb-3 mt-8">{inGroup ? `${inGroup.name} · this week` : 'This week'}</p>
-      <h1 className="h-page">
-        {!players.length ? 'No players yet'
-          : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
-          : 'Everyone’s on track'}
-      </h1>
+      <PageHead title={headline} eyebrow={inGroup ? `${inGroup.name} · this week` : 'This week'}
+                action={!!players.length && (
+                  <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost btn-sm pressable">
+                    {inGroup ? `Note to ${inGroup.name}` : 'Note to everyone'}
+                  </Link>
+                )} />
 
       {sent && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
@@ -73,22 +66,28 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
       {!!asking?.length && <JoinRequests requests={(asking as Omit<JoinRequest, 'when'>[]).map((r) => ({ ...r, when: ago(r.created_at) }))} />}
 
-      {!!players.length && (
-        <>
-          <div className="mt-5 grid grid-cols-3 gap-2.5">
+      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {!!groups.length && (
+          <nav className="scroll-x -mx-5 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">
+            <Link href="/coach" className={`chip shrink-0 ${!inGroup ? 'chip-on' : ''}`}>Everyone</Link>
+            {groups.map((g) => (
+              <Link key={g.id} href={`/coach?group=${g.id}`} className={`chip shrink-0 ${inGroup?.id === g.id ? 'chip-on' : ''}`}>{g.name}</Link>
+            ))}
+          </nav>
+        )}
+        {!!players.length && (
+          <div className="grid grid-cols-3 gap-2.5 lg:flex lg:gap-6">
             <Stat value={`${trained}/${players.length}`} label="trained" />
             <Stat value={sessions} label={sessions === 1 ? 'session' : 'sessions'} />
             <Stat value={minutes} label="minutes" />
           </div>
-          <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost pressable mt-4 w-full">
-            {inGroup ? `Send a note to ${inGroup.name}` : 'Send a note to everyone'}
-          </Link>
-        </>
-      )}
+        )}
+      </div>
 
       {error && <p className="mt-4 text-[13px] text-on-surface-variant">Couldn&rsquo;t load players: {error}</p>}
 
-      <ul className="mt-6 space-y-2.5">
+      {/* Phone: cards, worst first. */}
+      <ul className="mt-6 space-y-2.5 lg:hidden">
         {players.map((p) => {
           const detail = detailOf(p.progress);
           return (
@@ -117,7 +116,44 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         })}
       </ul>
 
-      <section className="mt-9">
+      {/* Laptop: the roster as a table, still worst first. */}
+      {!!players.length && (
+        <div className="card mt-6 hidden overflow-hidden lg:block">
+          <table className="w-full text-left text-[14px]">
+            <thead className="border-b border-outline-variant text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">
+              <tr><Th>Player</Th><Th>Groups</Th><Th>This week</Th><Th>Status</Th><Th>Last trained</Th><Th><span className="sr-only">Actions</span></Th></tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant">
+              {players.map((p) => {
+                const detail = detailOf(p.progress);
+                return (
+                  <tr key={p.user_id} className="relative hover:bg-surface-container-low">
+                    <td className="px-5 py-3.5 font-bold text-on-surface">
+                      <Link href={`/coach/players/${p.user_id}`} className="after:absolute after:inset-0">{p.name}</Link>
+                    </td>
+                    <td className="max-w-[14rem] truncate px-5 py-3.5 text-[13px] text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
+                    <td className="px-5 py-3.5"><WeekDots week={p.progress.week} /></td>
+                    <td className="px-5 py-3.5 text-[13px] text-on-surface-variant">
+                      <span className="flex items-center gap-2">
+                        <StatusDot status={p.progress.status} />
+                        <span><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-[13px] text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
+                    <td className="relative z-10 px-5 py-3.5 text-right">
+                      {p.progress.status !== 'good' && (
+                        <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-ghost btn-sm pressable">Nudge</Link>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <section className="mt-10 lg:max-w-xl">
         <p className="eyebrow mb-3">Add players</p>
         <div className="card p-5">
           <div className="h-card">Invite link</div>
@@ -133,9 +169,13 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   );
 }
 
+function Th({ children }: { children: React.ReactNode }) {
+  return <th scope="col" className="px-5 py-3 font-semibold">{children}</th>;
+}
+
 function Stat({ value, label }: { value: React.ReactNode; label: string }) {
   return (
-    <div className="card-flat px-3 py-3 text-center">
+    <div className="card-flat px-3 py-3 text-center lg:bg-transparent lg:p-0 lg:text-left lg:shadow-none">
       <div className="font-brand text-[22px] font-extrabold leading-none text-on-surface">{value}</div>
       <div className="mt-1 text-[11.5px] font-semibold text-on-surface-variant">{label}</div>
     </div>
