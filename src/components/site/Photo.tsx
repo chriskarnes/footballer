@@ -1,5 +1,6 @@
 import Image, { type StaticImageData } from 'next/image';
 import Link from 'next/link';
+import { DuotoneVideo } from './DuotoneVideo';
 
 /** Runs a box from screen edge to screen edge, whatever column it sits in. */
 const BLEED = 'left-[calc(50%_-_50dvw)] right-[calc(50%_-_50dvw)]';
@@ -34,11 +35,14 @@ export type HeroCard = { at: React.CSSProperties; title: string; sub: string; ki
  * page goes from dark to light. Without a photo it is the same dark top, for
  * forms.
  */
-export function SiteHero({ photo, alt, position, cards = [], children }: {
+export function SiteHero({ photo, video, alt, position, cards = [], children }: {
   photo?: StaticImageData; alt?: string; position?: string; cards?: HeroCard[]; children: React.ReactNode;
+  /** A short silent loop in place of the photo, with the same treatment. */
+  video?: { src: string; poster: string };
 }) {
+  const media = photo || video;
   return (
-    <section className={`site-dark relative isolate ${photo ? 'pt-[250px] sm:pt-20' : 'pt-12 sm:pt-16'} pb-32 sm:pb-40`}>
+    <section className={`site-dark relative isolate ${media ? 'pt-[250px] sm:pt-20' : 'pt-12 sm:pt-16'} pb-32 sm:pb-40`}>
       {/* The ground: green, a lime glow where the photo is, then paper. */}
       <div aria-hidden className={`absolute ${BLEED} -top-px bottom-0 -z-30`}
            style={{ background: [
@@ -47,9 +51,11 @@ export function SiteHero({ photo, alt, position, cards = [], children }: {
              'linear-gradient(to bottom, var(--site-ink) 0%, var(--site-pitch) 55%, #24503F 70%, #8DB8A2 84%, var(--site-mint) 93%, var(--site-paper) 100%)',
            ].join(', ') }} />
 
-      {photo && (
+      {media && (
         <div className={`photo-hero-mask absolute ${BLEED} top-0 -z-20 h-[330px] sm:bottom-24 sm:left-[40%] sm:h-auto`}>
-          <Duotone photo={photo} alt={alt ?? ''} position={position} preload sizes="(min-width: 640px) 70vw, 100vw" />
+          {video
+            ? <DuotoneVideo src={video.src} poster={video.poster} position={position} label={alt ?? ''} />
+            : <Duotone photo={photo!} alt={alt ?? ''} position={position} preload sizes="(min-width: 640px) 70vw, 100vw" />}
         </div>
       )}
 

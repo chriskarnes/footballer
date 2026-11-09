@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { FindTrainer } from '@/components/site/FindTrainer';
 import { Lime, SiteHero } from '@/components/site/Photo';
-import celebrate from '@/assets/site/celebrate.jpg';
 
 export const metadata = {
   title: 'For players · Train.futbol',
@@ -16,7 +15,8 @@ export const metadata = {
 export default function PlayersPage() {
   return (
     <>
-      <SiteHero photo={celebrate} alt="Young players in navy kits celebrating a goal together" position="62% 35%"
+      <SiteHero video={{ src: '/site/match.mp4', poster: '/site/match-poster.jpg' }}
+                alt="A young player dribbles in on goal during a match" position="70% 50%"
                 cards={[{ kind: 'done', title: 'Both feet', sub: 'Wed · 24 min · U12 Tuesday', at: { top: 40, right: -12 } }]}>
         <span className="marker">For players and parents</span>
         <h1 className="site-wide mt-5 max-w-[12ch] text-[40px] uppercase leading-[.94] text-white sm:text-[64px]">

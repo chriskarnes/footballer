@@ -1201,7 +1201,7 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    while the photo loads the box is green, not a flat block of mint. */
 /* Positioned by its user (always absolute), so no `position` here: it would win over Tailwind's. */
 .duotone { overflow: hidden; background: var(--duo-lo, var(--site-ink)); }
-.duotone img { filter: grayscale(1) contrast(1.2) brightness(1.02); mix-blend-mode: screen; }
+.duotone img, .duotone video { filter: grayscale(1) contrast(1.2) brightness(1.02); mix-blend-mode: screen; }
 .duotone::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: var(--duo-hi, var(--site-mint)); mix-blend-mode: multiply; }
 .duotone-lime { --duo-hi: var(--site-lime); --duo-lo: #0B2A21; }
