@@ -15,8 +15,8 @@ export const metadata = {
 export default function PlayersPage() {
   return (
     <>
-      <SiteHero video={{ src: '/site/match.mp4', poster: '/site/match-poster.jpg' }}
-                alt="A young player dribbles in on goal during a match" position="70% 50%"
+      <SiteHero video={{ src: '/site/goal.mp4', poster: '/site/goal-poster.jpg' }}
+                alt="A young player cuts past a defender and scores, the cut and shot in slow motion" position="55% 50%"
                 cards={[{ kind: 'done', title: 'Both feet', sub: 'Wed · 24 min · U12 Tuesday', at: { top: 40, right: -12 } }]}>
         <span className="marker">For players and parents</span>
         <h1 className="site-wide mt-5 max-w-[12ch] text-[40px] uppercase leading-[.94] text-white sm:text-[64px]">

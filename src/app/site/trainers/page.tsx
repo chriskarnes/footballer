@@ -17,8 +17,8 @@ export const metadata = {
 export default function TrainersPage() {
   return (
     <>
-      <SiteHero video={{ src: '/site/goal.mp4', poster: '/site/goal-poster.jpg' }}
-                alt="A young player cuts past a defender and scores, the cut and shot in slow motion" position="55% 50%"
+      <SiteHero video={{ src: '/site/session.mp4', poster: '/site/session-poster.jpg' }}
+                alt="Young players working through ball drills at an indoor training session" position="50% 35%"
                 cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 3 of 5 this week', at: { top: 40, right: -12 } }]}>
         <span className="marker">For private trainers</span>
         <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
