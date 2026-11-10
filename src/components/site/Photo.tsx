@@ -52,7 +52,7 @@ export function SiteHero({ photo, video, alt, position, cards = [], children }: 
            ].join(', ') }} />
 
       {media && (
-        <div className={`photo-hero-mask absolute ${BLEED} top-0 -z-20 h-[330px] sm:bottom-24 sm:left-[40%] sm:h-auto`}>
+        <div className={`photo-hero-mask absolute ${BLEED} top-0 -z-20 h-[330px] sm:bottom-24 sm:left-[24%] sm:h-auto`}>
           {video
             ? <DuotoneVideo src={video.src} poster={video.poster} position={position} label={alt ?? ''} />
             : <Duotone photo={photo!} alt={alt ?? ''} position={position} preload sizes="(min-width: 640px) 70vw, 100vw" />}
