@@ -13,7 +13,9 @@ export const metadata = {
 export default function SiteHome() {
   return (
     <>
-      <SiteHero photo={strike} alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%"
+      <SiteHero photo={strike}
+                video={{ src: '/site/match.mp4', poster: '/site/match-poster.jpg', delay: 5000, position: '70% 50%' }}
+                alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%"
                 cards={[{ kind: 'done', title: 'Touch and pass', sub: 'Tuesday · 15 min · done', at: { top: 40, right: -12 } }]}>
         <span className="marker">At-home training</span>
         <h1 className="site-wide mt-5 max-w-[13ch] text-[42px] uppercase leading-[.94] text-white sm:text-[68px]">

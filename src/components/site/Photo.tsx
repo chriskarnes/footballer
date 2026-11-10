@@ -37,8 +37,12 @@ export type HeroCard = { at: React.CSSProperties; title: string; sub: string; ki
  */
 export function SiteHero({ photo, video, alt, position, cards = [], children }: {
   photo?: StaticImageData; alt?: string; position?: string; cards?: HeroCard[]; children: React.ReactNode;
-  /** A short silent loop in place of the photo, with the same treatment. */
-  video?: { src: string; poster: string };
+  /**
+   * A short silent loop in place of the photo, with the same treatment. Given
+   * a photo as well and a `delay` (ms), the photo shows first and the loop
+   * fades in over it after that long.
+   */
+  video?: { src: string; poster: string; delay?: number; position?: string };
 }) {
   const media = photo || video;
   return (
@@ -53,9 +57,11 @@ export function SiteHero({ photo, video, alt, position, cards = [], children }: 
 
       {media && (
         <div className={`photo-hero-mask absolute ${BLEED} top-0 -z-20 h-[330px] sm:bottom-24 sm:left-[24%] sm:h-auto`}>
-          {video
-            ? <DuotoneVideo src={video.src} poster={video.poster} position={position} label={alt ?? ''} />
-            : <Duotone photo={photo!} alt={alt ?? ''} position={position} preload sizes="(min-width: 640px) 70vw, 100vw" />}
+          {photo && <Duotone photo={photo} alt={alt ?? ''} position={position} preload sizes="(min-width: 640px) 70vw, 100vw" />}
+          {video && (!photo || video.delay) && (
+            <DuotoneVideo src={video.src} poster={video.poster} position={video.position ?? position}
+                          label={alt ?? ''} delay={photo ? video.delay : undefined} />
+          )}
         </div>
       )}
 
