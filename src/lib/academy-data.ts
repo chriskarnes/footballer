@@ -3,7 +3,9 @@ import type { AddonRow, CustomRow, DrillRow, GroupRow, MoveRow, PlayerProgramRow
 import { DEFAULT_TARGET, type Target } from './week-builder';
 
 /** A player's targets and focus, as the trainer set them (0010). */
-export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean };
+export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean; progress?: boolean | null };
+/** The academy's default target, and whether built weeks step drills up (0013). */
+export type Defaults = Target & { progress: boolean };
 
 export type AcademyContent = {
   programs: (ProgramRow & { description: string | null })[];
@@ -19,7 +21,7 @@ export type AcademyContent = {
   /** Weeks built for one player, targets and focus; empty before 0010 runs. */
   custom: CustomRow[];
   plans: PlanRow[];
-  defaults: Target;
+  defaults: Defaults;
   /** False when the tables aren't there yet (migration 0007 not run). */
   ready: boolean;
 };
@@ -44,8 +46,8 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     db.from('player_schedules').select('user_id, club_days, game_day'),
     db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since),
     customQuery(db, academyId, since),
-    db.from('player_plans').select('user_id, sessions, minutes, focus, autopilot').eq('academy_id', academyId),
-    db.from('academy_plan_defaults').select('sessions, minutes').eq('academy_id', academyId).maybeSingle(),
+    withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress'),
+    loadDefaults(db, academyId),
   ]);
   return {
     programs: programs.data ?? [], sessions: sessions.data ?? [], drills: drills.data ?? [],
@@ -53,9 +55,25 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     playerPrograms: playerPrograms.data ?? [], addons: addons.data ?? [],
     schedules: schedules.data ?? [], moves: moves.data ?? [],
     custom: custom.data ?? [], plans: plans.data ?? [],
-    defaults: defaults.data ? { sessions: defaults.data.sessions, minutes: defaults.data.minutes } : DEFAULT_TARGET,
+    defaults,
     ready: !programs.error,
   };
+}
+
+/** Tries the newest columns, then without them (before their migration). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function withFallback(q: (cols: string) => any, cols: string, extra: string) {
+  const r = await q(cols + extra);
+  return r.error ? q(cols) : r;
+}
+
+/** The academy's default target and step-up setting; the built-in ones when unset. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadDefaults(db: any, academyId: string): Promise<Defaults> {
+  const { data } = await withFallback((c) => db.from('academy_plan_defaults').select(c).eq('academy_id', academyId).maybeSingle(), 'sessions, minutes', ', progress');
+  return data
+    ? { sessions: data.sessions, minutes: data.minutes, progress: data.progress ?? true }
+    : { ...DEFAULT_TARGET, progress: true };
 }
 
 /** Built-week sessions with their notes; without them before migration 0011 adds the column. */
@@ -82,10 +100,15 @@ async function drillsQuery(db: any, academyId: string) {
   return db.from('drills').select(cols).eq('academy_id', academyId).order('name');
 }
 /** A player's target: their own numbers where set, the academy's where not. */
-export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId: string): Target & { focus: string[]; autopilot: boolean; own: boolean } {
+export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId: string): Target & {
+  focus: string[]; autopilot: boolean; own: boolean;
+  /** Whether their weeks step up, and their own setting (null: the academy's). */
+  progress: boolean; ownProgress: boolean | null;
+} {
   const p = c.plans.find((x) => x.user_id === userId);
   return {
     sessions: p?.sessions ?? c.defaults.sessions, minutes: p?.minutes ?? c.defaults.minutes,
     focus: p?.focus ?? [], autopilot: p?.autopilot ?? false, own: !!(p && (p.sessions || p.minutes)),
+    progress: p?.progress ?? c.defaults.progress, ownProgress: p?.progress ?? null,
   };
 }

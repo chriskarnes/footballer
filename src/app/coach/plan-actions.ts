@@ -33,28 +33,34 @@ const clamp = (n: unknown, lo: number, hi: number) => {
 };
 
 /** Sessions a week, minutes each, and up to three things to work on. Null numbers mean the academy default. */
-export async function savePlan(userId: string, plan: { sessions: number | null; minutes: number | null; focus: string[] }): Promise<Result> {
+export async function savePlan(userId: string, plan: { sessions: number | null; minutes: number | null; focus: string[]; progress?: boolean | null }): Promise<Result> {
   try {
     const v = await staff();
     const focus = [...new Set(plan.focus)].filter((t) => t in FOCUS_LABELS).slice(0, 3);
-    const { error } = await v.db.from('player_plans').upsert({
+    const row: Record<string, unknown> = {
       academy_id: v.academy.id, user_id: userId, focus,
       sessions: plan.sessions === null ? null : clamp(plan.sessions, 1, 7),
       minutes: plan.minutes === null ? null : clamp(plan.minutes, 5, 90),
       updated_at: new Date().toISOString(),
-    });
+    };
+    // Null follows the academy; left out, it stays as it was.
+    if (plan.progress !== undefined) row.progress = plan.progress;
+    const { error } = await v.db.from('player_plans').upsert(row);
+    if (error && /progress/.test(error.message)) return { ok: false, error: 'Run migration 0013 in Supabase first.' };
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
 
 /** The academy's default target, for every player without their own. */
-export async function saveDefaults(sessions: number, minutes: number): Promise<Result> {
+export async function saveDefaults(sessions: number, minutes: number, progress: boolean): Promise<Result> {
   try {
     const v = await staff();
     const { error } = await v.db.from('academy_plan_defaults').upsert({
-      academy_id: v.academy.id, sessions: clamp(sessions, 1, 7), minutes: clamp(minutes, 5, 90), updated_at: new Date().toISOString(),
+      academy_id: v.academy.id, sessions: clamp(sessions, 1, 7), minutes: clamp(minutes, 5, 90), progress: !!progress,
+      updated_at: new Date().toISOString(),
     });
+    if (error && /progress/.test(error.message)) return { ok: false, error: 'Run migration 0013 in Supabase first.' };
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
@@ -83,8 +89,11 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     const meets = c.groups.filter((g) => !g.archived && g.meets_weekday !== null
       && c.memberships.some((m) => m.group_id === g.id && m.user_id === userId)).map((g) => g.meets_weekday as number);
     const busy = { club: sched?.club_days ?? [], game: sched?.game_day ?? null, meets };
-    const history = await pastWeeks(v.db, v.academy.id, c.custom, userId, week_of);
-    const recent = history.slice(0, 2).flatMap((w) => w.sessions.flatMap((x) => x.drill_ids));
+    const past = await pastWeeks(v.db, v.academy.id, c.custom, userId, week_of);
+    const recent = past.slice(0, 2).flatMap((w) => w.sessions.flatMap((x) => x.drill_ids));
+    // Step-ups off: no history, so every drill starts at its own amount and
+    // nothing carries over; recent drills still give way to fresh ones.
+    const history = t.progress ? past : [];
 
     const rules = buildPlayerWeek({ drills: c.drills, target: t, focus: t.focus, recent, busy, seed: `${userId}:${week_of}`, weekOf: week_of, history });
     if (!rules.length) return { ok: false, error: 'Nothing to build from yet.' };

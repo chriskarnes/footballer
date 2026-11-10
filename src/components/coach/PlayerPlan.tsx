@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { buildWeekFor, clearBuiltWeek, saveBuiltSession, savePlan } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
 import { drillTags, type CustomRow, type DrillRow } from '@/lib/academy-week';
-import { MINUTE_CHOICES, progressAmount, swapFor, type Target } from '@/lib/week-builder';
+import { MAX_STEP, MINUTE_CHOICES, progressAmount, swapFor, type Target } from '@/lib/week-builder';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -26,9 +26,11 @@ function madeBy(rows: CustomRow[]) {
  * its drills swapped or removed, or move day, and the week can be taken
  * back.
  */
-export function PlayerPlan({ userId, first, target, defaults, own, focus: savedFocus, drills, thisWeek, nextWeek, weeks, busy, runs = {} }: {
+export function PlayerPlan({ userId, first, target, defaults, own, focus: savedFocus, progress: savedProgress, ownProgress, drills, thisWeek, nextWeek, weeks, busy, runs = {} }: {
   userId: string; first: string;
-  target: Target; defaults: Target; own: boolean; focus: string[];
+  target: Target; defaults: Target & { progress: boolean }; own: boolean; focus: string[];
+  /** Whether their built weeks step up, and their own setting (null: the academy's). */
+  progress: boolean; ownProgress: boolean | null;
   drills: DrillRow[];
   thisWeek: CustomRow[]; nextWeek: CustomRow[];
   /** The Mondays: this week's and next. */
@@ -45,9 +47,10 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
   const [sessions, setSessions] = useState(target.sessions);
   const [minutes, setMinutes] = useState(target.minutes);
   const [focus, setFocus] = useState(savedFocus);
+  const [progress, setProgress] = useState(savedProgress);
   // Drills swapped out, per session, so tapping Swap again moves on.
   const [tried, setTried] = useState<Record<string, string[]>>({});
-  const dirty = sessions !== target.sessions || minutes !== target.minutes || focus.join() !== savedFocus.join();
+  const dirty = sessions !== target.sessions || minutes !== target.minutes || focus.join() !== savedFocus.join() || progress !== savedProgress;
 
   // Only tags some drill works on: a focus with nothing behind it builds nothing.
   const tags = useMemo(() => {
@@ -67,6 +70,8 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
     sessions: !own && sessions === defaults.sessions ? null : sessions,
     minutes: !own && minutes === defaults.minutes ? null : minutes,
     focus,
+    // Sent only when changed; back to the academy's setting when it matches it.
+    ...(progress !== savedProgress ? { progress: progress === defaults.progress ? null : progress } : {}),
   }));
 
   return (
@@ -104,6 +109,20 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
           })}
           {!tags.length && <p className="text-[13px] text-on-surface-variant">Tag your drills with what they work on, and the tags show up here.</p>}
         </div>
+
+        <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
+          <span>
+            <span className="block text-[14px] font-bold text-on-surface">Step up week to week</span>
+            <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
+              {progress
+                ? 'Drills they handle get a little harder each built week, with a lighter week every fourth.'
+                : 'Each built week starts fresh at every drill’s own amount. You set any step-ups.'}
+              {ownProgress === null && progress === defaults.progress && ' Your default.'}
+            </span>
+          </span>
+          <input type="checkbox" role="switch" className="mt-1 h-5 w-5 shrink-0 accent-current" checked={progress}
+                 onChange={(e) => setProgress(e.target.checked)} />
+        </label>
 
         {dirty && (
           <button type="button" disabled={pending} onClick={save} className="btn-primary pressable mt-5 w-full">
@@ -181,6 +200,24 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
                             {d && <span className="block truncate text-[12px] text-on-surface-variant">
                               {[progressAmount(d.amount, s.steps?.[i] ?? 0), `${d.minutes} min`, drillTags(d).map(label).join(', ')].filter(Boolean).join(' · ')}
                             </span>}
+                            {d?.amount && (() => {
+                              const step = s.steps?.[i] ?? 0;
+                              // Set by hand: the trainer's amount, no label.
+                              const set = (n: number) => run(() => saveBuiltSession(s.id, {
+                                drill_ids: s.drill_ids,
+                                steps: s.drill_ids.map((_, k) => k === i ? n : s.steps?.[k] ?? 0),
+                                changes: s.drill_ids.map((_, k) => k === i ? 'same' : s.changes?.[k] ?? 'new'),
+                              }));
+                              return (
+                                <span className="mt-1 flex items-center gap-1.5 text-[12px] text-on-surface-variant">
+                                  <button type="button" className="icon-btn !h-7 !w-7" aria-label={`Easier ${d.name}`}
+                                          disabled={pending || step <= 0} onClick={() => set(step - 1)}>−</button>
+                                  <span className="min-w-[3.5rem] text-center font-semibold">{step ? `Step ${step}` : 'Base'}</span>
+                                  <button type="button" className="icon-btn !h-7 !w-7" aria-label={`Harder ${d.name}`}
+                                          disabled={pending || step >= MAX_STEP + 3} onClick={() => set(step + 1)}>+</button>
+                                </span>
+                              );
+                            })()}
                           </span>
                           <button type="button" disabled={pending} className="shrink-0 text-[12.5px] font-semibold underline underline-offset-4"
                                   onClick={() => {

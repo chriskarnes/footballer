@@ -83,7 +83,7 @@ export default async function PlayerPage({ params, searchParams }: {
         return (
           <section className="mt-8">
             <p className="eyebrow mb-3">Their plan</p>
-            <PlayerPlan userId={p.user_id} first={p.first} target={t} defaults={content.defaults} own={t.own} focus={t.focus}
+            <PlayerPlan userId={p.user_id} first={p.first} target={t} defaults={content.defaults} own={t.own} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
               drills={content.drills} weeks={weeks}
               thisWeek={mine.filter((x) => x.week_of === weeks.this)} nextWeek={mine.filter((x) => x.week_of === weeks.next)} runs={runs}
               busy={{ club: soccer?.club_days ?? [], game: soccer?.game_day ?? null,
