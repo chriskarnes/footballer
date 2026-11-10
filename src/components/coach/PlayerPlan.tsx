@@ -10,6 +10,12 @@ import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const label = (t: string) => FOCUS_LABELS[t as FocusArea] ?? t;
 
+/** "Built with AI · edited by you" */
+function madeBy(rows: CustomRow[]) {
+  const how = rows.some((r) => r.made_by === 'ai') ? 'Built with AI' : 'Built from their settings';
+  return rows.some((r) => r.made_by === 'trainer') ? `${how} · edited by you` : how;
+}
+
 /**
  * One player's plan: how much they train (sessions a week, minutes each),
  * what they work on (up to three tags), and the weeks built from that. A
@@ -29,6 +35,8 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
+  // Why the last build skipped the AI, when it did.
+  const [why, setWhy] = useState('');
   const [sessions, setSessions] = useState(target.sessions);
   const [minutes, setMinutes] = useState(target.minutes);
   const [focus, setFocus] = useState(savedFocus);
@@ -42,10 +50,11 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
     return (Object.keys(FOCUS_LABELS) as FocusArea[]).filter((t) => have.has(t) || focus.includes(t));
   }, [drills, focus]);
 
-  const run = (f: () => Promise<{ ok: boolean; error?: string }>) => start(async () => {
+  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>) => start(async () => {
     setErr('');
     const r = await f();
-    if (!r.ok) setErr(r.error ?? 'That didn’t work.'); else router.refresh();
+    if (!r.ok) setErr(r.error ?? 'That didn’t work.');
+    else { if ('why' in r) setWhy(r.why ?? ''); router.refresh(); }
   });
 
   const save = () => run(() => savePlan(userId, {
@@ -100,6 +109,7 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
 
       {builtWeek({ title: 'This week', weekOf: weeks.this, rows: thisWeek, which: 'this' })}
       {builtWeek({ title: 'Next week', weekOf: weeks.next, rows: nextWeek, which: 'next' })}
+      {why && <p role="status" className="text-[12.5px] text-on-surface-variant">{why}.</p>}
       {err && <p role="alert" className="text-[13px] font-semibold text-on-surface">{err}</p>}
     </div>
   );
@@ -111,7 +121,10 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
     return (
       <section key={which} className="card p-5">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="h-card">{title}</div>
+          <div>
+            <div className="h-card">{title}</div>
+            {rows.length > 0 && <p className="mt-0.5 text-[12.5px] text-on-surface-variant">{madeBy(rows)}</p>}
+          </div>
           {rows.length > 0 && (
             <span className="flex gap-4 text-[13px] font-semibold">
               <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))} className="underline underline-offset-4">Rebuild</button>
@@ -132,6 +145,7 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-bold text-on-surface">{s.name}</span>
                       <span className="text-[12.5px] text-on-surface-variant">{total} min{note && ` · ${note}`}</span>
+                      {s.note && <span className="mt-1 block text-[12.5px] italic leading-snug text-on-surface">“{s.note}”</span>}
                     </span>
                     <select aria-label={`Day for ${s.name}`} value={day} disabled={pending}
                             onChange={(e) => run(() => saveBuiltSession(s.id, { weekday: Number(e.target.value) }))}

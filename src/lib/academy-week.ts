@@ -24,7 +24,8 @@ export type CompletionRow = { source: string; source_ref: string | null; complet
 /** The days a player already has soccer: club training, and a game. 0 = Monday. */
 export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null };
 /** A session of a week built for one player (0010). Replaces their program that week. */
-export type CustomRow = { id: string; user_id: string; week_of: string; position: number; name: string; drill_ids: string[]; weekday: number };
+export type CustomRow = { id: string; user_id: string; week_of: string; position: number; name: string; drill_ids: string[]; weekday: number;
+  made_by?: 'rules' | 'ai' | 'trainer'; note?: string | null };
 /** One item moved to another day, for one week. */
 export type MoveRow = { user_id: string; week_of: string; item_key: string; weekday: number };
 
@@ -171,7 +172,7 @@ export function buildWeek(input: {
   if (built.length) {
     for (const c of built) items.push({
       key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
-      weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, done: false,
+      weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, note: c.note ?? null, done: false,
     });
   } else {
     for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);

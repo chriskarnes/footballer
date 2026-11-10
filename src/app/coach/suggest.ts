@@ -1,6 +1,6 @@
 'use server';
 import { drillTags } from '@/lib/academy-week';
-import { GoogleGenAI } from '@google/genai';
+import { allowed, client, logCall, MODEL } from '@/lib/ai';
 import { getViewer } from '@/lib/viewer';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
@@ -40,10 +40,12 @@ export async function suggestAddon(userId: string): Promise<Suggestion> {
   const candidates = content.drills.filter((d) => !thisWeek.has(d.name));
   const pool = candidates.length ? candidates : content.drills;
 
-  const key = process.env.GEMINI_API_KEY;
-  if (key) {
+  // Within the AI's limits (see lib/ai.ts), or straight to the rule.
+  const gate = await allowed(v.db, { academyId: v.academy.id, timeZone: v.academy.timeZone, playerId: userId, kind: 'suggest' });
+  const ai = gate.ok ? client() : null;
+  if (ai) {
+    let usage: unknown = null, ok = false;
     try {
-      const ai = new GoogleGenAI({ apiKey: key });
       const facts = {
         name: p.first,
         positions: p.positions, age: p.age_band,
@@ -55,7 +57,7 @@ export async function suggestAddon(userId: string): Promise<Suggestion> {
       const drills = pool.map((d) => ({ id: d.id, name: d.name, amount: d.amount, minutes: d.minutes,
         works_on: drillTags(d).map((t) => FOCUS_LABELS[t as FocusArea] ?? t) }));
       const res = await ai.models.generateContent({
-        model: process.env.GEMINI_MODEL || 'gemini-flash-latest',
+        model: MODEL,
         contents: `Player:\n${JSON.stringify(facts)}\n\nThe trainer's drills:\n${JSON.stringify(drills)}`,
         config: {
           systemInstruction: SYSTEM,
@@ -65,12 +67,16 @@ export async function suggestAddon(userId: string): Promise<Suggestion> {
           abortSignal: AbortSignal.timeout(15000),
         },
       });
+      usage = res.usageMetadata ?? null;
       const input = JSON.parse(res.text ?? '{}') as { drill_id?: string; note?: string; why?: string };
       if (input.drill_id && pool.some((d) => d.id === input.drill_id)) {
+        ok = true;
         return { ok: true, drillId: input.drill_id, note: String(input.note ?? '').slice(0, 200), why: String(input.why ?? ''), by: 'ai' };
       }
     } catch (e) {
       console.error('suggestAddon: Gemini failed, using the rule', e instanceof Error ? e.message : e);
+    } finally {
+      await logCall(v.db, { academyId: v.academy.id, actorId: v.user?.id ?? null, playerId: userId, kind: 'suggest', ok, usage });
     }
   }
 

@@ -3,7 +3,10 @@ import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { addDays, localDate, mondayOf } from '@/lib/progress';
 import { loadContent, targetFor } from '@/lib/academy-data';
-import { buildPlayerWeek } from '@/lib/week-builder';
+import { buildPlayerWeek, fitToTarget } from '@/lib/week-builder';
+import { allowed, DENIED, fingerprint, logCall } from '@/lib/ai';
+import { proposeWeek } from '@/lib/ai-week';
+import { loadPlayers } from '@/lib/coach-data';
 import { FOCUS_LABELS } from '@/lib/types';
 
 /**
@@ -17,7 +20,7 @@ async function staff() {
   return v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> };
 }
 
-type Result = { ok: true } | { ok: false; error: string };
+type Result = { ok: true; by?: 'ai' | 'rules'; why?: string } | { ok: false; error: string };
 const fail = (e: unknown): Result => ({ ok: false, error: e instanceof Error ? e.message : String(e) });
 const done = () => revalidatePath('/', 'layout');
 const missing = (m: string) => /player_plans|player_week_sessions|academy_plan_defaults|schema cache/.test(m)
@@ -59,6 +62,11 @@ export async function saveDefaults(sessions: number, minutes: number): Promise<R
 /**
  * Builds this week or next for one player and publishes it, replacing any
  * week already built for them then. Their program steps aside for that week.
+ *
+ * The rules build it first, always. Then, if the AI is set up and within its
+ * limits, it proposes its own picks, which are checked and fitted to the
+ * target (fitToTarget) before they replace the rules' sessions. Days are the
+ * rules' either way. `why` says when the AI was skipped.
  */
 export async function buildWeekFor(userId: string, which: 'this' | 'next'): Promise<Result> {
   try {
@@ -71,25 +79,49 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     const sched = c.schedules.find((s) => s.user_id === userId);
     const meets = c.groups.filter((g) => !g.archived && g.meets_weekday !== null
       && c.memberships.some((m) => m.group_id === g.id && m.user_id === userId)).map((g) => g.meets_weekday as number);
+    const busy = { club: sched?.club_days ?? [], game: sched?.game_day ?? null, meets };
     // What they had in the last two built weeks drops down the list.
     const recent = c.custom.filter((x) => x.user_id === userId && x.week_of < week_of && x.week_of >= addDays(week_of, -14))
       .sort((a, b) => b.week_of.localeCompare(a.week_of)).flatMap((x) => x.drill_ids);
 
-    const built = buildPlayerWeek({
-      drills: c.drills, target: t, focus: t.focus, recent,
-      busy: { club: sched?.club_days ?? [], game: sched?.game_day ?? null, meets },
-      seed: `${userId}:${week_of}`,
-    });
-    if (!built.length) return { ok: false, error: 'Nothing to build from yet.' };
+    const rules = buildPlayerWeek({ drills: c.drills, target: t, focus: t.focus, recent, busy, seed: `${userId}:${week_of}` });
+    if (!rules.length) return { ok: false, error: 'Nothing to build from yet.' };
+    let rows: { name: string; drill_ids: string[]; weekday: number; note: string | null; made_by: 'ai' | 'rules' }[] =
+      rules.map((s) => ({ ...s, note: null, made_by: 'rules' }));
+    let why: string | undefined;
+
+    const gate = await allowed(v.db, { academyId: v.academy.id, timeZone: v.academy.timeZone, playerId: userId, kind: 'week' });
+    if (gate.ok) {
+      const { players } = await loadPlayers(v.db, v.academy, { player: userId, days: 21, content: c });
+      const p = players[0];
+      const last = p?.progress.weeks[p.progress.weeks.length - 2];
+      const res = await proposeWeek({
+        first: p?.first ?? 'Player', age: p?.age_band ?? null, positions: p?.positions ?? null,
+        target: t, focus: t.focus, drills: c.drills, recent,
+        lately: { done: last?.done ?? 0, planned: last?.planned ?? 0, titles: (p?.done ?? []).flatMap((d) => d.title ? [d.title] : []) },
+      });
+      await logCall(v.db, {
+        academyId: v.academy.id, actorId: v.user.id, playerId: userId, kind: 'week', ok: !!res.sessions, usage: res.usage,
+        inputHash: fingerprint({ week_of, t, busy, recent, drills: c.drills.map((d) => d.id).sort() }),
+      });
+      if (res.sessions) {
+        rows = fitToTarget(res.sessions, rules, c.drills, t, t.focus)
+          .map((s) => ({ name: s.name, drill_ids: s.drill_ids, weekday: s.weekday, note: s.note ?? null, made_by: s.fromAi ? 'ai' : 'rules' }));
+      } else why = 'AI didn’t answer, so this is the rules’ week';
+    } else why = `${DENIED[gate.why]}, so this is built from their settings`;
 
     const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of);
     if (del.error) return { ok: false, error: missing(del.error.message) };
-    const { error } = await v.db.from('player_week_sessions').insert(built.map((s, i) => ({
+    const insert = (withNote: boolean) => v.db.from('player_week_sessions').insert(rows.map((s, i) => ({
       academy_id: v.academy.id, user_id: userId, week_of, position: i,
-      name: s.name, drill_ids: s.drill_ids, weekday: s.weekday, made_by: 'rules',
+      name: s.name, drill_ids: s.drill_ids, weekday: s.weekday, made_by: s.made_by, ...(withNote ? { note: s.note } : {}),
     })));
+    let { error } = await insert(true);
+    // Before 0011 there's no note column: publish without the notes.
+    if (error && /note/.test(error.message)) ({ error } = await insert(false));
     if (error) return { ok: false, error: missing(error.message) };
-    done(); return { ok: true };
+    done();
+    return { ok: true, by: rows.some((r) => r.made_by === 'ai') ? 'ai' : 'rules', why };
   } catch (e) { return fail(e); }
 }
 

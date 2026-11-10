@@ -43,7 +43,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     // RLS: a player gets their own row; a trainer gets their players'.
     db.from('player_schedules').select('user_id, club_days, game_day'),
     db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since),
-    db.from('player_week_sessions').select('id, user_id, week_of, position, name, drill_ids, weekday').eq('academy_id', academyId).gte('week_of', since),
+    customQuery(db, academyId, since),
     db.from('player_plans').select('user_id, sessions, minutes, focus, autopilot').eq('academy_id', academyId),
     db.from('academy_plan_defaults').select('sessions, minutes').eq('academy_id', academyId).maybeSingle(),
   ]);
@@ -56,6 +56,15 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     defaults: defaults.data ? { sessions: defaults.data.sessions, minutes: defaults.data.minutes } : DEFAULT_TARGET,
     ready: !programs.error,
   };
+}
+
+/** Built-week sessions with their notes; without them before migration 0011 adds the column. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function customQuery(db: any, academyId: string, since: string) {
+  const cols = 'id, user_id, week_of, position, name, drill_ids, weekday, made_by';
+  const q = (c: string) => db.from('player_week_sessions').select(c).eq('academy_id', academyId).gte('week_of', since);
+  const full = await q(`${cols}, note`);
+  return full.error ? q(cols) : full;
 }
 
 /** Drills with their tags; without them before migration 0008 adds the column. */

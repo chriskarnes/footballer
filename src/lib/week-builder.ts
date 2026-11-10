@@ -122,3 +122,42 @@ export function swapFor(drills: DrillRow[], session: string[], drillId: string, 
   };
   return options.sort((a, b) => score(b) - score(a))[0];
 }
+
+/** The drills worth showing the AI: the best few dozen for this player, by the same scoring the rules use. */
+export function candidates(drills: DrillRow[], focus: string[], recent: string[] = [], max = 30): DrillRow[] {
+  const r = new Set(recent);
+  const score = (d: DrillRow) => drillTags(d).filter((t) => focus.includes(t)).length * 3 - (r.has(d.id) ? 2 : 0) + (drillTags(d).length ? 0 : -1);
+  return drills.filter((d) => d.minutes > 0).sort((a, b) => score(b) - score(a)).slice(0, max);
+}
+
+export type Proposed = { name: string; drill_ids: string[]; note?: string };
+
+/**
+ * Takes sessions someone else proposed (the AI) and makes them safe to
+ * publish: only real drills, each once per session, close to the target
+ * length, the right number of sessions. Anything missing or broken is
+ * filled from the rules' own week, so the result is always a full week.
+ */
+export function fitToTarget(proposed: Proposed[], fallback: BuiltSession[], drills: DrillRow[], target: Target, focus: string[]): (BuiltSession & { note?: string; fromAi: boolean })[] {
+  const byId = new Map(drills.filter((d) => d.minutes > 0).map((d) => [d.id, d]));
+  const mins = (ids: string[]) => ids.reduce((a, id) => a + (byId.get(id)?.minutes ?? 0), 0);
+  return fallback.map((rules, i) => {
+    const p = proposed[i];
+    let ids = p ? [...new Set(p.drill_ids.filter((id) => byId.has(id)))] : [];
+    if (!ids.length) return { ...rules, fromAi: false };
+    // A drill longer than the whole session goes, if there's anything else.
+    const fits = ids.filter((id) => byId.get(id)!.minutes <= target.minutes + 3);
+    if (fits.length) ids = fits;
+    // Too long: drop from the end. Too short: top up with the best fit not already in.
+    while (ids.length > 1 && mins(ids) > target.minutes + 3) ids = ids.slice(0, -1);
+    while (mins(ids) < target.minutes - 3) {
+      const add = [...byId.values()].filter((d) => !ids.includes(d.id) && mins(ids) + d.minutes <= target.minutes + 3)
+        .sort((a, b) => drillTags(b).filter((t) => focus.includes(t)).length - drillTags(a).filter((t) => focus.includes(t)).length)[0];
+      if (!add) break;
+      ids.push(add.id);
+    }
+    const name = (p.name ?? '').replace(/\s+/g, ' ').trim().slice(0, 40) || rules.name;
+    const note = p.note?.replace(/\s+/g, ' ').trim().slice(0, 140) || undefined;
+    return { name, drill_ids: ids, weekday: rules.weekday, minutes: mins(ids), note, fromAi: true };
+  });
+}
