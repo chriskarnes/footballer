@@ -71,9 +71,8 @@ export default function TrainersPage() {
       </section>
 
       <section id="pricing" className="mt-24 scroll-mt-8">
-        <SectionHead eyebrow="Pricing" title="$5 a player, a month.">
-          If you charge your players more than $5 a month through Train.futbol, we add 10% of the difference.
-          Or pay the $5 yourself and charge them however you already do.
+        <SectionHead eyebrow="Pricing" title="You set the price. You keep most of it.">
+          Your players pay you monthly through Train.futbol. We take $5 of each payment, plus 10% of anything above $5. The rest is yours.
         </SectionHead>
         <div className="mt-8 max-w-[40rem]">
           <PriceCalc />
