@@ -3,7 +3,9 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SignIn } from '@/components/SignIn';
 import { Brand } from '@/components/Brand';
-import { JoinButton } from '@/components/JoinButton';
+import { JoinFlow } from '@/components/JoinFlow';
+import { isWho } from '@/lib/who';
+import { getBranding } from '@/lib/branding-server';
 import { getViewer } from '@/lib/viewer';
 import { academyOrigin } from '@/lib/tenant';
 
@@ -17,7 +19,9 @@ export const metadata = { title: 'Join', robots: { index: false } };
  * demo.train.futbol — it moves to the right one first, since the sign-in
  * that follows belongs to that subdomain.
  */
-export default async function JoinPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function JoinPage({ params, searchParams }: {
+  params: Promise<{ code: string }>; searchParams: Promise<{ as?: string }>;
+}) {
   const { code } = await params;
   const v = await getViewer();
   const { data: invite } = /^[a-z0-9]{8,40}$/.test(code)
@@ -39,28 +43,58 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
   if (slug !== v.slug) {
     const h = await headers();
     const here = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('x-forwarded-host') ?? h.get('host')}`;
-    redirect(`${academyOrigin(slug, here)}/join/${code}`);
+    const q = await searchParams;
+    redirect(`${academyOrigin(slug, here)}/join/${code}${isWho(q.as) ? `?as=${q.as}` : ''}`);
   }
 
-  const as = role === 'trainer' ? 'a trainer' : 'a player';
   const already = v.role && (v.role !== 'player' || role === 'player');
+  const brand = await getBranding();
+  const shown = brand?.name ?? name;
+  const dot = shown.indexOf('.');
+  const [head, tail] = dot > 0 ? [shown.slice(0, dot), shown.slice(dot)] : [shown, ''];
+  const q = await searchParams;
 
   return (
-    <div className="animate-pop">
-      <header className="app-bar"><Brand small /></header>
-      <div className="mt-10">
-        <p className="eyebrow mb-3">{role === 'trainer' ? 'Trainer invite' : 'You’re invited'}</p>
-        <h1 className="h-page">Join {name}</h1>
-        <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
-          {role === 'trainer'
-            ? 'See every player’s progress this week, and send them notes.'
-            : 'Train with your own sessions, and your trainer sees what you finish.'}
-        </p>
-      </div>
-      <div className="mt-7">
-        {!v.user ? (
-          <SignIn next={`/join/${code}`} title={`Join as ${as}`} button="Email me a link" />
-        ) : already ? (
+    <div className="animate-pop pb-10">
+      {/* The academy's own colours, edge to edge, the way the marketing
+          pages open: this is the step between the two. */}
+      <section className="relative isolate -mx-5 px-5 pb-20 pt-6 text-on-surface-brand">
+        <div aria-hidden className="grain absolute bottom-0 left-[calc(50%_-_50dvw)] right-[calc(50%_-_50dvw)] -top-24 -z-10 overflow-hidden bg-surface-brand"
+             style={{ backgroundImage: 'radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--app-brand-accent) 26%, transparent), transparent 70%)' }} />
+        <header className="flex items-center gap-3">
+          {brand?.logo && <img src={brand.logo} alt="" className="h-10 w-10 rounded-xl object-contain" />}
+          <span className="font-brand text-[19px] tracking-tighter">
+            <span className="font-extrabold">{head}</span>
+            {tail && <span className="font-medium text-on-surface-brand-variant">{tail}</span>}
+          </span>
+        </header>
+
+        <div className="mt-12">
+          <span className="inline-block rounded-md px-2.5 pb-1 pt-1.5 font-brand text-[11.5px] font-extrabold uppercase tracking-[.14em]"
+                style={{ fontStretch: '140%', background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+            {role === 'trainer' ? 'Trainer invite' : 'You’re invited'}
+          </span>
+          <h1 className="site-wide mt-4 text-[38px] uppercase leading-[.95]">
+            Join {head}{tail && <span className="text-on-surface-brand-variant">{tail}</span>}
+          </h1>
+          <p className="mt-4 max-w-[34ch] text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+            {role === 'trainer'
+              ? 'See every player’s week at a glance, and send them notes.'
+              : 'Sessions from your trainer, done at home with a ball. Your trainer sees what you finish.'}
+          </p>
+          {role === 'player' && (
+            <ul className="mt-6 flex flex-wrap gap-2 text-[12.5px] font-semibold">
+              {['15–20 min a session', 'Set around your soccer days', 'Works on any phone'].map((t) => (
+                <li key={t} className="rounded-full px-3 py-1.5" style={{ background: 'color-mix(in srgb, currentColor 13%, transparent)' }}>{t}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* The card sits across the edge, half in the colour and half out. */}
+      <div className="relative -mt-12">
+        {v.user && already ? (
           <div className="card p-5">
             <div className="h-card">You&rsquo;re already in</div>
             <p className="mt-1 text-[13.5px] text-on-surface-variant">Signed in as {v.user.email}.</p>
@@ -69,7 +103,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
             </Link>
           </div>
         ) : (
-          <JoinButton code={code} label={`Join as ${as}`} email={v.user.email ?? ''} />
+          <JoinFlow code={code} role={role} email={v.user?.email ?? null} initial={isWho(q.as) ? q.as : null} />
         )}
       </div>
     </div>
