@@ -112,13 +112,14 @@ function WeekStrip({ items, today }: { items: MyWeek['items']; today: number }) 
         const label = `${DAYS[i]}${isToday ? ' (today)' : ''}: ${on.length ? (doneHere ? 'done' : `${on.length} to do`) : 'rest'}`;
         return (
           <li key={i} aria-label={label} className="flex w-9 flex-col items-center gap-1.5">
-            <span className="text-[11px] font-bold" style={{ color: isToday ? 'var(--app-brand-accent)' : undefined }}>
-              <span className={isToday ? '' : 'text-on-surface-brand-variant'}>{d}</span>
-            </span>
-            <span className={`flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-extrabold
-              ${doneHere ? '' : on.length ? 'border-2 border-on-surface-brand' : ''}`}
-                  style={doneHere ? { background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' } : undefined}>
-              {doneHere ? '✓' : on.length > 1 ? on.length : !on.length && <span className="h-1 w-1 rounded-full bg-on-surface-brand-variant" />}
+            <span className="text-[11.5px] font-extrabold" style={{ color: isToday ? 'var(--app-brand-accent)' : 'var(--app-on-surface-brand)' }}>{d}</span>
+            {/* Every day is a solid shape, so the row reads on any brand colour:
+                accent when done, a bright ring to do, a faint disc at rest. */}
+            <span className="flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-extrabold"
+                  style={doneHere ? { background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }
+                    : on.length ? { boxShadow: 'inset 0 0 0 2.5px var(--app-on-surface-brand)', color: 'var(--app-on-surface-brand)' }
+                    : { background: 'color-mix(in srgb, var(--app-on-surface-brand) 14%, transparent)' }}>
+              {doneHere ? '✓' : on.length > 1 ? on.length : ''}
             </span>
             <span className="h-[3px] w-4 rounded-full" style={{ background: isToday ? 'var(--app-brand-accent)' : 'transparent' }} />
           </li>
