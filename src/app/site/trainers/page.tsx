@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { PriceCalc } from '@/components/site/PriceCalc';
 import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
-import group from '@/assets/site/group.jpg';
 
 export const metadata = {
   title: 'For trainers · Train.futbol',
@@ -18,7 +17,8 @@ export const metadata = {
 export default function TrainersPage() {
   return (
     <>
-      <SiteHero photo={group} alt="A trainer laughing with a group of young players in training bibs" position="72% 30%"
+      <SiteHero video={{ src: '/site/goal.mp4', poster: '/site/goal-poster.jpg' }}
+                alt="A young player cuts past a defender and scores, the cut and shot in slow motion" position="55% 50%"
                 cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 3 of 5 this week', at: { top: 40, right: -12 } }]}>
         <span className="marker">For private trainers</span>
         <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
