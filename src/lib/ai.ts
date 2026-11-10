@@ -16,6 +16,15 @@ export const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const PER_PLAYER_WEEK = Number(process.env.AI_PLAYER_WEEKLY_LIMIT) || 6;
 const PER_ACADEMY_MONTH = Number(process.env.AI_ACADEMY_MONTHLY_LIMIT) || 600;
 
+/** How much AI this academy has used this month, against its limit. Null when it can't say. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function usage(db: any, academyId: string, timeZone: string): Promise<{ used: number; limit: number; on: boolean } | null> {
+  const monthStart = `${localDate(new Date(), timeZone).slice(0, 7)}-01`;
+  const { count, error } = await db.from('ai_usage').select('id', { count: 'exact', head: true })
+    .eq('academy_id', academyId).gte('created_at', monthStart);
+  return error ? null : { used: count ?? 0, limit: PER_ACADEMY_MONTH, on: !!process.env.GEMINI_API_KEY };
+}
+
 export type AiKind = 'week' | 'suggest';
 export type Denied = 'no_key' | 'player_limit' | 'academy_limit' | 'no_log';
 

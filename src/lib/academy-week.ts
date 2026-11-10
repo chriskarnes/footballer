@@ -13,7 +13,7 @@ import { addDays, localDate, mondayOf, weekdayOf } from './progress';
 export type ProgramRow = { id: string; name: string; weeks: number };
 export type SessionRow = { id: string; program_id: string; week: number; position: number; name: string; drill_ids: string[] };
 export type DrillRow = { id: string; name: string; amount: string | null; minutes: number; focus: string | null; focus_areas?: string[]; video_url: string | null; how: string | null;
-  /** The harder version this hands over to once stepped up as far as it goes (0012). */
+  /** The next drill, which takes over once this one is levelled all the way up (0012). */
   harder_id?: string | null };
 
 /** Everything a drill works on: its tags, or its one focus from before tags. */

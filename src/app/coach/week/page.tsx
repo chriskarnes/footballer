@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { staffOnly } from '@/components/coach/Gate';
 import { PageHead } from '@/components/coach/PageHead';
+import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { StatusDot } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
@@ -34,6 +35,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="animate-pop">
+      <ViewTabs tabs={PLAYER_VIEWS} on="/coach/week" />
       <PageHead title="This week" eyebrow={inGroup ? inGroup.name : 'Everyone'}>
         Each player&rsquo;s sessions, on the days that fit their soccer. They set their club and game days; you don&rsquo;t keep this up to date.
       </PageHead>

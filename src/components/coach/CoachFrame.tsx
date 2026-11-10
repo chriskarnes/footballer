@@ -12,17 +12,14 @@ import { haptic } from '@/lib/haptics';
  * column, since a 1200px-wide text field is harder to use, not easier.
  */
 const PLACES = [
-  { href: '/coach',         label: 'Players',  match: ['/coach', '/coach/players', '/coach/send'],
+  // Players holds the list and the calendar (Week); Library, programs and drills.
+  { href: '/coach',         label: 'Players',  match: ['/coach', '/coach/players', '/coach/send', '/coach/week'],
     d: 'M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
-  { href: '/coach/week',    label: 'Week',     match: ['/coach/week'],
-    d: 'M4 5h16v15H4zM16 3v4M8 3v4M4 10h16M9 10v10M14 10v10' },
   { href: '/coach/groups',  label: 'Groups',   match: ['/coach/groups'],
     d: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0' },
-  { href: '/coach/content', label: 'Programs', match: ['/coach/content', '/coach/programs'],
+  { href: '/coach/content', label: 'Library',  match: ['/coach/content', '/coach/programs', '/coach/drills'],
     d: 'M4 5h16v15H4zM16 3v4M8 3v4M4 10h16M8 14h3M8 17h6' },
-  { href: '/coach/drills',  label: 'Drills',   match: ['/coach/drills'],
-    d: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7l3.5 2.5-1.3 4h-4.4l-1.3-4L12 7Z' },
-  { href: '/coach/team',    label: 'Team',     match: ['/coach/team'],
+  { href: '/coach/team',    label: 'Academy',  match: ['/coach/team'],
     d: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M9 12h6M9 16h4' },
 ] as const;
 

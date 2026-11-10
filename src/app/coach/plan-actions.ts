@@ -52,6 +52,26 @@ export async function savePlan(userId: string, plan: { sessions: number | null; 
   } catch (e) { return fail(e); }
 }
 
+/**
+ * How their week is set. Back to their program takes away the custom weeks
+ * from this week on; custom builds nothing until the trainer builds a week.
+ */
+export async function setMode(userId: string, mode: 'program' | 'custom'): Promise<Result> {
+  try {
+    const v = await staff();
+    const { error } = await v.db.from('player_plans').upsert({
+      academy_id: v.academy.id, user_id: userId, mode, autopilot: false, updated_at: new Date().toISOString(),
+    });
+    if (error) return { ok: false, error: /mode/.test(error.message) ? 'Run migration 0014 in Supabase first.' : missing(error.message) };
+    if (mode === 'program') {
+      const from = mondayOf(localDate(new Date(), v.academy.timeZone));
+      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from);
+      if (del.error) return { ok: false, error: missing(del.error.message) };
+    }
+    done(); return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
 /** The academy's default target, for every player without their own. */
 export async function saveDefaults(sessions: number, minutes: number, progress: boolean): Promise<Result> {
   try {
@@ -137,6 +157,8 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       if (!error || !/note|steps|light|changes/.test(error.message)) break;
     }
     if (error) return { ok: false, error: missing(error.message) };
+    // Building a week means custom weeks, if they weren't already (before 0014, no mode).
+    if (t.mode !== 'auto') await v.db.from('player_plans').upsert({ academy_id: v.academy.id, user_id: userId, mode: 'custom' });
     done();
     return { ok: true, by: rows.some((r) => r.made_by === 'ai') ? 'ai' : 'rules', why };
   } catch (e) { return fail(e); }
@@ -183,17 +205,6 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
       delete row.steps; delete row.changes;
       ({ error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id));
     }
-    if (error) return { ok: false, error: missing(error.message) };
-    done(); return { ok: true };
-  } catch (e) { return fail(e); }
-}
-
-/** Takes a built week back: the player's program is their week again. */
-export async function clearBuiltWeek(userId: string, weekOf: string): Promise<Result> {
-  try {
-    const v = await staff();
-    const { error } = await v.db.from('player_week_sessions').delete()
-      .eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', weekOf);
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }

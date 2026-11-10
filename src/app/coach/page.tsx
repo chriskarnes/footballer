@@ -8,6 +8,7 @@ import { loadPlayers } from '@/lib/coach-data';
 import { ago } from '@/lib/notes';
 import { byAttention, detailOf, sinceLabel } from '@/lib/progress';
 import { PageHead } from '@/components/coach/PageHead';
+import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
 
@@ -51,6 +52,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="animate-pop">
+      <ViewTabs tabs={PLAYER_VIEWS} on="/coach" />
       <PageHead title={headline} eyebrow={inGroup ? `${inGroup.name} · this week` : 'This week'}
                 action={!!players.length && (
                   <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost btn-sm pressable">

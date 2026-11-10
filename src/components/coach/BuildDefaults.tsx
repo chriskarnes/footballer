@@ -7,10 +7,11 @@ import { MINUTE_CHOICES } from '@/lib/week-builder';
 import type { Defaults } from '@/lib/academy-data';
 
 /**
- * The academy's defaults for built weeks: how much every player trains
- * unless set on their own page, and whether weeks step drills up.
+ * The academy's defaults for custom weeks: how much every player trains
+ * unless set on their own page, and whether drills level up. With how much
+ * AI the academy has used this month.
  */
-export function BuildDefaults({ defaults }: { defaults: Defaults }) {
+export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used: number; limit: number; on: boolean } | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
@@ -28,7 +29,7 @@ export function BuildDefaults({ defaults }: { defaults: Defaults }) {
   return (
     <div className="card p-5">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="h-card">Built weeks</div>
+        <div className="h-card">Custom weeks</div>
         <span className="text-[13px] text-on-surface-variant">{sessions * minutes} min a week</span>
       </div>
       <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">For every player, unless you change it on their page.</p>
@@ -46,11 +47,11 @@ export function BuildDefaults({ defaults }: { defaults: Defaults }) {
 
       <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
         <span>
-          <span className="block text-[14px] font-bold text-on-surface">Step up week to week</span>
+          <span className="block text-[14px] font-bold text-on-surface">Level up week to week</span>
           <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
             {progress
-              ? 'Drills a player handles get a little harder each built week, with a lighter week every fourth.'
-              : 'Each built week starts fresh at every drill’s own amount. You set any step-ups.'}
+              ? 'Drills a player handles go up a level each week, with a lighter week every fourth.'
+              : 'Every drill stays at its own amount. You set levels yourself.'}
           </span>
         </span>
         <input type="checkbox" role="switch" className="mt-1 h-5 w-5 shrink-0 accent-current" checked={progress}
@@ -61,6 +62,23 @@ export function BuildDefaults({ defaults }: { defaults: Defaults }) {
         <button type="button" disabled={pending} onClick={save} className="btn-primary pressable mt-5 w-full">
           {pending ? 'Saving…' : 'Save'}
         </button>
+      )}
+      {ai && (
+        <div className="mt-5 border-t border-outline-variant pt-4">
+          <div className="flex items-baseline justify-between gap-3 text-[13px]">
+            <span className="font-bold text-on-surface">AI this month</span>
+            <span className="text-on-surface-variant">{ai.on ? `${ai.used} of ${ai.limit}` : 'Not set up'}</span>
+          </div>
+          {ai.on && (
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-highest" aria-hidden>
+              <div className="h-full rounded-full bg-on-surface" style={{ width: `${Math.min(100, (ai.used / ai.limit) * 100)}%` }} />
+            </div>
+          )}
+          <p className="mt-2 text-[12.5px] leading-snug text-on-surface-variant">
+            {ai.on ? 'Builds and suggestions. Past the limit, weeks are still built, just without AI.'
+              : 'Weeks are built from each player’s settings.'}
+          </p>
+        </div>
       )}
       {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
     </div>

@@ -66,7 +66,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
         </p>
       </fieldset>
       {others && others.length > 0 && (
-        <Field label="Harder version" hint="Built weeks move a player on to it once this drill is stepped up as far as it goes. Optional.">
+        <Field label="Next drill" hint="Once a player has levelled this drill all the way up, custom weeks move them on to this one. Optional.">
           <input type="hidden" name="has_harder" value="1" />
           <select name="harder_id" defaultValue={drill?.harder_id ?? ''}>
             <option value="">None</option>

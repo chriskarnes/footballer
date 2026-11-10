@@ -1,8 +1,9 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { buildWeekFor, clearBuiltWeek, saveBuiltSession, savePlan } from '@/app/coach/plan-actions';
+import { buildWeekFor, saveBuiltSession, savePlan, setMode } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
+import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { drillTags, type CustomRow, type DrillRow } from '@/lib/academy-week';
 import { MAX_STEP, MINUTE_CHOICES, progressAmount, swapFor, type Target } from '@/lib/week-builder';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
@@ -10,33 +11,35 @@ import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const label = (t: string) => FOCUS_LABELS[t as FocusArea] ?? t;
 const FEEL = { easy: 'felt too easy', right: 'felt about right', hard: 'felt too hard' } as const;
-/** What happened to a drill against last week, as a small label. */
-const CHANGE: Record<string, string> = { up: 'Step up', harder: 'Harder version', hold: 'Same as last week' };
+/** What happened to a drill against last week. */
+const CHANGE: Record<string, string> = { up: 'Level up', harder: 'Next drill', hold: 'Same level' };
+/** Levels past the first a trainer can set by hand. */
+const TOP_STEP = MAX_STEP + 3;
 
-/** "Built with AI · edited by you" */
-function madeBy(rows: CustomRow[]) {
-  const how = rows.some((r) => r.made_by === 'ai') ? 'Built with AI' : 'Built from their settings';
-  return rows.some((r) => r.made_by === 'trainer') ? `${how} · edited by you` : how;
-}
+type Mode = 'program' | 'custom' | 'auto';
 
 /**
- * One player's plan: how much they train (sessions a week, minutes each),
- * what they work on (up to three tags), and the weeks built from that. A
- * built week replaces their program for that week; each session can have
- * its drills swapped or removed, or move day, and the week can be taken
- * back.
+ * How one player's week is set, as one choice:
+ *   - Program: their group's program, or their own (the `program` slot);
+ *   - Custom: weeks built from how much they train and what they work on.
+ *     Each session's drills can be swapped, removed or set to a level, and
+ *     its day moved.
  */
-export function PlayerPlan({ userId, first, target, defaults, own, focus: savedFocus, progress: savedProgress, ownProgress, drills, thisWeek, nextWeek, weeks, busy, runs = {} }: {
+export function PlayerPlan({ userId, first, mode, program, target, defaults, own, focus: savedFocus, progress: savedProgress, ownProgress,
+  drills, thisWeek, nextWeek, weeks, busy, runs = {} }: {
   userId: string; first: string;
+  mode: Mode;
+  /** What Program shows: this week, groups and their own programs. */
+  program: React.ReactNode;
   target: Target; defaults: Target & { progress: boolean }; own: boolean; focus: string[];
-  /** Whether their built weeks step up, and their own setting (null: the academy's). */
+  /** Whether their custom weeks level up, and their own setting (null: the academy's). */
   progress: boolean; ownProgress: boolean | null;
   drills: DrillRow[];
   thisWeek: CustomRow[]; nextWeek: CustomRow[];
   /** The Mondays: this week's and next. */
   weeks: { this: string; next: string };
   busy: { club: number[]; game: number | null; meets: number[] };
-  /** Built sessions they've done, by id, with how it felt. */
+  /** Custom sessions they've done, by id, with how it felt. */
   runs?: Record<string, { feel: 'easy' | 'right' | 'hard' | null }>;
 }) {
   const router = useRouter();
@@ -48,9 +51,13 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
   const [minutes, setMinutes] = useState(target.minutes);
   const [focus, setFocus] = useState(savedFocus);
   const [progress, setProgress] = useState(savedProgress);
+  const [confirm, setConfirm] = useState(false);
+  // The drill row open for editing, as "session:index".
+  const [open, setOpen] = useState('');
   // Drills swapped out, per session, so tapping Swap again moves on.
   const [tried, setTried] = useState<Record<string, string[]>>({});
   const dirty = sessions !== target.sessions || minutes !== target.minutes || focus.join() !== savedFocus.join() || progress !== savedProgress;
+  const ownSettings = own || ownProgress !== null;
 
   // Only tags some drill works on: a focus with nothing behind it builds nothing.
   const tags = useMemo(() => {
@@ -58,11 +65,11 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
     return (Object.keys(FOCUS_LABELS) as FocusArea[]).filter((t) => have.has(t) || focus.includes(t));
   }, [drills, focus]);
 
-  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>) => start(async () => {
+  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void) => start(async () => {
     setErr('');
     const r = await f();
     if (!r.ok) setErr(r.error ?? 'That didn’t work.');
-    else { if ('why' in r) setWhy(r.why ?? ''); router.refresh(); }
+    else { if ('why' in r) setWhy(r.why ?? ''); after?.(); router.refresh(); }
   });
 
   const save = () => run(() => savePlan(userId, {
@@ -74,86 +81,130 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
     ...(progress !== savedProgress ? { progress: progress === defaults.progress ? null : progress } : {}),
   }));
 
+  const resetToDefaults = () => run(() => savePlan(userId, { sessions: null, minutes: null, focus: savedFocus, progress: null }), () => {
+    setSessions(defaults.sessions); setMinutes(defaults.minutes); setProgress(defaults.progress);
+  });
+
+  const choose = (m: 'program' | 'custom') => {
+    if (m === mode) return;
+    if (m === 'program' && (thisWeek.length || nextWeek.length)) { setConfirm(true); return; }
+    run(() => setMode(userId, m));
+  };
+
+  const OPTIONS = [
+    { key: 'program', title: 'Program', line: 'Their group’s program, or one of their own.' },
+    { key: 'custom', title: 'Custom weeks', line: 'Built from how much they train and what they work on. Edit any session.' },
+  ] as const;
+
   return (
     <div className="space-y-3">
-      <section className="card p-5">
-        <div className="flex items-baseline justify-between gap-3">
-          <div className="h-card">How much they train</div>
-          <span className="text-[13px] text-on-surface-variant">{sessions * minutes} min a week</span>
-        </div>
+      <div role="radiogroup" aria-label={`How ${first}’s week is set`} className="grid grid-cols-2 gap-2.5">
+        {OPTIONS.map((o) => {
+          const on = o.key === 'custom' ? mode !== 'program' : mode === 'program';
+          return (
+            <button key={o.key} type="button" role="radio" aria-checked={on} disabled={pending} onClick={() => choose(o.key)}
+                    className={`pressable rounded-2xl border p-3.5 text-left transition-colors
+                      ${on ? 'border-on-surface bg-surface-container-high' : 'border-outline-variant'}`}>
+              <span className="block text-[14.5px] font-bold text-on-surface">{o.title}</span>
+              <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">{o.line}</span>
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <div className="flex items-center gap-2">
-            <button type="button" className="icon-btn" aria-label="Fewer sessions" disabled={sessions <= 1} onClick={() => setSessions(sessions - 1)}>−</button>
-            <span className="min-w-[7.5rem] text-center text-[15px] font-bold text-on-surface">{sessions} {sessions === 1 ? 'session' : 'sessions'} a week</span>
-            <button type="button" className="icon-btn" aria-label="More sessions" disabled={sessions >= 7} onClick={() => setSessions(sessions + 1)}>+</button>
-          </div>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Minutes per session">
-            {MINUTE_CHOICES.map((m) => <Chip key={m} on={minutes === m} onClick={() => setMinutes(m)}>{m} min</Chip>)}
-          </div>
-        </div>
-        {!own && <p className="mt-3 text-[12.5px] text-on-surface-variant">Your default for every player. Change it here for {first} only.</p>}
+      {mode === 'program' ? program : (
+        <>
+          <section className="card p-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="h-card">How much they train</div>
+              <span className="text-[13px] text-on-surface-variant">{sessions * minutes} min a week</span>
+            </div>
 
-        <div className="mt-5 flex items-baseline justify-between">
-          <div className="text-[14px] font-bold text-on-surface">Work on</div>
-          <span className="text-[12.5px] text-on-surface-variant">Up to 3</span>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {tags.map((t) => {
-            const on = focus.includes(t);
-            return (
-              <Chip key={t} on={on} onClick={() => setFocus(on ? focus.filter((x) => x !== t) : focus.length < 3 ? [...focus, t] : focus)}>
-                {label(t)}
-              </Chip>
-            );
-          })}
-          {!tags.length && <p className="text-[13px] text-on-surface-variant">Tag your drills with what they work on, and the tags show up here.</p>}
-        </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="flex items-center gap-2">
+                <button type="button" className="icon-btn" aria-label="Fewer sessions" disabled={sessions <= 1} onClick={() => setSessions(sessions - 1)}>−</button>
+                <span className="min-w-[7.5rem] text-center text-[15px] font-bold text-on-surface">{sessions} {sessions === 1 ? 'session' : 'sessions'} a week</span>
+                <button type="button" className="icon-btn" aria-label="More sessions" disabled={sessions >= 7} onClick={() => setSessions(sessions + 1)}>+</button>
+              </div>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Minutes per session">
+                {MINUTE_CHOICES.map((m) => <Chip key={m} on={minutes === m} onClick={() => setMinutes(m)}>{m} min</Chip>)}
+              </div>
+            </div>
 
-        <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
-          <span>
-            <span className="block text-[14px] font-bold text-on-surface">Step up week to week</span>
-            <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
-              {progress
-                ? 'Drills they handle get a little harder each built week, with a lighter week every fourth.'
-                : 'Each built week starts fresh at every drill’s own amount. You set any step-ups.'}
-              {ownProgress === null && progress === defaults.progress && ' Your default.'}
-            </span>
-          </span>
-          <input type="checkbox" role="switch" className="mt-1 h-5 w-5 shrink-0 accent-current" checked={progress}
-                 onChange={(e) => setProgress(e.target.checked)} />
-        </label>
+            <div className="mt-5 flex items-baseline justify-between">
+              <div className="text-[14px] font-bold text-on-surface">Work on</div>
+              <span className="text-[12.5px] text-on-surface-variant">Up to 3</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {tags.map((t) => {
+                const on = focus.includes(t);
+                return (
+                  <Chip key={t} on={on} onClick={() => setFocus(on ? focus.filter((x) => x !== t) : focus.length < 3 ? [...focus, t] : focus)}>
+                    {label(t)}
+                  </Chip>
+                );
+              })}
+              {!tags.length && <p className="text-[13px] text-on-surface-variant">Tag your drills with what they work on, and the tags show up here.</p>}
+            </div>
 
-        {dirty && (
-          <button type="button" disabled={pending} onClick={save} className="btn-primary pressable mt-5 w-full">
-            {pending ? 'Saving…' : 'Save'}
-          </button>
-        )}
-      </section>
+            <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
+              <span>
+                <span className="block text-[14px] font-bold text-on-surface">Level up week to week</span>
+                <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
+                  {progress
+                    ? 'Drills they handle go up a level each week, with a lighter week every fourth.'
+                    : 'Every drill stays at its own amount. You set levels yourself.'}
+                </span>
+              </span>
+              <input type="checkbox" role="switch" className="mt-1 h-5 w-5 shrink-0 accent-current" checked={progress}
+                     onChange={(e) => setProgress(e.target.checked)} />
+            </label>
 
-      {builtWeek({ title: 'This week', weekOf: weeks.this, rows: thisWeek, which: 'this' })}
-      {builtWeek({ title: 'Next week', weekOf: weeks.next, rows: nextWeek, which: 'next' })}
+            <p className="mt-4 text-[12.5px] text-on-surface-variant">
+              {ownSettings ? <>Just for {first}. <button type="button" disabled={pending} onClick={resetToDefaults}
+                className="font-semibold text-on-surface underline underline-offset-4">Use academy defaults</button></>
+                : `Academy defaults. Changes here are just for ${first}.`}
+            </p>
+
+            {dirty && (
+              <button type="button" disabled={pending} onClick={save} className="btn-primary pressable mt-5 w-full">
+                {pending ? 'Saving…' : 'Save'}
+              </button>
+            )}
+          </section>
+
+          {customWeek({ title: 'This week', rows: thisWeek, which: 'this' })}
+          {customWeek({ title: 'Next week', rows: nextWeek, which: 'next' })}
+        </>
+      )}
       {why && <p role="status" className="text-[12.5px] text-on-surface-variant">{why}.</p>}
       {err && <p role="alert" className="text-[13px] font-semibold text-on-surface">{err}</p>}
+
+      <ConfirmSheet open={confirm} title="Back to their program?" confirmLabel="Back to program" busy={pending}
+        body={`${first}’s custom weeks from this week on are taken away, and their program is their week again.`}
+        onCancel={() => setConfirm(false)}
+        onConfirm={() => run(() => setMode(userId, 'program'), () => setConfirm(false))} />
     </div>
   );
 
   // A plain function, not a component: it's redrawn, never remounted.
-  function builtWeek({ title, weekOf, rows, which }: { title: string; weekOf: string; rows: CustomRow[]; which: 'this' | 'next' }) {
+  function customWeek({ title, rows, which }: { title: string; rows: CustomRow[]; which: 'this' | 'next' }) {
     const byId = new Map(drills.map((d) => [d.id, d]));
     const sorted = [...rows].sort((a, b) => a.weekday - b.weekday || a.position - b.position);
+    const tagsOf = [rows.some((r) => r.made_by === 'ai') && 'AI', rows.some((r) => r.made_by === 'trainer') && 'Edited', rows.some((r) => r.light) && 'Lighter week']
+      .filter((x): x is string => !!x);
     return (
       <section key={which} className="card p-5">
-        <div className="flex items-baseline justify-between gap-3">
-          <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <div className="h-card">{title}</div>
-            {rows.length > 0 && <p className="mt-0.5 text-[12.5px] text-on-surface-variant">{madeBy(rows)}</p>}
+            {tagsOf.map((t) => (
+              <span key={t} className="rounded-full bg-surface-container-highest px-2 py-0.5 text-[11px] font-bold text-on-surface-variant">{t}</span>
+            ))}
           </div>
           {rows.length > 0 && (
-            <span className="flex gap-4 text-[13px] font-semibold">
-              <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))} className="underline underline-offset-4">Rebuild</button>
-              <button type="button" disabled={pending} onClick={() => run(() => clearBuiltWeek(userId, weekOf))} className="text-on-surface-variant underline underline-offset-4">Use their program</button>
-            </span>
+            <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))}
+                    className="shrink-0 text-[13px] font-semibold underline underline-offset-4">Rebuild</button>
           )}
         </div>
 
@@ -163,15 +214,16 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
               const total = s.drill_ids.reduce((a, id) => a + (byId.get(id)?.minutes ?? 0), 0);
               const day = s.weekday;
               const note = busy.game === day ? 'Game day' : busy.club.includes(day) || busy.meets.includes(day) ? 'Practice day' : null;
+              const ran = runs[s.id];
               return (
                 <li key={s.id} className="rounded-2xl border border-outline-variant p-3.5">
                   <div className="flex items-center justify-between gap-3">
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-bold text-on-surface">{s.name}</span>
                       <span className="text-[12.5px] text-on-surface-variant">{total} min{note && ` · ${note}`}</span>
-                      {(s.light || runs[s.id]) && (
+                      {ran && (
                         <span className="mt-0.5 block text-[12.5px] font-semibold text-on-surface">
-                          {[s.light && 'Lighter week', runs[s.id] && `Done${runs[s.id].feel ? `, ${FEEL[runs[s.id].feel!]}` : ''}`].filter(Boolean).join(' · ')}
+                          Done{ran.feel ? `, ${FEEL[ran.feel]}` : ''}
                         </span>
                       )}
                       {s.note && <span className="mt-1 block text-[12.5px] italic leading-snug text-on-surface">“{s.note}”</span>}
@@ -183,65 +235,7 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
                     </select>
                   </div>
                   <ul className="mt-2.5 divide-y divide-outline-variant">
-                    {s.drill_ids.map((id, i) => {
-                      const d = byId.get(id);
-                      return (
-                        <li key={`${id}-${i}`} className="flex items-center gap-2 py-2">
-                          <span className="min-w-0 flex-1">
-                            <span className="flex items-center gap-2">
-                              <span className="truncate text-[13.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
-                              {CHANGE[s.changes?.[i] ?? ''] && (
-                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold
-                                  ${s.changes![i] === 'hold' ? 'bg-surface-container-highest text-on-surface-variant' : 'bg-on-surface text-surface'}`}>
-                                  {CHANGE[s.changes![i]]}
-                                </span>
-                              )}
-                            </span>
-                            {d && <span className="block truncate text-[12px] text-on-surface-variant">
-                              {[progressAmount(d.amount, s.steps?.[i] ?? 0), `${d.minutes} min`, drillTags(d).map(label).join(', ')].filter(Boolean).join(' · ')}
-                            </span>}
-                            {d?.amount && (() => {
-                              const step = s.steps?.[i] ?? 0;
-                              // Set by hand: the trainer's amount, no label.
-                              const set = (n: number) => run(() => saveBuiltSession(s.id, {
-                                drill_ids: s.drill_ids,
-                                steps: s.drill_ids.map((_, k) => k === i ? n : s.steps?.[k] ?? 0),
-                                changes: s.drill_ids.map((_, k) => k === i ? 'same' : s.changes?.[k] ?? 'new'),
-                              }));
-                              return (
-                                <span className="mt-1 flex items-center gap-1.5 text-[12px] text-on-surface-variant">
-                                  <button type="button" className="icon-btn !h-7 !w-7" aria-label={`Easier ${d.name}`}
-                                          disabled={pending || step <= 0} onClick={() => set(step - 1)}>−</button>
-                                  <span className="min-w-[3.5rem] text-center font-semibold">{step ? `Step ${step}` : 'Base'}</span>
-                                  <button type="button" className="icon-btn !h-7 !w-7" aria-label={`Harder ${d.name}`}
-                                          disabled={pending || step >= MAX_STEP + 3} onClick={() => set(step + 1)}>+</button>
-                                </span>
-                              );
-                            })()}
-                          </span>
-                          <button type="button" disabled={pending} className="shrink-0 text-[12.5px] font-semibold underline underline-offset-4"
-                                  onClick={() => {
-                                    const gone = [...(tried[s.id] ?? []), id];
-                                    const alt = swapFor(drills, s.drill_ids, id, focus, [...gone, ...sorted.flatMap((x) => x.drill_ids)]);
-                                    if (!alt) return;
-                                    setTried({ ...tried, [s.id]: gone });
-                                    run(() => saveBuiltSession(s.id, {
-                                      drill_ids: s.drill_ids.map((x, k) => k === i ? alt.id : x),
-                                      steps: s.drill_ids.map((_, k) => k === i ? 0 : s.steps?.[k] ?? 0),
-                                      changes: s.drill_ids.map((_, k) => k === i ? 'new' : s.changes?.[k] ?? 'new'),
-                                    }));
-                                  }}>Swap</button>
-                          {s.drill_ids.length > 1 && (
-                            <button type="button" disabled={pending} className="icon-btn" aria-label={`Remove ${d?.name ?? 'drill'}`}
-                                    onClick={() => run(() => saveBuiltSession(s.id, {
-                                      drill_ids: s.drill_ids.filter((_, k) => k !== i),
-                                      steps: s.drill_ids.map((_, k) => s.steps?.[k] ?? 0).filter((_, k) => k !== i),
-                                      changes: s.drill_ids.map((_, k) => s.changes?.[k] ?? 'new').filter((_, k) => k !== i),
-                                    }))}>×</button>
-                          )}
-                        </li>
-                      );
-                    })}
+                    {s.drill_ids.map((id, i) => drillRow(s, sorted, id, i, byId.get(id)))}
                   </ul>
                 </li>
               );
@@ -250,7 +244,7 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
         ) : (
           <>
             <p className="mt-1 text-[13px] text-on-surface-variant">
-              {which === 'this' ? `${first} is on their program this week.` : 'Not built yet.'} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
+              {which === 'this' ? `Not built yet, so ${first} is on their program this week.` : 'Not built yet.'} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
             </p>
             <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))}
                     className="btn-ghost pressable mt-4 w-full">
@@ -259,6 +253,66 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
           </>
         )}
       </section>
+    );
+  }
+
+  // One drill in a custom session. Tap it for its level, Swap and Remove.
+  function drillRow(s: CustomRow, sorted: CustomRow[], id: string, i: number, d: DrillRow | undefined) {
+    const key = `${s.id}:${i}`;
+    const isOpen = open === key;
+    const step = s.steps?.[i] ?? 0;
+    const change = CHANGE[s.changes?.[i] ?? ''];
+    const save = (drill_ids: string[], steps: number[], changes: string[]) =>
+      run(() => saveBuiltSession(s.id, { drill_ids, steps, changes }));
+    const steps = s.drill_ids.map((_, k) => s.steps?.[k] ?? 0);
+    const changes = s.drill_ids.map((_, k) => s.changes?.[k] ?? 'new');
+    // Set by hand: the trainer's level, no label.
+    const setLevel = (n: number) => save(s.drill_ids, steps.map((x, k) => k === i ? n : x), changes.map((c, k) => k === i ? 'same' : c));
+
+    return (
+      <li key={`${id}-${i}`} className="py-2">
+        <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? '' : key)} className="block w-full text-left">
+          <span className="flex items-center gap-2">
+            <span className="truncate text-[13.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
+            {change && (
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold
+                ${s.changes![i] === 'hold' ? 'bg-surface-container-highest text-on-surface-variant' : 'bg-on-surface text-surface'}`}>{change}</span>
+            )}
+            <span aria-hidden className="ml-auto shrink-0 text-[12px] text-on-surface-variant">{isOpen ? '▴' : '▾'}</span>
+          </span>
+          {d && <span className="block truncate text-[12px] text-on-surface-variant">
+            {[progressAmount(d.amount, step), `${d.minutes} min`, drillTags(d).map(label).join(', ')].filter(Boolean).join(' · ')}
+          </span>}
+        </button>
+        {isOpen && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            {d?.amount && (
+              <span className="flex items-center gap-1.5 text-[12.5px] text-on-surface-variant">
+                <button type="button" className="icon-btn !h-8 !w-8" aria-label={`Level down ${d.name}`}
+                        disabled={pending || step <= 0} onClick={() => setLevel(step - 1)}>−</button>
+                <span className="min-w-[3.5rem] text-center font-semibold text-on-surface">Level {step + 1}</span>
+                <button type="button" className="icon-btn !h-8 !w-8" aria-label={`Level up ${d.name}`}
+                        disabled={pending || step >= TOP_STEP} onClick={() => setLevel(step + 1)}>+</button>
+              </span>
+            )}
+            <button type="button" disabled={pending} className="text-[12.5px] font-semibold underline underline-offset-4"
+                    onClick={() => {
+                      const gone = [...(tried[s.id] ?? []), id];
+                      const alt = swapFor(drills, s.drill_ids, id, focus, [...gone, ...sorted.flatMap((x) => x.drill_ids)]);
+                      if (!alt) { setErr('No other drill to swap in.'); return; }
+                      setTried({ ...tried, [s.id]: gone });
+                      save(s.drill_ids.map((x, k) => k === i ? alt.id : x), steps.map((x, k) => k === i ? 0 : x), changes.map((c, k) => k === i ? 'new' : c));
+                    }}>Swap</button>
+            {s.drill_ids.length > 1 && (
+              <button type="button" disabled={pending} className="text-[12.5px] font-semibold text-on-surface-variant underline underline-offset-4"
+                      onClick={() => {
+                        setOpen('');
+                        save(s.drill_ids.filter((_, k) => k !== i), steps.filter((_, k) => k !== i), changes.filter((_, k) => k !== i));
+                      }}>Remove</button>
+            )}
+          </div>
+        )}
+      </li>
     );
   }
 }

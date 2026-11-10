@@ -27,7 +27,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
           <h2 className="mt-2 font-brand text-[24px] font-extrabold leading-tight tracking-tighter text-on-surface">{next.title}</h2>
           <p className="mt-1 text-[13.5px] text-on-surface-variant">
             {next.minutes} min · {next.drills} {next.drills === 1 ? 'drill' : 'drills'}{next.practice && ' · Practice day too'}
-            {next.light ? ' · Lighter week' : next.ups ? ` · ${next.ups} stepped up` : ''}
+            {next.light ? ' · Lighter week' : next.ups ? ` · ${next.ups} ${next.ups === 1 ? 'drill levels' : 'drills level'} up` : ''}
           </p>
           <Source item={next} />
           {next.note && <p className="mt-3 border-l-2 border-on-surface pl-3 text-[14px] leading-snug text-on-surface">{next.note}</p>}

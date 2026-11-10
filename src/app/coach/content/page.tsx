@@ -3,6 +3,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { loadContent } from '@/lib/academy-data';
 import { Pending } from '@/components/coach/Pending';
 import { PageHead } from '@/components/coach/PageHead';
+import { LIBRARY_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 
 export const metadata = { title: 'Programs', robots: { index: false } };
 
@@ -20,6 +21,7 @@ export default async function ContentPage() {
     <div className="animate-pop">
       {!c.ready && <Pending />}
 
+      <ViewTabs tabs={LIBRARY_VIEWS} on="/coach/content" />
       <PageHead title="Programs" action={<Link href="/coach/programs/new" className="btn-primary btn-sm pressable">New program</Link>}>
         Runs of weeks: what your players do at home between sessions.
       </PageHead>

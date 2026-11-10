@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { staffOnly } from '@/components/coach/Gate';
 import { Pending } from '@/components/coach/Pending';
 import { PageHead } from '@/components/coach/PageHead';
+import { LIBRARY_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { loadContent } from '@/lib/academy-data';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 import { youtubeId } from '@/lib/video';
@@ -37,6 +38,7 @@ export default async function DrillsPage() {
   return (
     <div className="animate-pop">
       {!c.ready && <Pending />}
+      <ViewTabs tabs={LIBRARY_VIEWS} on="/coach/drills" />
       <PageHead title="Drills" eyebrow={`${c.drills.length} ${c.drills.length === 1 ? 'drill' : 'drills'}`}>
         What your sessions are built from. Add the ones you always use first.
       </PageHead>

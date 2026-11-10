@@ -3,7 +3,9 @@ import type { AddonRow, CustomRow, DrillRow, GroupRow, MoveRow, PlayerProgramRow
 import { DEFAULT_TARGET, type Target } from './week-builder';
 
 /** A player's targets and focus, as the trainer set them (0010). */
-export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean; progress?: boolean | null };
+export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean; progress?: boolean | null; mode?: PlanMode | null };
+/** How a player's week is set (0014): their program, or custom weeks. */
+export type PlanMode = 'program' | 'custom' | 'auto';
 /** The academy's default target, and whether built weeks step drills up (0013). */
 export type Defaults = Target & { progress: boolean };
 
@@ -46,7 +48,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     db.from('player_schedules').select('user_id, club_days, game_day'),
     db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since),
     customQuery(db, academyId, since),
-    withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress'),
+    withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress, mode', ', progress'),
     loadDefaults(db, academyId),
   ]);
   return {
@@ -62,9 +64,12 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
 
 /** Tries the newest columns, then without them (before their migration). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function withFallback(q: (cols: string) => any, cols: string, extra: string) {
-  const r = await q(cols + extra);
-  return r.error ? q(cols) : r;
+async function withFallback(q: (cols: string) => any, cols: string, ...extras: string[]) {
+  for (const extra of extras) {
+    const r = await q(cols + extra);
+    if (!r.error) return r;
+  }
+  return q(cols);
 }
 
 /** The academy's default target and step-up setting; the built-in ones when unset. */
@@ -104,11 +109,13 @@ export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId:
   focus: string[]; autopilot: boolean; own: boolean;
   /** Whether their weeks step up, and their own setting (null: the academy's). */
   progress: boolean; ownProgress: boolean | null;
+  /** As chosen; null when never chosen (see modeOf). */
+  mode: PlanMode | null;
 } {
   const p = c.plans.find((x) => x.user_id === userId);
   return {
     sessions: p?.sessions ?? c.defaults.sessions, minutes: p?.minutes ?? c.defaults.minutes,
     focus: p?.focus ?? [], autopilot: p?.autopilot ?? false, own: !!(p && (p.sessions || p.minutes)),
-    progress: p?.progress ?? c.defaults.progress, ownProgress: p?.progress ?? null,
+    progress: p?.progress ?? c.defaults.progress, ownProgress: p?.progress ?? null, mode: p?.mode ?? null,
   };
 }

@@ -30,7 +30,7 @@ export function GroupForm({ group, programs, today }: {
         </Field>
         <Field label="At"><input name="meets_time" type="time" defaultValue={group?.meets_time ?? ''} /></Field>
       </div>
-      <Field label="Program" hint={programs.length ? 'What they do at home between sessions.' : 'Make a program first, under Programs.'}>
+      <Field label="Program" hint={programs.length ? 'What they do at home between sessions.' : 'Make a program first, under Library.'}>
         <select name="program_id" defaultValue={group?.program_id ?? ''}>
           <option value="">None yet</option>
           {programs.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.weeks} weeks)</option>)}

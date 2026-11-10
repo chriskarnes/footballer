@@ -8,7 +8,7 @@ import { loadPlayers } from '@/lib/coach-data';
 import { addDays, localDate, mondayOf, sinceLabel } from '@/lib/progress';
 import { loadContent, targetFor } from '@/lib/academy-data';
 import { PlayerPlan } from '@/components/coach/PlayerPlan';
-import { PlayerTraining } from '@/components/coach/PlayerTraining';
+import { Extras, ProgramSetup, WeekList } from '@/components/coach/PlayerTraining';
 import { SoccerDays } from '@/components/SoccerDays';
 import { soccerLabel } from '@/lib/soccer-days';
 
@@ -80,32 +80,42 @@ export default async function PlayerPage({ params, searchParams }: {
         const thisMonday = mondayOf(localDate(new Date(), tz));
         const weeks = { this: thisMonday, next: addDays(thisMonday, 7) };
         const mine = content.custom.filter((x) => x.user_id === p.user_id);
+        const thisWeek = mine.filter((x) => x.week_of === weeks.this);
+        const nextWeek = mine.filter((x) => x.week_of === weeks.next);
+        // Never chosen (before 0014, or never touched): custom if they have a custom week.
+        const mode = t.mode ?? (thisWeek.length || nextWeek.length ? 'custom' : 'program');
         return (
-          <section className="mt-8">
-            <p className="eyebrow mb-3">Their plan</p>
-            <PlayerPlan userId={p.user_id} first={p.first} target={t} defaults={content.defaults} own={t.own} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
-              drills={content.drills} weeks={weeks}
-              thisWeek={mine.filter((x) => x.week_of === weeks.this)} nextWeek={mine.filter((x) => x.week_of === weeks.next)} runs={runs}
-              busy={{ club: soccer?.club_days ?? [], game: soccer?.game_day ?? null,
-                meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
-                  && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />
-          </section>
+          <>
+            <section className="mt-8">
+              <p className="eyebrow mb-3">Their week</p>
+              <PlayerPlan userId={p.user_id} first={p.first} mode={mode}
+                program={
+                  <div className="space-y-6">
+                    <WeekList first={p.first} week={p.week} />
+                    <div className="card p-5">
+                      <ProgramSetup userId={p.user_id} first={p.first}
+                        groups={content.groups.filter((g) => !g.archived).map((g) => ({ id: g.id, name: g.name,
+                          member: content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id) }))}
+                        programs={content.programs}
+                        own={content.playerPrograms.filter((x) => x.user_id === p.user_id).map((x) => ({
+                          ...x, label: content.programs.find((pr) => pr.id === x.program_id)?.name ?? 'Program' }))} />
+                    </div>
+                  </div>
+                }
+                target={t} defaults={content.defaults} own={t.own} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
+                drills={content.drills} weeks={weeks} thisWeek={thisWeek} nextWeek={nextWeek} runs={runs}
+                busy={{ club: soccer?.club_days ?? [], game: soccer?.game_day ?? null,
+                  meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
+                    && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />
+            </section>
+            <div className="mt-8">
+              <Extras userId={p.user_id} first={p.first} drills={content.drills}
+                addons={content.addons.filter((a) => a.user_id === p.user_id && a.week_of === thisMonday).map((a) => ({
+                  id: a.id, note: a.note, name: content.drills.find((d) => d.id === a.drill_id)?.name ?? 'Drill' }))} />
+            </div>
+          </>
         );
       })()}
-
-      {content.ready && (
-        <div className="mt-8">
-          <PlayerTraining
-            userId={p.user_id} first={p.first} week={p.week} drills={content.drills}
-            groups={content.groups.filter((g) => !g.archived).map((g) => ({ id: g.id, name: g.name,
-              member: content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id) }))}
-            programs={content.programs}
-            own={content.playerPrograms.filter((x) => x.user_id === p.user_id).map((x) => ({
-              ...x, label: content.programs.find((pr) => pr.id === x.program_id)?.name ?? 'Program' }))}
-            addons={content.addons.filter((a) => a.user_id === p.user_id && a.week_of === mondayOf(localDate(new Date(), tz))).map((a) => ({
-              id: a.id, note: a.note, name: content.drills.find((d) => d.id === a.drill_id)?.name ?? 'Drill' }))} />
-        </div>
-      )}
 
       <div className="hidden lg:block"><RemovePlayer userId={p.user_id} name={p.first} /></div>
      </div>

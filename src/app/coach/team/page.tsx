@@ -5,8 +5,9 @@ import { InviteLink } from '@/components/coach/InviteLink';
 import { ROOT_DOMAIN } from '@/lib/tenant';
 import { BuildDefaults } from '@/components/coach/BuildDefaults';
 import { loadDefaults } from '@/lib/academy-data';
+import { usage } from '@/lib/ai';
 
-export const metadata = { title: 'Team', robots: { index: false } };
+export const metadata = { title: 'Academy', robots: { index: false } };
 
 type Staff = { user_id: string; role: string; email: string | null; display_name: string | null };
 
@@ -20,10 +21,11 @@ export default async function TeamPage() {
   if ('page' in gate) return gate.page;
   const { db, academy, role, canBrand } = gate.viewer;
 
-  const [{ data: staff }, { data: invites }, defaults] = await Promise.all([
+  const [{ data: staff }, { data: invites }, defaults, ai] = await Promise.all([
     db.rpc('academy_staff', { p_academy: academy.id }),
     db.from('academy_invites').select('code, role').eq('academy_id', academy.id),
     loadDefaults(db, academy.id),
+    usage(db, academy.id, academy.timeZone),
   ]);
   const code = (r: string) => (invites ?? []).find((i: { role: string }) => i.role === r)?.code as string | undefined;
   const owner = role === 'owner';
@@ -71,7 +73,7 @@ export default async function TeamPage() {
 
       <section className="mt-9">
         <p className="eyebrow mb-3">Training</p>
-        <BuildDefaults defaults={defaults} />
+        <BuildDefaults defaults={defaults} ai={ai} />
       </section>
 
       {canBrand && (
