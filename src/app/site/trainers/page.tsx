@@ -18,7 +18,7 @@ export default function TrainersPage() {
   return (
     <>
       <SiteHero video={{ src: '/site/session.mp4', poster: '/site/session-poster.jpg' }}
-                alt="Young players working through ball drills at an indoor training session" position="50% 65%"
+                alt="Young players working through ball drills at an indoor training session" position="50% 90%"
                 cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 3 of 5 this week', at: { top: 40, right: -12 } }]}>
         <span className="marker">For private trainers</span>
         <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
