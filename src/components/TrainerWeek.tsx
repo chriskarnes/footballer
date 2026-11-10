@@ -26,7 +26,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
           <p className="eyebrow">{next.weekday === today ? 'Today' : next.weekday < today ? `Missed ${DAYS[next.weekday]} · do it today?` : DAYS[next.weekday]}</p>
           <h2 className="mt-2 font-brand text-[24px] font-extrabold leading-tight tracking-tighter text-on-surface">{next.title}</h2>
           <p className="mt-1 text-[13.5px] text-on-surface-variant">
-            {next.minutes} min · {next.drills} {next.drills === 1 ? 'drill' : 'drills'}
+            {next.minutes} min · {next.drills} {next.drills === 1 ? 'drill' : 'drills'}{next.practice && ' · Practice day too'}
           </p>
           <Source item={next} />
           {next.note && <p className="mt-3 border-l-2 border-on-surface pl-3 text-[14px] leading-snug text-on-surface">{next.note}</p>}
@@ -57,7 +57,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
                     <span className={`block truncate text-[14.5px] font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
                     <span className="block truncate text-[12.5px] text-on-surface-variant">
                       {!it.done && it.weekday < today && <b className="font-semibold text-on-surface">Missed · </b>}
-                      {it.minutes} min · {it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Just for you'}
+                      {it.minutes} min · {it.practice ? 'Practice day' : it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Just for you'}
                     </span>
                   </span>
                 </Link>
@@ -70,7 +70,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
         </>
       )}
 
-      {items.some((i) => i.kind === 'session') && (
+      {items.some((i) => i.kind !== 'addon') && (
         <div className="mt-4">
           <SoccerDaysPanel club={schedule?.club ?? []} game={schedule?.game ?? null} set={!!schedule} />
         </div>
@@ -90,6 +90,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
 /** Where a session comes from, in words: "U12 Tuesday · Ball Mastery · Week 3 of 8". */
 function Source({ item }: { item: MyWeek['items'][number] }) {
   const label = item.kind === 'addon' ? 'Just for you, from your trainer'
+    : item.kind === 'custom' ? 'Built for you by your trainer'
     : [item.groups.join(' & ') || 'Just for you', item.from].join(' · ');
   return <p className="mt-3 text-[12.5px] font-semibold text-on-surface-variant">{label}</p>;
 }

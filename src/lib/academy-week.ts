@@ -23,14 +23,17 @@ export type AddonRow = { id: string; user_id: string; drill_id: string; note: st
 export type CompletionRow = { source: string; source_ref: string | null; completed_at: string | null };
 /** The days a player already has soccer: club training, and a game. 0 = Monday. */
 export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null };
+/** A session of a week built for one player (0010). Replaces their program that week. */
+export type CustomRow = { id: string; user_id: string; week_of: string; position: number; name: string; drill_ids: string[]; weekday: number };
 /** One item moved to another day, for one week. */
 export type MoveRow = { user_id: string; week_of: string; item_key: string; weekday: number };
 
 export type WeekItem = {
   /** Stable within the week: what completion and keys use. */
   key: string;
-  kind: 'session' | 'addon';
-  /** academy_sessions.id or addons.id — the runner's source_ref. */
+  /** custom: a session from a week built for this player. */
+  kind: 'session' | 'addon' | 'custom';
+  /** academy_sessions.id, player_week_sessions.id or addons.id — the runner's source_ref. */
   ref: string;
   title: string;
   /** "U12 Tuesday · Week 3 of 8", or "Just for you". */
@@ -46,6 +49,8 @@ export type WeekItem = {
   drills: number;
   note?: string | null;
   done: boolean;
+  /** On a club or group training day: a second session that day. */
+  practice?: boolean;
 };
 
 /** Which week of a program a date is in, 1-based; null before it starts or after it ends. */
@@ -115,6 +120,7 @@ export function buildWeek(input: {
   completions: CompletionRow[];
   schedules?: ScheduleRow[];
   moves?: MoveRow[];
+  custom?: CustomRow[];
   tz?: string;
 }): WeekItem[] {
   const { userId, today } = input;
@@ -156,20 +162,29 @@ export function buildWeek(input: {
     runs.push(made);
   };
 
-  for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);
-  for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null);
-
-  // Programs take turns, so two programs share the week instead of one
-  // taking the early days; then the turns go on the days that fit.
-  const order: WeekItem[] = [];
-  for (let i = 0; runs.some((r) => i < r.length); i++) for (const r of runs) if (i < r.length) order.push(r[i]);
   const mine = input.schedules?.find((x) => x.user_id === userId);
-  const days = placeDays(order.length, {
-    club: mine?.club_days ?? [], game: mine?.game_day ?? null,
-    meets: myGroups.map((g) => g.meets_weekday).filter((d): d is number => d !== null),
-  });
-  order.forEach((it, i) => { it.weekday = days[i]; });
-  items.push(...order);
+  const meets = myGroups.map((g) => g.meets_weekday).filter((d): d is number => d !== null);
+
+  // A week built for this player is their week: it replaces the programs.
+  const built = (input.custom ?? []).filter((c) => c.user_id === userId && c.week_of === monday)
+    .sort((a, b) => a.position - b.position);
+  if (built.length) {
+    for (const c of built) items.push({
+      key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
+      weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, done: false,
+    });
+  } else {
+    for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);
+    for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null);
+
+    // Programs take turns, so two programs share the week instead of one
+    // taking the early days; then the turns go on the days that fit.
+    const order: WeekItem[] = [];
+    for (let i = 0; runs.some((r) => i < r.length); i++) for (const r of runs) if (i < r.length) order.push(r[i]);
+    const days = placeDays(order.length, { club: mine?.club_days ?? [], game: mine?.game_day ?? null, meets });
+    order.forEach((it, i) => { it.weekday = days[i]; });
+    items.push(...order);
+  }
 
   for (const a of input.addons.filter((x) => x.user_id === userId && x.week_of === monday)) {
     const d = drills.get(a.drill_id);
@@ -194,13 +209,18 @@ export function buildWeek(input: {
     if (c.source !== 'academy' && c.source !== 'addon') continue;
     const day = localDate(c.completed_at, input.tz ?? 'UTC');
     if (day < monday || day > addDays(monday, 6)) continue;
-    const k = `${c.source === 'addon' ? 'a' : 's'}:${c.source_ref}`;
-    finished.set(k, (finished.get(k) ?? 0) + 1);
+    // A built-week session runs as 'academy' too; its id says which it is.
+    const keys = c.source === 'addon' ? [`a:${c.source_ref}`] : [`s:${c.source_ref}`, `c:${c.source_ref}`];
+    for (const k of keys) finished.set(k, (finished.get(k) ?? 0) + 1);
   }
   for (const it of items) {
     const left = finished.get(it.key) ?? 0;
     if (left > 0) { it.done = true; finished.set(it.key, left - 1); }
   }
+
+  // A session on a club or group day is a second one that day: say so.
+  const practice = new Set([...(mine?.club_days ?? []), ...meets]);
+  for (const it of items) if (practice.has(it.weekday)) it.practice = true;
 
   return items.sort((a, b) => a.weekday - b.weekday || (a.kind === 'addon' ? 1 : 0) - (b.kind === 'addon' ? 1 : 0));
 }

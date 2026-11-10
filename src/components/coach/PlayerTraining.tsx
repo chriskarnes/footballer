@@ -48,7 +48,7 @@ export function PlayerTraining({ userId, first, week, groups, programs, own, add
                 <span className="min-w-0">
                   <span className={`block truncate text-[14.5px] font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
                   <span className="block truncate text-[12.5px] text-on-surface-variant">
-                    {DAYS[it.weekday]} · {it.kind === 'addon' ? 'Just for you' : [it.groups.join(' & ') || 'On their own', it.from].join(' · ')}
+                    {DAYS[it.weekday]}{it.practice && ' (practice day)'} · {it.kind === 'addon' ? 'Just for you' : it.kind === 'custom' ? 'Built week' : [it.groups.join(' & ') || 'On their own', it.from].join(' · ')}
                   </span>
                 </span>
                 <span className="shrink-0 text-[12.5px] font-semibold text-on-surface-variant">{it.done ? 'Done' : `${it.minutes} min`}</span>

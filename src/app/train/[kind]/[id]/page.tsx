@@ -21,7 +21,7 @@ function asExercise(d: DrillRow, sessionId: string, i: number): Exercise {
 
 /**
  * Runs a session from the trainer's week: /train/session/<id> for a program
- * session, /train/addon/<id> for a "just for you" drill. RLS decides what
+ * session, /train/custom/<id> for one from a week built for them, /train/addon/<id> for a "just for you" drill. RLS decides what
  * this player may read; finishing records it so their trainer sees it.
  */
 export default async function TrainerSessionPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
@@ -32,6 +32,17 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
 
   if (kind === 'session') {
     const { data: s } = await v.db.from('academy_sessions').select('id, name, drill_ids').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+    if (!s) notFound();
+    const { data: rows } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').in('id', s.drill_ids);
+    const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
+    const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i)).filter(Boolean) as Exercise[];
+    return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills} sessionRef={s.id} source="academy" back={back} />;
+  }
+
+  // A session from a week built for this player: runs and records as an
+  // academy session, so the trainer's ticks work the same.
+  if (kind === 'custom') {
+    const { data: s } = await v.db.from('player_week_sessions').select('id, name, drill_ids').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
     if (!s) notFound();
     const { data: rows } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').in('id', s.drill_ids);
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));

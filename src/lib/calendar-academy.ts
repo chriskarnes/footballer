@@ -3,7 +3,7 @@
  * the week's sessions from their trainer on the days the app spreads them
  * to. UIDs are date + source, never content, so ticks update in place.
  */
-import { buildWeek, type AddonRow, type DrillRow, type GroupRow, type MoveRow, type PlayerProgramRow, type ProgramRow, type ScheduleRow, type SessionRow, type CompletionRow } from './academy-week';
+import { buildWeek, type AddonRow, type CustomRow, type DrillRow, type GroupRow, type MoveRow, type PlayerProgramRow, type ProgramRow, type ScheduleRow, type SessionRow, type CompletionRow } from './academy-week';
 import { addDays, mondayOf } from './progress';
 import { todayIn, type IcsEvent } from './ics';
 
@@ -14,6 +14,8 @@ export type AcademyFeed = {
   drills: DrillRow[]; addons: AddonRow[];
   /** Added in 0008; absent from a feed function that predates it. */
   schedules?: ScheduleRow[]; moves?: MoveRow[];
+  /** Added in 0010. */
+  custom?: CustomRow[];
 };
 
 const PAST = 14, FUTURE = 42;
@@ -43,7 +45,7 @@ export function academyEvents(feed: AcademyFeed, completed: CompletionRow[], ori
       userId: feed.user_id, today: monday, tz, groups: feed.groups, memberships: feed.memberships,
       playerPrograms: feed.player_programs, programs: feed.programs, sessions: feed.sessions,
       drills: feed.drills, addons: feed.addons, completions: completed,
-      schedules: feed.schedules ?? [], moves: feed.moves ?? [],
+      schedules: feed.schedules ?? [], moves: feed.moves ?? [], custom: feed.custom ?? [],
     });
     for (const it of items) {
       const date = addDays(monday, it.weekday);

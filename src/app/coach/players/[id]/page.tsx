@@ -5,8 +5,9 @@ import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { RemovePlayer } from '@/components/coach/RemovePlayer';
 import { loadPlayers } from '@/lib/coach-data';
-import { localDate, mondayOf, sinceLabel } from '@/lib/progress';
-import { loadContent } from '@/lib/academy-data';
+import { addDays, localDate, mondayOf, sinceLabel } from '@/lib/progress';
+import { loadContent, targetFor } from '@/lib/academy-data';
+import { PlayerPlan } from '@/components/coach/PlayerPlan';
 import { PlayerTraining } from '@/components/coach/PlayerTraining';
 import { SoccerDays } from '@/components/SoccerDays';
 import { soccerLabel } from '@/lib/soccer-days';
@@ -68,6 +69,24 @@ export default async function PlayerPage({ params, searchParams }: {
         <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-primary pressable">Nudge</Link>
         <Link href={`/coach/send?to=${p.user_id}`} className="btn-ghost pressable">Write a note</Link>
       </div>
+
+      {content.ready && (() => {
+        const t = targetFor(content, p.user_id);
+        const thisMonday = mondayOf(localDate(new Date(), tz));
+        const weeks = { this: thisMonday, next: addDays(thisMonday, 7) };
+        const mine = content.custom.filter((x) => x.user_id === p.user_id);
+        return (
+          <section className="mt-8">
+            <p className="eyebrow mb-3">Their plan</p>
+            <PlayerPlan userId={p.user_id} first={p.first} target={t} defaults={content.defaults} own={t.own} focus={t.focus}
+              drills={content.drills} weeks={weeks}
+              thisWeek={mine.filter((x) => x.week_of === weeks.this)} nextWeek={mine.filter((x) => x.week_of === weeks.next)}
+              busy={{ club: soccer?.club_days ?? [], game: soccer?.game_day ?? null,
+                meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
+                  && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />
+          </section>
+        );
+      })()}
 
       {content.ready && (
         <div className="mt-8">
