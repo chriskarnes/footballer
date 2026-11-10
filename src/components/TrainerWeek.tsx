@@ -64,7 +64,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
                     <span className={`block truncate text-[14.5px] font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
                     <span className="block truncate text-[12.5px] text-on-surface-variant">
                       {!it.done && it.weekday < today && <b className="font-semibold text-on-surface">Missed · </b>}
-                      {it.minutes} min · {it.practice ? 'Practice day' : it.extra ? 'Added by you' : it.kind === 'custom' ? 'Built for you' : it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Just for you'}
+                      {it.minutes} min · {it.practice ? 'Practice day' : it.extra ? 'Added by you' : it.kind === 'custom' ? 'Built for you' : it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Your program'}
                     </span>
                   </span>
                 </Link>
@@ -97,22 +97,30 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
 }
 
 /** Where a session comes from, in words: "U12 Tuesday · Ball Mastery · Week 3 of 8". */
-/** Monday to Sunday in the band: done, still to do, or nothing set. */
+/**
+ * Monday to Sunday in the band, as fixed circles: filled with a tick when
+ * done, a ring when there's a session to do, a dot on a rest day. Today's
+ * letter is in the accent colour, with a bar under its circle.
+ */
 function WeekStrip({ items, today }: { items: MyWeek['items']; today: number }) {
   return (
-    <ol className="mt-6 grid grid-cols-7 gap-1.5" aria-label="This week">
+    <ol className="mt-6 flex max-w-sm justify-between" aria-label="This week">
       {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
         const on = items.filter((x) => x.weekday === i);
         const doneHere = on.length > 0 && on.every((x) => x.done);
-        const label = `${DAYS[i]}: ${on.length ? (doneHere ? 'done' : `${on.length} to do`) : 'rest'}`;
+        const isToday = i === today;
+        const label = `${DAYS[i]}${isToday ? ' (today)' : ''}: ${on.length ? (doneHere ? 'done' : `${on.length} to do`) : 'rest'}`;
         return (
-          <li key={i} aria-label={label} className="flex flex-col items-center gap-1.5">
-            <span className={`text-[11px] font-bold ${i === today ? 'text-on-surface-brand' : 'text-on-surface-brand-variant'}`}>{d}</span>
-            <span className={`flex h-7 w-full items-center justify-center rounded-full text-[11px] font-extrabold
-              ${doneHere ? '' : on.length ? 'border-2 border-on-surface-brand-variant' : 'opacity-30'} ${i === today ? 'outline outline-2 outline-offset-2 outline-[var(--app-brand-accent)]' : ''}`}
-                  style={doneHere ? { background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' } : undefined}>
-              {doneHere ? '✓' : on.length > 1 ? on.length : on.length ? '' : '·'}
+          <li key={i} aria-label={label} className="flex w-9 flex-col items-center gap-1.5">
+            <span className="text-[11px] font-bold" style={{ color: isToday ? 'var(--app-brand-accent)' : undefined }}>
+              <span className={isToday ? '' : 'text-on-surface-brand-variant'}>{d}</span>
             </span>
+            <span className={`flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-extrabold
+              ${doneHere ? '' : on.length ? 'border-2 border-on-surface-brand' : ''}`}
+                  style={doneHere ? { background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' } : undefined}>
+              {doneHere ? '✓' : on.length > 1 ? on.length : !on.length && <span className="h-1 w-1 rounded-full bg-on-surface-brand-variant" />}
+            </span>
+            <span className="h-[3px] w-4 rounded-full" style={{ background: isToday ? 'var(--app-brand-accent)' : 'transparent' }} />
           </li>
         );
       })}
@@ -124,6 +132,6 @@ function Source({ item }: { item: MyWeek['items'][number] }) {
   const label = item.extra ? 'Added by you, from your trainer’s drills'
     : item.kind === 'addon' ? 'Just for you, from your trainer'
     : item.kind === 'custom' ? 'Built for you by your trainer'
-    : [item.groups.join(' & ') || 'Just for you', item.from].join(' · ');
-  return <p className="mt-3 text-[12.5px] font-semibold text-on-surface-variant">{label}</p>;
+    : [item.groups.join(' & ') || 'Your program', item.from].join(' · ');
+  return <p className="text-[12.5px] font-semibold text-on-surface-variant">{label}</p>;
 }
