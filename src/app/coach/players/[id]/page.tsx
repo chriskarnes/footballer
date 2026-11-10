@@ -79,7 +79,10 @@ export default async function PlayerPage({ params, searchParams }: {
         const t = targetFor(content, p.user_id);
         const thisMonday = mondayOf(localDate(new Date(), tz));
         const weeks = { this: thisMonday, next: addDays(thisMonday, 7) };
-        const mine = content.custom.filter((x) => x.user_id === p.user_id);
+        // The trainer's sessions; the player's own extras are listed under Extras.
+        const mine = content.custom.filter((x) => x.user_id === p.user_id && x.made_by !== 'player');
+        const added = content.custom.filter((x) => x.user_id === p.user_id && x.made_by === 'player' && x.week_of === weeks.this)
+          .map((x) => ({ id: x.id, name: x.name, done: !!runs[x.id], weekday: x.weekday }));
         const thisWeek = mine.filter((x) => x.week_of === weeks.this);
         const nextWeek = mine.filter((x) => x.week_of === weeks.next);
         // Never chosen (before 0014, or never touched): custom if they have a custom week.
@@ -109,7 +112,7 @@ export default async function PlayerPage({ params, searchParams }: {
                     && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />
             </section>
             <div className="mt-8">
-              <Extras userId={p.user_id} first={p.first} drills={content.drills}
+              <Extras userId={p.user_id} first={p.first} drills={content.drills} added={added}
                 addons={content.addons.filter((a) => a.user_id === p.user_id && a.week_of === thisMonday).map((a) => ({
                   id: a.id, note: a.note, name: content.drills.find((d) => d.id === a.drill_id)?.name ?? 'Drill' }))} />
             </div>

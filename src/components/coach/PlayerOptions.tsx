@@ -1,0 +1,60 @@
+'use client';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { savePlayerOptions } from '@/app/coach/plan-actions';
+import { Chip } from '@/components/Chip';
+
+/**
+ * What players may do on their own: browse the academy's library, and add a
+ * session when they have time, built by rules from their own settings.
+ */
+export function PlayerOptions({ library: savedLibrary, extras: savedExtras }: { library: boolean; extras: number }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [err, setErr] = useState('');
+  const [library, setLibrary] = useState(savedLibrary);
+  const [extras, setExtras] = useState(savedExtras);
+  const dirty = library !== savedLibrary || extras !== savedExtras;
+
+  const save = () => start(async () => {
+    setErr('');
+    const r = await savePlayerOptions(library, extras);
+    if (!r.ok) setErr(r.error); else router.refresh();
+  });
+
+  return (
+    <div className="card p-5">
+      <div className="h-card">Players can</div>
+
+      <label className="mt-4 flex cursor-pointer items-start justify-between gap-4">
+        <span>
+          <span className="block text-[14px] font-bold text-on-surface">Browse your library</span>
+          <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
+            {library ? 'Every program and drill, in their Library tab. They can run any of them.' : 'They see only what you set them.'}
+          </span>
+        </span>
+        <input type="checkbox" role="switch" className="mt-1 h-5 w-5 shrink-0 accent-current" checked={library}
+               onChange={(e) => setLibrary(e.target.checked)} />
+      </label>
+
+      <div className="mt-5">
+        <div className="text-[14px] font-bold text-on-surface">Add a session when they have time</div>
+        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Extra sessions a week">
+          {[0, 1, 2, 3].map((n) => <Chip key={n} on={extras === n} onClick={() => setExtras(n)}>{n ? `${n} a week` : 'Off'}</Chip>)}
+        </div>
+        <p className="mt-2 text-[12.5px] leading-snug text-on-surface-variant">
+          {extras
+            ? 'Built from their focus and session length, with drills they haven’t done this week. Only once today’s session is done, and never on a game day.'
+            : 'Players stick to the week you set.'}
+        </p>
+      </div>
+
+      {dirty && (
+        <button type="button" disabled={pending} onClick={save} className="btn-primary pressable mt-5 w-full">
+          {pending ? 'Saving…' : 'Save'}
+        </button>
+      )}
+      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+    </div>
+  );
+}

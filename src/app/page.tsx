@@ -16,17 +16,13 @@ export default async function TrainNowPage() {
   return (
     <div className="animate-pop">
       {/* Landmarks, not loose divs held apart by a margin. */}
-      <header className="app-bar">
-        <Brand small />
-        <span className="text-[12px] font-semibold text-on-surface-variant">786 drills</span>
-      </header>
+      {/* The trainer's week, when they've set one, leads in the academy's
+          colours; otherwise the plain bar. Its own Suspense, so signed-out
+          visitors never wait on the lookup. */}
+      <Suspense fallback={<Bar />}><MyTrainerWeek /></Suspense>
 
-      {/* A note from the trainer outranks everything else on the page. Its own
-          Suspense, so signed-out visitors never wait on the lookup. */}
+      {/* A note from the trainer outranks everything else on the page. */}
       <Suspense fallback={null}><NoteBanner /></Suspense>
-
-      {/* The trainer's week, when they've set one, before anything to build. */}
-      <Suspense fallback={null}><MyTrainerWeek /></Suspense>
 
       {/* The headline lives in Coach now: it changes with the step, from
           "Start training now" to the session you've just made. */}
@@ -39,7 +35,16 @@ export default async function TrainNowPage() {
   );
 }
 
+function Bar() {
+  return (
+    <header className="app-bar">
+      <Brand small />
+      <span className="text-[12px] font-semibold text-on-surface-variant">786 drills</span>
+    </header>
+  );
+}
+
 async function MyTrainerWeek() {
   const week = await getMyWeek().catch(() => null);
-  return week ? <div className="mb-10 mt-2"><TrainerWeek week={week} /></div> : null;
+  return week ? <div className="mb-10"><TrainerWeek week={week} /></div> : <Bar />;
 }

@@ -105,9 +105,11 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
 }
 
 /** Extras: a drill or two on top of this week, however the week is set. Suggest can pick one. */
-export function Extras({ userId, first, addons, drills }: {
+export function Extras({ userId, first, addons, drills, added = [] }: {
   userId: string; first: string;
   addons: { id: string; name: string; note: string | null }[];
+  /** Sessions the player added themselves this week. */
+  added?: { id: string; name: string; done: boolean; weekday: number }[];
   drills: DrillRow[];
 }) {
   const { busy, start, err, setErr, run } = useRun();
@@ -138,7 +140,20 @@ export function Extras({ userId, first, addons, drills }: {
           ))}
         </ul>
       )}
-      {!addons.length && !adding && !!drills.length && (
+      {!!added.length && (
+        <ul className="card mb-3 divide-y divide-outline-variant">
+          {added.map((a) => (
+            <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="min-w-0">
+                <span className="block truncate text-[14.5px] font-semibold text-on-surface">{a.name}</span>
+                <span className="block text-[12.5px] text-on-surface-variant">Added by {first} · {DAYS[a.weekday]}</span>
+              </span>
+              <span className="shrink-0 text-[12.5px] font-semibold text-on-surface-variant">{a.done ? 'Done' : 'Not yet'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!addons.length && !added.length && !adding && !!drills.length && (
         <p className="text-[13.5px] text-on-surface-variant">A drill on top of {first}&rsquo;s week, with a note if you like.</p>
       )}
       {!drills.length && <p className="text-[13.5px] text-on-surface-variant">Add drills under Library to give {first} extras.</p>}

@@ -4,6 +4,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { ROOT_DOMAIN } from '@/lib/tenant';
 import { BuildDefaults } from '@/components/coach/BuildDefaults';
+import { PlayerOptions } from '@/components/coach/PlayerOptions';
 import { loadDefaults } from '@/lib/academy-data';
 import { usage } from '@/lib/ai';
 
@@ -73,7 +74,10 @@ export default async function TeamPage() {
 
       <section className="mt-9">
         <p className="eyebrow mb-3">Training</p>
-        <BuildDefaults defaults={defaults} ai={ai} />
+        <div className="space-y-3">
+          <BuildDefaults defaults={defaults} ai={ai} />
+          <PlayerOptions library={defaults.playerLibrary} extras={defaults.playerExtras} />
+        </div>
       </section>
 
       {canBrand && (

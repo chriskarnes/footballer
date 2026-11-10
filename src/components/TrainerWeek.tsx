@@ -2,6 +2,8 @@ import Link from 'next/link';
 import type { MyWeek } from '@/lib/player-week';
 import { MoveDay } from './MoveDay';
 import { SoccerDaysPanel } from './SoccerDays';
+import { AddSession } from './AddSession';
+import { BandTag, BandTitle, BrandBand } from './BrandBand';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -16,36 +18,40 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
  */
 export function TrainerWeek({ week }: { week: MyWeek }) {
   const { items, groups, today, schedule } = week;
-  const done = items.filter((i) => i.done).length;
+  const set = items.filter((i) => !i.extra);
+  const done = set.filter((i) => i.done).length;
   const next = items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
+
+  const when = next ? (next.weekday === today ? 'Today' : next.weekday < today ? `Missed ${DAYS[next.weekday]}` : DAYS[next.weekday]) : 'This week';
 
   return (
     <section>
-      {next ? (
-        <div className="card p-5">
-          <p className="eyebrow">{next.weekday === today ? 'Today' : next.weekday < today ? `Missed ${DAYS[next.weekday]} · do it today?` : DAYS[next.weekday]}</p>
-          <h2 className="mt-2 font-brand text-[24px] font-extrabold leading-tight tracking-tighter text-on-surface">{next.title}</h2>
-          <p className="mt-1 text-[13.5px] text-on-surface-variant">
+      {/* The week leads, in the academy's colours, the way the site opens. */}
+      <BrandBand overlap={!!next} right={set.length ? `${done} of ${set.length} done` : undefined}>
+        <BandTag>{when}</BandTag>
+        <BandTitle>{next ? next.title : items.length ? 'All done' : 'This week'}</BandTitle>
+        <p className="mt-3 text-[14px] text-on-surface-brand-variant">
+          {next ? <>
             {next.minutes} min · {next.drills} {next.drills === 1 ? 'drill' : 'drills'}{next.practice && ' · Practice day too'}
             {next.light ? ' · Lighter week' : next.ups ? ` · ${next.ups} ${next.ups === 1 ? 'drill levels' : 'drills level'} up` : ''}
-          </p>
+          </> : 'Everything your trainer set this week is finished.'}
+        </p>
+        <WeekStrip items={items} today={today} />
+      </BrandBand>
+
+      {next && (
+        <div className="card relative -mt-12 p-5">
+          {next.weekday < today && <p className="mb-2 text-[13px] font-semibold text-on-surface">Do it today?</p>}
           <Source item={next} />
           {next.note && <p className="mt-3 border-l-2 border-on-surface pl-3 text-[14px] leading-snug text-on-surface">{next.note}</p>}
-          <Link href={`/train/${next.kind}/${next.ref}`} className="btn-primary pressable mt-5 w-full">Start</Link>
+          <Link href={`/train/${next.kind}/${next.ref}`} className="btn-primary pressable mt-4 w-full">Start</Link>
         </div>
-      ) : items.length ? (
-        <div className="card p-5">
-          <p className="eyebrow">This week</p>
-          <h2 className="mt-2 font-brand text-[24px] font-extrabold leading-tight tracking-tighter text-on-surface">All done</h2>
-          <p className="mt-1 text-[14px] text-on-surface-variant">Everything your trainer set this week is finished.</p>
-        </div>
-      ) : null}
+      )}
 
       {items.length > 0 && (
         <>
           <div className="mb-3 mt-8 flex items-baseline justify-between">
             <p className="eyebrow">This week</p>
-            <span className="text-[13px] font-semibold text-on-surface-variant">{done} of {items.length} done</span>
           </div>
           <ul className="card divide-y divide-outline-variant">
             {items.map((it) => (
@@ -58,7 +64,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
                     <span className={`block truncate text-[14.5px] font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
                     <span className="block truncate text-[12.5px] text-on-surface-variant">
                       {!it.done && it.weekday < today && <b className="font-semibold text-on-surface">Missed · </b>}
-                      {it.minutes} min · {it.practice ? 'Practice day' : it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Just for you'}
+                      {it.minutes} min · {it.practice ? 'Practice day' : it.extra ? 'Added by you' : it.kind === 'custom' ? 'Built for you' : it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Just for you'}
                     </span>
                   </span>
                 </Link>
@@ -70,6 +76,8 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
           </ul>
         </>
       )}
+
+      {week.more && <AddSession left={week.more.left} why={week.more.why} />}
 
       {items.some((i) => i.kind !== 'addon') && (
         <div className="mt-4">
@@ -89,8 +97,32 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
 }
 
 /** Where a session comes from, in words: "U12 Tuesday · Ball Mastery · Week 3 of 8". */
+/** Monday to Sunday in the band: done, still to do, or nothing set. */
+function WeekStrip({ items, today }: { items: MyWeek['items']; today: number }) {
+  return (
+    <ol className="mt-6 grid grid-cols-7 gap-1.5" aria-label="This week">
+      {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
+        const on = items.filter((x) => x.weekday === i);
+        const doneHere = on.length > 0 && on.every((x) => x.done);
+        const label = `${DAYS[i]}: ${on.length ? (doneHere ? 'done' : `${on.length} to do`) : 'rest'}`;
+        return (
+          <li key={i} aria-label={label} className="flex flex-col items-center gap-1.5">
+            <span className={`text-[11px] font-bold ${i === today ? 'text-on-surface-brand' : 'text-on-surface-brand-variant'}`}>{d}</span>
+            <span className={`flex h-7 w-full items-center justify-center rounded-full text-[11px] font-extrabold
+              ${doneHere ? '' : on.length ? 'border-2 border-on-surface-brand-variant' : 'opacity-30'} ${i === today ? 'outline outline-2 outline-offset-2 outline-[var(--app-brand-accent)]' : ''}`}
+                  style={doneHere ? { background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' } : undefined}>
+              {doneHere ? '✓' : on.length > 1 ? on.length : on.length ? '' : '·'}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function Source({ item }: { item: MyWeek['items'][number] }) {
-  const label = item.kind === 'addon' ? 'Just for you, from your trainer'
+  const label = item.extra ? 'Added by you, from your trainer’s drills'
+    : item.kind === 'addon' ? 'Just for you, from your trainer'
     : item.kind === 'custom' ? 'Built for you by your trainer'
     : [item.groups.join(' & ') || 'Just for you', item.from].join(' · ');
   return <p className="mt-3 text-[12.5px] font-semibold text-on-surface-variant">{label}</p>;

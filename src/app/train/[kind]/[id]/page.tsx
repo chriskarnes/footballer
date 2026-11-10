@@ -56,6 +56,14 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills} sessionRef={s.id} source="academy" back={back} />;
   }
 
+  // Any drill from the academy's library, when players may browse it.
+  if (kind === 'drill') {
+    const { data: d } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+    if (!d) notFound();
+    return <Runner title={d.name} subtitle={d.amount ?? `${d.minutes} min`} drills={[asExercise(d as DrillRow, d.id, 0)]}
+                   sessionRef={d.id} source="academy" back={{ href: '/library', label: 'Library' }} />;
+  }
+
   if (kind === 'addon') {
     const { data: a } = await v.db.from('addons').select('id, note, drills(id, name, amount, minutes, focus, video_url, how)')
       .eq('id', id).eq('user_id', v.user.id).maybeSingle();

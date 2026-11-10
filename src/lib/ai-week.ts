@@ -29,7 +29,9 @@ export async function proposeWeek(input: {
   const ai = client();
   if (!ai) return { sessions: null, usage: null };
   const kept = new Set(input.week.flatMap((s) => s.drill_ids.filter((_, k) => s.changes[k] !== 'new')));
-  const pool = candidates(input.drills.filter((d) => !kept.has(d.id)), input.focus, input.recent);
+  // Enough to fill the week without repeats: about one candidate per 4 minutes, 30 to 80.
+  const pool = candidates(input.drills.filter((d) => !kept.has(d.id)), input.focus, input.recent,
+    Math.max(30, Math.min(80, Math.round((input.target.sessions * input.target.minutes) / 4))));
   const byId = new Map(input.drills.map((d) => [d.id, d]));
   const n = input.target.sessions;
   const schema = {

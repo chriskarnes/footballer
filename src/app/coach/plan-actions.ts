@@ -2,8 +2,8 @@
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { addDays, localDate, mondayOf } from '@/lib/progress';
-import { loadContent, targetFor } from '@/lib/academy-data';
-import { buildPlayerWeek, fitToTarget, type BuiltSession, type Feel, type PastWeek } from '@/lib/week-builder';
+import { loadContent, loadDefaults, targetFor } from '@/lib/academy-data';
+import { MAX_MINUTES, MIN_MINUTES, buildPlayerWeek, fitToTarget, type BuiltSession, type Feel, type PastWeek } from '@/lib/week-builder';
 import type { CustomRow } from '@/lib/academy-week';
 import { allowed, DENIED, fingerprint, logCall } from '@/lib/ai';
 import { proposeWeek } from '@/lib/ai-week';
@@ -40,7 +40,7 @@ export async function savePlan(userId: string, plan: { sessions: number | null; 
     const row: Record<string, unknown> = {
       academy_id: v.academy.id, user_id: userId, focus,
       sessions: plan.sessions === null ? null : clamp(plan.sessions, 1, 7),
-      minutes: plan.minutes === null ? null : clamp(plan.minutes, 5, 90),
+      minutes: plan.minutes === null ? null : clamp(plan.minutes, MIN_MINUTES, MAX_MINUTES),
       updated_at: new Date().toISOString(),
     };
     // Null follows the academy; left out, it stays as it was.
@@ -65,9 +65,24 @@ export async function setMode(userId: string, mode: 'program' | 'custom'): Promi
     if (error) return { ok: false, error: /mode/.test(error.message) ? 'Run migration 0014 in Supabase first.' : missing(error.message) };
     if (mode === 'program') {
       const from = mondayOf(localDate(new Date(), v.academy.timeZone));
-      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from);
+      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
       if (del.error) return { ok: false, error: missing(del.error.message) };
     }
+    done(); return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
+/** What players may do on their own: browse the library, add up to `extras` sessions a week. */
+export async function savePlayerOptions(library: boolean, extras: number): Promise<Result> {
+  try {
+    const v = await staff();
+    const d = await loadDefaults(v.db, v.academy.id);
+    const { error } = await v.db.from('academy_plan_defaults').upsert({
+      academy_id: v.academy.id, sessions: d.sessions, minutes: d.minutes,
+      player_library: !!library, player_extras: clamp(extras, 0, 3) ?? 0, updated_at: new Date().toISOString(),
+    });
+    if (error && /player_/.test(error.message)) return { ok: false, error: 'Run migration 0015 in Supabase first.' };
+    if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -77,7 +92,7 @@ export async function saveDefaults(sessions: number, minutes: number, progress: 
   try {
     const v = await staff();
     const { error } = await v.db.from('academy_plan_defaults').upsert({
-      academy_id: v.academy.id, sessions: clamp(sessions, 1, 7), minutes: clamp(minutes, 5, 90), progress: !!progress,
+      academy_id: v.academy.id, sessions: clamp(sessions, 1, 7), minutes: clamp(minutes, MIN_MINUTES, MAX_MINUTES), progress: !!progress,
       updated_at: new Date().toISOString(),
     });
     if (error && /progress/.test(error.message)) return { ok: false, error: 'Run migration 0013 in Supabase first.' };
@@ -140,7 +155,8 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       } else why = 'AI didn’t answer, so this is the rules’ week';
     } else why = `${DENIED[gate.why]}, so this is built from their settings`;
 
-    const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of);
+    // The player's own extra sessions stay.
+    const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
     if (del.error) return { ok: false, error: missing(del.error.message) };
     // Newest columns first; before 0012 (steps, light) or 0011 (note), without them.
     const tiers: string[][] = [['note', 'steps', 'light', 'changes'], ['note'], []];
@@ -160,6 +176,13 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     // Building a week means custom weeks, if they weren't already (before 0014, no mode).
     if (t.mode !== 'auto') await v.db.from('player_plans').upsert({ academy_id: v.academy.id, user_id: userId, mode: 'custom' });
     done();
+    // Too few drills to fill the time: say so, rather than quietly building short sessions.
+    const full = rows.filter((r) => !r.light);
+    const shortest = full.length ? Math.min(...full.map((r) => r.minutes)) : t.minutes;
+    if (shortest < t.minutes - 5) {
+      const short = `Sessions come to about ${shortest} of ${t.minutes} min: add more drills${t.focus.length ? ` for ${t.focus.map((f) => FOCUS_LABELS[f as keyof typeof FOCUS_LABELS] ?? f).join(', ')}` : ''} to fill them`;
+      why = why ? `${short}. ${why}` : short;
+    }
     return { ok: true, by: rows.some((r) => r.made_by === 'ai') ? 'ai' : 'rules', why };
   } catch (e) { return fail(e); }
 }
@@ -170,7 +193,8 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function pastWeeks(db: any, academyId: string, custom: CustomRow[], userId: string, weekOf: string): Promise<PastWeek[]> {
-  const mine = custom.filter((x) => x.user_id === userId && x.week_of < weekOf);
+  // The trainer's weeks only: a player's own extras don't set levels or blocks.
+  const mine = custom.filter((x) => x.user_id === userId && x.week_of < weekOf && x.made_by !== 'player');
   if (!mine.length) return [];
   const since = `${mine.map((x) => x.week_of).sort()[0]}T00:00:00Z`;
   const { data } = await db.rpc('academy_completions', { p_academy: academyId, p_since: since });

@@ -27,8 +27,13 @@ import { drillTags, placeDays, type DrillRow } from './academy-week';
 import { FOCUS_LABELS, type FocusArea } from './types';
 
 export type Target = { sessions: number; minutes: number };
-export const DEFAULT_TARGET: Target = { sessions: 3, minutes: 20 };
-export const MINUTE_CHOICES = [10, 15, 20, 30, 45];
+/** Sessions are 30 minutes to an hour: long enough to work, short enough to finish. */
+export const MIN_MINUTES = 30;
+export const MAX_MINUTES = 60;
+export const DEFAULT_TARGET: Target = { sessions: 3, minutes: 45 };
+export const MINUTE_CHOICES = [30, 45, 60];
+/** A saved length from before the 30–60 range, brought inside it. */
+export const sessionMinutes = (n: number) => Math.max(MIN_MINUTES, Math.min(MAX_MINUTES, n));
 /** Steps a drill can go up before it needs its harder version. */
 export const MAX_STEP = 3;
 /** A lighter week after this many built weeks in a row. */

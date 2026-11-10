@@ -548,12 +548,17 @@ input, textarea, [data-selectable] {
    need to beat utilities.
    ========================================================================== */
 @layer components {
-.h-hero  { font-family: var(--md-sys-typescale-headline-large-font);
-           font-size: var(--md-sys-typescale-headline-large-size);
-           font-weight: var(--md-sys-typescale-headline-large-weight);
-           line-height: var(--md-sys-typescale-headline-large-line-height);
-           font-stretch: var(--md-sys-typescale-headline-large-width);
-           letter-spacing: var(--md-sys-typescale-headline-large-tracking); margin: 0; }
+/* The player app's big headlines are set like the marketing pages: the brand
+   face, wide and heavy, in capitals. It is the one thing that makes the app
+   read as the same product as the site. */
+.h-hero  { font-family: var(--md-ref-typeface-brand);
+           font-size: clamp(28px, 8.4vw, 36px);
+           font-weight: 900;
+           line-height: .98;
+           font-stretch: 151%;
+           text-transform: uppercase;
+           overflow-wrap: anywhere;
+           letter-spacing: -.02em; margin: 0; }
 .h-page  { font-family: var(--md-sys-typescale-headline-small-font);
            font-size: var(--md-sys-typescale-headline-small-size);
            font-weight: var(--md-sys-typescale-headline-small-weight);

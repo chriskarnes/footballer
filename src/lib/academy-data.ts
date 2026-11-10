@@ -1,13 +1,17 @@
 import 'server-only';
 import type { AddonRow, CustomRow, DrillRow, GroupRow, MoveRow, PlayerProgramRow, ProgramRow, ScheduleRow, SessionRow } from './academy-week';
-import { DEFAULT_TARGET, type Target } from './week-builder';
+import { DEFAULT_TARGET, sessionMinutes, type Target } from './week-builder';
 
 /** A player's targets and focus, as the trainer set them (0010). */
 export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean; progress?: boolean | null; mode?: PlanMode | null };
 /** How a player's week is set (0014): their program, or custom weeks. */
 export type PlanMode = 'program' | 'custom' | 'auto';
 /** The academy's default target, and whether built weeks step drills up (0013). */
-export type Defaults = Target & { progress: boolean };
+export type Defaults = Target & {
+  progress: boolean;
+  /** What players may do on their own (0015): browse the library; add up to this many sessions a week. */
+  playerLibrary: boolean; playerExtras: number;
+};
 
 export type AcademyContent = {
   programs: (ProgramRow & { description: string | null })[];
@@ -75,10 +79,11 @@ async function withFallback(q: (cols: string) => any, cols: string, ...extras: s
 /** The academy's default target and step-up setting; the built-in ones when unset. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadDefaults(db: any, academyId: string): Promise<Defaults> {
-  const { data } = await withFallback((c) => db.from('academy_plan_defaults').select(c).eq('academy_id', academyId).maybeSingle(), 'sessions, minutes', ', progress');
+  const { data } = await withFallback((c) => db.from('academy_plan_defaults').select(c).eq('academy_id', academyId).maybeSingle(), 'sessions, minutes', ', progress, player_library, player_extras', ', progress');
   return data
-    ? { sessions: data.sessions, minutes: data.minutes, progress: data.progress ?? true }
-    : { ...DEFAULT_TARGET, progress: true };
+    ? { sessions: data.sessions, minutes: sessionMinutes(data.minutes), progress: data.progress ?? true,
+        playerLibrary: data.player_library ?? false, playerExtras: data.player_extras ?? 0 }
+    : { ...DEFAULT_TARGET, progress: true, playerLibrary: false, playerExtras: 0 };
 }
 
 /** Built-week sessions with their notes; without them before migration 0011 adds the column. */
@@ -114,7 +119,7 @@ export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId:
 } {
   const p = c.plans.find((x) => x.user_id === userId);
   return {
-    sessions: p?.sessions ?? c.defaults.sessions, minutes: p?.minutes ?? c.defaults.minutes,
+    sessions: p?.sessions ?? c.defaults.sessions, minutes: sessionMinutes(p?.minutes ?? c.defaults.minutes),
     focus: p?.focus ?? [], autopilot: p?.autopilot ?? false, own: !!(p && (p.sessions || p.minutes)),
     progress: p?.progress ?? c.defaults.progress, ownProgress: p?.progress ?? null, mode: p?.mode ?? null,
   };

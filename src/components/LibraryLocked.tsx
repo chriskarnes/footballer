@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { Brand } from './Brand';
+import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { NoteBanner } from './NoteBanner';
 import { TrainerWeek } from './TrainerWeek';
 import { getMyWeek } from '@/lib/player-week';
@@ -17,22 +17,22 @@ export async function LibraryLocked({ title }: { title: string }) {
   if (week) {
     return (
       <div className="animate-pop">
-        <header className="app-bar"><Brand small /></header>
-        <Suspense fallback={null}><NoteBanner /></Suspense>
         <TrainerWeek week={week} />
+        <div className="mt-4"><Suspense fallback={null}><NoteBanner /></Suspense></div>
         <Link href="/speed" className="btn-ghost pressable mt-8 w-full">Extra: Speed &amp; Stamina</Link>
       </div>
     );
   }
   return (
     <div className="animate-pop">
-      <header className="app-bar"><Brand small /></header>
+      <BrandBand>
+        <BandTag>{title}</BandTag>
+        <BandTitle>Your trainer&rsquo;s sessions land here</BandTitle>
+        <p className="mt-3 text-[15px] leading-relaxed text-on-surface-brand-variant">
+          In the meantime, Speed &amp; Stamina has a full year of sessions ready to go.
+        </p>
+      </BrandBand>
       <Suspense fallback={null}><NoteBanner /></Suspense>
-      <p className="eyebrow mb-3">{title}</p>
-      <h1 className="h-page">Your trainer&rsquo;s programs will appear here</h1>
-      <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">
-        In the meantime, Speed &amp; Stamina has a full year of sessions ready to go.
-      </p>
       <Link href="/speed" className="btn-primary pressable mt-6 w-full">Open Speed &amp; Stamina</Link>
     </div>
   );

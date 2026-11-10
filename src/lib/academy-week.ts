@@ -27,7 +27,7 @@ export type CompletionRow = { source: string; source_ref: string | null; complet
 export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null };
 /** A session of a week built for one player (0010). Replaces their program that week. */
 export type CustomRow = { id: string; user_id: string; week_of: string; position: number; name: string; drill_ids: string[]; weekday: number;
-  made_by?: 'rules' | 'ai' | 'trainer'; note?: string | null;
+  made_by?: 'rules' | 'ai' | 'trainer' | 'player'; note?: string | null;
   /** Per drill, how far it has stepped up (0012); and whether it's a lighter week. */
   steps?: number[]; light?: boolean; changes?: string[] };
 /** One item moved to another day, for one week. */
@@ -59,6 +59,8 @@ export type WeekItem = {
   /** From a built week: a lighter one, and how many drills stepped up or got harder. */
   light?: boolean;
   ups?: number;
+  /** One the player added themselves (0015): on top of the week, never counted as set. */
+  extra?: boolean;
 };
 
 /** Which week of a program a date is in, 1-based; null before it starts or after it ends. */
@@ -174,8 +176,11 @@ export function buildWeek(input: {
   const meets = myGroups.map((g) => g.meets_weekday).filter((d): d is number => d !== null);
 
   // A week built for this player is their week: it replaces the programs.
-  const built = (input.custom ?? []).filter((c) => c.user_id === userId && c.week_of === monday)
+  const mineCustom = (input.custom ?? []).filter((c) => c.user_id === userId && c.week_of === monday)
     .sort((a, b) => a.position - b.position);
+  // The player's own extra sessions sit on top of whatever the week is.
+  const built = mineCustom.filter((c) => c.made_by !== 'player');
+  const own = mineCustom.filter((c) => c.made_by === 'player');
   if (built.length) {
     for (const c of built) items.push({
       key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
@@ -194,6 +199,11 @@ export function buildWeek(input: {
     order.forEach((it, i) => { it.weekday = days[i]; });
     items.push(...order);
   }
+
+  for (const c of own) items.push({
+    key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Added by you', groups: [],
+    weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, note: null, done: false, extra: true,
+  });
 
   for (const a of input.addons.filter((x) => x.user_id === userId && x.week_of === monday)) {
     const d = drills.get(a.drill_id);
@@ -236,7 +246,7 @@ export function buildWeek(input: {
 
 /** The week as progress() wants it: one planned slot per item, on its day. */
 export const asPlanDays = (items: WeekItem[]) =>
-  items.map((it, i) => ({ weekday: it.weekday, slot: 10 + i, kind: 'technical' }));
+  items.filter((it) => !it.extra).map((it, i) => ({ weekday: it.weekday, slot: 10 + i, kind: 'technical' }));
 
 /** "Tue 5:00 pm" */
 export function meetingLabel(g: Pick<GroupRow, 'meets_weekday' | 'meets_time'>): string | null {

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { libraryAllowed } from '@/lib/branding-server';
 import { LibraryLocked } from '@/components/LibraryLocked';
+import { AcademyLibrary } from '@/components/AcademyLibrary';
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
 
@@ -26,17 +28,21 @@ const KID: Record<string, string> = {
 };
 
 export default async function LibraryPage() {
-  if (!(await libraryAllowed())) return <LibraryLocked title="Library" />;
+  if (!(await libraryAllowed())) {
+    // Their academy's own library, when their trainer lets them browse it.
+    const own = await AcademyLibrary({});
+    return own ? <div className="animate-pop">{own}</div> : <LibraryLocked title="Library" />;
+  }
   const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);
   const categories = ['Technical', 'Physical', 'Finishing & Crossing'];
 
   return (
     <div className="animate-pop">
-      <p className="eyebrow mb-3">Library</p>
-      {/* "programme" was only ever in the headings — every card title already
-          said "Program". Normalised to US, and the hero is one line. */}
-      <h1 className="h-hero">Training Programs</h1>
-      <p className="mt-3.5 text-[15px] text-on-surface-variant">786 drills across 17 programs.</p>
+      <BrandBand>
+        <BandTag>Library</BandTag>
+        <BandTitle>Training programs</BandTitle>
+        <p className="mt-3 text-[15px] text-on-surface-brand-variant">786 drills across 17 programs.</p>
+      </BrandBand>
 
       <div className="stagger mt-9 space-y-9">
         {categories.map((cat) => {
