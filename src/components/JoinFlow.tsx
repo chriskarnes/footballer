@@ -5,9 +5,9 @@ import { JoinButton } from './JoinButton';
 import type { Who } from '@/lib/who';
 
 
-const CHOICES: { who: Who; title: string; body: string }[] = [
-  { who: 'player', title: 'I’m the player', body: 'It’s my email, and I’ll do the sessions.' },
-  { who: 'parent', title: 'I’m a parent', body: 'I’m signing up for my child.' },
+const CHOICES: { who: Who; title: string }[] = [
+  { who: 'player', title: 'I’m the player' },
+  { who: 'parent', title: 'I’m a parent' },
 ];
 
 /**
@@ -42,12 +42,11 @@ export function JoinFlow({ code, role, email, initial }: {
                      className={`pressable relative cursor-pointer rounded-2xl border-2 p-3.5 transition-colors
                        ${on ? 'border-primary bg-primary-container' : 'border-outline-variant'}`}>
                 <input type="radio" name="who" value={c.who} checked={on} onChange={() => setWho(c.who)} className="sr-only" />
-                <span className="flex items-start justify-between gap-2">
+                <span className="flex items-center justify-between gap-2">
                   <span className="text-[15px] font-bold leading-tight text-on-surface">{c.title}</span>
-                  <span aria-hidden className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 text-[11px] font-black
+                  <span aria-hidden className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 text-[11px] font-black
                     ${on ? 'border-primary bg-primary text-on-primary' : 'border-outline'}`}>{on && '✓'}</span>
                 </span>
-                <span className="mt-1 block text-[12.5px] leading-snug text-on-surface-variant">{c.body}</span>
               </label>
             );
           })}
@@ -58,11 +57,7 @@ export function JoinFlow({ code, role, email, initial }: {
         <div key={who} className="animate-pop">
           {email
             ? <JoinButton code={code} who={who} label={`Join as ${as}`} email={email} />
-            : <SignIn next={`/join/${code}?as=${who}`} button="Email me a link"
-                      title="Your email"
-                      note={who === 'parent'
-                        ? 'No password. We’ll email you a link that signs you in, on your phone or theirs.'
-                        : undefined} />}
+            : <SignIn next={`/join/${code}?as=${who}`} button="Email me a link" title="Your email" />}
         </div>
       )}
     </div>

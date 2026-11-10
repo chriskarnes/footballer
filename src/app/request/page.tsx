@@ -34,7 +34,7 @@ export default async function RequestPage() {
       <div className="mt-10">
         <p className="eyebrow mb-3">Ask to join</p>
         <h1 className="h-page">{v.academy.name}</h1>
-        <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
+        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
           Your trainer lets you in, then your sessions appear here. If they sent you a link, use that instead: it skips this step.
         </p>
       </div>

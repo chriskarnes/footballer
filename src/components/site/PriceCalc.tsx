@@ -90,7 +90,7 @@ export function PriceCalc() {
       <div className="card-flat p-6 sm:p-7">
         <p className="eyebrow">Or pay us directly</p>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <p className="max-w-[26rem] text-[14.5px] leading-relaxed text-on-surface-variant">
+          <p className="min-w-0 flex-1 basis-[18rem] text-[14.5px] leading-relaxed text-on-surface-variant">
             Already charge your players your own way, or want it free for them? Pay us a flat <b className="font-semibold text-on-surface">$5 a player, a month</b> and
             nothing goes through us.
           </p>

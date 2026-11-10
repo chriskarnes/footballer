@@ -30,7 +30,7 @@ export async function LibraryLocked({ title }: { title: string }) {
       <Suspense fallback={null}><NoteBanner /></Suspense>
       <p className="eyebrow mb-3">{title}</p>
       <h1 className="h-page">Your trainer&rsquo;s programs will appear here</h1>
-      <p className="mt-3 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
+      <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">
         In the meantime, Speed &amp; Stamina has a full year of sessions ready to go.
       </p>
       <Link href="/speed" className="btn-primary pressable mt-6 w-full">Open Speed &amp; Stamina</Link>

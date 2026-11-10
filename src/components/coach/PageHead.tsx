@@ -11,7 +11,7 @@ export function PageHead({ title, eyebrow, action, children }: {
       <div className="min-w-0">
         {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
         <h1 className="h-page">{title}</h1>
-        {children && <p className="mt-2 max-w-[40rem] text-[14px] leading-relaxed text-on-surface-variant">{children}</p>}
+        {children && <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">{children}</p>}
       </div>
       {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
     </header>

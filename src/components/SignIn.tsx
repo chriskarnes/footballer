@@ -67,7 +67,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
       {/* The reason most people are here: they just finished a session. */}
       {waiting && <p className="mb-1 text-[14px] font-medium leading-snug text-on-surface">{waiting}</p>}
       <p className="mb-4 text-[13.5px] leading-snug text-on-surface-variant">
-        {note ?? 'No password. We’ll email you a link that signs you in.'}
+        {note ?? 'No password. We’ll email you a link.'}
       </p>
       <label className="text-field">
         <input

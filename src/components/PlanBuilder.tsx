@@ -270,7 +270,7 @@ function Builder({
     <div key="questions" className="animate-pop">
       <p className="eyebrow mb-3">{editing ? `Rebuilding ${editing.name}` : 'Plan'}</p>
       <h1 className="h-hero">Weekly Schedule</h1>
-      <p className="mt-3.5 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
+      <p className="mt-3.5 text-[15px] leading-relaxed text-on-surface-variant">
         A repeating weekly training routine built just for you.
       </p>
 

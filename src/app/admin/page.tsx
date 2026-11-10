@@ -40,7 +40,7 @@ export default async function AdminPage() {
       <BackLink href="/coach/team" label="Team" />
       <p className="eyebrow mb-3">{v.academy.name}</p>
       <h1 className="h-page">Brand settings</h1>
-      <p className="mt-2 max-w-[38ch] text-[14px] leading-relaxed text-on-surface-variant">
+      <p className="mt-2 text-[14px] leading-relaxed text-on-surface-variant">
         Pick a kit, add your crest, and every player sees it on their next load.
       </p>
       <BrandingAdmin initial={v.academy.branding} />

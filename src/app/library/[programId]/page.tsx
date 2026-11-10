@@ -75,7 +75,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
       <p className="eyebrow mb-3">{KID[program.category] ?? program.category}{level && ` · ${level}`}</p>
       <h1 className="h-page">{program.name}</h1>
       {blurb && (
-        <p className="mt-3 max-w-[40ch] text-[15px] leading-relaxed text-on-surface-variant">{blurb}</p>
+        <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">{blurb}</p>
       )}
 
       <dl className="mt-6 flex divide-x divide-outline-variant">

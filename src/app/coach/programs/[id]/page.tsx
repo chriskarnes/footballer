@@ -33,7 +33,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
       <BackLink href="/coach/content" label="Programs" />
       <p className="eyebrow mb-3">{p.weeks} weeks</p>
       <h1 className="h-page">{p.name}</h1>
-      {p.description && <p className="mt-2 max-w-[40ch] text-[14px] leading-relaxed text-on-surface-variant">{p.description}</p>}
+      {p.description && <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">{p.description}</p>}
       <p className="mt-3 text-[13.5px] text-on-surface-variant">
         {groups.length || players
           ? <>Used by {[...groups.map((g) => g.name), players ? `${players} ${players === 1 ? 'player' : 'players'} on their own` : ''].filter(Boolean).join(', ')}</>

@@ -11,7 +11,7 @@ export default async function NewProgramPage() {
     <div className="animate-pop">
       <BackLink href="/coach/content" label="Programs" />
       <h1 className="h-page">New program</h1>
-      <p className="mb-6 mt-2 max-w-[36ch] text-[14px] leading-relaxed text-on-surface-variant">
+      <p className="mb-6 mt-2 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">
         Weeks of at-home work. Give it to a group, or to one player.
       </p>
       <ProgramForm />

@@ -32,7 +32,7 @@ export default async function JoinPage({ params, searchParams }: {
     return (
       <Shell eyebrow="Invite">
         <h1 className="h-page">This link doesn&rsquo;t work</h1>
-        <p className="mt-2 max-w-[34ch] text-[15px] leading-relaxed text-on-surface-variant">
+        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
           It may have been replaced with a new one. Ask your trainer to send it again.
         </p>
       </Shell>
@@ -77,18 +77,9 @@ export default async function JoinPage({ params, searchParams }: {
           <h1 className="site-wide mt-4 text-[38px] uppercase leading-[.95]">
             Join {head}{tail && <span className="text-on-surface-brand-variant">{tail}</span>}
           </h1>
-          <p className="mt-4 max-w-[34ch] text-[15.5px] leading-relaxed text-on-surface-brand-variant">
-            {role === 'trainer'
-              ? 'See every player’s week at a glance, and send them notes.'
-              : 'Sessions from your trainer, done at home with a ball. Your trainer sees what you finish.'}
+          <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+            {role === 'trainer' ? 'See every player’s week, and send them notes.' : 'Your trainer’s sessions, done at home.'}
           </p>
-          {role === 'player' && (
-            <ul className="mt-6 flex flex-wrap gap-2 text-[12.5px] font-semibold">
-              {['15–20 min a session', 'Set around your soccer days', 'Works on any phone'].map((t) => (
-                <li key={t} className="rounded-full px-3 py-1.5" style={{ background: 'color-mix(in srgb, currentColor 13%, transparent)' }}>{t}</li>
-              ))}
-            </ul>
-          )}
         </div>
       </section>
 

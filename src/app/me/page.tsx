@@ -92,7 +92,7 @@ export default async function MePage() {
       <div>
         <p className="eyebrow mb-3">Your training</p>
         <h1 className="h-hero">Keep every<br />session</h1>
-        <p className="mt-3.5 max-w-[32ch] text-[15px] leading-relaxed text-on-surface-variant">
+        <p className="mt-3.5 text-[15px] leading-relaxed text-on-surface-variant">
           Sign in to build a history, repeat a session you liked, and save a weekly plan.
         </p>
         <div className="mt-5"><SignIn /></div>

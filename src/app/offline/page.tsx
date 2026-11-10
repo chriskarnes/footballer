@@ -9,7 +9,7 @@ export default function Offline() {
     <div className="flex min-h-[70dvh] flex-col items-center justify-center text-center">
       <Brand />
       <h1 className="h-page mt-8">You&apos;re offline</h1>
-      <p className="mt-2.5 max-w-xs text-[14.5px] leading-relaxed text-on-surface-variant">
+      <p className="mt-2.5 text-[14.5px] leading-relaxed text-on-surface-variant">
         Train.futbol needs a connection to load a new session. Anything already open keeps
         working — including the drill you&apos;re in the middle of.
       </p>

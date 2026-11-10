@@ -43,7 +43,7 @@ export default async function SendPage({ searchParams }: { searchParams: Promise
       <BackLink href={target ? `/coach/players/${target.user_id}` : inGroup ? `/coach/groups/${inGroup.id}` : '/coach'}
                 label={target ? target.name : inGroup ? inGroup.name : 'Players'} />
       <h1 className="h-page">{nudge ? `Nudge ${target.first}` : target ? `Note to ${target.first}` : inGroup ? `Note to ${inGroup.name}` : 'Send a note'}</h1>
-      <p className="mt-2 max-w-[38ch] text-[13.5px] leading-relaxed text-on-surface-variant">
+      <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-on-surface-variant">
         Players see it in the app and can&rsquo;t reply. Every trainer at {academy.name} can see what&rsquo;s sent.
       </p>
       <NoteComposer
