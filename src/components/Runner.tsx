@@ -50,6 +50,10 @@ export function Runner({
   const [phase, setPhase] = useState<Phase>('running');
   const [save, setSave] = useState<Save>('saving');
   const [played, setPlayed] = useState(0);
+  // A trainer's session asks how it felt: that's what steps the next week up.
+  const [savedId, setSavedId] = useState<string | null>(workoutId ?? null);
+  const [feel, setFeel] = useState<'easy' | 'right' | 'hard' | null>(null);
+  const asksFeel = source === 'academy' || source === 'addon';
   // Which drill's "How to do it" is open. One at a time: the list is the
   // thing being worked through, and two sets of steps open push it apart.
   const [howOpen, setHowOpen] = useState<string | null>(null);
@@ -104,7 +108,10 @@ export function Runner({
       // needs no account — so most first sessions were reported saved and
       // weren't. A signed-out finish is kept in this browser until sign-in.
       if (res.status === 401 && !workoutId) { pendingWorkout.stash(body); setSave('signin'); }
-      else setSave(res.ok ? 'saved' : 'error');
+      else {
+        setSave(res.ok ? 'saved' : 'error');
+        if (res.ok && !workoutId) { const j = await res.json().catch(() => null); if (j?.id) setSavedId(j.id); }
+      }
     } catch { setSave('error'); }
   }
 
@@ -176,6 +183,22 @@ export function Runner({
             )}
           </p>
         </div>
+
+        {asksFeel && savedId && (
+          <div className="card mt-4 p-5">
+            <div className="h-card">{feel ? 'Thanks. Your trainer will see it.' : 'How did that feel?'}</div>
+            <div className="mt-3 grid grid-cols-3 gap-2" role="group" aria-label="How did that feel?">
+              {([['easy', 'Too easy'], ['right', 'About right'], ['hard', 'Too hard']] as const).map(([k, l]) => (
+                <button key={k} type="button" aria-pressed={feel === k}
+                        className={`chip justify-center ${feel === k ? 'chip-on' : ''}`}
+                        onClick={() => {
+                          setFeel(k); haptic('tap');
+                          fetch('/api/workouts', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: savedId, feel: k }) }).catch(() => {});
+                        }}>{l}</button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* The way out. The ticked list has nothing left to say, so it's gone,
             and this is the one thing on the screen to press. */}

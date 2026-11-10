@@ -4,11 +4,14 @@ import { useRouter } from 'next/navigation';
 import { buildWeekFor, clearBuiltWeek, saveBuiltSession, savePlan } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
 import { drillTags, type CustomRow, type DrillRow } from '@/lib/academy-week';
-import { MINUTE_CHOICES, swapFor, type Target } from '@/lib/week-builder';
+import { MINUTE_CHOICES, progressAmount, swapFor, type Target } from '@/lib/week-builder';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const label = (t: string) => FOCUS_LABELS[t as FocusArea] ?? t;
+const FEEL = { easy: 'felt too easy', right: 'felt about right', hard: 'felt too hard' } as const;
+/** What happened to a drill against last week, as a small label. */
+const CHANGE: Record<string, string> = { up: 'Step up', harder: 'Harder version', hold: 'Same as last week' };
 
 /** "Built with AI · edited by you" */
 function madeBy(rows: CustomRow[]) {
@@ -23,7 +26,7 @@ function madeBy(rows: CustomRow[]) {
  * its drills swapped or removed, or move day, and the week can be taken
  * back.
  */
-export function PlayerPlan({ userId, first, target, defaults, own, focus: savedFocus, drills, thisWeek, nextWeek, weeks, busy }: {
+export function PlayerPlan({ userId, first, target, defaults, own, focus: savedFocus, drills, thisWeek, nextWeek, weeks, busy, runs = {} }: {
   userId: string; first: string;
   target: Target; defaults: Target; own: boolean; focus: string[];
   drills: DrillRow[];
@@ -31,6 +34,8 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
   /** The Mondays: this week's and next. */
   weeks: { this: string; next: string };
   busy: { club: number[]; game: number | null; meets: number[] };
+  /** Built sessions they've done, by id, with how it felt. */
+  runs?: Record<string, { feel: 'easy' | 'right' | 'hard' | null }>;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -145,6 +150,11 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-bold text-on-surface">{s.name}</span>
                       <span className="text-[12.5px] text-on-surface-variant">{total} min{note && ` · ${note}`}</span>
+                      {(s.light || runs[s.id]) && (
+                        <span className="mt-0.5 block text-[12.5px] font-semibold text-on-surface">
+                          {[s.light && 'Lighter week', runs[s.id] && `Done${runs[s.id].feel ? `, ${FEEL[runs[s.id].feel!]}` : ''}`].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
                       {s.note && <span className="mt-1 block text-[12.5px] italic leading-snug text-on-surface">“{s.note}”</span>}
                     </span>
                     <select aria-label={`Day for ${s.name}`} value={day} disabled={pending}
@@ -159,9 +169,17 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
                       return (
                         <li key={`${id}-${i}`} className="flex items-center gap-2 py-2">
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
+                            <span className="flex items-center gap-2">
+                              <span className="truncate text-[13.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
+                              {CHANGE[s.changes?.[i] ?? ''] && (
+                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold
+                                  ${s.changes![i] === 'hold' ? 'bg-surface-container-highest text-on-surface-variant' : 'bg-on-surface text-surface'}`}>
+                                  {CHANGE[s.changes![i]]}
+                                </span>
+                              )}
+                            </span>
                             {d && <span className="block truncate text-[12px] text-on-surface-variant">
-                              {[`${d.minutes} min`, drillTags(d).map(label).join(', ')].filter(Boolean).join(' · ')}
+                              {[progressAmount(d.amount, s.steps?.[i] ?? 0), `${d.minutes} min`, drillTags(d).map(label).join(', ')].filter(Boolean).join(' · ')}
                             </span>}
                           </span>
                           <button type="button" disabled={pending} className="shrink-0 text-[12.5px] font-semibold underline underline-offset-4"
@@ -170,11 +188,19 @@ export function PlayerPlan({ userId, first, target, defaults, own, focus: savedF
                                     const alt = swapFor(drills, s.drill_ids, id, focus, [...gone, ...sorted.flatMap((x) => x.drill_ids)]);
                                     if (!alt) return;
                                     setTried({ ...tried, [s.id]: gone });
-                                    run(() => saveBuiltSession(s.id, { drill_ids: s.drill_ids.map((x, k) => k === i ? alt.id : x) }));
+                                    run(() => saveBuiltSession(s.id, {
+                                      drill_ids: s.drill_ids.map((x, k) => k === i ? alt.id : x),
+                                      steps: s.drill_ids.map((_, k) => k === i ? 0 : s.steps?.[k] ?? 0),
+                                      changes: s.drill_ids.map((_, k) => k === i ? 'new' : s.changes?.[k] ?? 'new'),
+                                    }));
                                   }}>Swap</button>
                           {s.drill_ids.length > 1 && (
                             <button type="button" disabled={pending} className="icon-btn" aria-label={`Remove ${d?.name ?? 'drill'}`}
-                                    onClick={() => run(() => saveBuiltSession(s.id, { drill_ids: s.drill_ids.filter((_, k) => k !== i) }))}>×</button>
+                                    onClick={() => run(() => saveBuiltSession(s.id, {
+                                      drill_ids: s.drill_ids.filter((_, k) => k !== i),
+                                      steps: s.drill_ids.map((_, k) => s.steps?.[k] ?? 0).filter((_, k) => k !== i),
+                                      changes: s.drill_ids.map((_, k) => s.changes?.[k] ?? 'new').filter((_, k) => k !== i),
+                                    }))}>×</button>
                           )}
                         </li>
                       );

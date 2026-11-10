@@ -13,8 +13,8 @@ import { localDate, mondayOf } from './progress';
  *   - per academy, per month: a ceiling for everything, Autopilot included.
  */
 export const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
-const PER_PLAYER_WEEK = Number(process.env.AI_PLAYER_WEEKLY_LIMIT) || 3;
-const PER_ACADEMY_MONTH = Number(process.env.AI_ACADEMY_MONTHLY_LIMIT) || 300;
+const PER_PLAYER_WEEK = Number(process.env.AI_PLAYER_WEEKLY_LIMIT) || 6;
+const PER_ACADEMY_MONTH = Number(process.env.AI_ACADEMY_MONTHLY_LIMIT) || 600;
 
 export type AiKind = 'week' | 'suggest';
 export type Denied = 'no_key' | 'player_limit' | 'academy_limit' | 'no_log';

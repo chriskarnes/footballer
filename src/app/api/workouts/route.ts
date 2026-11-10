@@ -8,9 +8,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
   const body = await req.json();
-  const { data, error } = await db
-    .from('workouts')
-    .insert({
+  const row: Record<string, unknown> = {
       user_id: user.id,
       title: body.title,
       source: body.source ?? 'coach',
@@ -27,11 +25,15 @@ export async function POST(req: Request) {
       completed_at: body.status === 'completed' ? (body.completed_at ?? new Date().toISOString()) : null,
       actual_minutes: body.actual_minutes ?? null,
       actual_touches: body.actual_touches ?? null,
-    })
-    .select('id')
-    .single();
+  };
+  // A trainer's session keeps which drills were ticked on the row itself
+  // (0012): progression reads it. Without the column yet, save without it.
+  const ticked = (body.source === 'academy' || body.source === 'addon') && Array.isArray(body.done_ids)
+    ? body.done_ids.filter((x: unknown) => typeof x === 'string').slice(0, 40) : null;
+  let { data, error } = await db.from('workouts').insert(ticked ? { ...row, done_ids: ticked } : row).select('id').single();
+  if (error && ticked && /done_ids/.test(error.message)) ({ data, error } = await db.from('workouts').insert(row).select('id').single());
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error || !data) return NextResponse.json({ error: error?.message ?? 'not saved' }, { status: 400 });
 
   // Speed and trainer drills are not library rows, and workout_items.exercise_id
   // is a foreign key to exercises — so those sessions keep their ids on the
@@ -56,7 +58,15 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
-  const { id, doneIds, actual_minutes, actual_touches } = await req.json();
+  const body = await req.json();
+  // How it felt, after the fact: just that, on a finished session.
+  if (body.feel !== undefined && body.id) {
+    if (!['easy', 'right', 'hard'].includes(body.feel)) return NextResponse.json({ error: 'feel is easy, right or hard' }, { status: 400 });
+    const { error } = await db.from('workouts').update({ feel: body.feel }).eq('id', body.id).eq('user_id', user.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
+  const { id, doneIds, actual_minutes, actual_touches } = body;
   const { error } = await db.from('workouts')
     .update({
       status: 'completed',

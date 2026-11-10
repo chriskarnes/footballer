@@ -3,18 +3,20 @@ import { Runner } from '@/components/Runner';
 import { getViewer } from '@/lib/viewer';
 import type { DrillRow } from '@/lib/academy-week';
 import type { Exercise } from '@/lib/types';
+import { progressAmount } from '@/lib/week-builder';
 
 export const metadata = { title: 'Session', robots: { index: false } };
 
 /** A trainer's drill, in the shape the runner draws. */
-function asExercise(d: DrillRow, sessionId: string, i: number): Exercise {
+function asExercise(d: DrillRow, sessionId: string, i: number, step = 0): Exercise {
+  const amount = progressAmount(d.amount, step);
   return {
     id: `${d.id}:${i}`, session_id: sessionId, program_id: '', name: d.name, exercise_order: i,
-    sets: '', reps_time: d.amount ?? '', rest: '', total_seconds: d.minutes * 60, work_seconds: d.minutes * 60,
+    sets: '', reps_time: amount ?? '', rest: '', total_seconds: d.minutes * 60, work_seconds: d.minutes * 60,
     total_minutes: d.minutes, touches: 0, touches_per_min: 0, primary_focus: (d.focus ?? 'ball_mastery') as Exercise['primary_focus'],
     focus_areas: [], equipment: [], intensity: 'moderate', space_required: 'minimal', can_do_at_home: true,
     gym_required: false, level: '', category: '', video_url: d.video_url, duration_confidence: 'high',
-    amount: d.amount ?? `${d.minutes} min`,
+    amount: amount ?? `${d.minutes} min`,
     how: d.how ? d.how.split('\n').map((l) => l.trim()).filter(Boolean) : undefined,
   };
 }
@@ -42,11 +44,15 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
   // A session from a week built for this player: runs and records as an
   // academy session, so the trainer's ticks work the same.
   if (kind === 'custom') {
-    const { data: s } = await v.db.from('player_week_sessions').select('id, name, drill_ids').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+    type Built = { id: string; name: string; drill_ids: string[]; steps?: number[] };
+    const q = async (cols: string) => (await v.db.from('player_week_sessions').select(cols).eq('id', id).eq('academy_id', v.academy!.id).maybeSingle()).data as Built | null;
+    // With each drill's step (0012), so the amounts are this week's.
+    const s = (await q('id, name, drill_ids, steps')) ?? (await q('id, name, drill_ids'));
     if (!s) notFound();
     const { data: rows } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').in('id', s.drill_ids);
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
-    const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i)).filter(Boolean) as Exercise[];
+    const steps: number[] = s.steps ?? [];
+    const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i, steps[i] ?? 0)).filter(Boolean) as Exercise[];
     return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills} sessionRef={s.id} source="academy" back={back} />;
   }
 

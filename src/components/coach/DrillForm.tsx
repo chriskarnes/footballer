@@ -15,8 +15,10 @@ const MAX_TAGS = 3;
  * no video is a perfectly good drill, and most trainers have dozens of those
  * in their head and none filmed.
  */
-export function DrillForm({ drill, back, onSaved, onCancel }: {
+export function DrillForm({ drill, back, onSaved, onCancel, others }: {
   drill?: DrillRow; back: string;
+  /** The academy's other drills, to pick a harder version from. Without it, no field. */
+  others?: { id: string; name: string }[];
   /** Inline, inside another editor: hand the new drill back instead of leaving the page. */
   onSaved?: (d: DrillRow) => void; onCancel?: () => void;
 }) {
@@ -63,6 +65,15 @@ export function DrillForm({ drill, back, onSaved, onCancel }: {
             : 'Up to three. The first you pick is its main focus.'}
         </p>
       </fieldset>
+      {others && others.length > 0 && (
+        <Field label="Harder version" hint="Built weeks move a player on to it once this drill is stepped up as far as it goes. Optional.">
+          <input type="hidden" name="has_harder" value="1" />
+          <select name="harder_id" defaultValue={drill?.harder_id ?? ''}>
+            <option value="">None</option>
+            {others.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        </Field>
+      )}
       <Field label="Video link" hint="A YouTube link (unlisted is fine), or any https link. Optional.">
         <input name="video_url" inputMode="url" maxLength={300} value={video} onChange={(e) => setVideo(e.target.value)}
                placeholder="https://youtu.be/…" />

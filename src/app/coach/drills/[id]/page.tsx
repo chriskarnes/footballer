@@ -55,7 +55,8 @@ export default async function DrillPage({ params, searchParams }: {
       {fresh && sessions}
       <div className={fresh ? 'mt-10' : ''}>
         {fresh && <p className="eyebrow mb-3">The drill</p>}
-        <DrillForm drill={drill} back="/coach/drills" />
+        <DrillForm drill={drill} back="/coach/drills"
+          others={c.drills.filter((d) => d.id !== drill.id).map((d) => ({ id: d.id, name: d.name })).sort((a, b) => a.name.localeCompare(b.name))} />
       </div>
       {!fresh && sessions}
     </div>

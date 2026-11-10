@@ -32,12 +32,17 @@ export default async function PlayerPage({ params, searchParams }: {
   const { sent } = await searchParams;
 
   const content = await loadContent(db, academy.id);
-  const [{ players }, { data: notes }] = await Promise.all([
+  const [{ players }, { data: notes }, { data: runsRaw }] = await Promise.all([
     loadPlayers(db, academy, { player: id, days: 120, content }),
     db.from('note_recipients')
       .select('seen_at, notes!inner(id, body, kind, author_name, created_at, academy_id)')
       .eq('user_id', id).eq('notes.academy_id', academy.id),
+    // This fortnight's finished trainer sessions, with how they felt.
+    db.rpc('academy_completions', { p_academy: academy.id, p_since: new Date(Date.now() - 15 * 86400000).toISOString() }),
   ]);
+  const runs: Record<string, { feel: 'easy' | 'right' | 'hard' | null }> = {};
+  for (const r of ((runsRaw ?? []) as { user_id: string; source: string; source_ref: string | null; feel?: 'easy' | 'right' | 'hard' | null }[]))
+    if (r.user_id === id && r.source === 'academy' && r.source_ref) runs[r.source_ref] = { feel: r.feel ?? runs[r.source_ref]?.feel ?? null };
   const p = players[0];
   if (!p) notFound();
   const pr = p.progress;
@@ -80,7 +85,7 @@ export default async function PlayerPage({ params, searchParams }: {
             <p className="eyebrow mb-3">Their plan</p>
             <PlayerPlan userId={p.user_id} first={p.first} target={t} defaults={content.defaults} own={t.own} focus={t.focus}
               drills={content.drills} weeks={weeks}
-              thisWeek={mine.filter((x) => x.week_of === weeks.this)} nextWeek={mine.filter((x) => x.week_of === weeks.next)}
+              thisWeek={mine.filter((x) => x.week_of === weeks.this)} nextWeek={mine.filter((x) => x.week_of === weeks.next)} runs={runs}
               busy={{ club: soccer?.club_days ?? [], game: soccer?.game_day ?? null,
                 meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
                   && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />

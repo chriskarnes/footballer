@@ -12,7 +12,9 @@ import { addDays, localDate, mondayOf, weekdayOf } from './progress';
 
 export type ProgramRow = { id: string; name: string; weeks: number };
 export type SessionRow = { id: string; program_id: string; week: number; position: number; name: string; drill_ids: string[] };
-export type DrillRow = { id: string; name: string; amount: string | null; minutes: number; focus: string | null; focus_areas?: string[]; video_url: string | null; how: string | null };
+export type DrillRow = { id: string; name: string; amount: string | null; minutes: number; focus: string | null; focus_areas?: string[]; video_url: string | null; how: string | null;
+  /** The harder version this hands over to once stepped up as far as it goes (0012). */
+  harder_id?: string | null };
 
 /** Everything a drill works on: its tags, or its one focus from before tags. */
 export const drillTags = (d: Pick<DrillRow, 'focus' | 'focus_areas'>): string[] =>
@@ -25,7 +27,9 @@ export type CompletionRow = { source: string; source_ref: string | null; complet
 export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null };
 /** A session of a week built for one player (0010). Replaces their program that week. */
 export type CustomRow = { id: string; user_id: string; week_of: string; position: number; name: string; drill_ids: string[]; weekday: number;
-  made_by?: 'rules' | 'ai' | 'trainer'; note?: string | null };
+  made_by?: 'rules' | 'ai' | 'trainer'; note?: string | null;
+  /** Per drill, how far it has stepped up (0012); and whether it's a lighter week. */
+  steps?: number[]; light?: boolean; changes?: string[] };
 /** One item moved to another day, for one week. */
 export type MoveRow = { user_id: string; week_of: string; item_key: string; weekday: number };
 
@@ -52,6 +56,9 @@ export type WeekItem = {
   done: boolean;
   /** On a club or group training day: a second session that day. */
   practice?: boolean;
+  /** From a built week: a lighter one, and how many drills stepped up or got harder. */
+  light?: boolean;
+  ups?: number;
 };
 
 /** Which week of a program a date is in, 1-based; null before it starts or after it ends. */
@@ -173,6 +180,7 @@ export function buildWeek(input: {
     for (const c of built) items.push({
       key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
       weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, note: c.note ?? null, done: false,
+      light: !!c.light, ups: (c.changes ?? []).filter((x) => x === 'up' || x === 'harder').length,
     });
   } else {
     for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);

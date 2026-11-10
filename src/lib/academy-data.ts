@@ -63,18 +63,24 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
 async function customQuery(db: any, academyId: string, since: string) {
   const cols = 'id, user_id, week_of, position, name, drill_ids, weekday, made_by';
   const q = (c: string) => db.from('player_week_sessions').select(c).eq('academy_id', academyId).gte('week_of', since);
-  const full = await q(`${cols}, note`);
-  return full.error ? q(cols) : full;
+  for (const extra of [', note, steps, light, changes', ', note']) {
+    const r = await q(cols + extra);
+    if (!r.error) return r;
+  }
+  return q(cols);
 }
 
 /** Drills with their tags; without them before migration 0008 adds the column. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function drillsQuery(db: any, academyId: string) {
   const cols = 'id, name, amount, minutes, focus, video_url, how';
-  const tagged = await db.from('drills').select(`${cols}, focus_areas`).eq('academy_id', academyId).order('name');
-  return tagged.error ? db.from('drills').select(cols).eq('academy_id', academyId).order('name') : tagged;
+  // Newest columns first: harder versions (0012), tags (0008).
+  for (const extra of [', focus_areas, harder_id', ', focus_areas']) {
+    const r = await db.from('drills').select(cols + extra).eq('academy_id', academyId).order('name');
+    if (!r.error) return r;
+  }
+  return db.from('drills').select(cols).eq('academy_id', academyId).order('name');
 }
-
 /** A player's target: their own numbers where set, the academy's where not. */
 export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId: string): Target & { focus: string[]; autopilot: boolean; own: boolean } {
   const p = c.plans.find((x) => x.user_id === userId);

@@ -22,7 +22,7 @@ create table if not exists player_plans (
   minutes    smallint check (minutes is null or minutes between 5 and 90),
   -- What they need to work on: drill tags, at most three.
   focus      text[] not null default '{}' check (cardinality(focus) <= 3),
-  -- Phase 3: the week is built and published each Sunday without the trainer.
+  -- Phase 3: the week is built and published at 3:00 am each Monday (academy time) without the trainer.
   autopilot  boolean not null default false,
   updated_at timestamptz not null default now(),
   primary key (academy_id, user_id)

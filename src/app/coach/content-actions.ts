@@ -37,7 +37,10 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
     const id = str(f, 'id', 40);
     // Known focus areas only, once each, in the order picked.
     const tags = [...new Set(f.getAll('focus').map(String))].filter((t) => t in FOCUS_LABELS).slice(0, 3);
-    const row = {
+    const row: {
+      academy_id: string; name: string; amount: string | null; minutes: number; focus: string | null;
+      focus_areas: string[]; video_url: string | null; how: string | null; harder_id?: string | null;
+    } = {
       academy_id: v.academy.id,
       name: str(f, 'name', 80),
       amount: str(f, 'amount', 80) || null,
@@ -47,6 +50,11 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
       video_url: videoUrl(str(f, 'video_url', 300)),
       how: str(f, 'how', 1000) || null,
     };
+    // Only from a form that offered the field, so other saves leave it be.
+    if (f.get('has_harder')) {
+      const h = str(f, 'harder_id', 40);
+      row.harder_id = h && h !== id ? h : null;
+    }
     if (!row.name) return { ok: false, error: 'Give the drill a name.' };
     if (str(f, 'video_url', 300) && !row.video_url) return { ok: false, error: 'That video link doesn’t look right.' };
     const write = (r: Partial<typeof row>) => id
@@ -54,8 +62,13 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
       : v.db.from('drills').insert({ ...r, created_by: v.user.id }).select('id').single();
     let { data, error } = await write(row);
     // Before migration 0008 there's no focus_areas column: keep the main one.
+    // Before 0012 there's no harder_id column.
+    if (error && /harder_id/.test(error.message)) {
+      delete row.harder_id;
+      ({ data, error } = await write(row));
+    }
     if (error && /focus_areas/.test(error.message)) {
-      const { focus_areas: _tags, ...plain } = row;
+      const { focus_areas: _tags, harder_id: _h, ...plain } = row;
       ({ data, error } = await write(plain));
     }
     if (error) return { ok: false, error: error.message };
