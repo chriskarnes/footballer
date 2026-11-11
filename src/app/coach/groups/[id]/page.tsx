@@ -6,6 +6,7 @@ import { GroupForm } from '@/components/coach/GroupForm';
 import { MemberToggle } from '@/components/coach/MemberToggle';
 import { ArchiveGroup } from '@/components/coach/ArchiveGroup';
 import { Disclose } from '@/components/coach/Disclose';
+import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
@@ -44,13 +45,19 @@ export default async function GroupPage({ params, searchParams }: {
         : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${g.starts_on}` : 'finished'}`
     : null].filter(Boolean).join(' · ');
 
+  const noteGroups = c.groups.filter((x) => !x.archived).map((x) => ({
+    id: x.id, name: x.name,
+    members: c.memberships.filter((m) => m.group_id === x.id && players.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
+  }));
+
   return (
+    <NoteProvider players={players.map((p) => ({ id: p.user_id, name: p.name }))} groups={noteGroups}>
     <div className="animate-pop">
       <BackLink href="/coach/groups" label="Groups" />
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <h1 className="h-page min-w-0">{g.name}</h1>
         {!!members.length && (
-          <Link href={`/coach/send?group=${g.id}`} className="btn-ghost btn-sm pressable shrink-0">Send a note</Link>
+          <NoteButton group={g.id} className="btn-ghost btn-sm pressable shrink-0">Send a note</NoteButton>
         )}
       </div>
       <p className="mt-2 text-[14px] text-on-surface-variant">
@@ -130,5 +137,6 @@ export default async function GroupPage({ params, searchParams }: {
         </Disclose>
       </section>
     </div>
+    </NoteProvider>
   );
 }

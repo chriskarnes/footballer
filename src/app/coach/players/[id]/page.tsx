@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
@@ -11,6 +10,8 @@ import { PlayerPlan } from '@/components/coach/PlayerPlan';
 import { Extras, ProgramSetup, WeekList } from '@/components/coach/PlayerTraining';
 import { SoccerDays } from '@/components/SoccerDays';
 import { soccerLabel } from '@/lib/soccer-days';
+import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
+import { nudgeDraft } from '@/lib/nudge';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
@@ -54,14 +55,23 @@ export default async function PlayerPage({ params, searchParams }: {
   const about = [p.positions?.join(', '), p.age_band && (AGE[p.age_band] ?? p.age_band)].filter(Boolean).join(' · ');
 
   return (
+    <NoteProvider only players={[{ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, pr) }]}>
     <div className="animate-pop lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-x-10">
      <div className="min-w-0">
       <BackLink href="/coach" label="Players" />
-      {about && <p className="eyebrow mb-3">{about}</p>}
-      <h1 className="h-page">{p.name}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <h1 className="h-page min-w-0">{p.name}</h1>
+        <div className="flex shrink-0 gap-2">
+          <NoteButton to={p.user_id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
+          {pr.status !== 'good' && <NoteButton to={p.user_id} kind="nudge" className="btn-primary btn-sm pressable">Nudge</NoteButton>}
+        </div>
+      </div>
       <p className="mt-2 flex items-center gap-2 text-[14px] text-on-surface-variant">
         <StatusDot status={pr.status} />
-        <span><b className="font-semibold text-on-surface">{pr.reason}</b> · last trained {sinceLabel(pr.daysSince)}</span>
+        <span>
+          <b className="font-semibold text-on-surface">{pr.reason}</b> · last trained {sinceLabel(pr.daysSince)}
+          {about && <> · {about}</>}
+        </span>
       </p>
 
       {sent && (
@@ -69,11 +79,6 @@ export default async function PlayerPage({ params, searchParams }: {
           Sent. {p.first} sees it next time they open the app.
         </p>
       )}
-
-      <div className="mt-5 grid grid-cols-2 gap-2.5">
-        <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-primary pressable">Nudge</Link>
-        <Link href={`/coach/send?to=${p.user_id}`} className="btn-ghost pressable">Write a note</Link>
-      </div>
 
       {content.ready && (() => {
         const t = targetFor(content, p.user_id);
@@ -133,25 +138,12 @@ export default async function PlayerPage({ params, searchParams }: {
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
-      </section>
 
-      <section className="card mt-3 p-5">
-        <div className="h-card">Their soccer</div>
-        <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
-          {soccer ? soccerLabel(soccer.club_days, soccer.game_day) ?? 'No club days.' : `${p.first} hasn’t said yet.`} Sessions go on the other days.
-          Set it here if a parent tells you at practice.
-        </p>
-        <div className="mt-4">
-          <SoccerDays club={soccer?.club_days ?? []} game={soccer?.game_day ?? null} userId={p.user_id} />
-        </div>
-      </section>
-
-      <section className="card mt-3 p-5">
-        <div className="flex items-baseline justify-between">
-          <div className="h-card">Last four weeks</div>
+        <div className="mt-6 flex items-baseline justify-between border-t border-outline-variant pt-5">
+          <div className="text-[13.5px] font-semibold text-on-surface">Last four weeks</div>
           <div className="text-[13px] text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
         </div>
-        <div className="mt-4 flex h-28 gap-3" role="img"
+        <div className="mt-3 flex h-24 gap-3" role="img"
              aria-label={pr.weeks.map((w) => `${w.done} sessions`).join(', ')}>
           {pr.weeks.map((w, i) => (
             <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
@@ -166,11 +158,21 @@ export default async function PlayerPage({ params, searchParams }: {
         </div>
       </section>
 
+      <section className="card mt-3 p-5">
+        <div className="h-card">Their soccer</div>
+        <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
+          {soccer ? soccerLabel(soccer.club_days, soccer.game_day) ?? 'No club days.' : `${p.first} hasn’t said yet.`} Sessions go on the other days.
+        </p>
+        <div className="mt-4">
+          <SoccerDays club={soccer?.club_days ?? []} game={soccer?.game_day ?? null} userId={p.user_id} />
+        </div>
+      </section>
+
       <section className="mt-9">
         <p className="eyebrow mb-3">Recent sessions</p>
         {p.done.length ? (
           <ul className="card divide-y divide-outline-variant">
-            {p.done.slice(0, 8).map((d, i) => (
+            {p.done.slice(0, 5).map((d, i) => (
               <li key={i} className="flex items-center justify-between gap-4 px-4 py-3">
                 <span className="min-w-0">
                   <span className="block truncate text-[14px] font-semibold text-on-surface">{d.title}</span>
@@ -202,6 +204,7 @@ export default async function PlayerPage({ params, searchParams }: {
       <div className="lg:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>
      </aside>
     </div>
+    </NoteProvider>
   );
 }
 

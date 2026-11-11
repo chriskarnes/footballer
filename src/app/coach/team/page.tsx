@@ -52,21 +52,20 @@ export default async function TeamPage() {
 
       <section id="invite" className="mt-9 scroll-mt-6">
         <p className="eyebrow mb-3">Invite links</p>
-        <div className="space-y-3">
-          <div className="card p-5">
-            <div className="h-card">Players</div>
-            <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
-              Text it to a player or a parent. They sign in with their email and join your list.
-            </p>
-            {code('player') && <InviteLink path={`/join/${code('player')}`} role="player" />}
+        <div className="card divide-y divide-outline-variant">
+          <div className="p-5">
+            <div className="text-[14px] font-semibold text-on-surface">For players and parents</div>
+            {code('player')
+              ? <InviteLink path={`/join/${code('player')}`} role="player" />
+              : <p className="mt-2 text-[13px] text-on-surface-variant">No link yet.</p>}
           </div>
           {owner && (
-            <div className="card p-5">
-              <div className="h-card">Trainers</div>
-              <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
-                Only for people who coach with you. Trainers see every player and every note.
-              </p>
-              {code('trainer') && <InviteLink path={`/join/${code('trainer')}`} role="trainer" />}
+            <div className="p-5">
+              <div className="text-[14px] font-semibold text-on-surface">For trainers</div>
+              <p className="mt-0.5 text-[13px] text-on-surface-variant">Trainers see every player and every note.</p>
+              {code('trainer')
+                ? <InviteLink path={`/join/${code('trainer')}`} role="trainer" />
+                : <p className="mt-2 text-[13px] text-on-surface-variant">No link yet.</p>}
             </div>
           )}
         </div>

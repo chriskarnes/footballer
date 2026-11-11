@@ -8,6 +8,8 @@ import { loadPlayers } from '@/lib/coach-data';
 import { ago } from '@/lib/notes';
 import { byAttention, detailOf, sinceLabel } from '@/lib/progress';
 import { PageHead } from '@/components/coach/PageHead';
+import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
+import { nudgeDraft } from '@/lib/nudge';
 import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
@@ -46,19 +48,25 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const sessions = players.reduce((a, p) => a + p.progress.done, 0);
   const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
+  // What the note dialog needs: everyone it could go to, and who's in each group.
+  const notePlayers = all.map((p) => ({ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, p.progress) }));
+  const noteGroups = groups.map((g) => ({
+    id: g.id, name: g.name,
+    members: content.memberships.filter((m) => m.group_id === g.id && all.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
+  }));
+
   const headline = !players.length ? 'No players yet'
     : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
     : 'Everyone’s on track';
 
   return (
+    <NoteProvider players={notePlayers} groups={noteGroups}>
     <div className="animate-pop">
       <ViewTabs tabs={PLAYER_VIEWS} on="/coach" />
       <PageHead title={headline}
                 action={<>
                   {!!players.length && (
-                    <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost btn-sm pressable">
-                      {inGroup ? `Note to ${inGroup.name}` : 'Note to everyone'}
-                    </Link>
+                    <NoteButton group={inGroup?.id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
                   )}
                   {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable">Invite players</Link>}
                 </>}>
@@ -108,9 +116,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                 <span className="mt-3 block"><WeekDots week={p.progress.week} /></span>
               </Link>
               {p.progress.status !== 'good' && (
-                <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-ghost btn-sm pressable shrink-0">
-                  Nudge
-                </Link>
+                <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable shrink-0">Nudge</NoteButton>
               )}
             </li>
           );
@@ -143,7 +149,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                     <td className="whitespace-nowrap px-5 py-3.5 text-[13px] text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
                     <td className="relative z-10 px-5 py-3.5 text-right">
                       {p.progress.status !== 'good' && (
-                        <Link href={`/coach/send?to=${p.user_id}&kind=nudge`} className="btn-ghost btn-sm pressable">Nudge</Link>
+                        <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable">Nudge</NoteButton>
                       )}
                     </td>
                   </tr>
@@ -169,6 +175,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         </section>
       )}
     </div>
+    </NoteProvider>
   );
 }
 

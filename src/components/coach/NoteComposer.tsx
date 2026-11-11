@@ -3,7 +3,10 @@ import { useState, useTransition } from 'react';
 import { Chip } from '@/components/Chip';
 import { sendNote } from '@/app/coach/actions';
 
-type P = { id: string; name: string };
+export type NotePlayer = { id: string; name: string };
+export type NoteGroup = { id: string; name: string; members: string[] };
+/** Who a note starts out addressed to. */
+export type NoteTo = { mode: 'everyone' } | { mode: 'groups'; ids: string[] } | { mode: 'players'; ids: string[] };
 
 const QUICK = [
   'Great work this week. Keep it going!',
@@ -12,68 +15,115 @@ const QUICK = [
 ];
 
 /**
- * Who it's to, then what it says. "Everyone" is the default when nobody's
- * picked, so a note to the whole group is one tap; picking players narrows
- * it. The players who need attention are listed first.
+ * Who it's to, then what it says.
+ *
+ * "To" is one of three things, picked first: everyone, whole groups, or
+ * named players. Groups and players used to be chips in one cloud, where
+ * ticking a group silently ticked names below it; now each has its own list
+ * and the Send button says how many people that comes to.
+ *
+ * `fixed` is a note that already knows its one reader (from their page, or
+ * a Nudge): no picker, just their name.
  */
-export function NoteComposer({ players, groups = [], initialTo, initialBody, kind, back }: {
-  players: P[]; groups?: { id: string; name: string; members: string[] }[];
-  initialTo: string[]; initialBody: string; kind: 'note' | 'nudge'; back: string;
+export function NoteComposer({ players, groups = [], initial, fixed, initialBody, kind, back, onSent }: {
+  players: NotePlayer[]; groups?: NoteGroup[]; initial: NoteTo; fixed?: NotePlayer;
+  initialBody: string; kind: 'note' | 'nudge';
+  /** A page to return to with ?sent=1. Leave out, with onSent, to stay put. */
+  back?: string; onSent?: (count: number) => void;
 }) {
-  const [to, setTo] = useState<string[]>(initialTo);
+  const usable = groups.filter((g) => g.members.length);
+  const [mode, setMode] = useState<NoteTo['mode']>(initial.mode);
+  const [groupIds, setGroupIds] = useState<string[]>(initial.mode === 'groups' ? initial.ids : []);
+  const [playerIds, setPlayerIds] = useState<string[]>(initial.mode === 'players' ? initial.ids : []);
   const [body, setBody] = useState(initialBody);
   const [err, setErr] = useState('');
   const [pending, start] = useTransition();
-  const everyone = to.length === 0;
-  const toggle = (id: string) => setTo((t) => t.includes(id) ? t.filter((x) => x !== id) : [...t, id]);
+  const flip = (list: string[], id: string) => list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+
+  // The people this comes to: a player in two picked groups gets it once.
+  const to = fixed ? [fixed.id]
+    : mode === 'everyone' ? players.map((p) => p.id)
+    : mode === 'groups' ? [...new Set(usable.filter((g) => groupIds.includes(g.id)).flatMap((g) => g.members))]
+    : playerIds;
+  const who = fixed ? fixed.name.split(' ')[0]
+    : mode === 'everyone' ? 'everyone'
+    : to.length === 1 ? players.find((p) => p.id === to[0])?.name.split(' ')[0] ?? '1 player'
+    : `${to.length} players`;
 
   function send() {
     setErr('');
     start(async () => {
-      // On success the action redirects, so a result here is an error.
-      const r = await sendNote({ body, to: everyone ? null : to, kind, back });
+      const r = await sendNote({ body, to: !fixed && mode === 'everyone' ? null : to, kind, back });
+      // With a page to go back to the action redirects, so a result is an error or "stay here".
       if (r && !r.ok) setErr(r.error);
+      else if (r?.ok) onSent?.(to.length);
     });
   }
 
+  const MODES: { key: NoteTo['mode']; label: string }[] = [
+    { key: 'everyone', label: 'Everyone' },
+    ...(usable.length ? [{ key: 'groups' as const, label: 'Groups' }] : []),
+    { key: 'players', label: 'Players' },
+  ];
+
   return (
-    <div className="mt-6">
+    <div>
       <p className="eyebrow mb-2.5">To</p>
-      {/* A group picks its players; the names below show who that is. */}
-      {!!groups.length && (
-        <div className="mb-2.5 flex flex-wrap gap-2">
-          {groups.filter((g) => g.members.length).map((g) => {
-            const on = g.members.length === to.length && g.members.every((m) => to.includes(m));
-            return <Chip key={g.id} on={on} onClick={() => setTo(on ? [] : g.members)}>{g.name} ({g.members.length})</Chip>;
-          })}
-        </div>
+      {fixed ? (
+        <p className="text-[15px] font-bold text-on-surface">{fixed.name}</p>
+      ) : (
+        <>
+          <div className="segmented" role="radiogroup" aria-label="Send to">
+            {MODES.map((m) => (
+              <button key={m.key} type="button" role="radio" aria-checked={mode === m.key}
+                      onClick={() => setMode(m.key)}
+                      className={`segment pressable ${mode === m.key ? 'segment-on' : ''}`}>{m.label}</button>
+            ))}
+          </div>
+          <div className="mt-3 min-h-[44px]">
+            {mode === 'everyone' && (
+              <p className="pt-2.5 text-[13.5px] text-on-surface-variant">All {players.length} {players.length === 1 ? 'player' : 'players'} in the academy.</p>
+            )}
+            {mode === 'groups' && (
+              <div className="flex flex-wrap gap-2">
+                {usable.map((g) => (
+                  <Chip key={g.id} on={groupIds.includes(g.id)} onClick={() => setGroupIds((l) => flip(l, g.id))}>
+                    {g.name} <span className="font-normal text-on-surface-variant">{g.members.length}</span>
+                  </Chip>
+                ))}
+              </div>
+            )}
+            {mode === 'players' && (
+              <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto p-1 -m-1">
+                {players.map((p) => (
+                  <Chip key={p.id} on={playerIds.includes(p.id)} onClick={() => setPlayerIds((l) => flip(l, p.id))}>{p.name}</Chip>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
-      <div className="flex flex-wrap gap-2">
-        <Chip on={everyone} onClick={() => setTo([])}>Everyone ({players.length})</Chip>
-        {players.map((p) => (
-          <Chip key={p.id} on={to.includes(p.id)} onClick={() => toggle(p.id)}>{p.name}</Chip>
-        ))}
-      </div>
 
       <p className="eyebrow mb-2.5 mt-6">Message</p>
       <label className="text-field">
-        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={1000}
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={1000}
                   aria-label="Message" placeholder="Write a note…" />
       </label>
       {!body && (
-        <div className="mt-3 card-flat divide-y divide-outline-variant overflow-hidden">
+        <div className="card-flat mt-3 divide-y divide-outline-variant overflow-hidden">
           {QUICK.map((q) => (
             <button key={q} type="button" onClick={() => setBody(q)}
-                    className="pressable block w-full px-4 py-3 text-left text-[14px] text-on-surface">{q}</button>
+                    className="pressable block w-full px-4 py-2.5 text-left text-[13.5px] text-on-surface">{q}</button>
           ))}
         </div>
       )}
 
-      <button type="button" disabled={pending || !body.trim()} onClick={send}
+      <button type="button" disabled={pending || !body.trim() || !to.length} onClick={send}
               className="btn-primary pressable mt-6 w-full disabled:opacity-50">
-        {pending ? 'Sending…' : everyone ? `Send to everyone` : `Send to ${to.length === 1 ? players.find((p) => p.id === to[0])?.name.split(' ')[0] : `${to.length} players`}`}
+        {pending ? 'Sending…' : !to.length ? (mode === 'groups' ? 'Pick a group' : 'Pick a player') : `Send to ${who}`}
       </button>
-      {err && <p role="status" className="mt-3 text-[13px] font-semibold text-on-surface">Couldn&rsquo;t send: {err}</p>}
+      <p className="mt-3 text-center text-[12.5px] text-on-surface-variant">Players see it in the app and can&rsquo;t reply.</p>
+      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">Couldn&rsquo;t send: {err}</p>}
     </div>
   );
 }

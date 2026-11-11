@@ -4,6 +4,7 @@ import { NoteComposer } from '@/components/coach/NoteComposer';
 import { loadPlayers } from '@/lib/coach-data';
 import { byAttention } from '@/lib/progress';
 import { loadContent } from '@/lib/academy-data';
+import { nudgeDraft } from '@/lib/nudge';
 
 export const metadata = { title: 'Send a note', robots: { index: false } };
 
@@ -28,31 +29,23 @@ export default async function SendPage({ searchParams }: { searchParams: Promise
   const target = players.find((p) => p.user_id === to);
   const nudge = kind === 'nudge' && target;
 
-  let draft = '';
-  if (nudge) {
-    const pr = target.progress;
-    draft = pr.daysSince === null
-      ? `Hi ${target.first}, your first session is waiting. Even 15 minutes today gets you started.`
-      : pr.daysSince >= 7
-        ? `Hi ${target.first}, haven’t seen you train in ${pr.daysSince} days. 15 minutes today is plenty to get going again.`
-        : `Hi ${target.first}, you’re ${pr.due - pr.done} behind this week. Can you fit one in today?`;
-  }
+  const draft = nudge ? nudgeDraft(target.first, target.progress) : '';
 
   return (
     <div className="animate-pop">
       <BackLink href={target ? `/coach/players/${target.user_id}` : inGroup ? `/coach/groups/${inGroup.id}` : '/coach'}
                 label={target ? target.name : inGroup ? inGroup.name : 'Players'} />
       <h1 className="h-page">{nudge ? `Nudge ${target.first}` : target ? `Note to ${target.first}` : inGroup ? `Note to ${inGroup.name}` : 'Send a note'}</h1>
-      <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-on-surface-variant">
-        Players see it in the app and can&rsquo;t reply. Every trainer at {academy.name} can see what&rsquo;s sent.
-      </p>
-      <NoteComposer
-        players={players.map((p) => ({ id: p.user_id, name: p.name }))}
-        groups={groups}
-        initialTo={target ? [target.user_id] : inGroup ? inGroup.members : []}
-        initialBody={draft}
-        kind={nudge ? 'nudge' : 'note'}
-        back={target ? `/coach/players/${target.user_id}` : inGroup ? `/coach/groups/${inGroup.id}` : '/coach'} />
+      <div className="mt-6">
+        <NoteComposer
+          players={players.map((p) => ({ id: p.user_id, name: p.name }))}
+          groups={groups}
+          initial={target ? { mode: 'players', ids: [target.user_id] } : inGroup ? { mode: 'groups', ids: [inGroup.id] } : { mode: 'everyone' }}
+          fixed={nudge ? { id: target.user_id, name: target.name } : undefined}
+          initialBody={draft}
+          kind={nudge ? 'nudge' : 'note'}
+          back={target ? `/coach/players/${target.user_id}` : inGroup ? `/coach/groups/${inGroup.id}` : '/coach'} />
+      </div>
     </div>
   );
 }
