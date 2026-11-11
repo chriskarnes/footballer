@@ -211,7 +211,7 @@ function StartYear({ now, onStart }: { now: Date; onStart: (s: { monday: string;
         Pick where to begin and the plan counts the weeks: today&rsquo;s session, test days and
         blocks, without working out which of the 60 it is.
       </p>
-      <p className="eyebrow mb-2.5 mt-5">Start at</p>
+      <p className="mb-2.5 mt-5 text-[14px] font-bold text-on-surface">Start at</p>
       <div className="flex flex-wrap gap-2">
         {PHASES.map((p) => (
           <Chip key={p.id} on={phase === p.id} onClick={() => setPhase(p.id)}>

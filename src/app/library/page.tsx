@@ -4,7 +4,6 @@ import { LibraryLocked } from '@/components/LibraryLocked';
 import { AcademyLibrary } from '@/components/AcademyLibrary';
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { getPrograms, getSessions } from '@/lib/library';
-import { formatTouches } from '@/lib/session-builder';
 
 /**
  * The three category gradients are --app-category-* extensions, not md.sys
@@ -40,27 +39,19 @@ export default async function LibraryPage() {
     <div className="animate-pop">
       <BrandBand>
         <BandTag>Library</BandTag>
-        <BandTitle>Training programs</BandTitle>
-        <p className="mt-3 text-[15px] text-on-surface-brand-variant">786 drills across 17 programs.</p>
+        <BandTitle>Pick a program</BandTitle>
       </BrandBand>
 
       <div className="stagger mt-9 space-y-9">
         {categories.map((cat) => {
           const inCat = programs.filter((p) => p.category === cat);
           if (!inCat.length) return null;
-          const touches = inCat.reduce((a, p) => a + p.touches, 0);
           return (
             <section key={cat}>
               <div className={`relative mb-4 overflow-hidden rounded-large-increased bg-gradient-to-br
                                ${ART[cat]} p-6 shadow-level3`}>
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-on-category-variant">
-                  {cat}
-                </p>
-                <h2 className="mt-1.5 font-brand text-[24px] font-extrabold leading-none
+                <h2 className="font-brand text-[26px] font-extrabold leading-none
                                tracking-tightest text-on-category">{KID[cat]}</h2>
-                <p className="mt-2.5 text-[12.5px] font-semibold text-on-category-variant">
-                  {inCat.length} programs · {formatTouches(touches)} touches
-                </p>
               </div>
 
               {/* A program is a destination again, not a dialog. The sheet's job
@@ -73,13 +64,13 @@ export default async function LibraryPage() {
                   const n = sessions.filter((s) => s.program_id === p.id).length;
                   return (
                     <Link key={p.id} href={`/library/${p.id}`}
-                      className="card pressable flex items-center gap-4 p-4">
+                      className="card pressable flex min-h-[68px] items-center gap-4 p-4">
                       <div className="min-w-0 flex-1">
-                        <div className="h-card truncate">{p.name}</div>
+                        <div className="text-[16px] font-bold leading-snug text-on-surface">{p.name}</div>
                         {/* No minute total. The number that helps is per drill, on
                             Train — "384m" against a program is not actionable. */}
-                        <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
-                          {p.level} · {n} sessions · {formatTouches(p.touches)} touches
+                        <div className="mt-0.5 text-[14px] font-semibold text-on-surface-variant">
+                          {n} sessions
                         </div>
                       </div>
                       <svg viewBox="0 0 24 24" aria-hidden="true"

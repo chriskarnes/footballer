@@ -71,7 +71,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
 
   return (
     <section id="plans" className="mt-9 scroll-mt-5">
-      <p className="eyebrow mb-3">Your plans</p>
+      <h2 className="h-sec mb-3">My plans</h2>
       <ul role="radiogroup" aria-label="Active weekly plan" className="space-y-2">
         {plans.map((p) => (
           <li key={p.id} className="card p-4">

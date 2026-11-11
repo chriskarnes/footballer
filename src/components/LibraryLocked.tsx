@@ -19,7 +19,7 @@ export async function LibraryLocked({ title }: { title: string }) {
       <div className="animate-pop">
         <TrainerWeek week={week} />
         <div className="mt-4"><Suspense fallback={null}><NoteBanner /></Suspense></div>
-        <Link href="/speed" className="btn-ghost pressable mt-8 w-full">Extra: Speed &amp; Stamina</Link>
+        <Link href="/speed" className="btn-ghost pressable mt-8 min-h-[52px] w-full text-[15px] font-bold">Get faster</Link>
       </div>
     );
   }
@@ -27,13 +27,13 @@ export async function LibraryLocked({ title }: { title: string }) {
     <div className="animate-pop">
       <BrandBand>
         <BandTag>{title}</BandTag>
-        <BandTitle>Your trainer&rsquo;s sessions land here</BandTitle>
-        <p className="mt-3 text-[15px] leading-relaxed text-on-surface-brand-variant">
-          In the meantime, Speed &amp; Stamina has a full year of sessions ready to go.
+        <BandTitle>Nothing yet</BandTitle>
+        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          Your trainer hasn&rsquo;t set a session. Try a speed session.
         </p>
       </BrandBand>
       <Suspense fallback={null}><NoteBanner /></Suspense>
-      <Link href="/speed" className="btn-primary pressable mt-6 w-full">Open Speed &amp; Stamina</Link>
+      <Link href="/speed" className="btn-primary btn-big pressable mt-6 w-full">Get faster</Link>
     </div>
   );
 }

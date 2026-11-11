@@ -32,10 +32,7 @@ export default async function SpeedPage() {
       <BrandBand>
         <BandTag>Speed</BandTag>
         <BandTitle>Speed &amp; Stamina</BandTitle>
-        <p className="mt-3 text-[15px] text-on-surface-brand-variant">
-          A 12-month program for 13–16 year olds. Four phases, each three 4-week blocks,
-          each block ending in a test day. {SPEED_SESSIONS.length} sessions.
-        </p>
+        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">A year of sessions to get faster. For ages 13 and up.</p>
       </BrandBand>
 
       <SpeedYear completions={completions} />
@@ -54,7 +51,7 @@ export default async function SpeedPage() {
       </div>
 
       <section className="mt-9">
-        <p className="eyebrow mb-3">The year</p>
+        <h2 className="h-sec mb-3">The year</h2>
         <div className="stagger grid grid-cols-1 gap-2.5">
           {PHASES.map((p) => (
             <Link key={p.id} href={`/speed/${p.id}`}
@@ -79,7 +76,7 @@ export default async function SpeedPage() {
       </section>
 
       <section className="mt-9">
-        <p className="eyebrow mb-3">Every block</p>
+        <h2 className="h-sec mb-3">Every block</h2>
         <div className="card-flat divide-y divide-outline-variant">
           {BLOCK_WEEKS.map((w) => (
             <div key={w.week} className="flex items-start gap-4 p-4">
@@ -99,7 +96,7 @@ export default async function SpeedPage() {
       </section>
 
       <section className="mt-9">
-        <p className="eyebrow mb-3">Every week</p>
+        <h2 className="h-sec mb-3">Every week</h2>
         <div className="card-flat divide-y divide-outline-variant">
           {WEEK_TEMPLATE.map((t) => (
             <div key={t.day} className="flex items-center gap-4 p-4">

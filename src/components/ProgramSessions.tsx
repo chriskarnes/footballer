@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { formatTouches } from '@/lib/session-builder';
 import { formatMinutes } from '@/lib/program-copy';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 
@@ -53,7 +52,6 @@ export function BlockSection({ block, last, current, nextId, featured }: {
   block: Block; last: boolean; current: boolean; nextId: string | null; featured: Featured;
 }) {
   const complete = blockProgress(block) === 100;
-  const focus = topFocus(block.sessions);
   return (
     <section id={`block-${block.n}`} className="relative scroll-mt-6 pl-12">
       {!last && <span aria-hidden="true" className="absolute bottom-[-36px] left-[15px] top-9 w-[2px] bg-outline-variant" />}
@@ -65,13 +63,12 @@ export function BlockSection({ block, last, current, nextId, featured }: {
         {complete ? <Check className="h-4 w-4" /> : block.n}
       </span>
 
-      <p className="eyebrow">Block {block.n}{current && ' · You’re here'}</p>
+      <p className="text-[13.5px] font-bold text-on-surface-variant">Block {block.n}{current && ' · You’re here'}</p>
       <h2 className="mt-1 font-brand text-[22px] font-extrabold leading-tight tracking-tight">{block.weeks}</h2>
       <p className="mt-1.5 text-[13.5px] leading-snug text-on-surface-variant">
         {block.weekCount > 1
-          ? `Do these ${block.sessions.length} sessions every week for ${block.weekCount} weeks.`
+          ? `Do these every week for ${block.weekCount} weeks.`
           : `${block.sessions.length} sessions this week.`}
-        {focus && <> Works on {focus}.</>}
       </p>
 
       <ol className="stagger mt-4 space-y-3">
@@ -103,14 +100,13 @@ export function SessionList({ sessions, nextId, featured }: { sessions: CardSess
 function SessionCard({ s, featured, unit }: { s: CardSession; featured: Featured; unit: 'week' | 'time' }) {
   const finished = s.done !== null && s.done >= s.target;
   const hero = !!featured;
-  const muted = hero ? 'text-on-surface-brand-variant' : 'text-on-surface-variant';
   return (
     <Link href={`/session/${s.id}`}
           className={hero
             ? 'pressable block rounded-large-increased border border-brand-edge bg-surface-brand p-5 text-on-surface-brand shadow-level3'
             : `card pressable block p-5 ${finished ? 'opacity-70' : ''}`}>
       <div className="flex items-baseline justify-between gap-3">
-        <span className={`text-[11px] font-bold uppercase tracking-[0.14em] ${hero ? 'text-brand-accent' : 'text-on-surface-variant'}`}>
+        <span className={`text-[13.5px] font-bold ${hero ? 'text-brand-accent' : 'text-on-surface-variant'}`}>
           {featured === 'next' ? 'Up next' : featured === 'start' ? 'Start here' : null}
           {featured && s.label ? ' · ' : null}
           {s.label}
@@ -123,15 +119,6 @@ function SessionCard({ s, featured, unit }: { s: CardSession; featured: Featured
       <h3 className={`mt-1.5 font-brand text-[19px] font-bold leading-snug tracking-tighter ${hero ? 'text-on-surface-brand' : 'text-on-surface'}`}>
         {s.title}
       </h3>
-
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        {s.focus.slice(0, 3).map((f) => (
-          <span key={f} className={hero ? 'rounded-small bg-brand-track px-2 py-[3px] text-[11px] font-semibold text-on-surface-brand' : 'tag'}>
-            {FOCUS_LABELS[f]}
-          </span>
-        ))}
-        {!!s.touches && <span className={`ml-1 text-[12px] font-medium ${muted}`}>{formatTouches(s.touches)} touches</span>}
-      </div>
 
       {(s.done !== null || hero) && (
         <div className={`mt-4 flex items-center justify-between gap-3 border-t pt-3.5 ${hero ? 'border-brand-track' : 'border-outline-variant'}`}>
@@ -168,15 +155,6 @@ function Progress({ s, hero, unit }: { s: CardSession; hero: boolean; unit: 'wee
       </span>
     </span>
   );
-}
-
-/** The block's focus areas, most common first, as a readable list. */
-function topFocus(sessions: CardSession[]) {
-  const n = new Map<FocusArea, number>();
-  sessions.forEach((s) => s.focus.forEach((f) => n.set(f, (n.get(f) ?? 0) + 1)));
-  const top = [...n.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([f]) => FOCUS_LABELS[f].toLowerCase());
-  if (!top.length) return null;
-  return top.length === 1 ? top[0] : `${top.slice(0, -1).join(', ')} and ${top[top.length - 1]}`;
 }
 
 function Check({ className }: { className: string }) {

@@ -36,7 +36,7 @@ export function SpeedTestCard() {
   return (
     <div className="animate-pop">
       <BackLink href="/speed" label="Speed" />
-      <p className="eyebrow mb-3">Test day</p>
+      <h2 className="h-sec mb-3">Test day</h2>
       <h1 className="h-page">Your card</h1>
       <p className="mt-3 text-[14.5px] leading-relaxed text-on-surface-variant">
         Thursday of every fourth week. Same five tests, same order, same surface, after the
@@ -60,7 +60,7 @@ export function SpeedTestCard() {
 
       {ready && !!entries.length && (
         <section className="mt-8">
-          <p className="eyebrow mb-3">Personal bests</p>
+          <h2 className="h-sec mb-3">Personal bests</h2>
           <div className="grid grid-cols-2 gap-2.5">
             {TESTS.map((t) => {
               const v = pb[t.id];
@@ -87,7 +87,7 @@ export function SpeedTestCard() {
 
       {ready && !!entries.length && (
         <section className="mt-8">
-          <p className="eyebrow mb-3">Every test day</p>
+          <h2 className="h-sec mb-3">Every test day</h2>
           <div className="card-flat overflow-x-auto">
             <table className="w-full text-[12.5px]">
               <thead>
@@ -133,7 +133,7 @@ export function SpeedTestCard() {
       )}
 
       <section className="mt-8">
-        <p className="eyebrow mb-3">The battery</p>
+        <h2 className="h-sec mb-3">The battery</h2>
         <ol className="card-flat divide-y divide-outline-variant">
           {TESTS.map((t, i) => (
             <li key={t.id} className="flex gap-4 p-4">
@@ -156,7 +156,7 @@ export function SpeedTestCard() {
       </section>
 
       <section className="mt-8">
-        <p className="eyebrow mb-3">What a result changes next block</p>
+        <h2 className="h-sec mb-3">What a result changes next block</h2>
         <div className="card-flat divide-y divide-outline-variant">
           {PROGRESSION.map((p) => (
             <div key={p.result} className="p-4">
@@ -203,7 +203,7 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
 
   return (
     <div className="animate-pop">
-      <p className="eyebrow mb-3">Test day</p>
+      <h2 className="h-sec mb-3">Test day</h2>
       <h1 className="h-page">Record the numbers</h1>
       <p className="mt-3 text-[14.5px] leading-relaxed text-on-surface-variant">
         Best attempt for each. Leave anything you skipped blank.

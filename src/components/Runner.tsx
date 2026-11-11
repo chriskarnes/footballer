@@ -2,8 +2,6 @@
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import type { Exercise } from '@/lib/types';
-import { FOCUS_LABELS } from '@/lib/types';
-import { formatTouches } from '@/lib/session-builder';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { pendingWorkout } from '@/lib/pending';
@@ -28,9 +26,12 @@ function playedMinutes(startedAt: number | null, openedAt: number, plannedSecond
 }
 
 export function Runner({
-  title, subtitle, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
+  title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
 }: {
-  title: string; subtitle: string; drills: Exercise[];
+  title: string; drills: Exercise[];
+  /** One line under the title, when there's something to say: a trainer's
+   *  note on a drill set just for them, or how many rounds. */
+  note?: string | null;
   workoutId?: string; sessionRef?: string;
   /** Where the drills came from. Defaults to library when there's a sessionRef,
    *  coach otherwise. 'speed' drills aren't library rows, so history keeps the
@@ -127,70 +128,51 @@ export function Runner({
     send(minutes);
   }
 
+  const Tick = ({ className }: { className: string }) => (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor"
+         strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path className="celebrate-tick" d="M20 6 9 17l-5-5" /></svg>
+  );
+
   if (finished) {
     return (
       <div className="animate-pop">
-        <p className="eyebrow mb-3">{title}</p>
-        {/* Ended early is still a session. The headline says what happened
-            without grading it; the numbers underneath carry the difference. */}
-        <h1 className="h-hero">{allDone ? 'Session complete' : 'Session done'}</h1>
-
-        {/* The celebration, now on Finish rather than the last tick: the card
-            lands, the tick draws. Same motion as before, one moment later. */}
-        <div className="celebrate mt-6 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
-          <div className="flex items-end gap-3">
-            <svg viewBox="0 0 24 24" aria-hidden="true"
-                 className="mb-1 h-9 w-9 shrink-0 text-on-surface-brand"
-                 fill="none" stroke="currentColor" strokeWidth="3"
-                 strokeLinecap="round" strokeLinejoin="round">
-              <path className="celebrate-tick" d="M20 6 9 17l-5-5" />
-            </svg>
-            <div>
-              <div className="font-brand text-[40px] font-extrabold leading-none
-                              tracking-tightest text-on-surface-brand">
-                {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
-              </div>
-              <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
-                drills done
-              </div>
-            </div>
-          </div>
-
-          {/* Trainers' own drills don't count touches: say minutes only. */}
-          <div className={`mt-6 grid gap-4 border-t border-brand-edge pt-5 ${doneTouches ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            {!!doneTouches && <Metric v={formatTouches(doneTouches)} unit="ball touches" />}
-            <Metric v={`${played}`} unit={played === 1 ? 'minute' : 'minutes'} />
-          </div>
-
-          {/* What became of it, said plainly — and if it's waiting on an
-              account, what signing in does with it. */}
-          <p role="status" className="mt-5 text-[13px] font-medium text-on-surface-brand-variant">
-            {save === 'saving' && 'Saving…'}
-            {save === 'saved' && (
-              <>Saved to <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">your training</Link>.</>
-            )}
-            {save === 'signin' && (
-              <><Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> and
-              this session is saved to your training.</>
-            )}
-            {save === 'error' && (
-              <>Couldn&rsquo;t save this session.{' '}
-                <button type="button" onClick={() => send(played)}
-                        className="font-bold text-on-surface-brand underline underline-offset-4">
-                  Try again
-                </button>
-              </>
-            )}
+        {/* Ended early is still a session: the headline cheers either way, and
+            the count underneath carries the difference. */}
+        <div className="celebrate mt-4 rounded-large-increased border border-brand-edge bg-surface-brand px-6 py-9 text-center shadow-level3">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full"
+                style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+            <Tick className="h-8 w-8" />
+          </span>
+          <h1 className="site-wide mt-5 text-[32px] uppercase leading-none text-on-surface-brand">
+            {allDone ? 'Nice work!' : 'Good effort!'}
+          </h1>
+          <p className="mt-3 text-[17px] font-semibold text-on-surface-brand-variant">
+            {done.size} of {drills.length} drills · {played} min
           </p>
+
+          {/* Said only when there's something to do about it. */}
+          {(save === 'signin' || save === 'error') && (
+            <p role="status" className="mt-4 text-[14px] font-medium text-on-surface-brand-variant">
+              {save === 'signin' ? (
+                <><Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> to keep this session.</>
+              ) : (
+                <>Couldn&rsquo;t save.{' '}
+                  <button type="button" onClick={() => send(played)}
+                          className="font-bold text-on-surface-brand underline underline-offset-4">Try again</button>
+                </>
+              )}
+            </p>
+          )}
         </div>
 
         {asksFeel && savedId && (
-          <div className="card mt-4 p-5">
-            <div className="h-card">{feel ? 'Thanks. Your trainer will see it.' : 'How did that feel?'}</div>
-            <div className="mt-3 grid grid-cols-3 gap-2" role="group" aria-label="How did that feel?">
-              {([['easy', 'Too easy'], ['right', 'About right'], ['hard', 'Too hard']] as const).map(([k, l]) => (
+          <div className="mt-7">
+            <h2 className="h-sec text-center">{feel ? 'Thanks!' : 'How was it?'}</h2>
+            <div className="mt-3 grid grid-cols-3 gap-2.5" role="group" aria-label="How was it?">
+              {([['easy', 'Easy'], ['right', 'Just right'], ['hard', 'Hard']] as const).map(([k, l]) => (
                 <button key={k} type="button" aria-pressed={feel === k}
-                        className={`chip justify-center ${feel === k ? 'chip-on' : ''}`}
+                        className={`pressable min-h-[60px] rounded-2xl border-2 text-[15px] font-bold
+                                    ${feel === k ? 'border-on-surface bg-on-surface text-surface' : 'border-outline text-on-surface'}`}
                         onClick={() => {
                           setFeel(k); haptic('tap');
                           fetch('/api/workouts', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: savedId, feel: k }) }).catch(() => {});
@@ -200,9 +182,7 @@ export function Runner({
           </div>
         )}
 
-        {/* The way out. The ticked list has nothing left to say, so it's gone,
-            and this is the one thing on the screen to press. */}
-        <Link href={doneHref ?? back?.href ?? '/'} className="btn-primary pressable mt-6 w-full">
+        <Link href={doneHref ?? back?.href ?? '/'} className="btn-primary btn-big pressable mt-7 w-full">
           Done
         </Link>
       </div>
@@ -212,201 +192,128 @@ export function Runner({
   return (
     <div className="animate-pop">
       {back && <BackLink href={back.href} label={back.label} />}
-      <p className="eyebrow mb-3">{subtitle}</p>
       <h1 className="h-page">{title}</h1>
+      {note && <p className="mt-2 text-[16px] font-medium leading-snug text-on-surface-variant">{note}</p>}
 
-      {/* Live progress. Drills lead, touches follow.
-          What a player is doing on this screen is working through a list, and
-          the number that answers "how much is left" is the one they are
-          actually moving — a drill at a time. Touches banked led before and
-          could not do that job: it jumps 150 at a time, it is an estimate, and
-          it never reaches a number anyone recognises as finished. The bar has
-          always been drawn from the drill count, so the headline now agrees
-          with the bar underneath it. */}
-      <div className="mt-6 rounded-large-increased bg-surface-brand border border-brand-edge p-6 shadow-level3">
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="font-brand text-[40px] font-extrabold leading-none
-                            tracking-tightest text-on-surface-brand">
-              {done.size}<span className="text-on-surface-brand-variant">/{drills.length}</span>
-            </div>
-            <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
-              {allDone ? 'all drills done' : 'completed drills'}
-            </div>
-          </div>
-          {/* Touches, at one weight and in the quiet tone. The banked count used
-              to sit above this in bold white, which put a second headline
-              number on a card that only has room for one. */}
-          {/* A speed session has no ball; "0 of 0 touches" is noise there. */}
-          {!!totalTouches && (
-            <div className="text-right text-[11.5px] font-semibold text-on-surface-brand-variant">
-              {formatTouches(doneTouches)} of {formatTouches(totalTouches)} touches
-            </div>
-          )}
+      {/* How far through: one number and a bar. It stays in view while the
+          list scrolls under it, so "how much is left" is never a scroll away. */}
+      <div className="sticky top-[calc(env(safe-area-inset-top)+8px)] z-10 mt-5 rounded-2xl border border-brand-edge bg-surface-brand px-5 py-4 shadow-level2">
+        <div className="flex items-baseline justify-between text-on-surface-brand">
+          <span className="font-brand text-[22px] font-extrabold leading-none tracking-tighter">
+            {done.size} of {drills.length}
+          </span>
+          <span className="text-[14px] font-bold text-on-surface-brand-variant">{allDone ? 'All done!' : 'done'}</span>
         </div>
-        <div className="mt-5 h-[6px] overflow-hidden rounded-full bg-brand-track">
-          <div className="h-full rounded-full bg-on-surface-brand transition-all duration-500"
-               style={{ width: `${pct}%` }} />
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-brand-track">
+          <div className="h-full rounded-full bg-brand-accent transition-all duration-500" style={{ width: `${pct}%` }} />
         </div>
-
-        {/* Finish is the one primary button that sits ON the brand block, so its
-            fill and label swap: a black button on a black card is not a button. */}
-        {allDone && (
-          <button onClick={finish}
-                  className="btn-primary pressable animate-pop mt-5 w-full bg-on-surface-brand text-surface-brand">
-            Finish session
-          </button>
-        )}
-
-        {/* Ending early. It used to be impossible: Finish only existed at 100%,
-            so stopping at four of six logged nothing and held the screen awake
-            until you left the page. Quiet until asked, and asked twice, since
-            it ends the session on a tap. */}
-        {!allDone && done.size > 0 && phase === 'running' && (
-          <button onClick={() => setPhase('confirm-end')}
-                  className="btn-ghost pressable mt-5 border-on-surface-brand-variant text-on-surface-brand">
-            End early
-          </button>
-        )}
-        {!allDone && done.size > 0 && phase === 'confirm-end' && (
-          <div className="hint-in mt-5">
-            <p className="text-[13px] font-medium text-on-surface-brand">
-              End with {done.size} of {drills.length} drills done?
-            </p>
-            <div className="mt-3 flex gap-2.5">
-              <button onClick={() => setPhase('running')}
-                      className="btn-ghost pressable min-h-[52px] flex-1 border-on-surface-brand-variant text-on-surface-brand">
-                Keep going
-              </button>
-              <button onClick={finish}
-                      className="btn-primary pressable flex-1 bg-on-surface-brand text-surface-brand">
-                End session
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      <ol className="stagger mt-4 space-y-2.5">
+      <ol className="stagger mt-4 space-y-3">
         {drills.map((d) => {
           const on = done.has(d.id);
+          const open = howOpen === d.id;
+          const more = !!d.how?.length || !!d.video_url;
           return (
-            <li key={d.id} onClick={() => toggle(d.id)}
-                role="button" tabIndex={0} aria-pressed={on}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(d.id); }
-                }}
-                className={`card pressable flex cursor-pointer items-start gap-3.5 p-4
-                            ${on ? 'opacity-45' : ''}`}>
-              {/* A ticked drill is a selection, not a brand block, so it takes
-                  the selection pair and flips with the scheme — same as a
-                  chosen chip and the navigation pill. */}
-              <div className={`mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center
-                               rounded-[9px] border-2 transition
-                               ${on ? 'border-secondary-container bg-transparent' : 'border-outline-variant bg-surface-container-low'}`}>
-                {on && (
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-secondary-container" fill="none"
-                       stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"
-                       strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                )}
+            <li key={d.id} className="card overflow-hidden">
+              {/* The whole top of the card ticks the drill off. */}
+              <div onClick={() => toggle(d.id)} role="button" tabIndex={0} aria-pressed={on}
+                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(d.id); } }}
+                   className={`pressable flex cursor-pointer items-center gap-4 p-4 transition-opacity ${on ? 'opacity-50' : ''}`}>
+                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2.5px] transition
+                                  ${on ? 'border-on-surface bg-on-surface text-surface' : 'border-outline'}`}>
+                  {on && <Tick className="h-5 w-5" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[17px] font-bold leading-snug text-on-surface">{d.name}</span>
+                  <span className="mt-0.5 block text-[14.5px] font-semibold text-on-surface-variant">
+                    {/* "rest 1 min", but just "walk back": a rest that's an
+                        instruction rather than a time doesn't take "rest". */}
+                    {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
+                      ? (/^\d/.test(d.rest) ? ` · rest ${d.rest}` : ` · ${d.rest}`) : ''}`}
+                    {d.effort && ` · ${EFFORT[d.effort].label}`}
+                  </span>
+                  {/* The one thing to think about at speed. */}
+                  {d.cue && <span className="mt-1 block text-[14px] font-semibold text-on-surface">&ldquo;{d.cue}&rdquo;</span>}
+                </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className={`h-card ${on ? 'line-through' : ''}`}>{d.name}</div>
-                {/* The coach's word for it, under the player's — they'll hear
-                    it at training, so it's taught rather than hidden. */}
-                {d.also_called && (
-                  <div className="mt-0.5 text-[12px] text-on-surface-variant">Coaches call it &ldquo;{d.also_called}&rdquo;</div>
-                )}
-                <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
-                  {/* "rest 1 min", but just "walk back" — a rest that's an
-                      instruction rather than a time doesn't take "rest". */}
-                  {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
-                    ? (/^\d/.test(d.rest) ? ` · rest ${d.rest}` : ` · ${d.rest}`) : ''}`}
-                </div>
-                {/* The one thing to think about at speed. Only the speed module
-                    sets it; library drills say it in their video. */}
-                {d.cue && (
-                  <div className="mt-1.5 text-[13px] font-semibold">
-                    Think about: <span className="italic">&ldquo;{d.cue}&rdquo;</span>
-                  </div>
-                )}
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                  {d.effort && <span className="tag tag-accent">{EFFORT[d.effort].label}</span>}
-                  <span className={`tag ${d.effort ? '' : 'tag-accent'}`}>{FOCUS_LABELS[d.primary_focus]}</span>
-                  {!!d.touches && <span className="tag">{formatTouches(d.touches)} touches</span>}
-                </div>
 
-                {/* The steps, for drills with no video to show them. Closed by
-                    default so the list stays a list; the tap stops here rather
-                    than ticking the drill off. */}
-                {!!d.how?.length && (
-                  <>
-                    <button type="button" aria-expanded={howOpen === d.id}
-                            onClick={(e) => { e.stopPropagation(); setHowOpen(howOpen === d.id ? null : d.id); }}
-                            onKeyDown={(e) => e.stopPropagation()}
-                            className="pressable mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-on-surface underline underline-offset-4">
-                      How to do it
+              {/* How to do it: a video, the steps, or both. One button. */}
+              {more && !on && (
+                <div className="border-t border-outline-variant">
+                  {d.how?.length ? (
+                    <button type="button" aria-expanded={open} onClick={() => setHowOpen(open ? null : d.id)}
+                            className="pressable flex min-h-12 w-full items-center justify-between px-4 text-[14.5px] font-bold text-on-surface">
+                      Show me how
                       <svg viewBox="0 0 24 24" aria-hidden="true"
-                           className={`h-3.5 w-3.5 transition-transform duration-200 ${howOpen === d.id ? 'rotate-180' : ''}`}
+                           className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
                            fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M6 9l6 6 6-6" />
                       </svg>
                     </button>
-                    {howOpen === d.id && (
-                      <div className="hint-in mt-2.5 border-t border-outline-variant pt-3"
-                           onClick={(e) => e.stopPropagation()}>
-                        <ol className="space-y-2">
-                          {d.how.map((step, n) => (
-                            <li key={n} className="flex gap-2.5 text-[13.5px] leading-snug text-on-surface">
-                              <span className="w-4 shrink-0 font-brand text-[12px] font-bold text-on-surface-variant">{n + 1}</span>
-                              <span>{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                        {d.effort && (
-                          <p className="mt-3 text-[12.5px] text-on-surface-variant">
-                            <span className="font-semibold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
-                            {EFFORT[d.effort].means}
-                          </p>
-                        )}
-                        {/* The play glyph in the corner is easy to miss under a
-                            list of steps; the words are not. */}
-                        {d.video_url && (
-                          <a href={d.video_url} target="_blank" rel="noopener"
-                             className="btn-ghost pressable mt-3 gap-2">
-                            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
-                            Watch it done
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              {d.video_url && (
-                <a href={d.video_url} target="_blank" rel="noopener" aria-label="Watch demo"
-                   onClick={(e) => e.stopPropagation()}
-                   className="icon-btn pressable">
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </a>
+                  ) : (
+                    <Watch href={d.video_url!} className="pressable flex min-h-12 w-full items-center gap-2 px-4 text-[14.5px] font-bold text-on-surface" />
+                  )}
+                  {open && !!d.how?.length && (
+                    <div className="hint-in px-4 pb-4">
+                      <ol className="space-y-2.5">
+                        {d.how.map((step, n) => (
+                          <li key={n} className="flex gap-3 text-[15px] leading-snug text-on-surface">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[12.5px] font-extrabold">{n + 1}</span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                      {d.effort && (
+                        <p className="mt-3 text-[14px] text-on-surface-variant">
+                          <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
+                          {EFFORT[d.effort].means}
+                        </p>
+                      )}
+                      {d.video_url && <Watch href={d.video_url} className="btn-ghost pressable mt-4 gap-2" />}
+                    </div>
+                  )}
+                </div>
               )}
             </li>
           );
         })}
       </ol>
+
+      {/* The way out is where the list ends, which is where the last tick was. */}
+      {allDone && (
+        <button onClick={finish} className="btn-primary btn-big pressable animate-pop mt-6 w-full">
+          Finish
+        </button>
+      )}
+      {!allDone && done.size > 0 && phase === 'running' && (
+        <button onClick={() => setPhase('confirm-end')}
+                className="btn-ghost pressable mt-6 min-h-[52px] w-full text-[15px] font-bold">
+          Stop early
+        </button>
+      )}
+      {!allDone && done.size > 0 && phase === 'confirm-end' && (
+        <div className="hint-in card mt-6 p-5">
+          <p className="h-sec">Stop now?</p>
+          <div className="mt-4 flex gap-2.5">
+            <button onClick={() => setPhase('running')} className="btn-ghost pressable min-h-[52px] flex-1 font-bold">
+              Keep going
+            </button>
+            <button onClick={finish} className="btn-primary pressable flex-1">
+              Stop
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function Metric({ v, unit }: { v: string; unit: string }) {
+function Watch({ href, className }: { href: string; className: string }) {
   return (
-    <div>
-      <div className="font-brand text-[22px] font-bold leading-none tracking-tighter text-on-surface-brand">{v}</div>
-      <div className="mt-1 text-[11.5px] font-semibold text-on-surface-brand-variant">{unit}</div>
-    </div>
+    <a href={href} target="_blank" rel="noopener" className={className}>
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+      Watch the video
+    </a>
   );
 }

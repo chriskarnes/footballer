@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DrillBrief, SessionRow } from '@/lib/types';
 import { WEEKDAYS } from '@/lib/types';
-import { formatTouches } from '@/lib/session-builder';
 import { dayKey, weekState, type Completion } from '@/lib/plan-today';
 import { PlanWeek, type WeekRow } from './PlanWeek';
 import { BackLink } from './BackLink';
@@ -44,7 +43,6 @@ export function SavedWeek({
 
   const training = rows.filter((d) => d.kind !== 'rest' && d.session);
   const minutes = Math.round(training.reduce((a, d) => a + (d.session?.total_minutes ?? 0), 0));
-  const touches = training.reduce((a, d) => a + (d.session?.touches ?? 0), 0);
 
   async function activate() {
     setSwitching(true);
@@ -61,10 +59,9 @@ export function SavedWeek({
       {/* The way to every saved week, and to renaming one. Plan is a tab, but
           the list of plans lives with the rest of your account. */}
       <BackLink href="/me#plans" label="Your plans" />
-      <p className="eyebrow mb-3">{plan.active ? 'Active plan' : 'Inactive plan'}</p>
       <h1 className="h-hero">{plan.name}</h1>
       <p className="mt-3 text-[14px] font-medium text-on-surface-variant">
-        {training.length} session{training.length === 1 ? '' : 's'} · {minutes} min · {formatTouches(touches)} touches a week
+        {training.length} session{training.length === 1 ? '' : 's'} a week · {minutes} min
       </p>
 
       {plan.active && state && (

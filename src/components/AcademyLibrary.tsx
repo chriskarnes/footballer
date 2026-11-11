@@ -34,16 +34,13 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
       {heading && (
         <BrandBand>
           <BandTag>Library</BandTag>
-          <BandTitle>Pick anything and go</BandTitle>
-          <p className="mt-3 text-[15px] text-on-surface-brand-variant">
-            {c.programs.length} {c.programs.length === 1 ? 'program' : 'programs'} · {c.drills.length} {c.drills.length === 1 ? 'drill' : 'drills'} from your trainer.
-          </p>
+          <BandTitle>Pick one and go</BandTitle>
         </BrandBand>
       )}
 
       {!!c.programs.length && (
         <section className="mt-8">
-          <p className="eyebrow mb-3">Programs</p>
+          <h2 className="h-sec mb-3">Programs</h2>
           <div className="stagger space-y-2.5">
             {c.programs.map((p) => {
               const sessions = c.sessions.filter((s) => s.program_id === p.id).sort((a, b) => a.week - b.week || a.position - b.position);
@@ -52,18 +49,18 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
                 <details key={p.id} className="card group overflow-hidden">
                   <summary className="pressable flex cursor-pointer list-none items-center gap-4 p-4">
                     <span className="min-w-0 flex-1">
-                      <span className="h-card block truncate">{p.name}</span>
-                      <span className="mt-1 block text-[12.5px] font-medium text-on-surface-variant">{p.weeks} weeks · {sessions.length} sessions</span>
+                      <span className="block text-[16px] font-bold leading-snug text-on-surface">{p.name}</span>
+                      <span className="mt-0.5 block text-[14px] font-semibold text-on-surface-variant">{sessions.length} sessions</span>
                     </span>
                     <span className="transition-transform group-open:rotate-90"><Chevron /></span>
                   </summary>
                   <ul className="divide-y divide-outline-variant border-t border-outline-variant">
                     {sessions.map((s) => (
                       <li key={s.id}>
-                        <Link href={`/train/session/${s.id}`} className="flex items-center gap-3 px-4 py-3">
+                        <Link href={`/train/session/${s.id}`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[14px] font-semibold text-on-surface">{s.name}</span>
-                            <span className="block text-[12.5px] text-on-surface-variant">Week {s.week} · {s.drill_ids.length} drills</span>
+                            <span className="block text-[15px] font-bold text-on-surface">{s.name}</span>
+                            <span className="block text-[13.5px] font-medium text-on-surface-variant">Week {s.week}</span>
                           </span>
                           <Chevron />
                         </Link>
@@ -79,14 +76,14 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
 
       {groups.map((g) => (
         <section key={g.key} className="mt-8">
-          <p className="eyebrow mb-3">{g.title}</p>
+          <h2 className="h-sec mb-3">{g.title}</h2>
           <ul className="card divide-y divide-outline-variant">
             {g.drills.map((d) => (
               <li key={d.id}>
-                <Link href={`/train/drill/${d.id}`} className="flex items-center gap-3 px-4 py-3">
+                <Link href={`/train/drill/${d.id}`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-semibold text-on-surface">{d.name}</span>
-                    <span className="block truncate text-[12.5px] text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>
+                    <span className="block text-[15px] font-bold text-on-surface">{d.name}</span>
+                    <span className="block truncate text-[13.5px] font-medium text-on-surface-variant">{d.amount ?? `${d.minutes} min`}</span>
                   </span>
                   <Chevron />
                 </Link>

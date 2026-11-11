@@ -53,13 +53,13 @@ export function SoccerDays({ club = [], game = null, userId, onDone, cta = 'Save
                         : 'border-on-surface bg-surface text-on-surface ring-2 ring-inset ring-on-surface'}`}>
               {label}
               <span className={`mt-0.5 text-[10.5px] font-semibold ${d === 'free' ? 'text-on-surface-variant' : ''}`}>
-                {d === 'free' ? '·' : d === 'club' ? 'Club' : 'Game'}
+                {d === 'free' ? '·' : d === 'club' ? 'Train' : 'Game'}
               </span>
             </button>
           );
         })}
       </div>
-      <p className="mt-2 text-[12.5px] text-on-surface-variant">Tap once for club training, twice for a game.</p>
+      <p className="mt-2.5 text-[13.5px] font-medium text-on-surface-variant">Tap once for training. Tap twice for a game.</p>
       {error && <p role="alert" className="mt-2 text-[13px] font-semibold text-on-surface">{error}</p>}
       <button type="button" onClick={save} disabled={pending} className="btn-primary btn-sm pressable mt-4">
         {pending ? 'Saving…' : cta}
@@ -77,20 +77,17 @@ export function SoccerDaysPanel({ club, game, set }: { club: number[]; game: num
   const label = soccerLabel(club, game);
   if (!open) {
     return (
-      <p className="flex items-center justify-between gap-3 pl-1 text-[13px] text-on-surface-variant">
-        <span><b className="font-semibold text-on-surface">Your soccer</b> · {label ?? 'No club days'}</span>
-        <button type="button" onClick={() => setOpen(true)} className="shrink-0 font-semibold text-on-surface underline underline-offset-4">Change</button>
-      </p>
+      <div className="card flex min-h-[60px] items-center justify-between gap-3 px-4">
+        <span className="min-w-0 text-[15px] font-bold text-on-surface">{label ?? 'No team days'}</span>
+        <button type="button" onClick={() => setOpen(true)} className="btn-ghost btn-sm pressable shrink-0">Change</button>
+      </div>
     );
   }
   return (
     <div className="card p-5">
-      <div className="h-card">Which days do you already have soccer?</div>
-      <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
-        Club training and games. Your trainer&rsquo;s sessions go on the other days.
-      </p>
+      <div className="h-sec">When does your team play?</div>
       <div className="mt-4">
-        <SoccerDays club={club} game={game} onDone={() => setOpen(false)} cta={set ? 'Save' : 'Fit my week'} />
+        <SoccerDays club={club} game={game} onDone={() => setOpen(false)} cta="Save" />
       </div>
     </div>
   );

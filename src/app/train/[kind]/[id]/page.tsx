@@ -38,7 +38,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const { data: rows } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').in('id', s.drill_ids);
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
     const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i)).filter(Boolean) as Exercise[];
-    return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills} sessionRef={s.id} source="academy" back={back} />;
+    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} />;
   }
 
   // A session from a week built for this player: runs and records as an
@@ -53,14 +53,14 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
     const steps: number[] = s.steps ?? [];
     const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i, steps[i] ?? 0)).filter(Boolean) as Exercise[];
-    return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills} sessionRef={s.id} source="academy" back={back} />;
+    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} />;
   }
 
   // Any drill from the academy's library, when players may browse it.
   if (kind === 'drill') {
     const { data: d } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
     if (!d) notFound();
-    return <Runner title={d.name} subtitle={d.amount ?? `${d.minutes} min`} drills={[asExercise(d as DrillRow, d.id, 0)]}
+    return <Runner title={d.name} drills={[asExercise(d as DrillRow, d.id, 0)]}
                    sessionRef={d.id} source="academy" back={{ href: '/library', label: 'Library' }} />;
   }
 
@@ -69,7 +69,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
       .eq('id', id).eq('user_id', v.user.id).maybeSingle();
     const d = a?.drills as unknown as DrillRow | null;
     if (!a || !d) notFound();
-    return <Runner title={d.name} subtitle={a.note ?? 'Just for you'} drills={[asExercise(d, a.id, 0)]}
+    return <Runner title={d.name} note={a.note} drills={[asExercise(d, a.id, 0)]}
                    sessionRef={a.id} source="addon" back={back} />;
   }
   notFound();

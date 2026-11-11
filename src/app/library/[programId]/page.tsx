@@ -3,15 +3,11 @@ import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';
-import { PROGRAM_BLURBS, SHOWN_LEVELS, formatMinutes, splitSessionName } from '@/lib/program-copy';
+import { PROGRAM_BLURBS, formatMinutes, splitSessionName } from '@/lib/program-copy';
 import { serverClient } from '@/lib/supabase/server';
 import { BackLink } from '@/components/BackLink';
 import { BlockSection, BlockStrip, SessionList, type Block, type CardSession } from '@/components/ProgramSessions';
 
-const KID: Record<string, string> = {
-  'Technical': 'Ball Skills', 'Physical': 'Speed & Strength',
-  'Finishing & Crossing': 'Scoring Goals',
-};
 
 /**
  * A program: what it is, how big it is, where you are in it, and its sessions.
@@ -66,13 +62,11 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
   const currentBlock = signedIn && next ? blocks.find((b) => b.sessions.some((s) => s.id === next.id))?.n ?? 0 : 0;
 
   const blurb = PROGRAM_BLURBS[program.id];
-  const level = SHOWN_LEVELS.includes(program.level) ? program.level : null;
 
   return (
     <div className="animate-pop">
       <BackLink href="/library" label="Library" />
 
-      <p className="eyebrow mb-3">{KID[program.category] ?? program.category}{level && ` · ${level}`}</p>
       <h1 className="h-page">{program.name}</h1>
       {blurb && (
         <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">{blurb}</p>

@@ -45,7 +45,6 @@ export default async function SessionPage({
           // PATCH the old row, so doing a session twice overwrote the first time.
           const again = w.status === 'completed';
           return <Runner title={w.title}
-                         subtitle={again ? 'Doing it again' : 'Saved session'}
                          drills={drills}
                          workoutId={again ? undefined : w.id}
                          sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
@@ -78,6 +77,6 @@ export default async function SessionPage({
     : program ? { href: `/library/${program.id}`, label: program.name }
     : { href: '/library', label: 'Library' };
 
-  return <Runner title={s.name} subtitle={`${drills.length} drills`} drills={drills}
+  return <Runner title={s.name} drills={drills}
                  sessionRef={s.id} back={back} />;
 }

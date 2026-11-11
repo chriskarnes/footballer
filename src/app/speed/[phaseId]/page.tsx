@@ -17,7 +17,6 @@ export default async function PhasePage({ params }: { params: Promise<{ phaseId:
     <div className="animate-pop">
       <BackLink href="/speed" label="Speed" />
 
-      <p className="eyebrow mb-3">Phase {phase.number} · {phase.months}</p>
       <h1 className="h-page">{phase.name}</h1>
       <p className="mt-3 text-[13px] font-semibold text-primary">
         Sprint cap {phase.sprintCap} m · plyo cap {phase.contactCap} contacts per session

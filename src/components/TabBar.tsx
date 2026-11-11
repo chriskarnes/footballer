@@ -42,17 +42,16 @@ export function TabBar({ academyId, library = true, plan = true }: {
           return (
             <Link key={t.href} href={t.href} aria-current={on ? 'page' : undefined}
               onClick={() => { if (!on) haptic('tap'); }}
-              // min-h-11 = 44px, Apple's minimum touch target. The visual pill is
-              // smaller than the tappable area, which is how native bars work.
-              className={`pressable flex min-h-11 items-center gap-2 rounded-full px-4
-                          text-[12.5px] font-bold tracking-tight
+                            className={`pressable flex min-h-[52px] min-w-[54px] flex-col items-center justify-center gap-0.5 rounded-full px-3
+                          text-[11.5px] font-bold tracking-tight
                           transition-colors duration-300
                           ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant'}`}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                   strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+                   strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                 <path d={t.d} />
               </svg>
-              <span className={on ? 'inline' : 'hidden sm:inline'}>{t.label}</span>
+              {/* Always named: an icon alone asks a ten-year-old to guess. */}
+              <span>{t.label}</span>
             </Link>
           );
         })}

@@ -2,7 +2,9 @@ import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import Link from 'next/link';
 import { serverClient } from '@/lib/supabase/server';
 import { SignIn } from '@/components/SignIn';
-import { ProfileCard } from '@/components/ProfileCard';
+import { Avatar } from '@/components/Avatar';
+import { SoccerDaysPanel } from '@/components/SoccerDays';
+import { getMyWeek, type MyWeek } from '@/lib/player-week';
 import { ThisWeek } from '@/components/ThisWeek';
 import { WorkoutList } from '@/components/WorkoutList';
 import { AccountSection } from '@/components/AccountSection';
@@ -21,8 +23,9 @@ import { avatarSrc } from '@/lib/avatar';
  * with nothing to count it's the four setup questions; signed in with history
  * it reads, top to bottom:
  *
- *   who you are      the name as the headline, then the profile
- *   this week        sessions, minutes, touches, the streak, the active week
+ *   who you are      the name and photo, in the band
+ *   this week        sessions, minutes, and touches or the streak
+ *   team days        which days their own team trains and plays
  *   saved sessions   kept from Train to do later
  *   your plans       every saved week
  *   history          the last five, and See all
@@ -57,6 +60,7 @@ export default async function MePage() {
   let workouts: WorkoutRaw[] = [];
   let profile: ProfileValues | null = null;
   let avatarAt: string | null = null;
+  let myWeek: MyWeek | null = null;
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
   let canBrand = false;
@@ -71,7 +75,7 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, viewer, cal, photoAt] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
@@ -80,7 +84,9 @@ export default async function MePage() {
           db.from('calendar_feeds').select('token, include_plan, include_speed, start_time, time_zone')
             .eq('user_id', user.id).maybeSingle(),
           readAvatarAt(db, user.id),
+          getMyWeek().catch(() => null),
         ]);
+        myWeek = wk;
         avatarAt = photoAt;
         canBrand = viewer.canBrand;
         role = viewer.role;
@@ -103,15 +109,12 @@ export default async function MePage() {
       <div>
         <BrandBand>
           <BandTag>Me</BandTag>
-          <BandTitle>Keep every session</BandTitle>
-          <p className="mt-3 text-[15px] leading-relaxed text-on-surface-brand-variant">
-            Sign in to build a history, repeat a session you liked, and save a weekly plan.
+          <BandTitle>Sign in</BandTitle>
+          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+            Save your sessions and see your week.
           </p>
         </BrandBand>
         <div className="mt-5"><SignIn /></div>
-        <p className="mt-4 text-xs text-on-surface-variant">
-          You don&rsquo;t need an account to train — the coach works signed out.
-        </p>
       </div>
     );
   }
@@ -127,35 +130,40 @@ export default async function MePage() {
   const finished = finishedRows(workouts);
   const saved = workouts.filter((w) => w.status !== 'completed').map(toRow);
   const activePlan = plans.find((p) => p.active);
-  const allTime = {
-    sessions: finished.length,
-    minutes: finished.reduce((a, w) => a + w.minutes, 0),
-    touches: finished.reduce((a, w) => a + w.touches, 0),
-  };
   const completions = workouts
     .filter((w) => w.status === 'completed' && w.source === 'library')
     .map((w) => ({ source_ref: w.source_ref, completed_at: w.completed_at }));
 
+  const name = profile?.display_name?.trim();
+
   return (
     <div>
+      {/* Who this is, and nothing else: the name is the headline. The rest of
+          the profile is a tap away, under Account. */}
       <BrandBand>
-        <BandTag>Me</BandTag>
-        <BandTitle>Your training</BandTitle>
+        <div className="flex items-center gap-4">
+          <Avatar name={name} email={user.email} src={avatarSrc(avatarAt)} className="h-16 w-16 text-[24px]" />
+          <h1 className="site-wide min-w-0 flex-1 text-[30px] uppercase leading-[.95] [overflow-wrap:anywhere]">{name || 'Me'}</h1>
+        </div>
       </BrandBand>
-      {/* Clear of the band: the name is this page's headline, not part of the colour above it. */}
-      <div className="mt-7">
-        <NoteBanner />
-        <ProfileCard profile={profile} email={user.email} avatar={avatarSrc(avatarAt)} />
-      </div>
+      <div className="mt-6"><NoteBanner /></div>
 
-      <ThisWeek finished={finished.map(toFinished)} allTime={allTime}
+      <ThisWeek finished={finished.map(toFinished)}
         plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />
+
+      {/* Their team's days, once answered on Train: it's a setting from then on. */}
+      {myWeek?.schedule && (
+        <section className="mt-8">
+          <h2 className="h-sec mb-3">My team days</h2>
+          <SoccerDaysPanel club={myWeek.schedule.club} game={myWeek.schedule.game} set />
+        </section>
+      )}
 
       {/* Kept from Train for later. Starting one and finishing it moves it
           down into history; removing it is for the ones you won't. */}
       {!!saved.length && (
-        <section className="mt-9">
-          <p className="eyebrow mb-3">Saved sessions</p>
+        <section className="mt-8">
+          <h2 className="h-sec mb-3">Saved for later</h2>
           <WorkoutList rows={saved} kind="saved" />
         </section>
       )}
@@ -167,19 +175,15 @@ export default async function MePage() {
           from. An ordinary card and a ghost button, like every other
           invitation in the app — it had its own outlined, tinted style. */}
       {finished.length >= 3 && !plans.length && (
-        <section className="card mt-9 p-5">
-          <div className="h-card">Make this a weekly routine?</div>
-          <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
-            You&rsquo;ve trained {finished.length} times. Your history already answers most of
-            the questions, so a repeating week is a couple of taps away.
-          </p>
-          <Link href="/plan" className="btn-ghost mt-4 w-full">Build my week</Link>
+        <section className="card mt-8 p-5">
+          <div className="h-sec">Want a weekly plan?</div>
+          <Link href="/plan" className="btn-ghost mt-4 min-h-[52px] w-full text-[15px] font-bold">Make my week</Link>
         </section>
       )}
 
-      <section className="mt-9">
+      <section className="mt-8">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <p className="eyebrow">History</p>
+          <h2 className="h-sec">Done</h2>
           {finished.length > HISTORY_ON_ME && (
             <Link href="/me/history"
                   className="text-[13px] font-semibold text-primary underline underline-offset-4">
@@ -190,8 +194,8 @@ export default async function MePage() {
         {finished.length ? (
           <WorkoutList rows={finished.slice(0, HISTORY_ON_ME)} kind="history" />
         ) : (
-          <p className="pl-1 text-[13.5px] text-on-surface-variant">
-            Nothing finished yet. <Link href="/" className="font-bold text-primary">Build a session</Link>
+          <p className="pl-1 text-[15px] font-medium text-on-surface-variant">
+            Nothing yet. <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>
           </p>
         )}
       </section>

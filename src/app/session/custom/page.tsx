@@ -27,9 +27,8 @@ export default async function CustomSessionPage({
   if (!decoded) redirect('/');
 
   const { built } = decoded;
-  const drills = `${built.drills.length} drills`;
   return <Runner title={sessionTitle(built.spec)}
-                 subtitle={built.rounds > 1 ? `${drills} · ${built.rounds} rounds` : drills}
+                 note={built.rounds > 1 ? `Do the list ${built.rounds} times.` : null}
                  drills={built.drills} rounds={built.rounds}
                  back={{ href: `/?${params.toString()}`, label: 'Your session' }}
                  // Back goes to the session before you start it; Done goes to a

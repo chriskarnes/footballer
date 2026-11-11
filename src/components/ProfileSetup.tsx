@@ -98,44 +98,21 @@ export function ProfileSetup({ email, initial, photo }: {
       router.push(returning ? '/me' : '/plan');
       router.refresh();
     } catch {
-      setError('Could not save that just now. Your answers are still here — try again.');
+      setError('Couldn’t save. Try again.');
       setBusy(false);
     }
   }
 
   return (
     <div className="animate-pop">
-      {/* The kicker every other screen has. Removing the "Account ·
-          you@example.com" line took this screen's header with it — the address
-          belonged in a field, but the eyebrow above the title was doing a
-          separate job, which is telling you which screen you are on. */}
-      <p className="eyebrow mb-3">Profile</p>
-      <h1 className="h-page">{returning ? 'Your profile' : 'Let’s set you up'}</h1>
+      <h1 className="h-page">{returning ? 'My profile' : 'Let’s set you up'}</h1>
       {photo}
-
-      {/* No stats row. A 0 / 0m / 0 version of the populated screen reads as
-          failure rather than as a new start. */}
-      <div className="card-flat mt-6 p-5">
-        <div className="h-card">{returning ? 'What your sessions are built from' : 'Nothing here yet'}</div>
-        <p className="mt-1.5 text-[14px] leading-snug text-on-surface-variant">
-          {returning
-            ? 'Change any of it and the next session you build will follow. Each answer changes what you get — nothing here is asked for its own sake.'
-            : 'Four questions and I’ll build your first week. Each one changes what you get — nothing here is asked for its own sake.'}
-        </p>
-        <div className="progress mt-4">
-          <div style={{ width: `${(answered / 4) * 100}%` }} />
-        </div>
-        <p className="eyebrow mt-2" aria-live="polite">{answered} of 4 answered</p>
-      </div>
 
       {/* Name is required now the profile is about someone else, but a first
           name or nickname is all the app ever needs. A full legal name adds
           nothing to a drill plan and a great deal to the blast radius. */}
       <div className="mt-9">
-        <p className="eyebrow mb-0.5">What should I call you</p>
-        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
-          First name or a nickname — it&rsquo;s just what the app calls you.
-        </p>
+        <p className="h-sec mb-3">What’s your name?</p>
         <label className="text-field">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                  placeholder="e.g. Sam" autoComplete="off"
@@ -150,40 +127,28 @@ export function ProfileSetup({ email, initial, photo }: {
           disabled input is skipped by keyboard navigation and not read out,
           which would hide the answer from exactly the people who need it. */}
       <div className="mt-6">
-        <p className="eyebrow mb-0.5">Email</p>
-        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
-          What you sign in with. Not shown to anyone else.
-        </p>
+        <p className="h-sec mb-3">Email</p>
         <label className="text-field">
           <input type="email" value={email ?? ''} readOnly aria-label="Email"
-                 aria-describedby="email-locked" className="text-field-locked" />
+                 className="text-field-locked" />
         </label>
-        <p id="email-locked" className="mt-1.5 text-[12px] text-on-surface-variant">
-          Can&rsquo;t be changed here yet.
-        </p>
       </div>
 
       <div className="mt-9">
-        <p className="eyebrow mb-0.5">How old are you</p>
-        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
-          Sets how long a session runs and how hard it pushes you.
-        </p>
+        <p className="h-sec mb-3">How old are you?</p>
         <div className="flex flex-wrap gap-2">
           {AGE_BANDS.map(([v, l]) => (
             <Chip key={v} on={ageBand === v} onClick={() => setAgeBand(v)}>{l}</Chip>
           ))}
         </div>
         {/* At the question, not in the footer — this is where it becomes relevant. */}
-        <p className="mt-3 pl-0.5 text-[12.5px] leading-snug text-on-surface-variant">
-          Under 13? Grab a parent — they need to set this up with you.
+        <p className="mt-3 pl-0.5 text-[14px] font-medium leading-snug text-on-surface-variant">
+          Under 13? Get a parent to do this with you.
         </p>
       </div>
 
       <div className="mt-8">
-        <p className="eyebrow mb-0.5">Where do you play</p>
-        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
-          Picks which drills come up. Choose as many as apply.
-        </p>
+        <p className="h-sec mb-3">Where do you play?</p>
         <div className="flex flex-wrap gap-2">
           {POSITIONS.map((p) => (
             <Chip key={p} on={positions.includes(p)} onClick={() => togglePosition(p)}>{p}</Chip>
@@ -192,10 +157,7 @@ export function ProfileSetup({ email, initial, photo }: {
       </div>
 
       <div className="mt-8">
-        <p className="eyebrow mb-0.5">Dominant foot</p>
-        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
-          Sets how much weak-foot work gets built into your sessions.
-        </p>
+        <p className="h-sec mb-3">Which foot is your best?</p>
         {/* Same component as the Train mode switch, different semantics: nothing
             is revealed by choosing, so this is a radiogroup, not a tablist.
             Arrow keys move the choice, which is what the role promises. */}
@@ -221,10 +183,7 @@ export function ProfileSetup({ email, initial, photo }: {
           most needed to be a free choice were the two nobody was offered.
           Region rather than town, never device location, both skippable. */}
       <div className="mt-10 border-t border-outline-variant pt-5">
-        <p className="eyebrow mb-0.5">Optional</p>
-        <p className="mb-3.5 text-[12.5px] text-on-surface-variant">
-          Doesn&rsquo;t change your plan. Skip it and nothing is lost.
-        </p>
+        <p className="h-sec mb-3">Your team (you can skip this)</p>
         <label className="text-field">
           <span>Club</span>
           <input type="text" value={club} onChange={(e) => setClub(e.target.value)}
@@ -238,14 +197,11 @@ export function ProfileSetup({ email, initial, photo }: {
       </div>
 
       <button type="button" onClick={save} disabled={!complete || busy}
-              className="btn-primary mt-8 w-full">
-        {busy ? 'Saving…' : returning ? 'Save changes' : 'Build my first week'}
+              className="btn-primary btn-big mt-8 w-full">
+        {busy ? 'Saving…' : returning ? 'Save' : 'Done'}
       </button>
       {error && <p className="mt-3 text-[13px] font-medium text-error">{error}</p>}
 
-      <p className="mt-6 text-[12px] leading-relaxed text-on-surface-variant">
-        You can change or delete any of this later from your profile.
-      </p>
     </div>
   );
 }

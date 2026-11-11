@@ -33,14 +33,14 @@ export function TodayCard({
     <Link href={session ? `/session/${session.id}?from=train` : '/plan'}
           className="card pressable animate-pop mt-6 flex items-center gap-4 p-4">
       <div className="min-w-0 flex-1">
-        <p className="eyebrow">Today on {planName}</p>
+        <p className="text-[13.5px] font-bold text-on-surface-variant">Today</p>
         <div className="h-card mt-1.5">
           {session ? session.name : todayDone ? 'Done for today' : 'Rest day'}
         </div>
         <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
           {session
-            ? `${Math.round(session.total_minutes)} min · ${state.doneCount} of ${state.trainingCount} done this week`
-            : next?.s ? `Next up: ${next.day} — ${next.s.name}` : `${state.doneCount} of ${state.trainingCount} done this week`}
+            ? `${Math.round(session.total_minutes)} min`
+            : next?.s ? `Next: ${next.day}` : `${state.doneCount} of ${state.trainingCount} done this week`}
         </div>
       </div>
       {/* The whole card is the link; this is what it does, said as a button. */}

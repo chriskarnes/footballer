@@ -21,11 +21,11 @@ export function AccountSection({ email, version, canBrand, role }: {
 
   return (
     <section className="mt-9">
-      <p className="eyebrow mb-3">Account</p>
+      <h2 className="h-sec mb-3">Account</h2>
       <div className="card divide-y divide-outline-variant">
-        {email && (
-          <Row label="Signed in as"><span className="truncate">{email}</span></Row>
-        )}
+        <Link href="/me/profile" className="pressable block">
+          <Row label="My profile"><Chevron /></Row>
+        </Link>
         {installable && (
           <button type="button" onClick={askToInstall} className="pressable block w-full text-left">
             <Row label="Add to home screen">
@@ -38,7 +38,7 @@ export function AccountSection({ email, version, canBrand, role }: {
         )}
         {role === 'player' && (
           <Link href="/me/notes" className="pressable block">
-            <Row label="Notes from your trainer">
+            <Row label="Notes from my trainer">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
                    fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />
@@ -48,7 +48,7 @@ export function AccountSection({ email, version, canBrand, role }: {
         )}
         {(role === 'owner' || role === 'trainer') && (
           <Link href="/coach" className="pressable block">
-            <Row label="Your players">
+            <Row label="My players">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
                    fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />
@@ -67,18 +67,23 @@ export function AccountSection({ email, version, canBrand, role }: {
           </Link>
         )}
         {/* The whole row is the button, like the row above it. */}
-        <SignOut className="pressable flex min-h-[52px] w-full items-center px-4 text-left
-                            text-[14px] font-semibold text-on-surface" />
+        <SignOut className="pressable flex min-h-[56px] w-full items-center px-4 text-left
+                            text-[15px] font-bold text-on-surface" />
       </div>
-      <p className="mt-3 pl-1 text-[12px] text-on-surface-variant">Train.futbol {version}</p>
+      <p className="mt-3 pl-1 text-[12px] text-on-surface-variant">{email && `${email} · `}v{version}</p>
     </section>
   );
 }
 
+const Chevron = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
+       fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+);
+
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[52px] items-center justify-between gap-4 px-4">
-      <span className="shrink-0 text-[14px] font-semibold text-on-surface">{label}</span>
+    <div className="flex min-h-[56px] items-center justify-between gap-4 px-4">
+      <span className="shrink-0 text-[15px] font-bold text-on-surface">{label}</span>
       <span className="flex min-w-0 items-center text-[13px] text-on-surface-variant">{children}</span>
     </div>
   );

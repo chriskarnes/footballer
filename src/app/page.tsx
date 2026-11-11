@@ -38,10 +38,9 @@ export default async function TrainNowPage() {
 /** Train without a week from their trainer: the band, in the academy's colours. */
 function Bar() {
   return (
-    <BrandBand right="786 drills">
+    <BrandBand>
       <BandTag>Train</BandTag>
-      <BandTitle>Start training now</BandTitle>
-      <p className="mt-3 text-[15px] text-on-surface-brand-variant">Ask the coach for a session, or build it yourself.</p>
+      <BandTitle>Let&rsquo;s train</BandTitle>
     </BrandBand>
   );
 }

@@ -196,7 +196,6 @@ function Builder({
     return (
       <div key="week" className="animate-pop">
         <div className="mt-6"><BackButton onClick={back} label="Back" destination="your answers" /></div>
-        <p className="eyebrow mb-3">{editing ? `Rebuilding ${editing.name}` : 'Plan'}</p>
         <h1 className="h-hero">Your week</h1>
 
         {/* The week's headline numbers and its actions, on one card — the
@@ -268,11 +267,7 @@ function Builder({
 
   return (
     <div key="questions" className="animate-pop">
-      <p className="eyebrow mb-3">{editing ? `Rebuilding ${editing.name}` : 'Plan'}</p>
-      <h1 className="h-hero">Weekly Schedule</h1>
-      <p className="mt-3.5 text-[15px] leading-relaxed text-on-surface-variant">
-        A repeating weekly training routine built just for you.
-      </p>
+      <h1 className="h-hero">{editing ? `Change ${editing.name}` : 'Make my week'}</h1>
 
       <div className="mt-8">
       {/* ---- what we already knew ---- */}

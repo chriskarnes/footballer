@@ -1259,3 +1259,12 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   box-shadow: 0 0 0 0 rgba(200,240,60,.0); }
 .btn-lime:hover { transform: translateY(-1px); box-shadow: 0 4px 14px -6px rgba(200,240,60,.45); }
 .btn-lime:disabled { opacity: .6; cursor: default; transform: none; box-shadow: none; }
+
+/* ==========================================================================
+   PLAYER PAGES — set for a ten-year-old.
+   One plain heading per section instead of a small upper-case label, and a
+   bigger button for the one thing a screen is for.
+   ========================================================================== */
+.h-sec { margin: 0; font-family: var(--md-ref-typeface-brand); font-size: 19px; font-weight: 800;
+  letter-spacing: var(--app-track-tighter); line-height: 1.2; color: var(--md-sys-color-on-surface); }
+.btn-big { min-height: 60px; font-size: 18px; font-weight: 800; }

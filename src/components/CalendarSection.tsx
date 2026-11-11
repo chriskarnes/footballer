@@ -58,7 +58,7 @@ export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
   if (!feed) {
     return (
       <section className="mt-9">
-        <p className="eyebrow mb-3">Calendar</p>
+        <h2 className="h-sec mb-3">Calendar</h2>
         <div className="card p-5">
           <div className="h-card">Put your training in your calendar</div>
           <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
@@ -82,7 +82,7 @@ export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
 
   return (
     <section className="mt-9">
-      <p className="eyebrow mb-3">Calendar</p>
+      <h2 className="h-sec mb-3">Calendar</h2>
       <div className="card p-5">
         <div className="h-card">Subscribe</div>
         <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
@@ -100,13 +100,13 @@ export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
           {copied ? 'Copied' : 'Copy link (Outlook, others)'}
         </button>
 
-        <p className="eyebrow mb-2.5 mt-6">Include</p>
+        <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Include</p>
         <div className="flex flex-wrap gap-2">
           <Chip on={feed.include_plan} onClick={() => update({ include_plan: !feed.include_plan })}>Weekly plan</Chip>
           <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed &amp; Stamina</Chip>
         </div>
 
-        <p className="eyebrow mb-2.5 mt-6">Show sessions</p>
+        <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Show sessions</p>
         <div className="segmented" role="radiogroup" aria-label="Show sessions">
           <button type="button" role="radio" aria-checked={!timed} onClick={() => update({ start_time: null })}
                   className={`segment pressable ${!timed ? 'segment-on' : ''}`}>

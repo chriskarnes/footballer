@@ -30,7 +30,6 @@ export default async function SpeedSessionPage({
   return (
     <Runner
       title={s.name}
-      subtitle={`${phase.name} · block ${s.block} · ${KIND_LABELS[s.kind]}`}
       drills={sessionExercises(s)}
       sessionRef={s.id}
       source="speed"
