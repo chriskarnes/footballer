@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { setMembership } from '@/app/coach/content-actions';
 
 /** One player's row in a group's roster: tap to put them in or take them out. */
@@ -9,12 +10,15 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
   const [on, setOn] = useState(initial);
   const [busy, start] = useTransition();
   const [err, setErr] = useState(false);
+  const router = useRouter();
   return (
     <button type="button" role="switch" aria-checked={on} disabled={busy}
             onClick={() => start(async () => {
               const next = !on; setOn(next); setErr(false);
               const r = await setMembership(groupId, userId, next);
               if (!r.ok) { setOn(!next); setErr(true); }
+              // The list of who's in it, above, is the server's: bring it up to date.
+              else router.refresh();
             })}
             className="flex w-full items-center gap-3 px-4 py-3 text-left">
       <span className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${on ? 'border-on-surface bg-on-surface' : 'border-outline'}`}>

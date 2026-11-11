@@ -22,9 +22,7 @@ export default async function ContentPage() {
       {!c.ready && <Pending />}
 
       <ViewTabs tabs={LIBRARY_VIEWS} on="/coach/content" />
-      <PageHead title="Programs" action={<Link href="/coach/programs/new" className="btn-primary btn-sm pressable">New program</Link>}>
-        Runs of weeks: what your players do at home between sessions.
-      </PageHead>
+      <PageHead title="Programs" action={<Link href="/coach/programs/new" className="btn-primary btn-sm pressable">New program</Link>} />
       <section className="mt-6">
         {c.programs.length ? (
           <ul className="card divide-y divide-outline-variant">

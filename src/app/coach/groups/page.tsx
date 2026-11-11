@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { staffOnly } from '@/components/coach/Gate';
 import { Pending } from '@/components/coach/Pending';
+import { StatusDot } from '@/components/coach/WeekDots';
 import { PageHead } from '@/components/coach/PageHead';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
@@ -28,10 +29,8 @@ export default async function GroupsPage() {
     <div className="animate-pop">
       {!c.ready && <Pending />}
 
-      <PageHead title="Groups" eyebrow={`${active.length} ${active.length === 1 ? 'group' : 'groups'}`}
-                action={<Link href="/coach/groups/new" className="btn-primary btn-sm pressable">New group</Link>}>
-        A label for players you train together. Each group brings its program&rsquo;s week with it.
-      </PageHead>
+      <PageHead title="Groups"
+                action={<Link href="/coach/groups/new" className="btn-primary btn-sm pressable">New group</Link>} />
       <div className="mt-6" />
 
       {active.length ? (
@@ -52,7 +51,12 @@ export default async function GroupsPage() {
                   <p className="mt-1 text-[13px] text-on-surface-variant">
                     {[when, program ? (n ? `${program.name} · Week ${n} of ${program.weeks}` : `${program.name} · ${g.starts_on && g.starts_on > today ? 'not started' : 'finished'}`) : 'No program'].filter(Boolean).join(' · ')}
                   </p>
-                  {!!behind && <p className="mt-1 text-[13px] font-semibold text-on-surface">{behind} behind this week</p>}
+                  {!!members.length && (
+                    <p className="mt-2.5 flex items-center gap-2 text-[13px] font-semibold text-on-surface">
+                      <StatusDot status={behind ? 'warn' : 'good'} />
+                      {behind ? `${behind} behind this week` : 'All on track'}
+                    </p>
+                  )}
                 </Link>
               </li>
             );
@@ -68,9 +72,9 @@ export default async function GroupsPage() {
         </div>
       )}
 
-      {!!players.length && (
+      {!!players.length && !!solo && !!active.length && (
         <p className="mt-4 pl-1 text-[13px] text-on-surface-variant">
-          {solo ? `${solo} ${solo === 1 ? 'player isn’t' : 'players aren’t'} in a group. Give them a program from their page.` : 'Every player is in at least one group.'}
+          {solo ? `${solo} ${solo === 1 ? 'player isn’t' : 'players aren’t'} in a group yet.` : ''}
         </p>
       )}
 

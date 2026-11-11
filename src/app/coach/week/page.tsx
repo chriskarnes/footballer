@@ -36,9 +36,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
   return (
     <div className="animate-pop">
       <ViewTabs tabs={PLAYER_VIEWS} on="/coach/week" />
-      <PageHead title="This week" eyebrow={inGroup ? inGroup.name : 'Everyone'}>
-        Each player&rsquo;s sessions, on the days that fit their soccer. They set their club and game days; you don&rsquo;t keep this up to date.
-      </PageHead>
+      <PageHead title="This week">Sessions sit on the days that fit each player&rsquo;s soccer.</PageHead>
 
       {!!groups.length && (
         <nav className="scroll-x -mx-5 mt-6 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">

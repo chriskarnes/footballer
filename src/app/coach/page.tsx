@@ -53,12 +53,20 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   return (
     <div className="animate-pop">
       <ViewTabs tabs={PLAYER_VIEWS} on="/coach" />
-      <PageHead title={headline} eyebrow={inGroup ? `${inGroup.name} · this week` : 'This week'}
-                action={!!players.length && (
-                  <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost btn-sm pressable">
-                    {inGroup ? `Note to ${inGroup.name}` : 'Note to everyone'}
-                  </Link>
-                )} />
+      <PageHead title={headline}
+                action={<>
+                  {!!players.length && (
+                    <Link href={inGroup ? `/coach/send?group=${inGroup.id}` : '/coach/send'} className="btn-ghost btn-sm pressable">
+                      {inGroup ? `Note to ${inGroup.name}` : 'Note to everyone'}
+                    </Link>
+                  )}
+                  {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable">Invite players</Link>}
+                </>}>
+        {!!players.length && <>
+          This week: <b className="font-semibold text-on-surface">{trained} of {players.length}</b> trained
+          {' · '}{sessions} {sessions === 1 ? 'session' : 'sessions'} · {minutes} min
+        </>}
+      </PageHead>
 
       {sent && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
@@ -68,23 +76,14 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
       {!!asking?.length && <JoinRequests requests={(asking as Omit<JoinRequest, 'when'>[]).map((r) => ({ ...r, when: ago(r.created_at) }))} />}
 
-      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {!!groups.length && (
-          <nav className="scroll-x -mx-5 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">
-            <Link href="/coach" className={`chip shrink-0 ${!inGroup ? 'chip-on' : ''}`}>Everyone</Link>
-            {groups.map((g) => (
-              <Link key={g.id} href={`/coach?group=${g.id}`} className={`chip shrink-0 ${inGroup?.id === g.id ? 'chip-on' : ''}`}>{g.name}</Link>
-            ))}
-          </nav>
-        )}
-        {!!players.length && (
-          <div className="grid grid-cols-3 gap-2.5 lg:flex lg:gap-6">
-            <Stat value={`${trained}/${players.length}`} label="trained" />
-            <Stat value={sessions} label={sessions === 1 ? 'session' : 'sessions'} />
-            <Stat value={minutes} label="minutes" />
-          </div>
-        )}
-      </div>
+      {!!groups.length && (
+        <nav className="scroll-x -mx-5 mt-6 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">
+          <Link href="/coach" className={`chip shrink-0 ${!inGroup ? 'chip-on' : ''}`}>Everyone</Link>
+          {groups.map((g) => (
+            <Link key={g.id} href={`/coach?group=${g.id}`} className={`chip shrink-0 ${inGroup?.id === g.id ? 'chip-on' : ''}`}>{g.name}</Link>
+          ))}
+        </nav>
+      )}
 
       {error && <p className="mt-4 text-[13px] text-on-surface-variant">Couldn&rsquo;t load players: {error}</p>}
 
@@ -155,31 +154,24 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         </div>
       )}
 
-      <section className="mt-10 lg:max-w-xl">
-        <p className="eyebrow mb-3">Add players</p>
-        <div className="card p-5">
-          <div className="h-card">Invite link</div>
-          <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
-            Text it to a player or a parent. They sign in with their email and appear here.
-          </p>
-          {invite?.code
-            ? <InviteLink path={`/join/${invite.code}`} role="player" canRotate={false} />
-            : <p className="mt-3 text-[13px]">No invite link yet.</p>}
-        </div>
-      </section>
+      {/* The invite link leads only while there's nobody to list; after that it lives under Academy. */}
+      {!all.length && (
+        <section className="mt-6 lg:max-w-xl">
+          <div className="card p-5">
+            <div className="h-card">Invite your players</div>
+            <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+              Text this link to a player or a parent. They sign in with their email and appear here.
+            </p>
+            {invite?.code
+              ? <InviteLink path={`/join/${invite.code}`} role="player" canRotate={false} />
+              : <p className="mt-3 text-[13px]">No invite link yet.</p>}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
 function Th({ children }: { children: React.ReactNode }) {
   return <th scope="col" className="px-5 py-3 font-semibold">{children}</th>;
-}
-
-function Stat({ value, label }: { value: React.ReactNode; label: string }) {
-  return (
-    <div className="card-flat px-3 py-3 text-center lg:bg-transparent lg:p-0 lg:text-left lg:shadow-none">
-      <div className="font-brand text-[22px] font-extrabold leading-none text-on-surface">{value}</div>
-      <div className="mt-1 text-[11.5px] font-semibold text-on-surface-variant">{label}</div>
-    </div>
-  );
 }

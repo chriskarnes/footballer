@@ -50,7 +50,7 @@ export default async function TeamPage() {
         </ul>
       </section>
 
-      <section className="mt-9">
+      <section id="invite" className="mt-9 scroll-mt-6">
         <p className="eyebrow mb-3">Invite links</p>
         <div className="space-y-3">
           <div className="card p-5">
