@@ -43,7 +43,7 @@ export default function PlayersPage() {
             Each drill has a video, the reps, and a clock. Most sessions take 15 to 30 minutes.
           </Step>
           <Step n="3" title="Your trainer sees it">
-            Tick it off and they know. They&rsquo;ll send you a note when you&rsquo;re flying, or when the week slips.
+            Tick it off and they know. They can send you a note when you&rsquo;re flying, or when the week slips.
           </Step>
         </ol>
       </section>
@@ -52,7 +52,7 @@ export default function PlayersPage() {
         <h2 className="h-card text-on-surface">Don&rsquo;t have a trainer here yet?</h2>
         <p className="mt-2 max-w-[36rem] text-[15px] leading-relaxed text-on-surface-variant">
           We&rsquo;re just getting started, so there aren&rsquo;t many trainers to browse yet. If you train with someone,
-          send them this page. If you are someone&rsquo;s trainer, <Link href="/trainers" className="font-semibold text-on-surface underline underline-offset-4">start here</Link>.
+          send them this page. If you&rsquo;re a trainer, <Link href="/trainers" className="font-semibold text-on-surface underline underline-offset-4">start here</Link>.
         </p>
       </section>
     </>

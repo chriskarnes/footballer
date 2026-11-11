@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { libraryAllowed } from '@/lib/branding-server';
+import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { AcademyLibrary } from '@/components/AcademyLibrary';
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';

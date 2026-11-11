@@ -41,21 +41,21 @@ export default function SiteHome() {
       </PhotoBand>
 
       <section className="mt-24">
-        <SectionHead eyebrow="How it works" title="One trainer, their players, one week at a time." />
+        <SectionHead eyebrow="How it works" title="Two or three short sessions a week, and you see who did them." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
           <Step n="1" title="The trainer sets the week">
             Two or three short sessions: ball mastery, first touch, finishing. Whatever they&rsquo;re working on together.
           </Step>
           <Step n="2" title="Players train at home">
-            Each session is a list of drills with a timer and a video. Fifteen to thirty minutes, most days.
+            Each session is a list of drills with a timer and a video. It takes 15 to 30 minutes.
           </Step>
           <Step n="3" title="The trainer sees it">
-            Finished sessions show up on the trainer&rsquo;s side. If a player&rsquo;s week slips, they get a nudge.
+            Finished sessions show up on the trainer&rsquo;s side. If a player falls behind, the trainer can nudge them in one tap.
           </Step>
         </ol>
       </section>
 
-      <DarkCta title="Set next week tonight." href="/start" cta="Get started">
+      <DarkCta title="Set up your first week with us." href="/start" cta="Get started">
         Tell us how you train. We&rsquo;ll set up your page and your first sessions with you.
         Already training with someone? <Link href="/players" className="font-semibold text-white underline underline-offset-4">Find your trainer</Link>.
       </DarkCta>

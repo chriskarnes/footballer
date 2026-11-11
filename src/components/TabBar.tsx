@@ -20,10 +20,15 @@ const TABS = [
 // app. A clipboard.
 const COACH = { href: '/coach', label: 'Coach', d: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M9 12h6M9 16h4' };
 
-export function TabBar({ academyId }: { academyId: string | null }) {
+export function TabBar({ academyId, library = true, plan = true }: {
+  academyId: string | null;
+  /** Whether this viewer gets Library and Plan: their trainer decides for players. */
+  library?: boolean; plan?: boolean;
+}) {
   const path = usePathname();
   const role = useAcademyRole(academyId, path.startsWith('/coach'));
-  const tabs = role === 'owner' || role === 'trainer' ? [COACH, ...TABS] : TABS;
+  const mine = TABS.filter((t) => (t.href !== '/library' || library) && (t.href !== '/plan' || plan));
+  const tabs = role === 'owner' || role === 'trainer' ? [COACH, ...mine] : mine;
   // An invite is one decision; the app's tabs are for after it.
   if (path.startsWith('/join') || path === '/request') return null;
   return (

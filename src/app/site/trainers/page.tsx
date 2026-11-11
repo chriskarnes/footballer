@@ -38,8 +38,8 @@ export default function TrainersPage() {
         <SectionHead eyebrow="How it fits together" title="Your training, on their phones." />
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <Piece title="Your page" tag="Your name on it">
-            One home for everyone you train, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
-            Your name and colours on it, not ours, and not a club&rsquo;s.
+            One page for everyone you train, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
+            It carries your name and colours, not ours or a club&rsquo;s.
           </Piece>
           <Piece title="Your players" tag="From any team">
             You send one link. Players (or their parents) open it, sign in with an email, and they&rsquo;re on your list,
@@ -47,7 +47,7 @@ export default function TrainersPage() {
           </Piece>
           <Piece title="Groups and 1-to-1s" tag="However you train">
             Run small groups at a set time, see players one to one, or both. A player can be in more than one group,
-            and each still gets a week that feels like their own.
+            and each player still gets their own week.
           </Piece>
           <Piece title="Their week" tag="The homework">
             Two or three short sessions a week: drills, reps and a timer. They tick each one off when it&rsquo;s done.
@@ -62,10 +62,10 @@ export default function TrainersPage() {
             Each player&rsquo;s week in one line: on track, one behind, or not seen since Tuesday. The ones who need a word are at the top.
           </Step>
           <Step n="2" title="Send a nudge">
-            One tap writes it for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). Or a note to a whole group.
+            One tap writes it for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). Or send a note to a whole group.
           </Step>
           <Step n="3" title="No group chat">
-            Notes go one way, trainer to player. Nobody replies, nothing to moderate, and every note is kept.
+            Notes go one way, trainer to player. Nobody replies, so there&rsquo;s nothing to moderate. Every note is kept.
           </Step>
         </ol>
       </section>
@@ -78,16 +78,16 @@ export default function TrainersPage() {
           <PriceCalc />
           <ul className="mt-5 space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
             <li>No setup fee and no contract. Players you remove stop counting the next month.</li>
-            <li>Players pay by card. The money goes to your bank account, not through ours.</li>
+            <li>Players pay by card. Their money goes straight to your bank account, not into ours first.</li>
           </ul>
         </div>
       </section>
 
       <section className="mt-24">
-        <SectionHead eyebrow="Questions" title="Before you ask." />
+        <SectionHead eyebrow="Questions" title="What you might ask first." />
         <dl className="mt-8 max-w-[44rem] divide-y divide-outline-variant border-y border-outline-variant">
           <Faq q="I only have a handful of drills. Is that enough?">
-            Yes. Most trainers start with three or four sessions they already run, and add as they go. We set up your first sessions with you.
+            Yes. Three or four sessions you already run is enough to start, and you can add more as you go. We set up your first sessions with you.
           </Faq>
           <Faq q="My drills are already on YouTube.">
             Good. Paste the link and it plays inside the session. If you&rsquo;d rather film new ones, a phone held sideways is plenty.
@@ -104,8 +104,8 @@ export default function TrainersPage() {
         </dl>
       </section>
 
-      <DarkCta title="Ready when you are." href="/start" cta="Get started">
-        Tell us how you train. We&rsquo;ll set up your page and your first sessions with you, then you send your players the link.
+      <DarkCta title="Tell us how you train." href="/start" cta="Get started">
+        We&rsquo;ll set up your page and your first sessions with you. Then you send your players the link.
       </DarkCta>
     </>
   );

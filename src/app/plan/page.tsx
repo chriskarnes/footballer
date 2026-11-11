@@ -1,5 +1,5 @@
 import { getExercises, getSessions } from '@/lib/library';
-import { libraryAllowed } from '@/lib/branding-server';
+import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { serverClient } from '@/lib/supabase/server';
 import { derivePrefill, type HistoryRow, type ProfileRow } from '@/lib/plan-builder';

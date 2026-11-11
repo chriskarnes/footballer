@@ -10,6 +10,7 @@ import { InstallNudge } from '@/components/InstallNudge';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { PendingSaves } from '@/components/PendingSaves';
 import { getAcademy } from '@/lib/branding-server';
+import { libraryFor } from '@/lib/library-gate';
 import { ROOT_DOMAIN } from '@/lib/tenant';
 import { brandCss } from '@/lib/brand-colors';
 import { headers } from 'next/headers';
@@ -115,6 +116,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </html>
     );
   }
+  const lib = await libraryFor().catch(() => ({ drills: true, own: false }));
   return (
     <html lang="en">
       <body className="pad-nav min-h-dvh antialiased">
@@ -123,7 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             at equal specificity. Values are validated #RRGGBB, never raw input. */}
         {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
         <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">{children}</main>
-        <TabBar academyId={academy?.id ?? null} />
+        <TabBar academyId={academy?.id ?? null} library={lib.drills || lib.own} plan={lib.drills} />
         <InstallNudge />
         <ServiceWorker />
         <PendingSaves />

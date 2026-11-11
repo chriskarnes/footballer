@@ -293,8 +293,9 @@ function Train({
     <div key="inputs" className="animate-pop">
       {/* No "Train now" kicker: the headline says it and the tab you arrived on
           is called Train. */}
-      <section className="hero">
-        <h1 className="h-hero">Start training now</h1>
+      {/* The page's title is in the band above (Train): this is the section. */}
+      <section className="mt-8">
+        <h2 className="h-page">Build a session</h2>
       </section>
 
       {planCard}

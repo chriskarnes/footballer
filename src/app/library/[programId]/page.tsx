@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { libraryAllowed } from '@/lib/branding-server';
+import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { getPrograms, getSessions } from '@/lib/library';
 import { formatTouches } from '@/lib/session-builder';

@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { libraryAllowed } from '@/lib/branding-server';
+import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { getExercises, getPrograms, getSessions } from '@/lib/library';
 import { Runner } from '@/components/Runner';

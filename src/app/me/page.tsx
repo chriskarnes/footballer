@@ -1,3 +1,4 @@
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import Link from 'next/link';
 import { serverClient } from '@/lib/supabase/server';
 import { SignIn } from '@/components/SignIn';
@@ -90,11 +91,13 @@ export default async function MePage() {
   if (!user) {
     return (
       <div>
-        <p className="eyebrow mb-3">Your training</p>
-        <h1 className="h-hero">Keep every<br />session</h1>
-        <p className="mt-3.5 text-[15px] leading-relaxed text-on-surface-variant">
-          Sign in to build a history, repeat a session you liked, and save a weekly plan.
-        </p>
+        <BrandBand>
+          <BandTag>Me</BandTag>
+          <BandTitle>Keep every session</BandTitle>
+          <p className="mt-3 text-[15px] leading-relaxed text-on-surface-brand-variant">
+            Sign in to build a history, repeat a session you liked, and save a weekly plan.
+          </p>
+        </BrandBand>
         <div className="mt-5"><SignIn /></div>
         <p className="mt-4 text-xs text-on-surface-variant">
           You don&rsquo;t need an account to train — the coach works signed out.
@@ -125,8 +128,11 @@ export default async function MePage() {
 
   return (
     <div>
+      <BrandBand>
+        <BandTag>Me</BandTag>
+        <BandTitle>Your training</BandTitle>
+      </BrandBand>
       <NoteBanner />
-      <p className="eyebrow mb-3">Your training</p>
       <ProfileCard profile={profile} email={user.email} />
 
       <ThisWeek finished={finished.map(toFinished)} allTime={allTime}

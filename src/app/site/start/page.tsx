@@ -22,7 +22,7 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
             Tell us how you <Lime>train.</Lime>
           </h1>
           <p className="mt-6 max-w-[30rem] text-[17px] leading-relaxed text-site-mint">
-            We set every page up with its trainer, so no player opens it to find nothing there. Here&rsquo;s what happens:
+            We set every page up with its trainer, so it has sessions in it the day your players open it. Here&rsquo;s what happens:
           </p>
           <ol className="mt-6 max-w-[30rem] space-y-4 text-[15px] leading-relaxed text-site-mint">
             <li><b className="text-white">A short call.</b> What you train, who, and how often you see them.</li>

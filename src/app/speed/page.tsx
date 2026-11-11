@@ -1,3 +1,4 @@
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import Link from 'next/link';
 import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS, SOURCES } from '@/lib/speed';
 import { serverClient } from '@/lib/supabase/server';
@@ -28,12 +29,14 @@ export default async function SpeedPage() {
 
   return (
     <div className="animate-pop">
-      <p className="eyebrow mb-3">Speed</p>
-      <h1 className="h-hero">Speed &amp; Stamina</h1>
-      <p className="mt-3.5 text-[15px] text-on-surface-variant">
-        A 12-month program for 13–16 year olds. Four phases, each three 4-week blocks,
-        each block ending in a test day. {SPEED_SESSIONS.length} sessions.
-      </p>
+      <BrandBand>
+        <BandTag>Speed</BandTag>
+        <BandTitle>Speed &amp; Stamina</BandTitle>
+        <p className="mt-3 text-[15px] text-on-surface-brand-variant">
+          A 12-month program for 13–16 year olds. Four phases, each three 4-week blocks,
+          each block ending in a test day. {SPEED_SESSIONS.length} sessions.
+        </p>
+      </BrandBand>
 
       <SpeedYear completions={completions} />
 

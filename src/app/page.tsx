@@ -1,8 +1,8 @@
 import { getExercises } from '@/lib/library';
-import { libraryAllowed } from '@/lib/branding-server';
+import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { Coach } from '@/components/Coach';
-import { Brand } from '@/components/Brand';
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { TodayOnPlan } from '@/components/TodayOnPlan';
 import { Suspense } from 'react';
 import { NoteBanner } from '@/components/NoteBanner';
@@ -35,12 +35,14 @@ export default async function TrainNowPage() {
   );
 }
 
+/** Train without a week from their trainer: the band, in the academy's colours. */
 function Bar() {
   return (
-    <header className="app-bar">
-      <Brand small />
-      <span className="text-[12px] font-semibold text-on-surface-variant">786 drills</span>
-    </header>
+    <BrandBand right="786 drills">
+      <BandTag>Train</BandTag>
+      <BandTitle>Start training now</BandTitle>
+      <p className="mt-3 text-[15px] text-on-surface-brand-variant">Ask the coach for a session, or build it yourself.</p>
+    </BrandBand>
   );
 }
 
