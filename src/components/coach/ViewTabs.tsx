@@ -16,4 +16,4 @@ export function ViewTabs({ tabs, on }: { tabs: { href: string; label: string }[]
 }
 
 export const PLAYER_VIEWS = [{ href: '/coach', label: 'List' }, { href: '/coach/week', label: 'Calendar' }];
-export const LIBRARY_VIEWS = [{ href: '/coach/content', label: 'Programs' }, { href: '/coach/drills', label: 'Drills' }];
+export const LIBRARY_VIEWS = [{ href: '/coach/content', label: 'Programs' }, { href: '/coach/sessions', label: 'Sessions' }, { href: '/coach/drills', label: 'Drills' }];

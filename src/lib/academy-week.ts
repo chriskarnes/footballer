@@ -11,7 +11,11 @@
 import { addDays, localDate, mondayOf, weekdayOf } from './progress';
 
 export type ProgramRow = { id: string; name: string; weeks: number };
-export type SessionRow = { id: string; program_id: string; week: number; position: number; name: string; drill_ids: string[] };
+export type SessionRow = { id: string; program_id: string; week: number; position: number; name: string; drill_ids: string[];
+  /** The library session this is a use of (0017); null for one that stands alone. */
+  library_id?: string | null };
+/** A session in the trainer's library: built once, placed in any program week. */
+export type LibrarySession = { id: string; name: string; drill_ids: string[] };
 export type DrillRow = { id: string; name: string; amount: string | null; minutes: number; focus: string | null; focus_areas?: string[]; video_url: string | null; how: string | null;
   /** The next drill, which takes over once this one is levelled all the way up (0012). */
   harder_id?: string | null };

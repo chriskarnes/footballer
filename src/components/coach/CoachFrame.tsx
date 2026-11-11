@@ -17,14 +17,14 @@ const PLACES = [
     d: 'M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
   { href: '/coach/groups',  label: 'Groups',   match: ['/coach/groups'],
     d: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0' },
-  { href: '/coach/content', label: 'Library',  match: ['/coach/content', '/coach/programs', '/coach/drills'],
+  { href: '/coach/content', label: 'Library',  match: ['/coach/content', '/coach/programs', '/coach/sessions', '/coach/drills'],
     d: 'M4 5h16v15H4zM16 3v4M8 3v4M4 10h16M8 14h3M8 17h6' },
   { href: '/coach/team',    label: 'Academy',  match: ['/coach/team'],
     d: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M9 12h6M9 16h4' },
 ] as const;
 
 // Pages that use the width: tables and two-column views.
-const WIDE = [/^\/coach$/, /^\/coach\/week$/, /^\/coach\/groups$/, /^\/coach\/content$/, /^\/coach\/drills$/, /^\/coach\/players\/[^/]+$/];
+const WIDE = [/^\/coach$/, /^\/coach\/week$/, /^\/coach\/groups$/, /^\/coach\/content$/, /^\/coach\/drills$/, /^\/coach\/sessions$/, /^\/coach\/players\/[^/]+$/];
 
 function isOn(path: string, match: readonly string[]) {
   return match.some((m) => m === '/coach' ? path === '/coach' : path === m || path.startsWith(`${m}/`));

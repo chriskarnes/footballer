@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
-import { saveSession, deleteSession } from '@/app/coach/content-actions';
+import { saveSession, deleteSession, saveLibrarySession, deleteLibrarySession } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import type { DrillRow } from '@/lib/academy-week';
 import { Field, FormError } from './Field';
@@ -13,10 +13,23 @@ import { DrillForm } from './DrillForm';
  * A drill that doesn't exist yet is written right here: the form opens in
  * place of the drill list, and saving puts the new drill at the end of the
  * session. Nothing typed so far is lost, because the page never changes.
+ *
+ * `target` is where the session lives, which decides what Save does:
+ *   library  a session in the trainer's library, from the Sessions tab.
+ *   placed   a session in a program week. With a library session behind it,
+ *            Save changes it everywhere it's used; when that's more than this
+ *            one place there is a second button to save it as a new session
+ *            for this week alone.
+ *   legacy   a program week before migration 0017: the session is the week's own.
  */
-export function SessionEditor({ programId, week, session, drills: given }: {
-  programId: string; week: number;
-  session?: { id: string; name: string; drill_ids: string[] };
+export type SessionTarget =
+  | { kind: 'library'; id?: string; usedIn: string[] }
+  | { kind: 'placed'; programId: string; week: number; placementId?: string; libraryId?: string | null; alsoIn: string[] }
+  | { kind: 'legacy'; programId: string; week: number; id?: string };
+
+export function SessionEditor({ target, session, drills: given }: {
+  target: SessionTarget;
+  session?: { name: string; drill_ids: string[] };
   drills: DrillRow[];
 }) {
   // Drills written here, until the page's own list catches up.
@@ -29,7 +42,6 @@ export function SessionEditor({ programId, week, session, drills: given }: {
   const [q, setQ] = useState('');
   const [err, setErr] = useState('');
   const [busy, start] = useTransition();
-  const [confirm, setConfirm] = useState(false);
   const byId = useMemo(() => new Map(drills.map((d) => [d.id, d])), [drills]);
   const minutes = ids.reduce((a, id) => a + (byId.get(id)?.minutes ?? 0), 0);
   const shown = drills.filter((d) => !q || d.name.toLowerCase().includes(q.toLowerCase()));
@@ -108,23 +120,101 @@ export function SessionEditor({ programId, week, session, drills: given }: {
       </section>
 
       <FormError error={err} />
-      <button type="button" disabled={busy} className="btn-primary pressable w-full"
-              onClick={() => start(async () => {
-                const r = await saveSession({ id: session?.id, programId, week, name, drillIds: ids });
-                if (r && !r.ok) setErr(r.error);
-              })}>
-        {busy ? 'Saving…' : 'Save session'}
-      </button>
-      {session && (
-        <>
-          <button type="button" onClick={() => setConfirm(true)}
-                  className="w-full text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">Delete this session</button>
-          <ConfirmSheet open={confirm} title="Delete this session?" confirmLabel="Delete"
-            body={`It comes out of week ${week}. The drills stay.`}
-            onCancel={() => setConfirm(false)}
-            onConfirm={async () => { await deleteSession(session.id); window.location.href = `/coach/programs/${programId}#week-${week}`; }} />
-        </>
-      )}
+      {(() => {
+        const run = (fn: () => Promise<{ ok: boolean; error?: string } | void>) => start(async () => {
+          setErr('');
+          const r = await fn();
+          if (r && !r.ok) setErr(r.error ?? 'Couldn’t save.');
+        });
+        const body = { name, drillIds: ids };
+        if (target.kind === 'legacy') {
+          const { programId, week, id } = target;
+          return (
+            <>
+              <button type="button" disabled={busy} className="btn-primary pressable w-full"
+                      onClick={() => run(() => saveSession({ id, programId, week, ...body }))}>
+                {busy ? 'Saving…' : 'Save session'}
+              </button>
+              {id && <Remove label="Delete this session" title="Delete this session?" confirm="Delete"
+                             body={`It comes out of week ${week}. The drills stay.`}
+                             run={() => deleteSession(id)} then={`/coach/programs/${programId}#week-${week}`} />}
+            </>
+          );
+        }
+        if (target.kind === 'library') {
+          const { id, usedIn } = target;
+          return (
+            <>
+              {!!usedIn.length && (
+                <p className="text-[13px] leading-snug text-on-surface-variant">
+                  Used in <b className="font-semibold text-on-surface">{usedIn.join(', ')}</b>. Saving changes it there too.
+                </p>
+              )}
+              <button type="button" disabled={busy} className="btn-primary pressable w-full"
+                      onClick={() => run(() => saveLibrarySession({ libraryId: id, ...body, back: '/coach/sessions' }))}>
+                {busy ? 'Saving…' : 'Save session'}
+              </button>
+              {id && (usedIn.length
+                ? <p className="text-center text-[13px] text-on-surface-variant">To delete it, take it out of those weeks first.</p>
+                : <Remove label="Delete this session" title="Delete this session?" confirm="Delete"
+                          body="It isn’t in any program. The drills stay."
+                          run={() => deleteLibrarySession(id)} then="/coach/sessions" />)}
+            </>
+          );
+        }
+        const { programId, week, placementId, libraryId, alsoIn } = target;
+        const back = `/coach/programs/${programId}#week-${week}`;
+        const shared = !!libraryId && alsoIn.length > 0;
+        return (
+          <>
+            {shared && (
+              <p className="text-[13px] leading-snug text-on-surface-variant">
+                Also used in <b className="font-semibold text-on-surface">{alsoIn.join(', ')}</b>.
+              </p>
+            )}
+            <button type="button" disabled={busy} className="btn-primary pressable w-full"
+                    onClick={() => run(() => saveLibrarySession(
+                      !placementId ? { ...body, place: { programId, week }, back }
+                        : libraryId ? { libraryId, ...body, back }
+                        : { relink: placementId, ...body, back }))}>
+              {busy ? 'Saving…' : shared ? `Save everywhere it’s used` : 'Save session'}
+            </button>
+            {shared && placementId && (
+              <button type="button" disabled={busy} className="btn-ghost pressable w-full"
+                      onClick={() => run(() => saveLibrarySession({ relink: placementId, ...body, back }))}>
+                Save as a new session, for week {week} only
+              </button>
+            )}
+            {placementId && <Remove label={`Take it out of week ${week}`} title={`Take it out of week ${week}?`} confirm="Take out"
+                                    body="It stays in your sessions, and anywhere else it’s used."
+                                    run={() => deleteSession(placementId)} then={back} />}
+          </>
+        );
+      })()}
     </div>
+  );
+}
+
+/** The quiet way out at the bottom of the editor, behind a second tap. */
+function Remove({ label, title, body, confirm, run, then }: {
+  label: string; title: string; body: string; confirm: string;
+  run: () => Promise<{ ok: boolean; error?: string }>; then: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}
+              className="w-full text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">{label}</button>
+      {err && <p role="alert" className="text-center text-[13px] font-semibold text-on-surface">{err}</p>}
+      <ConfirmSheet open={open} busy={busy} title={title} confirmLabel={confirm} body={body}
+        onCancel={() => setOpen(false)}
+        onConfirm={async () => {
+          setBusy(true);
+          const r = await run();
+          if (r.ok) window.location.href = then; else { setBusy(false); setOpen(false); setErr(r.error ?? 'Couldn’t do that.'); }
+        }} />
+    </>
   );
 }

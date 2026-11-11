@@ -1,5 +1,5 @@
 import 'server-only';
-import type { AddonRow, CustomRow, DrillRow, GroupRow, MoveRow, PlayerProgramRow, ProgramRow, ScheduleRow, SessionRow } from './academy-week';
+import type { AddonRow, CustomRow, DrillRow, GroupRow, LibrarySession, MoveRow, PlayerProgramRow, ProgramRow, ScheduleRow, SessionRow } from './academy-week';
 import { DEFAULT_TARGET, sessionMinutes, type Target } from './week-builder';
 
 /** A player's targets and focus, as the trainer set them (0010). */
@@ -16,6 +16,10 @@ export type Defaults = Target & {
 export type AcademyContent = {
   programs: (ProgramRow & { description: string | null })[];
   sessions: SessionRow[];
+  /** The trainer's session library; empty for players, and before 0017 runs. */
+  library: LibrarySession[];
+  /** False until migration 0017 has run. */
+  libraryReady: boolean;
   drills: DrillRow[];
   groups: GroupRow[];
   memberships: { group_id: string; user_id: string }[];
@@ -40,9 +44,9 @@ export type AcademyContent = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadContent(db: any, academyId: string, opts: { addonsSince?: string } = {}): Promise<AcademyContent> {
   const since = opts.addonsSince ?? new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
-  const [programs, sessions, drills, groups, memberships, playerPrograms, addons, schedules, moves, custom, plans, defaults] = await Promise.all([
+  const [programs, sessions, drills, groups, memberships, playerPrograms, addons, schedules, moves, custom, plans, defaults, library] = await Promise.all([
     db.from('academy_programs').select('id, name, description, weeks').eq('academy_id', academyId).order('created_at'),
-    db.from('academy_sessions').select('id, program_id, week, position, name, drill_ids').eq('academy_id', academyId),
+    withFallback((c) => db.from('academy_sessions').select(c).eq('academy_id', academyId), 'id, program_id, week, position, name, drill_ids', ', library_id'),
     drillsQuery(db, academyId),
     db.from('groups').select('id, name, meets_weekday, meets_time, program_id, starts_on, archived').eq('academy_id', academyId).order('name'),
     db.from('group_members').select('group_id, user_id').eq('academy_id', academyId),
@@ -54,6 +58,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     customQuery(db, academyId, since),
     withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress, mode', ', progress'),
     loadDefaults(db, academyId),
+    db.from('library_sessions').select('id, name, drill_ids').eq('academy_id', academyId).order('name'),
   ]);
   return {
     programs: programs.data ?? [], sessions: sessions.data ?? [], drills: drills.data ?? [],
@@ -62,6 +67,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     schedules: schedules.data ?? [], moves: moves.data ?? [],
     custom: custom.data ?? [], plans: plans.data ?? [],
     defaults,
+    library: library.data ?? [], libraryReady: !library.error,
     ready: !programs.error,
   };
 }

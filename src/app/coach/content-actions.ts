@@ -148,6 +148,90 @@ export async function saveSession(input: { id?: string; programId: string; week:
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
+/** Where saving a session may send you back to: our own pages only. */
+const BACK = /^\/coach\/(sessions|programs\/[\w-]+)(#[\w-]+)?$/;
+
+/**
+ * Save a session in the library (0017).
+ *
+ *   libraryId              change that session; every place it's used follows.
+ *   place                  a new session, also put into that program week.
+ *   relink                 a new session, taking over that one placement: "save
+ *                          as new, just here", or a stand-alone session joining
+ *                          the library.
+ *   none of them           a new session, in the library only.
+ */
+export async function saveLibrarySession(input: {
+  libraryId?: string; name: string; drillIds: string[];
+  place?: { programId: string; week: number }; relink?: string; back: string;
+}): Promise<Result> {
+  try {
+    const v = await staff();
+    const name = input.name.trim().slice(0, 60);
+    if (!name) return { ok: false, error: 'Give the session a name.' };
+    if (!input.drillIds.length) return { ok: false, error: 'Add at least one drill.' };
+    const drill_ids = input.drillIds.slice(0, 30);
+
+    if (input.libraryId && !input.relink) {
+      const { error } = await v.db.from('library_sessions').update({ name, drill_ids })
+        .eq('id', input.libraryId).eq('academy_id', v.academy.id);
+      if (error) return { ok: false, error: error.message };
+    } else {
+      const { data, error } = await v.db.from('library_sessions')
+        .insert({ academy_id: v.academy.id, name, drill_ids }).select('id').single();
+      if (error) return { ok: false, error: error.message };
+      if (input.relink) {
+        const { error: e } = await v.db.from('academy_sessions').update({ library_id: data.id, name, drill_ids })
+          .eq('id', input.relink).eq('academy_id', v.academy.id);
+        if (e) return { ok: false, error: e.message };
+      } else if (input.place) {
+        const r = await place(v, { id: data.id, name, drill_ids }, input.place.programId, input.place.week);
+        if (r) return { ok: false, error: r };
+      }
+    }
+    done();
+    redirect(BACK.test(input.back) ? input.back : '/coach/sessions');
+  } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function place(v: any, s: { id: string; name: string; drill_ids: string[] }, programId: string, week: number): Promise<string | null> {
+  const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
+    .eq('program_id', programId).eq('week', week);
+  const { error } = await v.db.from('academy_sessions').insert({
+    academy_id: v.academy.id, program_id: programId, week, position: count ?? 0,
+    name: s.name, drill_ids: s.drill_ids, library_id: s.id,
+  });
+  return error ? error.message : null;
+}
+
+/** Put a session from the library into a program week. */
+export async function placeSession(libraryId: string, programId: string, week: number): Promise<Result> {
+  try {
+    const v = await staff();
+    const { data } = await v.db.from('library_sessions').select('id, name, drill_ids')
+      .eq('id', libraryId).eq('academy_id', v.academy.id).maybeSingle();
+    if (!data) return { ok: false, error: 'That session isn’t in your library any more.' };
+    const r = await place(v, data, programId, week);
+    if (r) return { ok: false, error: r };
+    done();
+    redirect(`/coach/programs/${programId}#week-${week}`);
+  } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
+}
+
+/** Delete a session from the library. Only one that no program uses. */
+export async function deleteLibrarySession(id: string): Promise<Result> {
+  try {
+    const v = await staff();
+    const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
+      .eq('library_id', id).eq('academy_id', v.academy.id);
+    if (count) return { ok: false, error: 'It’s still in a program. Take it out of the program first.' };
+    const { error } = await v.db.from('library_sessions').delete().eq('id', id).eq('academy_id', v.academy.id);
+    if (error) return { ok: false, error: error.message };
+    done(); return { ok: true };
+  } catch (e) { return fail(e); }
+}
+
 export async function deleteSession(id: string): Promise<Result> {
   try {
     const v = await staff();
@@ -161,11 +245,15 @@ export async function deleteSession(id: string): Promise<Result> {
 export async function copyWeek(programId: string, from: number, to: number): Promise<Result> {
   try {
     const v = await staff();
-    const { data } = await v.db.from('academy_sessions').select('name, position, drill_ids')
+    // The same library sessions, used again (0017); before it, plain copies.
+    const q = (cols: string) => v.db.from('academy_sessions').select(cols)
       .eq('program_id', programId).eq('academy_id', v.academy.id).eq('week', from);
+    let { data } = await q('name, position, drill_ids, library_id');
+    if (!data) ({ data } = await q('name, position, drill_ids'));
     if (!data?.length) return { ok: false, error: 'Nothing in that week to copy.' };
     const { error } = await v.db.from('academy_sessions').insert(
-      data.map((s: { name: string; position: number; drill_ids: string[] }) => ({ ...s, academy_id: v.academy.id, program_id: programId, week: to })));
+      (data as unknown as { name: string; position: number; drill_ids: string[]; library_id?: string | null }[])
+        .map((s) => ({ ...s, academy_id: v.academy.id, program_id: programId, week: to })));
     if (error) return { ok: false, error: error.message };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
@@ -277,16 +365,24 @@ export async function setDrillSessions(drillId: string, sessionIds: string[]): P
   try {
     const v = await staff();
     const want = new Set(sessionIds);
-    const { data: sessions, error } = await v.db.from('academy_sessions').select('id, drill_ids').eq('academy_id', v.academy.id);
+    const q = (cols: string) => v.db.from('academy_sessions').select(cols).eq('academy_id', v.academy.id);
+    let { data: sessions, error } = await q('id, drill_ids, library_id');
+    if (error) ({ data: sessions, error } = await q('id, drill_ids'));
     if (error) return { ok: false, error: error.message };
-    for (const s of (sessions ?? []) as { id: string; drill_ids: string[] }[]) {
+    // A library session changes once, and everywhere it's used follows.
+    const changed = new Set<string>();
+    for (const s of (sessions ?? []) as unknown as { id: string; drill_ids: string[]; library_id?: string | null }[]) {
       const has = s.drill_ids.includes(drillId);
       if (has === want.has(s.id)) continue;
+      if (s.library_id && changed.has(s.library_id)) continue;
       if (!has && s.drill_ids.length >= 30) return { ok: false, error: 'One of those sessions is full (30 drills).' };
       const drill_ids = has ? s.drill_ids.filter((d) => d !== drillId) : [...s.drill_ids, drillId];
       if (!drill_ids.length) return { ok: false, error: 'A session needs at least one drill: that would empty one.' };
-      const { error: e } = await v.db.from('academy_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
+      const { error: e } = s.library_id
+        ? await v.db.from('library_sessions').update({ drill_ids }).eq('id', s.library_id).eq('academy_id', v.academy.id)
+        : await v.db.from('academy_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
       if (e) return { ok: false, error: e.message };
+      if (s.library_id) changed.add(s.library_id);
     }
     done();
     return { ok: true };
