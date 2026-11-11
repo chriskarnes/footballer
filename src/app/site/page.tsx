@@ -33,8 +33,8 @@ export default function SiteHome() {
 
       {/* The two doors sit across the fold, half in the dark and half out. */}
       <section className="relative -mt-24 grid gap-4 sm:-mt-28 sm:grid-cols-2">
-        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Stay with your players all week"
-              body="Give each player drills to do at home between sessions. See who did them, and send a note to the ones who didn't." cta="How it works" />
+        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Train them all week"
+              body="Give them drills to do at home between sessions, and see who did them." cta="How it works" />
         <Door href="/players" eyebrow="I'm a player or parent" title="Find your trainer"
               body="Get the drills your trainer picked for you, and do them before your next session." cta="Find my trainer" />
       </section>
@@ -46,10 +46,10 @@ export default function SiteHome() {
       </PhotoBand>
 
       <section className="mt-24">
-        <SectionHead eyebrow="What it does" title="Make one session a week go further." />
+        <SectionHead eyebrow="What it does" title="Make one session go further." />
         <ul className="mt-8 grid gap-4 sm:grid-cols-3">
           <Point title="More time on the ball">
-            Two or three short sessions at home add 30 to 90 minutes on the ball each week.
+            Two or three sessions at home add 30 to 90 minutes on the ball a week.
           </Point>
           <Point title="Sessions that build">
             Players practice what you showed them last week. When you see them next, you move on to the next thing.
@@ -64,7 +64,7 @@ export default function SiteHome() {
         <SectionHead eyebrow="How it works" title="How a week goes." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
           <Step n="1" title="You pick the drills">
-            After your session, choose two or three short sessions for the week ahead, like ball mastery, first touch, or finishing.
+            After your session, pick two or three short sessions for the week, like ball mastery or first touch.
           </Step>
           <Step n="2" title="Your player trains at home">
             Each session is a list of drills. Every drill has a video and a timer. A session takes 15 to 30 minutes.
@@ -75,7 +75,7 @@ export default function SiteHome() {
         </ol>
       </section>
 
-      <DarkCta title="Set up your first week with us." href="/start" cta="Get started">
+      <DarkCta title="Set up your first week." href="/start" cta="Get started">
         Tell us how you train. We&rsquo;ll build your page and your first sessions with you.
         Player or parent? <Link href="/players" className="font-semibold text-white underline underline-offset-4">Find your trainer</Link>.
       </DarkCta>

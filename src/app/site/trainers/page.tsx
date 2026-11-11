@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SectionHead, Step } from '@/components/site/SiteChrome';
+import { SectionHead } from '@/components/site/SiteChrome';
 import { PriceCalc } from '@/components/site/PriceCalc';
 import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
 
@@ -37,55 +37,38 @@ export default function TrainersPage() {
       <section className="mt-24">
         <SectionHead eyebrow="Between sessions" title="Your training goes home with them." />
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Piece title="Their week" tag="Done at home">
-            After a session, pick two or three short sessions for the week ahead. Each one is a list of drills with reps and a timer.
-            Players check off each session when they finish.
+          <Piece title="Their week">
+            After a session, pick two or three short sessions for the week ahead. Players check off each one when they finish.
           </Piece>
-          <Piece title="Your drills" tag="Your videos">
-            Each drill plays your video, so players learn it the way you teach it. Paste a YouTube link, or film it on your phone.
+          <Piece title="Your drills">
+            Build sessions from the drills you already teach. Set the reps and the time for each one, and add a video if you have it.
           </Piece>
-          <Piece title="Your page" tag="Your name on it">
-            One page for everyone you train, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
-            It has your name and colors on it, not ours or a club&rsquo;s.
+          <Piece title="Who trained this week">
+            Each player&rsquo;s week is on one line: on track, one behind, or not seen since Tuesday. Check it before you see them next.
           </Piece>
-          <Piece title="Your players" tag="From any team">
-            You send one link. Players or their parents open it and sign in with an email. They&rsquo;re on your list,
-            whatever team they play for. There&rsquo;s no app to download and no password.
+          <Piece title="Notes and reminders">
+            If a player falls behind, one tap writes the reminder for you. Notes go one way, so there&rsquo;s no group chat to manage.
           </Piece>
-          <Piece title="Groups and 1-to-1s" tag="However you train">
-            Train small groups, single players, or both. A player can be in more than one group,
-            and each player still gets their own week.
+          <Piece title="Groups and individual players">
+            Train small groups, individual players, or both. A player can be in more than one group and still gets their own week.
           </Piece>
-          <Piece title="Your next session" tag="Build on their week">
-            Before you see a player, check what they finished that week. You&rsquo;ll know what to build on when they arrive.
+          <Piece title="Your page">
+            Your page at <b className="text-on-surface">yourname.train.futbol</b>, with your name and colors.
+            Players join from one link, no app needed.
           </Piece>
         </div>
       </section>
 
-      <section className="mt-24">
-        <SectionHead eyebrow="Your side" title="Know who trained before you see them." />
-        <ol className="mt-8 grid gap-4 sm:grid-cols-3">
-          <Step n="1" title="See every player">
-            Each player&rsquo;s week is on one line: on track, one behind, or not seen since Tuesday. Players who need a reminder are at the top.
-          </Step>
-          <Step n="2" title="Send a reminder">
-            If a player falls behind, one tap writes the message for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). You can also send a note to a whole group.
-          </Step>
-          <Step n="3" title="No group chat">
-            Notes go from trainer to player only. Players can&rsquo;t reply, so there&rsquo;s nothing to moderate. Every note is saved.
-          </Step>
-        </ol>
-      </section>
-
       <section id="pricing" className="mt-24 scroll-mt-8">
-        <SectionHead eyebrow="Pricing" title="You set the price. You keep most of it.">
-          Your players pay you monthly through Train.futbol. We take $5 of each payment, plus 10% of anything above $5. The rest is yours.
+        <SectionHead eyebrow="Pricing" title="$5 a player, per month.">
+          That&rsquo;s the whole price if you collect from your players yourself. If they pay you through Train.futbol,
+          we also keep 10% of what you charge above $5.
         </SectionHead>
         <div className="mt-8 max-w-[40rem]">
           <PriceCalc />
           <ul className="mt-5 space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
-            <li>No setup fee and no contract. When you remove a player, you stop paying for them the next month.</li>
-            <li>Players pay by card. The money goes straight to your bank account, not ours.</li>
+            <li>No setup fee and no contract. Remove a player and you stop paying for them next month.</li>
+            <li>Through Train.futbol, players pay by card, straight to your bank account.</li>
           </ul>
         </div>
       </section>
@@ -112,19 +95,16 @@ export default function TrainersPage() {
       </section>
 
       <DarkCta title="Tell us how you train." href="/start" cta="Get started">
-        We&rsquo;ll set up your page and your first sessions with you. Then you send your players the link, and they have drills to do before you see them next.
+        We&rsquo;ll set up your page and first sessions with you. Send your players the link, and they have drills to do before you see them next.
       </DarkCta>
     </>
   );
 }
 
-function Piece({ title, tag, children }: { title: string; tag: string; children: React.ReactNode }) {
+function Piece({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card-flat p-6">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="h-card text-on-surface">{title}</h3>
-        <span className="text-[13px] font-semibold text-on-surface-variant">{tag}</span>
-      </div>
+      <h3 className="h-card text-on-surface">{title}</h3>
       <p className="mt-2 text-[14.5px] leading-relaxed text-on-surface-variant">{children}</p>
     </div>
   );

@@ -2,14 +2,15 @@
 import { useState } from 'react';
 
 /**
- * Pricing, worked out for the trainer's own numbers. Two plans, kept apart so
- * they don't blur together:
+ * Pricing. The price is the headline: $5 a player a month. Everything else is
+ * secondary and sits below it in ordinary type, so no large number can be
+ * mistaken for what we charge.
  *
- *   1. Players pay through Train.futbol (the lead). The trainer sets a monthly
- *      price; we keep $5 of each player's payment plus 10% of anything above
- *      $5, and the rest is theirs. The calculator leads with what they make.
- *   2. They pay us directly: a flat $5 a player a month, and they charge their
- *      players however they already do. Shown second, on its own.
+ *   1. They collect from their players themselves: a flat $5 a player a month.
+ *   2. Players pay through Train.futbol: $5 of each player's payment plus 10%
+ *      of anything above $5, and the rest is the trainer's.
+ *
+ * The calculator works both out for the trainer's own numbers.
  */
 export const feeFor = (price: number) => 5 + Math.max(0, price - 5) * 0.1;
 const FLAT = 5;
@@ -25,93 +26,79 @@ export function PriceCalc() {
   const fee = feeFor(price);
   const keep = Math.max(0, price - fee);
   const covers = price > FLAT;
-  const share = covers ? Math.round((keep / price) * 100) : 0;
+  const count = `${players} ${players === 1 ? 'player' : 'players'}`;
 
   return (
     <div className="space-y-4">
-      {/* Plan 1: players pay through us. */}
+      {/* The price, and the two ways to pay it. */}
       <div className="card overflow-hidden">
-        <div className="p-6 sm:p-8">
-          <p className="eyebrow">Your players pay through Train.futbol</p>
-          <div className="mt-4 grid gap-5 sm:grid-cols-2">
-            <label className="text-field">
-              <span>Players</span>
-              <input type="number" inputMode="numeric" min={1} max={500} value={players}
-                     onChange={(e) => setPlayers(clamp(e.target.value, 500))} />
-            </label>
-            <label className="text-field">
-              <span>You charge each player, per month ($)</span>
-              <input type="number" inputMode="decimal" min={0} max={1000} value={price}
-                     onChange={(e) => setPrice(clamp(e.target.value, 1000))} />
-            </label>
-          </div>
-
-          {covers ? (
-            <>
-              <div className="mt-7">
-                <p className="text-[14px] font-semibold text-on-surface-variant">You make each month</p>
-                <p className="font-brand text-[44px] font-extrabold leading-none tracking-tighter text-site-ink sm:text-[56px]">
-                  {money(keep * players)}
-                </p>
-                <p className="mt-2 text-[14px] text-on-surface-variant">
-                  {money(keep)} from each player. That&rsquo;s {share}% of what they pay.
-                </p>
-              </div>
-
-              {/* One player's payment, split. */}
-              <div className="mt-6">
-                <div className="flex h-3 overflow-hidden rounded-full bg-site-mint" aria-hidden>
-                  <div className="bg-site-pitch" style={{ width: `${share}%` }} />
-                  <div className="bg-site-lime" style={{ width: `${100 - share}%` }} />
-                </div>
-                <dl className="mt-3 grid grid-cols-3 gap-3 text-[13px]">
-                  <Part label="A player pays">{money(price)}</Part>
-                  <Part label="You keep" dot="bg-site-pitch">{money(keep)}</Part>
-                  <Part label="Our cut" dot="bg-site-lime" note={`$5 + 10% of ${money(price - FLAT)}`}>{money(fee)}</Part>
-                </dl>
-              </div>
-            </>
-          ) : (
-            <p className="mt-6 rounded-xl bg-site-paper px-4 py-3 text-[14px] leading-relaxed text-on-surface-variant">
-              At {money(price)} or less, there&rsquo;s nothing left after our $5. If you want to charge that little, or nothing,
-              use the plan below.
-            </p>
-          )}
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 p-6 sm:p-8">
+          <span className="font-brand text-[56px] font-extrabold leading-none tracking-tighter text-site-ink sm:text-[72px]">$5</span>
+          <span className="text-[16px] font-semibold text-on-surface-variant">per player, per month</span>
         </div>
-        {covers && (
-          <p className="border-t border-outline-variant bg-site-paper px-6 py-3.5 text-[13.5px] text-on-surface-variant sm:px-8">
-            Our cut for {players} {players === 1 ? 'player' : 'players'}: <b className="font-semibold text-on-surface">{money(fee * players)}</b> a month,
-            taken from their payments. You never get a bill.
-          </p>
-        )}
+        <dl className="grid border-t border-outline-variant sm:grid-cols-2 sm:divide-x sm:divide-outline-variant">
+          <Plan title="You collect from players yourself" price="$5 per player">
+            That&rsquo;s all we charge. Charge your players however you do now, or don&rsquo;t charge them.
+          </Plan>
+          <Plan title="Players pay through Train.futbol" price="$5 + 10% above $5" className="border-t border-outline-variant sm:border-t-0">
+            You set a monthly price. We keep $5 of each payment, plus 10% of anything above $5. You never get a bill.
+          </Plan>
+        </dl>
       </div>
 
-      {/* Plan 2: they pay us directly. */}
+      {/* Secondary: the same two plans, for their own numbers. */}
       <div className="card-flat p-6 sm:p-7">
-        <p className="eyebrow">Or pay us directly</p>
-        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-          <p className="min-w-0 flex-1 basis-[18rem] text-[14.5px] leading-relaxed text-on-surface-variant">
-            Already collect payment from your players yourself, or don&rsquo;t want to charge them? Pay us a flat <b className="font-semibold text-on-surface">$5 per player each month</b>.
-            No player payments go through us.
-          </p>
-          <p className="sm:text-right">
-            <span className="block font-brand text-[24px] font-extrabold tracking-tight text-site-ink">{money(FLAT * players)}</span>
-            <span className="text-[12.5px] text-on-surface-variant">a month for {players} {players === 1 ? 'player' : 'players'}</span>
-          </p>
+        <p className="eyebrow">Work out your numbers</p>
+        <div className="mt-4 grid gap-5 sm:grid-cols-2">
+          <label className="text-field">
+            <span>Players</span>
+            <input type="number" inputMode="numeric" min={1} max={500} value={players}
+                   onChange={(e) => setPlayers(clamp(e.target.value, 500))} />
+          </label>
+          <label className="text-field">
+            <span>You charge each player, per month ($)</span>
+            <input type="number" inputMode="decimal" min={0} max={1000} value={price}
+                   onChange={(e) => setPrice(clamp(e.target.value, 1000))} />
+          </label>
         </div>
+
+        <dl className="mt-6 divide-y divide-outline-variant border-y border-outline-variant text-[14.5px]">
+          <Row label="If you collect yourself, we charge" note={`$5 × ${count}`}>{money(FLAT * players)} a month</Row>
+          {covers ? (
+            <>
+              <Row label="If players pay through Train.futbol, we keep" note={`${money(fee)} × ${count}`}>{money(fee * players)} a month</Row>
+              <Row label="And you keep" note={`${money(keep)} × ${count}`}>{money(keep * players)} a month</Row>
+            </>
+          ) : (
+            <div className="py-3 leading-relaxed text-on-surface-variant">
+              At {money(price)} or less, there&rsquo;s nothing left after our $5. If you want to charge that little, or nothing,
+              collect from your players yourself.
+            </div>
+          )}
+        </dl>
       </div>
     </div>
   );
 }
 
-function Part({ label, dot, note, children }: { label: string; dot?: string; note?: string; children: React.ReactNode }) {
+function Plan({ title, price, className = '', children }: { title: string; price: string; className?: string; children: React.ReactNode }) {
   return (
-    <div>
-      <dt className="flex items-center gap-1.5 text-on-surface-variant">
-        {dot && <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />}{label}
-      </dt>
-      <dd className="mt-0.5 text-[16px] font-bold text-on-surface">{children}</dd>
-      {note && <dd className="text-[12px] text-on-surface-variant">{note}</dd>}
+    <div className={`p-6 sm:p-7 ${className}`}>
+      <dt className="text-[13.5px] font-semibold text-on-surface-variant">{title}</dt>
+      <dd className="mt-1 font-brand text-[20px] font-extrabold tracking-tight text-site-ink">{price}</dd>
+      <dd className="mt-2 text-[14.5px] leading-relaxed text-on-surface-variant">{children}</dd>
+    </div>
+  );
+}
+
+function Row({ label, note, children }: { label: string; note: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 py-3">
+      <dt className="text-on-surface-variant">{label}</dt>
+      <dd className="text-right">
+        <span className="font-bold text-on-surface">{children}</span>
+        <span className="ml-2 text-[12.5px] text-on-surface-variant">{note}</span>
+      </dd>
     </div>
   );
 }
