@@ -54,6 +54,8 @@ export type WeekItem = {
   drills: number;
   note?: string | null;
   done: boolean;
+  /** The weekday it was actually finished on, which needn't be the day it was set for. */
+  doneOn?: number;
   /** On a club or group training day: a second session that day. */
   practice?: boolean;
   /** From a built week: a lighter one, and how many drills stepped up or got harder. */
@@ -222,7 +224,7 @@ export function buildWeek(input: {
   }
 
   // Ticks: each finished run this week ticks one matching item.
-  const finished = new Map<string, number>();
+  const finished = new Map<string, number[]>();
   for (const c of input.completions) {
     if (!c.source_ref || !c.completed_at) continue;
     if (c.source !== 'academy' && c.source !== 'addon') continue;
@@ -230,11 +232,11 @@ export function buildWeek(input: {
     if (day < monday || day > addDays(monday, 6)) continue;
     // A built-week session runs as 'academy' too; its id says which it is.
     const keys = c.source === 'addon' ? [`a:${c.source_ref}`] : [`s:${c.source_ref}`, `c:${c.source_ref}`];
-    for (const k of keys) finished.set(k, (finished.get(k) ?? 0) + 1);
+    for (const k of keys) finished.set(k, [...(finished.get(k) ?? []), weekdayOf(day)]);
   }
   for (const it of items) {
-    const left = finished.get(it.key) ?? 0;
-    if (left > 0) { it.done = true; finished.set(it.key, left - 1); }
+    const on = finished.get(it.key)?.shift();
+    if (on !== undefined) { it.done = true; it.doneOn = on; }
   }
 
   // A session on a club or group day is a second one that day: say so.

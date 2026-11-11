@@ -24,14 +24,17 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
 
   // The tag says which day the headline is about, and why it's the headline:
   // a bare "Friday" on a Wednesday read as if the app had the date wrong.
-  const todays = items.filter((i) => i.weekday === today);
+  // Finished today, whichever day it was set for; one from later in the week counts as early.
+  const doneToday = items.filter((i) => i.done && (i.doneOn ?? i.weekday) === today);
+  const early = doneToday.find((i) => i.weekday > today);
   const when = !next ? 'This week'
     : next.weekday === today ? 'Today'
     : next.weekday < today ? `Missed · ${DAYS[next.weekday]}`
     : `Up next · ${DAYS[next.weekday]}`;
   // What today itself is, when the headline is about another day.
   const todayIs = !next || next.weekday === today ? null
-    : todays.length ? 'Today’s session is done.' : 'Nothing set for today.';
+    : early ? `${DAYS[early.weekday]}’s session done early.`
+    : doneToday.length ? 'Today’s session is done.' : 'Nothing set for today.';
 
   return (
     <section>
@@ -44,7 +47,10 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
             {todayIs && <><b className="font-semibold text-on-surface-brand">{todayIs}</b>{' '}</>}
             {next.minutes} min · {next.drills} {next.drills === 1 ? 'drill' : 'drills'}{next.practice && ' · Practice day too'}
             {next.light ? ' · Lighter week' : next.ups ? ` · ${next.ups} ${next.ups === 1 ? 'drill levels' : 'drills level'} up` : ''}
-          </> : 'Everything your trainer set this week is finished.'}
+          </> : <>
+            {early && <><b className="font-semibold text-on-surface-brand">{DAYS[early.weekday]}’s session done early.</b>{' '}</>}
+            Everything your trainer set this week is finished.
+          </>}
         </p>
         <WeekStrip items={items} today={today} nextDay={next?.weekday ?? null} done={done} total={set.length} />
       </BrandBand>
@@ -75,12 +81,13 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
                     <span className={`block truncate text-[14.5px] font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
                     <span className="block truncate text-[12.5px] text-on-surface-variant">
                       {!it.done && it.weekday < today && <b className="font-semibold text-on-surface">Missed · </b>}
+                      {it.done && it.doneOn !== undefined && it.doneOn < it.weekday && <b className="font-semibold text-on-surface">Done early · </b>}
                       {it.minutes} min · {it.practice ? 'Practice day' : it.extra ? 'Added by you' : it.kind === 'custom' ? 'Built for you' : it.kind === 'addon' ? 'Just for you' : it.groups[0] ?? 'Your program'}
                     </span>
                   </span>
                 </Link>
                 {it.done
-                  ? <span className="shrink-0 pr-2 text-[12.5px] font-bold text-on-surface-variant">{DAYS[it.weekday].slice(0, 3)}</span>
+                  ? <span className="shrink-0 pr-2 text-[12.5px] font-bold text-on-surface-variant">{DAYS[it.doneOn ?? it.weekday].slice(0, 3)}</span>
                   : <MoveDay itemKey={it.key} weekday={it.weekday} placed={it.placed ?? it.weekday} title={it.title} />}
               </li>
             ))}
@@ -113,6 +120,10 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
  * thing: today is the lit column, accent with a tick is done, the solid disc
  * is the session in the headline, a ring is a session still to come, and a
  * rest day is only a speck, so it never reads as an empty checkbox.
+ *
+ * A tick sits on the day the session was actually done. One finished on
+ * another day leaves an outlined tick on the day it was set for: nothing
+ * left to do there, and the week still shows where it was meant to go.
  */
 function WeekStrip({ items, today, nextDay, done, total }: {
   items: MyWeek['items']; today: number; nextDay: number | null; done: number; total: number;
@@ -126,11 +137,15 @@ function WeekStrip({ items, today, nextDay, done, total }: {
       </p>
       <ol className="mt-2 flex justify-between" aria-label="This week">
         {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
-          const on = items.filter((x) => x.weekday === i);
-          const doneHere = on.length > 0 && on.every((x) => x.done);
+          // Still to do, on the day it's set for; done, on the day it was done.
+          const todo = items.filter((x) => !x.done && x.weekday === i);
+          const doneHere = items.some((x) => x.done && (x.doneOn ?? x.weekday) === i);
+          const cleared = items.filter((x) => x.done && x.weekday === i && (x.doneOn ?? i) !== i);
           const isToday = i === today;
-          const isNext = i === nextDay && !doneHere;
-          const label = `${DAYS[i]}${isToday ? ' (today)' : ''}: ${on.length ? (doneHere ? 'done' : `${on.length} to do`) : 'rest'}`;
+          const isNext = i === nextDay;
+          const label = `${DAYS[i]}${isToday ? ' (today)' : ''}: ${todo.length ? `${todo.length} to do`
+            : doneHere ? 'done'
+            : cleared.length ? `done on ${DAYS[cleared[0].doneOn!]}` : 'rest'}`;
           return (
             <li key={i} aria-label={label} aria-current={isToday ? 'date' : undefined}
                 className="flex w-10 flex-col items-center gap-1.5 rounded-full pb-1.5 pt-2"
@@ -138,16 +153,21 @@ function WeekStrip({ items, today, nextDay, done, total }: {
               <span className="text-[11.5px] font-extrabold"
                     style={{ color: ink, opacity: isToday ? 1 : 0.7 }}>{d}</span>
               <span className="flex h-7 w-7 items-center justify-center">
-                {doneHere ? (
+                {!todo.length && doneHere ? (
                   <span className="flex h-7 w-7 items-center justify-center rounded-full"
                         style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
                     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                   </span>
-                ) : on.length ? (
+                ) : todo.length ? (
                   <span className="flex h-7 w-7 items-center justify-center rounded-full text-[12.5px] font-extrabold"
                         style={isNext ? { background: ink, color: 'var(--app-brand-primary)' }
                           : { boxShadow: `inset 0 0 0 2.5px ${ink}`, color: ink }}>
-                    {on.filter((x) => !x.done).length > 1 ? on.filter((x) => !x.done).length : ''}
+                    {todo.length > 1 ? todo.length : ''}
+                  </span>
+                ) : cleared.length ? (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full"
+                        style={{ boxShadow: 'inset 0 0 0 2px var(--app-brand-accent)', color: 'var(--app-brand-accent)', opacity: 0.75 }}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                   </span>
                 ) : (
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: ink, opacity: 0.35 }} />
