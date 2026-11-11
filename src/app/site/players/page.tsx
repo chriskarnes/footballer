@@ -5,7 +5,7 @@ import { Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'For players · Train.futbol',
-  description: 'Find your soccer trainer, get the drills they picked for you, and train at home.',
+  description: 'Find your private soccer trainer and get the drills they picked for you to do at home between sessions.',
 };
 
 /**
@@ -23,7 +23,8 @@ export default function PlayersPage() {
           Find your <Lime>trainer.</Lime>
         </h1>
         <p className="mt-6 max-w-[32rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
-          Every trainer here has their own page. Find yours and ask to join. Once they accept, your sessions show up.
+          Train.futbol is where your private trainer gives you drills to do at home between sessions.
+          Find their page and ask to join. Once they accept, your sessions show up.
         </p>
         <div className="mt-8 max-w-[34rem]">
           <FindTrainer />
@@ -34,16 +35,16 @@ export default function PlayersPage() {
       </SiteHero>
 
       <section className="mt-24">
-        <SectionHead eyebrow="What you get" title="A plan for the days you're not at practice." />
+        <SectionHead eyebrow="What you get" title="Your trainer's drills, for the days between sessions." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
           <Step n="1" title="Your trainer picks your week">
-            Open the app and today&rsquo;s session is ready. You don&rsquo;t have to decide what to work on.
+            After your session, your trainer picks drills for the days ahead. Open the app and today&rsquo;s session is ready.
           </Step>
           <Step n="2" title="Every drill has a video and a timer">
             Watch the drill, see how many reps to do, and start the clock. Most sessions take 15 to 30 minutes.
           </Step>
           <Step n="3" title="Your trainer sees it">
-            Check off a session when you finish, and your trainer knows. They can send you a note when you&rsquo;re doing well or falling behind.
+            Check off a session when you finish, and your trainer knows. They can send you a note during the week. Next session, you start from what you practiced.
           </Step>
         </ol>
       </section>
@@ -51,7 +52,7 @@ export default function PlayersPage() {
       <section className="mt-24 card-flat p-8">
         <h2 className="h-card text-on-surface">Don&rsquo;t have a trainer here yet?</h2>
         <p className="mt-2 max-w-[36rem] text-[15px] leading-relaxed text-on-surface-variant">
-          We&rsquo;re new, so there aren&rsquo;t many trainers here yet. If you train with someone,
+          We&rsquo;re new, so there aren&rsquo;t many trainers here yet. If you work with a private trainer,
           send them this page. If you&rsquo;re a trainer, <Link href="/trainers" className="font-semibold text-on-surface underline underline-offset-4">start here</Link>.
         </p>
       </section>

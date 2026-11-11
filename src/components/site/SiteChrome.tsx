@@ -26,7 +26,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <footer className="relative isolate mt-24 overflow-hidden bg-site-ink text-[13px] text-site-mint">
         <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <span>Soccer drills to do at home, picked by your trainer.</span>
+            <span>Drills from your private trainer, for the days between sessions.</span>
             <span className="flex gap-5">
               <Link href="/trainers" className="font-semibold text-white">Trainers</Link>
               <Link href="/players" className="font-semibold text-white">Players</Link>

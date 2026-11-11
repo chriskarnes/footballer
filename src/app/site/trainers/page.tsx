@@ -5,7 +5,7 @@ import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'For trainers · Train.futbol',
-  description: 'Give your players soccer drills to do at home, see who did them, and remind the ones who didn’t. $5 a player a month.',
+  description: 'For private soccer trainers. Give your players drills to do at home between sessions, see who did them, and stay in touch all week. $5 a player a month.',
 };
 
 /**
@@ -19,14 +19,14 @@ export default function TrainersPage() {
     <>
       <SiteHero video={{ src: '/site/session.mp4', poster: '/site/session-poster.jpg' }}
                 alt="Young players working through ball drills at an indoor training session" position="50% 90%"
-                cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 3 of 5 this week', at: { top: 40, right: -12 } }]}>
+                cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 2 of 3 this week', at: { top: 40, right: -12 } }]}>
         <span className="marker">For private soccer trainers</span>
         <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
           Your players, training <Lime>between sessions.</Lime>
         </h1>
         <p className="mt-6 max-w-[32rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
-          You see your players once or twice a week. The rest of the week, they&rsquo;re with their club teams. The ones who
-          improve are the ones who get touches on the other days. Give them drills to do, and see who does them.
+          You see each player about once a week. The ones who improve are the ones who get touches on the other days.
+          Give them drills to do at home, see who did them, and stay in touch until the next session.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/start" className="btn-lime">Get started</Link>
@@ -35,8 +35,15 @@ export default function TrainersPage() {
       </SiteHero>
 
       <section className="mt-24">
-        <SectionHead eyebrow="What you get" title="Your drills, on their phones." />
+        <SectionHead eyebrow="Between sessions" title="Your training goes home with them." />
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <Piece title="Their week" tag="Done at home">
+            After a session, pick two or three short sessions for the week ahead. Each one is a list of drills with reps and a timer.
+            Players check off each session when they finish.
+          </Piece>
+          <Piece title="Your drills" tag="Your videos">
+            Each drill plays your video, so players learn it the way you teach it. Paste a YouTube link, or film it on your phone.
+          </Piece>
           <Piece title="Your page" tag="Your name on it">
             One page for everyone you train, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
             It has your name and colors on it, not ours or a club&rsquo;s.
@@ -49,20 +56,20 @@ export default function TrainersPage() {
             Train small groups, single players, or both. A player can be in more than one group,
             and each player still gets their own week.
           </Piece>
-          <Piece title="Their week" tag="Done at home">
-            Two or three short sessions a week. Each one is a list of drills with reps and a timer. Players check off each session when they finish.
+          <Piece title="Your next session" tag="Build on their week">
+            Before you see a player, check what they finished that week. You&rsquo;ll know what to build on when they arrive.
           </Piece>
         </div>
       </section>
 
       <section className="mt-24">
-        <SectionHead eyebrow="Your side" title="See who trained this week." />
+        <SectionHead eyebrow="Your side" title="Know who trained before you see them." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
           <Step n="1" title="See every player">
             Each player&rsquo;s week is on one line: on track, one behind, or not seen since Tuesday. Players who need a reminder are at the top.
           </Step>
           <Step n="2" title="Send a reminder">
-            One tap writes the message for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). You can also send a note to a whole group.
+            If a player falls behind, one tap writes the message for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). You can also send a note to a whole group.
           </Step>
           <Step n="3" title="No group chat">
             Notes go from trainer to player only. Players can&rsquo;t reply, so there&rsquo;s nothing to moderate. Every note is saved.
@@ -105,7 +112,7 @@ export default function TrainersPage() {
       </section>
 
       <DarkCta title="Tell us how you train." href="/start" cta="Get started">
-        We&rsquo;ll set up your page and your first sessions with you. Then you send your players the link.
+        We&rsquo;ll set up your page and your first sessions with you. Then you send your players the link, and they have drills to do before you see them next.
       </DarkCta>
     </>
   );

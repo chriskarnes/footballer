@@ -3,7 +3,7 @@ import { Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'Get started · Train.futbol',
-  description: 'Tell us how you train and we’ll set up your page with you.',
+  description: 'Private soccer trainers: tell us how you train, and we’ll set up your page and first sessions with you.',
 };
 
 /**
@@ -27,7 +27,7 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
           <ol className="mt-6 max-w-[30rem] space-y-4 text-[15px] leading-relaxed text-site-mint">
             <li><b className="text-white">A short call.</b> What you teach, who you train, and how often you see them.</li>
             <li><b className="text-white">Your first sessions.</b> We build three or four together from drills you already use. Use your YouTube videos, or film new ones on your phone.</li>
-            <li><b className="text-white">Your link.</b> Send it to your players and they&rsquo;re in.</li>
+            <li><b className="text-white">Your link.</b> Send it to your players. They have drills to do before your next session.</li>
           </ol>
         </div>
         <StartForm slug={claim} />
