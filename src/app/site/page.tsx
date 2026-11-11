@@ -5,11 +5,15 @@ import strike from '@/assets/site/strike.jpg';
 import teams from '@/assets/site/teams.jpg';
 
 export const metadata = {
-  title: 'Train.futbol: soccer drills to do at home, picked by your trainer',
-  description: 'Soccer trainers pick drills for their players to do at home, and see who did them.',
+  title: 'Train.futbol: keep your players training between sessions',
+  description: 'For private soccer trainers. Give your players drills to do at home between sessions, and see who did them.',
 };
 
-/** The front door: two kinds of visitor, so two doors, and nothing else first. */
+/**
+ * The front door. Written to the private trainer who sees a player about once
+ * a week: this is how they stay with that player on the other six days. The
+ * player's door is the second thing on the page.
+ */
 export default function SiteHome() {
   return (
     <>
@@ -17,40 +21,56 @@ export default function SiteHome() {
                 video={{ src: '/site/match.mp4', poster: '/site/match-poster.jpg', delay: 5000, position: '70% 50%' }}
                 alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%"
                 cards={[{ kind: 'done', title: 'Touch and pass', sub: 'Tuesday · 15 min · done', at: { top: 40, right: -12 } }]}>
-        <span className="marker">At-home soccer training</span>
-        <h1 className="site-wide mt-5 max-w-[13ch] text-[42px] uppercase leading-[.94] text-white sm:text-[68px]">
-          Soccer drills to do <Lime>at home.</Lime>
+        <span className="marker">For private soccer trainers</span>
+        <h1 className="site-wide mt-5 max-w-[15ch] text-[40px] uppercase leading-[.94] text-white sm:text-[64px]">
+          One session a week. <Lime>Training all week.</Lime>
         </h1>
-        <p className="mt-6 max-w-[30rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
-          You pick the drills for the week. Your players do them at home with a ball and a wall.
-          You see who did them.
+        <p className="mt-6 max-w-[31rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
+          Most players see their private trainer once a week. Train.futbol is for the other six days.
+          You pick drills for your players to do at home, and you see who did them.
         </p>
       </SiteHero>
 
       {/* The two doors sit across the fold, half in the dark and half out. */}
       <section className="relative -mt-24 grid gap-4 sm:-mt-28 sm:grid-cols-2">
-        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Set drills for your players"
-              body="Pick drills for each player to do at home. See who did them, and remind the ones who didn't." cta="How it works" />
+        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Stay with your players all week"
+              body="Give each player drills to do at home between sessions. See who did them, and send a note to the ones who didn't." cta="How it works" />
         <Door href="/players" eyebrow="I'm a player or parent" title="Find your trainer"
-              body="Get the drills your trainer picked for you, and check them off as you finish." cta="Find my trainer" />
+              body="Get the drills your trainer picked for you, and do them before your next session." cta="Find my trainer" />
       </section>
 
       <PhotoBand photo={teams} alt="Young players from two teams around a goal during a match" position="45% 55%"
-                 eyebrow="For trainers with players from different clubs" title="They play for different clubs. They all do your drills.">
-        Your players are on different teams. During the week, each one does the drills you gave them at home.
+                 eyebrow="Between sessions" title="Players improve on the days you don&rsquo;t see them.">
+        In an hour with you, a player learns what to work on. The touches at home are what make it stick.
+        Your drills keep them on the right things until you see them again.
       </PhotoBand>
 
       <section className="mt-24">
-        <SectionHead eyebrow="How it works" title="Two or three short sessions a week, and you see who did them." />
+        <SectionHead eyebrow="What it does" title="Make one session a week go further." />
+        <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+          <Point title="More time on the ball">
+            Two or three short sessions at home add 30 to 90 minutes on the ball each week.
+          </Point>
+          <Point title="Sessions that build">
+            Players practice what you showed them last week. When you see them next, you move on to the next thing.
+          </Point>
+          <Point title="Their trainer all week">
+            Your drills, your videos and your notes are on their phone every day, on a page with your name on it.
+          </Point>
+        </ul>
+      </section>
+
+      <section className="mt-24">
+        <SectionHead eyebrow="How it works" title="How a week goes." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
-          <Step n="1" title="The trainer picks the sessions">
-            Two or three short sessions a week on what the player needs, like ball mastery, first touch, or finishing.
+          <Step n="1" title="You pick the drills">
+            After your session, choose two or three short sessions for the week ahead, like ball mastery, first touch, or finishing.
           </Step>
-          <Step n="2" title="The player trains at home">
+          <Step n="2" title="Your player trains at home">
             Each session is a list of drills. Every drill has a video and a timer. A session takes 15 to 30 minutes.
           </Step>
-          <Step n="3" title="The trainer sees who did it">
-            When a player finishes a session, the trainer sees it. If a player falls behind, the trainer can send a reminder in one tap.
+          <Step n="3" title="You see who did it">
+            When a player finishes a session, you see it. If a player falls behind, you can send a reminder in one tap.
           </Step>
         </ol>
       </section>
@@ -73,5 +93,15 @@ function Door({ href, eyebrow, title, body, cta, dark }: { href: string; eyebrow
       <span className={`mt-7 inline-flex min-h-[44px] items-center self-start rounded-full border px-5 text-[14px] font-bold transition-colors
         ${dark ? 'border-white/45 text-white group-hover:bg-white/10' : 'border-site-ink text-site-ink group-hover:bg-site-ink/[.08]'}`}>{cta}</span>
     </Link>
+  );
+}
+
+/** One thing the trainer gets out of it: a plain card, no number. */
+function Point({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <li className="card-flat p-6">
+      <h3 className="h-card text-on-surface">{title}</h3>
+      <p className="mt-2 text-[14.5px] leading-relaxed text-on-surface-variant">{children}</p>
+    </li>
   );
 }
