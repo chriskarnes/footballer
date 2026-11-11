@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { serverClient } from '@/lib/supabase/server';
 import { BackLink } from '@/components/BackLink';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
+import { AvatarPicker } from '@/components/AvatarPicker';
 
 /**
  * The profile, reachable at any time.
@@ -32,10 +33,15 @@ export default async function ProfilePage() {
     initial = (base ?? {}) as ProfileValues;
   }
 
+  // Their photo, if any. Before migration 0016 this errors, which reads as none.
+  const { data: avatarAt } = await db.from('profiles').select('avatar_updated_at').eq('id', user.id).maybeSingle() as
+    { data: { avatar_updated_at: string | null } | null };
+
   return (
     <div>
       <BackLink href="/me" label="Me" />
-      <ProfileSetup email={user.email} initial={initial} />
+      <ProfileSetup email={user.email} initial={initial}
+        photo={<AvatarPicker name={initial.display_name} email={user.email} updatedAt={avatarAt?.avatar_updated_at ?? null} />} />
     </div>
   );
 }

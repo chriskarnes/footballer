@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ProfileValues } from './ProfileSetup';
+import { Avatar } from './Avatar';
 
 /**
  * The profile as it reads back to the player: who this account is, and the four
@@ -14,23 +15,13 @@ const FOOT_LABEL: Record<string, string> = {
   left: 'Left footed', right: 'Right footed', both: 'Both footed',
 };
 
-/**
- * Up to two initials, from a name the player chose. Falls back to the email's
- * first character — never to a silhouette, which says "no photo" when the
- * actual state is "we have not asked you for one".
- */
-function initials(name?: string | null, email?: string): string {
-  const source = (name ?? '').trim();
-  if (!source) return (email ?? '?').trim().charAt(0).toUpperCase() || '?';
-  const words = source.split(/\s+/).slice(0, 2);
-  return words.map((w) => w.charAt(0).toUpperCase()).join('');
-}
-
 export function ProfileCard({
-  profile, email,
+  profile, email, avatar,
 }: {
   profile: ProfileValues | null;
   email?: string;
+  /** Their photo's address, when they've added one. */
+  avatar?: string | null;
 }) {
   const name = profile?.display_name?.trim();
   const positions = (profile?.positions ?? []).filter(Boolean);
@@ -54,15 +45,7 @@ export function ProfileCard({
           it opened on a small label and a Sign out link. The name is the
           headline, at the size every other tab's is. */}
       <div className="flex items-center gap-4">
-        {/* Initials, not a silhouette. The same brand pair a selected chip
-            uses, so the avatar is made of roles the rest of the app spends
-            rather than a colour chosen for this one place. */}
-        <span aria-hidden="true"
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full
-                         bg-secondary-container font-brand text-[19px] font-extrabold
-                         tracking-tighter text-on-secondary-container">
-          {initials(name, email)}
-        </span>
+        <Avatar name={name} email={email} src={avatar} />
         <div className="min-w-0 flex-1">
           <h1 className="h-hero break-words">{name || 'Your training'}</h1>
           {email && (

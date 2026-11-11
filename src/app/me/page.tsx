@@ -14,6 +14,7 @@ import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
 import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection';
 import { NoteBanner } from '@/components/NoteBanner';
 import { getViewer } from '@/lib/viewer';
+import { avatarSrc } from '@/lib/avatar';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -45,10 +46,17 @@ async function readProfile(db: any, id: string): Promise<ProfileValues | null> {
   return base ?? null;
 }
 
+/** When their photo last changed, or null: no photo, or the column isn't there yet (0016). */
+async function readAvatarAt(db: any, id: string): Promise<string | null> {
+  const { data } = await db.from('profiles').select('avatar_updated_at').eq('id', id).maybeSingle();
+  return data?.avatar_updated_at ?? null;
+}
+
 export default async function MePage() {
   let user = null as null | { id: string; email?: string };
   let workouts: WorkoutRaw[] = [];
   let profile: ProfileValues | null = null;
+  let avatarAt: string | null = null;
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
   let canBrand = false;
@@ -63,7 +71,7 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, viewer, cal] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal, photoAt] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
@@ -71,7 +79,9 @@ export default async function MePage() {
           getViewer(),
           db.from('calendar_feeds').select('token, include_plan, include_speed, start_time, time_zone')
             .eq('user_id', user.id).maybeSingle(),
+          readAvatarAt(db, user.id),
         ]);
+        avatarAt = photoAt;
         canBrand = viewer.canBrand;
         role = viewer.role;
         if (!cal.error) calendar = cal.data ?? null;
@@ -132,8 +142,11 @@ export default async function MePage() {
         <BandTag>Me</BandTag>
         <BandTitle>Your training</BandTitle>
       </BrandBand>
-      <NoteBanner />
-      <ProfileCard profile={profile} email={user.email} />
+      {/* Clear of the band: the name is this page's headline, not part of the colour above it. */}
+      <div className="mt-7">
+        <NoteBanner />
+        <ProfileCard profile={profile} email={user.email} avatar={avatarSrc(avatarAt)} />
+      </div>
 
       <ThisWeek finished={finished.map(toFinished)} allTime={allTime}
         plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />

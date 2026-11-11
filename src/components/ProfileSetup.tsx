@@ -36,7 +36,11 @@ export type ProfileValues = {
   club?: string | null;
 };
 
-export function ProfileSetup({ email, initial }: { email?: string; initial?: ProfileValues }) {
+export function ProfileSetup({ email, initial, photo }: {
+  email?: string; initial?: ProfileValues;
+  /** The optional photo picker, on the profile screen; not part of first-time setup. */
+  photo?: React.ReactNode;
+}) {
   const router = useRouter();
   const [name, setName] = useState(initial?.display_name ?? '');
   const [ageBand, setAgeBand] = useState(initial?.age_band ?? '');
@@ -107,6 +111,7 @@ export function ProfileSetup({ email, initial }: { email?: string; initial?: Pro
           separate job, which is telling you which screen you are on. */}
       <p className="eyebrow mb-3">Profile</p>
       <h1 className="h-page">{returning ? 'Your profile' : 'Let’s set you up'}</h1>
+      {photo}
 
       {/* No stats row. A 0 / 0m / 0 version of the populated screen reads as
           failure rather than as a new start. */}
