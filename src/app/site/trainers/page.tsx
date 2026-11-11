@@ -5,7 +5,7 @@ import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'For trainers · Train.futbol',
-  description: 'Set at-home training for your players, see who did it, and nudge the ones who didn’t. $5 a player a month.',
+  description: 'Give your players soccer drills to do at home, see who did them, and remind the ones who didn’t. $5 a player a month.',
 };
 
 /**
@@ -20,13 +20,13 @@ export default function TrainersPage() {
       <SiteHero video={{ src: '/site/session.mp4', poster: '/site/session-poster.jpg' }}
                 alt="Young players working through ball drills at an indoor training session" position="50% 90%"
                 cards={[{ kind: 'player', title: 'Liam Carter', sub: 'On track · 3 of 5 this week', at: { top: 40, right: -12 } }]}>
-        <span className="marker">For private trainers</span>
+        <span className="marker">For private soccer trainers</span>
         <h1 className="site-wide mt-5 max-w-[14ch] text-[38px] uppercase leading-[.94] text-white sm:text-[60px]">
           Your players, training <Lime>between sessions.</Lime>
         </h1>
         <p className="mt-6 max-w-[32rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
-          You see them once or twice a week, and they play for different teams the rest of it. The players who get better
-          are the ones who touch a ball on the other days. Set them the work, and see who&rsquo;s doing it.
+          You see your players once or twice a week. The rest of the week, they&rsquo;re with their club teams. The ones who
+          improve are the ones who get touches on the other days. Give them drills to do, and see who does them.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/start" className="btn-lime">Get started</Link>
@@ -35,37 +35,37 @@ export default function TrainersPage() {
       </SiteHero>
 
       <section className="mt-24">
-        <SectionHead eyebrow="How it fits together" title="Your training, on their phones." />
+        <SectionHead eyebrow="What you get" title="Your drills, on their phones." />
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <Piece title="Your page" tag="Your name on it">
             One page for everyone you train, at its own address: <b className="text-on-surface">yourname.train.futbol</b>.
-            It carries your name and colours, not ours or a club&rsquo;s.
+            It has your name and colors on it, not ours or a club&rsquo;s.
           </Piece>
           <Piece title="Your players" tag="From any team">
-            You send one link. Players (or their parents) open it, sign in with an email, and they&rsquo;re on your list,
-            whichever team they play for. No app store, no passwords.
+            You send one link. Players or their parents open it and sign in with an email. They&rsquo;re on your list,
+            whatever team they play for. There&rsquo;s no app to download and no password.
           </Piece>
           <Piece title="Groups and 1-to-1s" tag="However you train">
-            Run small groups at a set time, see players one to one, or both. A player can be in more than one group,
+            Train small groups, single players, or both. A player can be in more than one group,
             and each player still gets their own week.
           </Piece>
-          <Piece title="Their week" tag="The homework">
-            Two or three short sessions a week: drills, reps and a timer. They tick each one off when it&rsquo;s done.
+          <Piece title="Their week" tag="Done at home">
+            Two or three short sessions a week. Each one is a list of drills with reps and a timer. Players check off each session when they finish.
           </Piece>
         </div>
       </section>
 
       <section className="mt-24">
-        <SectionHead eyebrow="Your side" title="Who trained this week, at a glance." />
+        <SectionHead eyebrow="Your side" title="See who trained this week." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
-          <Step n="1" title="See everyone">
-            Each player&rsquo;s week in one line: on track, one behind, or not seen since Tuesday. The ones who need a word are at the top.
+          <Step n="1" title="See every player">
+            Each player&rsquo;s week is on one line: on track, one behind, or not seen since Tuesday. Players who need a reminder are at the top.
           </Step>
-          <Step n="2" title="Send a nudge">
-            One tap writes it for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). Or send a note to a whole group.
+          <Step n="2" title="Send a reminder">
+            One tap writes the message for you (&ldquo;You&rsquo;re one behind this week. Can you fit one in today?&rdquo;). You can also send a note to a whole group.
           </Step>
           <Step n="3" title="No group chat">
-            Notes go one way, trainer to player. Nobody replies, so there&rsquo;s nothing to moderate. Every note is kept.
+            Notes go from trainer to player only. Players can&rsquo;t reply, so there&rsquo;s nothing to moderate. Every note is saved.
           </Step>
         </ol>
       </section>
@@ -77,29 +77,29 @@ export default function TrainersPage() {
         <div className="mt-8 max-w-[40rem]">
           <PriceCalc />
           <ul className="mt-5 space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
-            <li>No setup fee and no contract. Players you remove stop counting the next month.</li>
-            <li>Players pay by card. Their money goes straight to your bank account, not into ours first.</li>
+            <li>No setup fee and no contract. When you remove a player, you stop paying for them the next month.</li>
+            <li>Players pay by card. The money goes straight to your bank account, not ours.</li>
           </ul>
         </div>
       </section>
 
       <section className="mt-24">
-        <SectionHead eyebrow="Questions" title="What you might ask first." />
+        <SectionHead eyebrow="Questions" title="Common questions." />
         <dl className="mt-8 max-w-[44rem] divide-y divide-outline-variant border-y border-outline-variant">
-          <Faq q="I only have a handful of drills. Is that enough?">
-            Yes. Three or four sessions you already run is enough to start, and you can add more as you go. We set up your first sessions with you.
+          <Faq q="I only have a few drills. Is that enough?">
+            Yes. Three or four sessions you already run are enough to start. You can add more later. We set up your first sessions with you.
           </Faq>
           <Faq q="My drills are already on YouTube.">
-            Good. Paste the link and it plays inside the session. If you&rsquo;d rather film new ones, a phone held sideways is plenty.
+            Good. Paste the link and the video plays inside the session. If you want to film new ones, your phone held sideways is good enough.
           </Faq>
-          <Faq q="Can I say hello before they start?">
-            Make your first session an introduction: a short video of you, what the next few weeks are for, and one easy drill to finish.
+          <Faq q="Can I introduce myself to players first?">
+            Yes. Make your first session an introduction: a short video of you, what you&rsquo;ll work on over the next few weeks, and one easy drill.
           </Faq>
           <Faq q="Who sees what?">
-            You, and anyone you add to help run your sessions, see all your players&rsquo; training. Players see only their own, plus the notes you send them. Other trainers see nothing, and neither do your players&rsquo; clubs.
+            You see all your players&rsquo; training. So does anyone you add to help you. Players see only their own training and the notes you send them. Other trainers and your players&rsquo; clubs see nothing.
           </Faq>
           <Faq q="Can I just sign up now?">
-            We&rsquo;re setting trainers up by hand for now, so every page starts with sessions in it. Tell us how you train and we&rsquo;ll be in touch within a day.
+            Not yet. We set up each trainer by hand for now, so every page starts with sessions in it. Tell us how you train and we&rsquo;ll email you within a day.
           </Faq>
         </dl>
       </section>

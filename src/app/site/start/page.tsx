@@ -22,12 +22,12 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
             Tell us how you <Lime>train.</Lime>
           </h1>
           <p className="mt-6 max-w-[30rem] text-[17px] leading-relaxed text-site-mint">
-            We set every page up with its trainer, so it has sessions in it the day your players open it. Here&rsquo;s what happens:
+            We set up every page with its trainer, so your sessions are in it before your players open it. Here&rsquo;s how it goes:
           </p>
           <ol className="mt-6 max-w-[30rem] space-y-4 text-[15px] leading-relaxed text-site-mint">
-            <li><b className="text-white">A short call.</b> What you train, who, and how often you see them.</li>
-            <li><b className="text-white">Your first sessions.</b> We build three or four together from the drills you already use, with your YouTube clips or new ones filmed on your phone.</li>
-            <li><b className="text-white">Your link.</b> Send it to your players. They&rsquo;re in.</li>
+            <li><b className="text-white">A short call.</b> What you teach, who you train, and how often you see them.</li>
+            <li><b className="text-white">Your first sessions.</b> We build three or four together from drills you already use. Use your YouTube videos, or film new ones on your phone.</li>
+            <li><b className="text-white">Your link.</b> Send it to your players and they&rsquo;re in.</li>
           </ol>
         </div>
         <StartForm slug={claim} />

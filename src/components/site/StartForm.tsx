@@ -21,7 +21,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
       <div className="card p-6 sm:p-8" role="status">
         <h2 className="h-card text-on-surface">Thanks. We&rsquo;ll be in touch.</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
-          Expect an email within a day. We&rsquo;ll set up your page together and get your first sessions in before you send it to anyone.
+          Expect an email within a day. We&rsquo;ll set up your page together and add your first sessions before you send it to anyone.
         </p>
       </div>
     );
@@ -39,7 +39,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
                placeholder="e.g. Riverside Skills" />
       </Field>
 
-      <Field label="Your address" hint="Where your players will find you.">
+      <Field label="Your web address" hint="Where your players will find your page.">
         <div className="flex items-stretch">
           <input name="slug" value={shownSlug} maxLength={30} className="!rounded-r-none"
                  onChange={(e) => { setSlugTouched(true); setSlug(toSlug(e.target.value)); }} placeholder="riverside" />
@@ -66,7 +66,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
         </Field>
       </div>
 
-      <Field label="Your sessions today">
+      <Field label="What drills do you have now?">
         <select name="content" defaultValue="">
           <option value="" disabled>Choose one</option>
           <option>Lots, with videos</option>
@@ -76,7 +76,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
       </Field>
 
       <Field label="Anything else?" hint="Optional.">
-        <textarea name="message" rows={3} maxLength={2000} placeholder="Ages, what you work on, links to your YouTube…" />
+        <textarea name="message" rows={3} maxLength={2000} placeholder="Ages, what you work on, links to your YouTube videos…" />
       </Field>
 
       {state?.error && <p role="alert" className="text-[14px] font-semibold text-on-surface">{state.error}</p>}

@@ -22,7 +22,7 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
               {slug}<span className="font-medium text-on-surface-variant">.{rootLabel}</span>
             </h1>
             <p className="mt-4 max-w-[30rem] text-[16px] leading-relaxed text-on-surface-variant sm:text-[17px]">
-              This address doesn&rsquo;t belong to a trainer yet. Which one are you?
+              This address doesn&rsquo;t belong to a trainer yet. Are you a player or a trainer?
             </p>
           </div>
         </section>
@@ -30,17 +30,17 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="card flex flex-col p-6">
             <span className="eyebrow">I&rsquo;m a player or parent</span>
-            <h2 className="h-card mt-3 text-on-surface">The link might be off</h2>
+            <h2 className="h-card mt-3 text-on-surface">The link may be wrong</h2>
             <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Check the address your trainer sent you. A letter out and you end up here. Or search for them by name.
+              Check the address your trainer sent you. One wrong letter brings you here. You can also search for your trainer by name.
             </p>
             <a href={`${root}/players`} className="btn-primary pressable mt-5 w-full">Find my trainer</a>
           </div>
           <div className="card flex flex-col p-6">
             <span className="eyebrow">I&rsquo;m a trainer</span>
-            <h2 className="h-card mt-3 text-on-surface">This name is free</h2>
+            <h2 className="h-card mt-3 text-on-surface">This address is available</h2>
             <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Make it your page: your players open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.
+              Make it your page. Your players will open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.
             </p>
             <a href={`${root}/start?slug=${encodeURIComponent(slug)}`} className="btn-ghost pressable mt-5 w-full">Claim this address</a>
           </div>

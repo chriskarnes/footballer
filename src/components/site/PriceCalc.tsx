@@ -49,7 +49,7 @@ export function PriceCalc() {
           {covers ? (
             <>
               <div className="mt-7">
-                <p className="text-[14px] font-semibold text-on-surface-variant">You make, every month</p>
+                <p className="text-[14px] font-semibold text-on-surface-variant">You make each month</p>
                 <p className="font-brand text-[44px] font-extrabold leading-none tracking-tighter text-site-ink sm:text-[56px]">
                   {money(keep * players)}
                 </p>
@@ -73,8 +73,8 @@ export function PriceCalc() {
             </>
           ) : (
             <p className="mt-6 rounded-xl bg-site-paper px-4 py-3 text-[14px] leading-relaxed text-on-surface-variant">
-              At {money(price)} or less there&rsquo;s nothing left after our $5. If you&rsquo;d rather keep it that cheap or free,
-              the plan below is the one for you.
+              At {money(price)} or less, there&rsquo;s nothing left after our $5. If you want to charge that little, or nothing,
+              use the plan below.
             </p>
           )}
         </div>
@@ -91,8 +91,8 @@ export function PriceCalc() {
         <p className="eyebrow">Or pay us directly</p>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <p className="min-w-0 flex-1 basis-[18rem] text-[14.5px] leading-relaxed text-on-surface-variant">
-            Already charge your players your own way, or want it free for them? Pay us a flat <b className="font-semibold text-on-surface">$5 a player, a month</b> and
-            nothing goes through us.
+            Already collect payment from your players yourself, or don&rsquo;t want to charge them? Pay us a flat <b className="font-semibold text-on-surface">$5 per player each month</b>.
+            No player payments go through us.
           </p>
           <p className="sm:text-right">
             <span className="block font-brand text-[24px] font-extrabold tracking-tight text-site-ink">{money(FLAT * players)}</span>

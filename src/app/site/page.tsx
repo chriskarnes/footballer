@@ -5,8 +5,8 @@ import strike from '@/assets/site/strike.jpg';
 import teams from '@/assets/site/teams.jpg';
 
 export const metadata = {
-  title: 'Train.futbol: at-home training, set by your trainer',
-  description: 'Your trainer sets the week. You train at home with a ball. They see it got done.',
+  title: 'Train.futbol: soccer drills to do at home, picked by your trainer',
+  description: 'Soccer trainers pick drills for their players to do at home, and see who did them.',
 };
 
 /** The front door: two kinds of visitor, so two doors, and nothing else first. */
@@ -17,47 +17,47 @@ export default function SiteHome() {
                 video={{ src: '/site/match.mp4', poster: '/site/match-poster.jpg', delay: 5000, position: '70% 50%' }}
                 alt="A young player in a training bib strikes a ball on an artificial pitch" position="62% 45%"
                 cards={[{ kind: 'done', title: 'Touch and pass', sub: 'Tuesday · 15 min · done', at: { top: 40, right: -12 } }]}>
-        <span className="marker">At-home training</span>
+        <span className="marker">At-home soccer training</span>
         <h1 className="site-wide mt-5 max-w-[13ch] text-[42px] uppercase leading-[.94] text-white sm:text-[68px]">
-          The training <Lime>between</Lime> training.
+          Soccer drills to do <Lime>at home.</Lime>
         </h1>
         <p className="mt-6 max-w-[30rem] text-[17px] leading-relaxed text-site-mint sm:text-[19px]">
-          You set the week. Your players do the work at home, with a ball and a bit of wall.
-          You see who got it done.
+          You pick the drills for the week. Your players do them at home with a ball and a wall.
+          You see who did them.
         </p>
       </SiteHero>
 
       {/* The two doors sit across the fold, half in the dark and half out. */}
       <section className="relative -mt-24 grid gap-4 sm:-mt-28 sm:grid-cols-2">
-        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Run your training here"
-              body="Set at-home work for every player you train, see who did it, and nudge the ones who didn't." cta="How it works" />
+        <Door href="/trainers" dark eyebrow="I'm a trainer" title="Set drills for your players"
+              body="Pick drills for each player to do at home. See who did them, and remind the ones who didn't." cta="How it works" />
         <Door href="/players" eyebrow="I'm a player or parent" title="Find your trainer"
-              body="Get the sessions your trainer has set for you, and tick them off as you go." cta="Find my trainer" />
+              body="Get the drills your trainer picked for you, and check them off as you finish." cta="Find my trainer" />
       </section>
 
       <PhotoBand photo={teams} alt="Young players from two teams around a goal during a match" position="45% 55%"
-                 eyebrow="Trainers who work across clubs" title="Different teams on Saturday. Your homework on Tuesday.">
-        Your players wear different shirts at the weekend. Between sessions, they&rsquo;re all working on what you set them.
+                 eyebrow="For trainers with players from different clubs" title="They play for different clubs. They all do your drills.">
+        Your players are on different teams. During the week, each one does the drills you gave them at home.
       </PhotoBand>
 
       <section className="mt-24">
         <SectionHead eyebrow="How it works" title="Two or three short sessions a week, and you see who did them." />
         <ol className="mt-8 grid gap-4 sm:grid-cols-3">
-          <Step n="1" title="The trainer sets the week">
-            Two or three short sessions: ball mastery, first touch, finishing. Whatever they&rsquo;re working on together.
+          <Step n="1" title="The trainer picks the sessions">
+            Two or three short sessions a week on what the player needs, like ball mastery, first touch, or finishing.
           </Step>
-          <Step n="2" title="Players train at home">
-            Each session is a list of drills with a timer and a video. It takes 15 to 30 minutes.
+          <Step n="2" title="The player trains at home">
+            Each session is a list of drills. Every drill has a video and a timer. A session takes 15 to 30 minutes.
           </Step>
-          <Step n="3" title="The trainer sees it">
-            Finished sessions show up on the trainer&rsquo;s side. If a player falls behind, the trainer can nudge them in one tap.
+          <Step n="3" title="The trainer sees who did it">
+            When a player finishes a session, the trainer sees it. If a player falls behind, the trainer can send a reminder in one tap.
           </Step>
         </ol>
       </section>
 
       <DarkCta title="Set up your first week with us." href="/start" cta="Get started">
-        Tell us how you train. We&rsquo;ll set up your page and your first sessions with you.
-        Already training with someone? <Link href="/players" className="font-semibold text-white underline underline-offset-4">Find your trainer</Link>.
+        Tell us how you train. We&rsquo;ll build your page and your first sessions with you.
+        Player or parent? <Link href="/players" className="font-semibold text-white underline underline-offset-4">Find your trainer</Link>.
       </DarkCta>
     </>
   );
