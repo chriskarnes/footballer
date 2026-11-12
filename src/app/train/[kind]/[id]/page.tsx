@@ -4,6 +4,7 @@ import { getViewer } from '@/lib/viewer';
 import type { DrillRow } from '@/lib/academy-week';
 import type { Exercise } from '@/lib/types';
 import { progressAmount } from '@/lib/week-builder';
+import { getMyWeek, getTrainer } from '@/lib/player-week';
 
 export const metadata = { title: 'Session', robots: { index: false } };
 
@@ -25,12 +26,21 @@ function asExercise(d: DrillRow, sessionId: string, i: number, step = 0): Exerci
  * Runs a session from the trainer's week: /train/session/<id> for a program
  * session, /train/custom/<id> for one from a week built for them, /train/addon/<id> for a "just for you" drill. RLS decides what
  * this player may read; finishing records it so their trainer sees it.
+ *
+ * Done already this week, it opens as done, from the same week Train reads,
+ * so the two can't disagree. The drills are the trainer's, so a player sees
+ * the trainer's name and face on them; a trainer previewing sees neither.
  */
 export default async function TrainerSessionPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
   const { kind, id } = await params;
   const v = await getViewer();
   if (!v.academy || !v.user || !/^[0-9a-f-]{36}$/.test(id)) notFound();
   const back = { href: '/', label: 'Train' };
+  const player = v.role === 'player';
+  const [week, trainer] = player ? await Promise.all([getMyWeek().catch(() => null), getTrainer()]) : [null, undefined];
+  const item = week?.items.find((i) => i.kind === kind && i.ref === id);
+  const completedDay = item?.done ? item.doneOn ?? item.weekday : null;
+  const mine = { trainer, completedDay };
 
   if (kind === 'session') {
     const { data: s } = await v.db.from('academy_sessions').select('id, name, drill_ids').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
@@ -38,7 +48,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const { data: rows } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').in('id', s.drill_ids);
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
     const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i)).filter(Boolean) as Exercise[];
-    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} />;
+    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} {...mine} />;
   }
 
   // A session from a week built for this player: runs and records as an
@@ -53,7 +63,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
     const steps: number[] = s.steps ?? [];
     const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i, steps[i] ?? 0)).filter(Boolean) as Exercise[];
-    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} />;
+    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} {...mine} />;
   }
 
   // Any drill from the academy's library, when players may browse it.
@@ -61,7 +71,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const { data: d } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
     if (!d) notFound();
     return <Runner title={d.name} drills={[asExercise(d as DrillRow, d.id, 0)]}
-                   sessionRef={d.id} source="academy" back={{ href: '/library', label: 'Library' }} />;
+                   sessionRef={d.id} source="academy" back={{ href: '/library', label: 'Library' }} trainer={trainer} />;
   }
 
   if (kind === 'addon') {
@@ -70,7 +80,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const d = a?.drills as unknown as DrillRow | null;
     if (!a || !d) notFound();
     return <Runner title={d.name} note={a.note} drills={[asExercise(d, a.id, 0)]}
-                   sessionRef={a.id} source="addon" back={back} />;
+                   sessionRef={a.id} source="addon" back={back} {...mine} />;
   }
   notFound();
 }

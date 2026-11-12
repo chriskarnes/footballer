@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Runner } from '@/components/Runner';
 import { KIND_LABELS, phaseById, sessionExercises, speedSessionById } from '@/lib/speed';
+import { serverClient } from '@/lib/supabase/server';
 
 /**
  * A speed session in the Runner, the same screen every other session uses.
@@ -20,6 +21,22 @@ export default async function SpeedSessionPage({
   if (!s) notFound();
   const phase = phaseById(s.phase)!;
 
+  // When it was finished lately, the way the Speed page reads it. Whether
+  // that's this week is the player's own week, so the runner decides.
+  let completedAt: string[] = [];
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
+      const db = await serverClient();
+      const { data: auth } = await db.auth.getUser();
+      if (auth.user) {
+        const { data } = await db.from('workouts').select('completed_at')
+          .eq('status', 'completed').eq('source', 'speed').eq('source_ref', s.id)
+          .gte('completed_at', new Date(Date.now() - 8 * 86400000).toISOString());
+        completedAt = (data ?? []).map((r: { completed_at: string | null }) => r.completed_at).filter(Boolean) as string[];
+      }
+    } catch { /* not configured */ }
+  }
+
   // Back goes where you came from: history, the Speed tab's "today", or the
   // phase you were browsing.
   const back =
@@ -34,6 +51,7 @@ export default async function SpeedSessionPage({
       sessionRef={s.id}
       source="speed"
       back={back}
+      completedAt={completedAt}
     />
   );
 }

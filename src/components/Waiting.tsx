@@ -30,7 +30,7 @@ export function Waiting({ state }: { state: Wait }) {
         <BandTag>{state.kind === 'new' ? 'Welcome' : 'This week'}</BandTag>
         <BandTitle>{state.kind === 'new' ? 'You’re in!' : 'Nothing yet'}</BandTitle>
         <div className="mt-5 flex items-center gap-3.5">
-          {(trainer.name || trainer.photo) && <Avatar name={trainer.name} src={trainer.photo} className="h-14 w-14 text-[20px]" />}
+          {(trainer.name || trainer.photo) && <Avatar name={trainer.name} src={trainer.photo} className="h-14 w-14 text-[20px]" onBrand />}
           <p className="min-w-0 text-[17px] font-semibold leading-snug text-on-surface-brand">{waitingLine(state)}</p>
         </div>
         {meets && (

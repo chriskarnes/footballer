@@ -1144,6 +1144,15 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   stroke-dasharray: 30;
   animation: draw 460ms var(--md-sys-motion-easing-emphasized-decelerate) 160ms both;
 }
+/* The drill to tick next, in a session: its ring breathes out, slowly, so
+   the eye finds it. Not for anyone who has asked for less motion. */
+@keyframes tickHere {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent); }
+  70%  { box-shadow: 0 0 0 8px color-mix(in srgb, var(--md-sys-color-primary) 0%, transparent); }
+  100% { box-shadow: 0 0 0 8px transparent; }
+}
+.tick-here { animation: tickHere 2.2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tick-here { animation: none; } }
 /* Someone who has asked for less motion still gets the state change, just not
    the movement — the tick appears rather than drawing. */
 @media (prefers-reduced-motion: reduce) {

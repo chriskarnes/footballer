@@ -44,7 +44,9 @@ export const readMyWeek = cache(async (): Promise<MyWeek | null> => {
   const today = localDate(new Date(), tz);
   const { data: done } = await v.db.from('workouts').select('source, source_ref, completed_at')
     .eq('user_id', v.user.id).eq('status', 'completed').in('source', ['academy', 'addon'])
-    .gte('completed_at', new Date(Date.now() - 8 * 86400000).toISOString());
+    .gte('completed_at', new Date(Date.now() - 8 * 86400000).toISOString())
+    // Oldest first: a session done twice keeps the tick from the first time.
+    .order('completed_at');
   const items = buildWeek({ userId: v.user.id, today, tz, ...c, completions: done ?? [] });
   const mine = c.groups.filter((g) => !g.archived && c.memberships.some((m) => m.group_id === g.id && m.user_id === v.user!.id));
   const weekday = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7;
@@ -100,7 +102,7 @@ export const getPlayerState = cache(async (): Promise<PlayerState> => {
   if (!week) return { kind: 'none' };
   if (week.items.length) return { kind: week.items.every((i) => i.done) ? 'done' : 'active', week };
   const [trainer, joined, everDone] = await Promise.all([
-    readTrainer(v.db, v.academy.id),
+    getTrainer(),
     v.db.from('academy_members').select('joined_at').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle(),
     v.db.from('workouts').select('id', { count: 'exact', head: true })
       .eq('user_id', v.user.id).eq('status', 'completed').in('source', ['academy', 'addon']),
@@ -110,10 +112,12 @@ export const getPlayerState = cache(async (): Promise<PlayerState> => {
   return { kind: recent && !everDone.count ? 'new' : 'waiting', week, trainer };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function readTrainer(db: any, academyId: string): Promise<Trainer> {
-  const { data, error } = await db.rpc('academy_trainer', { p_academy: academyId });
+/** This academy's trainer, for a signed-in member; nameless and faceless otherwise. Once per render. */
+export const getTrainer = cache(async (): Promise<Trainer> => {
+  const v = await getViewer();
+  if (!v.academy || !v.user) return { name: null, photo: null };
+  const { data, error } = await v.db.rpc('academy_trainer', { p_academy: v.academy.id });
   if (error || !data) return { name: null, photo: null };
   const t = data as { name: string | null; photo_at: string | null };
   return { name: t.name ?? null, photo: t.photo_at ? `/me/trainer-photo?v=${encodeURIComponent(t.photo_at)}` : null };
-}
+});
