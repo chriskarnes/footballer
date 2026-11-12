@@ -1135,6 +1135,10 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 .tabbar-surface {
   background: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 85%, transparent);
 }
+/* A tab has no box of its own, so no hover outline or press layer: those drew
+   a circle around it. Hover inks it; a press dims it. */
+@media (hover: hover) { .tab:hover { color: var(--md-sys-color-on-surface); } }
+.tab:active { opacity: .6; }
 
 /* ==========================================================================
    MOTION

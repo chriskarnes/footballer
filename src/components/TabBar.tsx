@@ -40,18 +40,24 @@ export function TabBar({ academyId, library = true, plan = true, speed = true }:
         {tabs.map((t) => {
           const on = t.href === '/' ? path === '/' : path.startsWith(t.href);
           return (
+            // The tab you're on is in full ink with a short bar under its name.
+            // It had been a filled black blob, about as wide as it was tall, so
+            // it read as a circle stamped on the bar.
             <Link key={t.href} href={t.href} aria-current={on ? 'page' : undefined}
               onClick={() => { if (!on) haptic('tap'); }}
-                            className={`pressable flex min-h-[52px] min-w-[54px] flex-col items-center justify-center gap-0.5 rounded-full px-3
-                          text-[11.5px] font-bold tracking-tight
-                          transition-colors duration-300
-                          ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant'}`}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"
+              className={`tab flex min-h-[52px] min-w-[54px] flex-col items-center justify-center rounded-xl px-3 pt-1
+                          text-[11.5px] font-bold tracking-tight transition-colors duration-300
+                          ${on ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.3 : 1.9}
                    strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                 <path d={t.d} />
               </svg>
               {/* Always named: an icon alone asks a ten-year-old to guess. */}
-              <span>{t.label}</span>
+              <span className="mt-0.5">{t.label}</span>
+              {/* Always there, so the label doesn't jump when it shows. */}
+              <span aria-hidden="true"
+                    className={`mt-[3px] h-[3px] w-4 rounded-full bg-current transition-[opacity,transform] duration-300
+                                ${on ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`} />
             </Link>
           );
         })}
