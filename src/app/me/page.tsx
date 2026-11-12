@@ -6,11 +6,9 @@ import { Avatar } from '@/components/Avatar';
 import { SoccerDaysPanel } from '@/components/SoccerDays';
 import { getMyWeek, getPlayerState, type MyWeek, type PlayerState } from '@/lib/player-week';
 import { waitingLine } from '@/components/Waiting';
-import { ThisWeek } from '@/components/ThisWeek';
 import { WorkoutList } from '@/components/WorkoutList';
 import { AccountSection } from '@/components/AccountSection';
-import { finishedRows, readWorkouts, toFinished, toRow, type WorkoutRaw } from '@/lib/workout-rows';
-import type { DayRow } from '@/lib/plan-today';
+import { finishedRows, readWorkouts, toRow, type WorkoutRaw } from '@/lib/workout-rows';
 import pkg from '../../../package.json';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
@@ -27,7 +25,6 @@ import { speedAllowed } from '@/lib/speed-gate';
  * it reads, top to bottom:
  *
  *   who you are      the name and photo, in the band
- *   this week        sessions, minutes, and touches or the streak
  *   team days        which days their own team trains and plays
  *   saved sessions   kept from Train to do later
  *   your plans       every saved week
@@ -36,6 +33,9 @@ import { speedAllowed } from '@/lib/speed-gate';
  *
  * Saved and finished sessions used to share one "Do it again" list, so a
  * session you meant to do sat between ones you'd done, looking the same.
+ *
+ * It used to open on a row of this week's numbers (sessions, minutes, weeks
+ * in a row). Train already shows the week; the tiles said nothing new.
  */
 /**
  * The profile columns arrive with supabase/migrations/0001. Until it runs, the
@@ -68,7 +68,6 @@ export default async function MePage() {
   // Weekly plans are built from the drill library: without it, no plans.
   let library = false;
   let plans: SavedPlan[] = [];
-  let planDays: DayRow[] = [];
   let canBrand = false;
   let role: string | null = null;
   // undefined: the calendar table doesn't exist yet (migration 0003), so no
@@ -104,12 +103,6 @@ export default async function MePage() {
         workouts = rows;
         profile = prof;
         plans = planRows ?? [];
-        const activePlan = plans.find((p) => p.active);
-        if (activePlan) {
-          const { data: days } = await db.from('plan_days')
-            .select('weekday,slot,kind,session_id').eq('plan_id', activePlan.id);
-          planDays = days ?? [];
-        }
       }
     } catch { /* not configured yet */ }
   }
@@ -139,12 +132,6 @@ export default async function MePage() {
 
   const finished = finishedRows(workouts);
   const saved = workouts.filter((w) => w.status !== 'completed').map(toRow);
-  const activePlan = library ? plans.find((p) => p.active) : undefined;
-  // The week their trainer set, counted as Train counts it.
-  const set = myWeek?.items.filter((i) => !i.extra) ?? [];
-  const completions = workouts
-    .filter((w) => w.status === 'completed' && w.source === 'library')
-    .map((w) => ({ source_ref: w.source_ref, completed_at: w.completed_at }));
 
   const name = profile?.display_name?.trim();
   // Waiting on their trainer: nothing to count yet, and that isn't on them.
@@ -162,10 +149,6 @@ export default async function MePage() {
       </BrandBand>
       {/* Every section 40px from the last. NoteBanner keeps its own gap below. */}
       <div className="mt-10"><NoteBanner /></div>
-
-      <ThisWeek finished={finished.map(toFinished)} quiet={!!waiting}
-        trainer={set.length ? { done: set.filter((i) => i.done).length, set: set.length } : null}
-        plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />
 
       {/* Their team's days, once answered on Train: it's a setting from then on. */}
       {myWeek?.schedule && (

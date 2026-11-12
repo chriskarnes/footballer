@@ -1,5 +1,4 @@
 import type { WorkoutRow } from '@/components/WorkoutList';
-import type { Finished } from './training-stats';
 
 /**
  * Reading workouts for Me and its history page.
@@ -56,7 +55,5 @@ export function toRow(w: Raw): WorkoutRow {
 export const finishedRows = (all: Raw[]) =>
   all.filter((w) => w.status === 'completed').map(toRow)
     .sort((a, b) => b.at.localeCompare(a.at));
-
-export const toFinished = (r: WorkoutRow): Finished => ({ at: r.at, minutes: r.minutes, touches: r.touches });
 
 export type { Raw as WorkoutRaw };
