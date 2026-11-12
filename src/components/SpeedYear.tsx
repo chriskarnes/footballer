@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { PHASES, sessionSeconds, KIND_LABELS, type PhaseId } from '@/lib/speed';
 import {
-  isoDate, mondayOf, phaseForMonth, position, weekPlan, type DayPlan, type Position, type YearStart,
+  autoStart, isoDate, mondayOf, phaseForMonth, position, weekPlan, type DayPlan, type Position, type YearStart,
 } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 import { BandTag, BandTitle } from './BandText';
@@ -64,17 +64,6 @@ function useSpeed() {
   if (!s) throw new Error('Speed parts go inside SpeedYearProvider');
   const pos = s.ready && s.start && s.now ? position(s.start, s.now) : null;
   return { ...s, pos };
-}
-
-/**
- * Where "Start my speed program" starts: at the phase the calendar says it
- * is (the phases follow the football year), this week, or from Thursday on
- * next Monday, since this week's first sessions would already be missed.
- */
-function autoStart(now: Date): YearStart {
-  const monday = mondayOf(now);
-  if ((now.getDay() + 6) % 7 >= 3) monday.setDate(monday.getDate() + 7);
-  return { monday: isoDate(monday), phase: phaseForMonth(monday) };
 }
 
 const href = (d: Training) => d.type === 'test' ? '/speed/test' : `/speed/session/${d.session.id}?from=speed`;

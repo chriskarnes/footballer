@@ -1,11 +1,11 @@
-import Link from 'next/link';
 import { Suspense } from 'react';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { NoteBanner } from './NoteBanner';
 import { TrainerWeek } from './TrainerWeek';
-import { getMyWeek, getPlayerState } from '@/lib/player-week';
+import { getMyWeek, getPlayerState, getTrainer } from '@/lib/player-week';
 import { speedAllowed } from '@/lib/speed-gate';
 import { Waiting } from './Waiting';
+import { SpeedInvite } from './SpeedInvite';
 
 /**
  * What Train, Library and Plan show in an academy that doesn't have the drill
@@ -21,18 +21,18 @@ export async function LibraryLocked({ title }: { title: string }) {
   // What their trainer has set them is the page, when there's anything.
   const week = await getMyWeek().catch(() => null);
   if (week) return <div className="animate-pop"><TrainerWeek week={week} /></div>;
-  const speed = await speedAllowed().catch(() => true);
+  const [speed, trainer] = await Promise.all([speedAllowed().catch(() => true), getTrainer().catch(() => null)]);
   return (
     <div className="animate-pop">
       <BrandBand>
         <BandTag>{title}</BandTag>
         <BandTitle>Nothing yet</BandTitle>
         <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
-          Your trainer hasn&rsquo;t set a session.{speed && ' Try a speed session.'}
+          Your trainer hasn&rsquo;t set a session.
         </p>
       </BrandBand>
       <Suspense fallback={null}><NoteBanner /></Suspense>
-      {speed && <Link href="/speed" className="btn-primary btn-big pressable mt-6 w-full">Get faster</Link>}
+      {speed && <SpeedInvite trainer={trainer?.name ?? null} className="mt-6" />}
     </div>
   );
 }

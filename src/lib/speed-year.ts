@@ -54,6 +54,17 @@ export function phaseForMonth(d: Date): PhaseId {
   return 'inseason';
 }
 
+/**
+ * Where "Start my speed program" starts: at the phase the calendar says it
+ * is (the phases follow the football year), this week, or from Thursday on
+ * next Monday, since this week's first sessions would already be missed.
+ */
+export function autoStart(now: Date): YearStart {
+  const monday = mondayOf(now);
+  if ((now.getDay() + 6) % 7 >= 3) monday.setDate(monday.getDate() + 7);
+  return { monday: isoDate(monday), phase: phaseForMonth(monday) };
+}
+
 export type Position =
   | { state: 'upcoming'; startsOn: Date }
   | { state: 'finished' }

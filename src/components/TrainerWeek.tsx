@@ -8,6 +8,7 @@ import { Avatar } from './Avatar';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { StartLink } from './StartLink';
 import { TickMark } from './TickMark';
+import { SpeedInvite } from './SpeedInvite';
 import { speedAllowed } from '@/lib/speed-gate';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -99,7 +100,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
         )}
         {weekDone && !gameDay && (
           week.more && !week.more.why ? <AddSession why={null} inBand />
-          : speed ? <Link href="/speed" className="btn-primary btn-big pressable mt-4 w-full bg-on-surface-brand text-surface-brand">Get faster</Link>
+          : speed ? <SpeedInvite trainer={trainer?.name ?? null} onBrand className="mt-4" />
           : null
         )}
         {!weekDone && <WeekStrip items={items} today={today} nextDay={next?.weekday ?? null} />}
