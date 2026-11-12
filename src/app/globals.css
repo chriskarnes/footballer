@@ -1265,6 +1265,6 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    One plain heading per section instead of a small upper-case label, and a
    bigger button for the one thing a screen is for.
    ========================================================================== */
-.h-sec { margin: 0; font-family: var(--md-ref-typeface-brand); font-size: 19px; font-weight: 800;
+.h-sec { font-family: var(--md-ref-typeface-brand); font-size: 19px; font-weight: 800;
   letter-spacing: var(--app-track-tighter); line-height: 1.2; color: var(--md-sys-color-on-surface); }
 .btn-big { min-height: 60px; font-size: 18px; font-weight: 800; }
