@@ -25,7 +25,7 @@ import { speedAllowed } from '@/lib/speed-gate';
  * it reads, top to bottom:
  *
  *   who you are      the name and photo, in the band
- *   team days        which days their own team trains and plays
+ *   soccer week      trainer, practice and game days, tapped to change
  *   saved sessions   kept from Train to do later
  *   your plans       every saved week
  *   history          the last five, and See all
@@ -150,11 +150,11 @@ export default async function MePage() {
       {/* Every section 40px from the last. NoteBanner keeps its own gap below. */}
       <div className="mt-10"><NoteBanner /></div>
 
-      {/* Their team's days, once answered on Train: it's a setting from then on. */}
+      {/* Their soccer days, once answered on Train: it's a setting from then on. */}
       {myWeek?.schedule && (
         <section className="mt-10">
-          <h2 className="h-sec mb-3">Team practice &amp; games</h2>
-          <SoccerDaysPanel club={myWeek.schedule.club} game={myWeek.schedule.game} set />
+          <h2 className="h-sec mb-3">Your soccer week</h2>
+          <SoccerDaysPanel days={myWeek.schedule} />
         </section>
       )}
 

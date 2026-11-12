@@ -4,7 +4,7 @@ import { getViewer } from '@/lib/viewer';
 import { addDays, localDate, mondayOf } from '@/lib/progress';
 import { loadContent, loadDefaults, targetFor } from '@/lib/academy-data';
 import { MAX_MINUTES, MIN_MINUTES, buildPlayerWeek, fitToTarget, type BuiltSession, type Feel, type PastWeek } from '@/lib/week-builder';
-import type { CustomRow } from '@/lib/academy-week';
+import { teamDays, type CustomRow } from '@/lib/academy-week';
 import { allowed, DENIED, fingerprint, logCall } from '@/lib/ai';
 import { proposeWeek } from '@/lib/ai-week';
 import { loadPlayers } from '@/lib/coach-data';
@@ -133,7 +133,7 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     const sched = c.schedules.find((s) => s.user_id === userId);
     const meets = c.groups.filter((g) => !g.archived && g.meets_weekday !== null
       && c.memberships.some((m) => m.group_id === g.id && m.user_id === userId)).map((g) => g.meets_weekday as number);
-    const busy = { club: sched?.club_days ?? [], game: sched?.game_day ?? null, meets };
+    const busy = { ...teamDays(sched), meets };
     const past = await pastWeeks(v.db, v.academy.id, c.custom, userId, week_of);
     const recent = past.slice(0, 2).flatMap((w) => w.sessions.flatMap((x) => x.drill_ids));
     // Step-ups off: no history, so every drill starts at its own amount and

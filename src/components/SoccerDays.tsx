@@ -2,11 +2,22 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveSoccerDays } from '@/app/schedule-actions';
+import type { TeamDays } from '@/lib/academy-week';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-type Days = { club: number[]; game: number | null };
+const FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-/** A ball, for the game day. */
+type Kind = 'off' | 'trainer' | 'practice' | 'game';
+/** The order a tap goes in. */
+const KINDS: Kind[] = ['off', 'trainer', 'practice', 'game'];
+const NAME: Record<Kind, string> = { off: 'Off', trainer: 'Trainer', practice: 'Practice', game: 'Game' };
+
+const toWeek = (d: TeamDays | null): Kind[] => DAYS.map((_, i) =>
+  !d ? 'off' : d.games.includes(i) ? 'game' : d.trainer.includes(i) ? 'trainer' : d.practice.includes(i) ? 'practice' : 'off');
+const on = (w: Kind[], k: Kind) => w.flatMap((x, i) => (x === k ? [i] : []));
+const fromWeek = (w: Kind[]): TeamDays => ({ trainer: on(w, 'trainer'), practice: on(w, 'practice'), games: on(w, 'game') });
+
+/** A ball, for a game. */
 function Ball({ className }: { className: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
@@ -17,148 +28,144 @@ function Ball({ className }: { className: string }) {
   );
 }
 
+/** A whistle, for a day with their trainer. */
+function Whistle({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+      <circle cx="9" cy="14.5" r="6" />
+      <path d="M9 8.5h12.5v4h-7" />
+      <circle cx="9" cy="14.5" r="1.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** A cone, for team practice. */
+function Cone({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round">
+      <path d="M12 3.5 17.5 19h-11z" />
+      <path d="M8.6 13h6.8M3.5 20.5h17" />
+    </svg>
+  );
+}
+
+const MARK: Record<Kind, (p: { className: string }) => React.ReactNode> = {
+  off: () => null, trainer: Whistle, practice: Cone, game: Ball,
+};
+/** Each kind apart without colour: a thin line, a thick line, grey, filled. */
+const LOOK: Record<Kind, string> = {
+  off: 'border border-outline-variant text-on-surface-variant',
+  trainer: 'border-2 border-on-surface text-on-surface',
+  practice: 'border border-transparent bg-surface-container-high text-on-surface',
+  game: 'border border-transparent bg-primary text-on-primary',
+};
+
 /**
- * A player's team days, as two plain questions: which days the team
- * practices (any number), then which day is the game (one, or none). It used
- * to be one row where a tap went free → training → game, which a ten-year-old
- * had to be told and then remember, and it called practice "Train", the name
- * of the tab their own sessions are on. The trainer's sessions go on the
- * days left over.
+ * A player's soccer week, as seven days to tap. Each tap moves a day on:
+ * off, then a day with their trainer, then team practice, then a game, then
+ * off again. Any number of each, games too: a tournament weekend is two.
+ * The trainer's at-home sessions go on the off days.
  *
- * `userId` saves for one of a trainer's players instead of the viewer, and
- * asks in the trainer's words.
+ * It's the week itself, not a form for it: what's saved is what's shown, and
+ * Save (with Cancel) appears only once a day has changed. With nothing saved
+ * yet (`days` null) Save is there from the start, since "no soccer" is an
+ * answer too.
+ *
+ * This was two questions for a while (which days the team practices, then
+ * which one day is the game). One game a week didn't fit the kids who play
+ * two, and tapping a day until it says what's on was quicker.
+ *
+ * `userId` saves for one of a trainer's players instead of the viewer.
  */
-export function SoccerDays({ club = [], game = null, userId, onDone, onCancel, cta = 'Save' }: {
-  club?: number[]; game?: number | null; userId?: string;
-  onDone?: (saved: Days) => void; onCancel?: () => void; cta?: string;
-}) {
-  const [practice, setPractice] = useState<number[]>(club.filter((d) => d !== game));
-  const [match, setMatch] = useState<number | null>(game);
+export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: string }) {
+  const [saved, setSaved] = useState<Kind[]>(() => toWeek(days));
+  const [week, setWeek] = useState<Kind[]>(saved);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
 
-  // A day is practice or the game, not both: picking one takes it from the other.
-  const tapPractice = (i: number) => {
-    setPractice((p) => (p.includes(i) ? p.filter((d) => d !== i) : [...p, i].sort()));
-    if (match === i) setMatch(null);
-  };
-  const tapGame = (i: number | null) => {
-    setMatch((m) => (m === i ? null : i));
-    if (i !== null) setPractice((p) => p.filter((d) => d !== i));
+  // A fresh answer from the server (another device, the trainer) replaces both.
+  const key = days ? `${days.trainer}|${days.practice}|${days.games}` : 'unset';
+  useEffect(() => { const w = toWeek(days); setSaved(w); setWeek(w); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const changed = week.some((k, i) => k !== saved[i]);
+  const asking = !days;
+
+  const tap = (i: number) => {
+    setError(null);
+    setWeek((w) => w.map((k, j) => (j === i ? KINDS[(KINDS.indexOf(k) + 1) % KINDS.length] : k)));
   };
 
   const save = () => start(async () => {
     setError(null);
-    const r = await saveSoccerDays({ club: practice, game: match, userId });
+    const r = await saveSoccerDays({ ...fromWeek(week), userId });
     if (!r.ok) { setError(r.error); return; }
+    setSaved(week);
     router.refresh();
-    onDone?.({ club: practice, game: match });
   });
-
-  const q = userId
-    ? { practice: 'Practice days', game: 'Game day' }
-    : { practice: 'Which days does your team practice?', game: 'Which day is your game?' };
-  const day = 'pressable flex min-h-[52px] items-center justify-center rounded-xl border text-[14px] font-bold transition-colors';
 
   return (
     <div>
-      <p className="text-[16px] font-bold leading-snug text-on-surface">{q.practice}</p>
-      <p className="mt-0.5 text-[14px] font-medium text-on-surface-variant">Tap all of them.</p>
-      <div className="mt-3 grid grid-cols-7 gap-1.5" role="group" aria-label="Practice days">
+      <p className="text-[14px] font-medium text-on-surface-variant">Tap a day to change it.</p>
+      <div className="mt-2.5 grid grid-cols-7 gap-1.5" role="group" aria-label="Soccer week">
         {DAYS.map((label, i) => {
-          const on = practice.includes(i);
+          const k = week[i];
+          const Mark = MARK[k];
           return (
-            <button key={label} type="button" onClick={() => tapPractice(i)} aria-pressed={on}
-                    className={`${day} ${on ? 'border-on-surface bg-on-surface text-surface' : 'border-outline text-on-surface'}`}>
+            <button key={label} type="button" onClick={() => tap(i)} disabled={pending}
+                    aria-label={`${FULL[i]}: ${NAME[k]}`}
+                    className={`pressable flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl text-[14px] font-bold transition-colors ${LOOK[k]}`}>
               {label}
+              <span className="flex h-[18px] w-[18px] items-center justify-center">
+                <Mark className="h-[18px] w-[18px]" />
+                {k === 'off' && <span className="h-1 w-1 rounded-full bg-outline" aria-hidden="true" />}
+              </span>
             </button>
           );
         })}
       </div>
 
-      <p className="mt-6 text-[16px] font-bold leading-snug text-on-surface">{q.game}</p>
-      <div role="radiogroup" aria-label="Game day">
-      <div className="mt-3 grid grid-cols-7 gap-1.5">
-        {DAYS.map((label, i) => {
-          const on = match === i;
+      {/* The four, in the order a tap goes through them. */}
+      <ol className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[14px] font-semibold text-on-surface-variant" aria-label="Each tap goes to the next">
+        {KINDS.map((k) => {
+          const Mark = MARK[k];
           return (
-            <button key={label} type="button" role="radio" aria-checked={on} onClick={() => tapGame(i)}
-                    className={`${day} flex-col gap-0.5 ${on ? 'border-primary bg-primary text-on-primary' : 'border-outline text-on-surface'}`}>
-              {label}
-              {on && <Ball className="h-4 w-4" />}
-            </button>
+            <li key={k} className="flex items-center gap-1">
+              <span className={`flex h-5 w-5 items-center justify-center rounded-md ${LOOK[k]}`} aria-hidden="true">
+                <Mark className="h-3.5 w-3.5" />
+              </span>
+              {NAME[k]}
+            </li>
           );
         })}
-      </div>
-      <button type="button" role="radio" aria-checked={match === null} onClick={() => tapGame(null)}
-              className={`pressable mt-2 min-h-11 rounded-full border px-4 text-[14px] font-bold transition-colors
-                          ${match === null ? 'border-on-surface bg-on-surface text-surface' : 'border-outline text-on-surface'}`}>
-        No game
-      </button>
-      </div>
+      </ol>
 
       {error && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{error}</p>}
-      <div className="mt-6 flex items-center gap-2.5">
-        <button type="button" onClick={save} disabled={pending} className="btn-primary btn-sm pressable">
-          {pending ? 'Saving…' : cta}
-        </button>
-        {onCancel && (
-          <button type="button" onClick={onCancel} disabled={pending} className="btn-ghost btn-sm pressable">Cancel</button>
-        )}
-      </div>
+      {changed || asking ? (
+        <div className="mt-4 flex items-center gap-2.5">
+          <button type="button" onClick={save} disabled={pending} className="btn-primary btn-sm pressable">
+            {pending ? 'Saving…' : 'Save'}
+          </button>
+          {changed && !asking && (
+            <button type="button" onClick={() => { setWeek(saved); setError(null); }} disabled={pending}
+                    className="btn-ghost btn-sm pressable">Cancel</button>
+          )}
+        </div>
+      ) : !userId && (
+        <p className="mt-3 text-[15px] font-medium leading-snug text-on-surface">Your sessions go on the off days.</p>
+      )}
     </div>
   );
 }
 
 /**
- * Their team days as the week itself: seven days, practice filled in, the
- * game day in the academy's colour with a ball, the free days left plain,
- * because the free days are where their training goes. Change opens the two
- * questions. With nothing set, the questions are open to start with.
+ * The same, in a card, for the player's own pages. Unanswered, it asks first.
  */
-export function SoccerDaysPanel({ club, game, set }: { club: number[]; game: number | null; set: boolean }) {
-  const [open, setOpen] = useState(!set);
-  // What was just saved, shown straight away rather than after the refresh.
-  const [shown, setShown] = useState<Days>({ club, game });
-  const key = `${club.join()}|${game}`;
-  useEffect(() => { setShown({ club, game }); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (open) {
-    return (
-      <div className="card p-5">
-        <SoccerDays club={shown.club} game={shown.game}
-                    onDone={(saved) => { setShown(saved); setOpen(false); }}
-                    onCancel={set ? () => setOpen(false) : undefined} />
-      </div>
-    );
-  }
+export function SoccerDaysPanel({ days }: { days: TeamDays | null }) {
   return (
     <div className="card p-4">
-      <ol className="grid grid-cols-7 gap-1.5" aria-label="Your team's week">
-        {DAYS.map((label, i) => {
-          const isGame = shown.game === i;
-          const isPractice = !isGame && shown.club.includes(i);
-          return (
-            <li key={label} aria-label={`${label}: ${isGame ? 'game' : isPractice ? 'practice' : 'free'}`}
-                className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl text-[14px] font-bold
-                            ${isGame ? 'bg-primary text-on-primary'
-                              : isPractice ? 'bg-surface-container-high text-on-surface'
-                              : 'border border-outline-variant text-on-surface-variant'}`}>
-              {label}
-              {isGame && <Ball className="h-4 w-4" />}
-            </li>
-          );
-        })}
-      </ol>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] font-semibold text-on-surface-variant">
-        <span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded bg-surface-container-high ring-1 ring-outline-variant" aria-hidden="true" />Practice</span>
-        <span className="flex items-center gap-1.5"><Ball className="h-4 w-4 text-primary" />Game</span>
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="min-w-0 text-[15px] font-medium leading-snug text-on-surface">Your training goes on the other days.</p>
-        <button type="button" onClick={() => setOpen(true)} className="btn-ghost btn-sm pressable shrink-0">Change</button>
-      </div>
+      {!days && <p className="mb-2 text-[16px] font-bold leading-snug text-on-surface">When do you have soccer?</p>}
+      <SoccerDays days={days} />
     </div>
   );
 }

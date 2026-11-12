@@ -7,8 +7,8 @@
  * The week:
  *   - `sessions` sessions of about `minutes` each.
  *   - Each session leans on one of the player's focus tags, taking turns.
- *   - Days come from placeDays: free days first, then practice days, never a
- *     game day.
+ *   - Days come from placeDays: off days first, then practice and trainer
+ *     days, never a game day.
  *
  * Progression, from what came of the last built week:
  *   - Core and new. Each session keeps up to two drills from last week for its
@@ -23,7 +23,7 @@
  *   - Lighter week. After three built weeks in a row, the fourth is shorter
  *     and familiar, with no step-ups, before the next block.
  */
-import { drillTags, placeDays, type DrillRow } from './academy-week';
+import { drillTags, placeDays, type Busy, type DrillRow } from './academy-week';
 import { FOCUS_LABELS, type FocusArea } from './types';
 
 export type Target = { sessions: number; minutes: number };
@@ -84,7 +84,7 @@ export function buildPlayerWeek(input: {
   focus: string[];
   /** Drill ids from the last couple of weeks, most recent first. */
   recent?: string[];
-  busy?: { club?: number[]; game?: number | null; meets?: number[] };
+  busy?: Busy;
   /** Varies the tie-breaks: user id + week. */
   seed?: string;
   /** The Monday being built, and the built weeks before it, newest first. */

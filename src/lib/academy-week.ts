@@ -27,8 +27,25 @@ export type GroupRow = { id: string; name: string; meets_weekday: number | null;
 export type PlayerProgramRow = { user_id: string; program_id: string; starts_on: string };
 export type AddonRow = { id: string; user_id: string; drill_id: string; note: string | null; week_of: string };
 export type CompletionRow = { source: string; source_ref: string | null; completed_at: string | null };
-/** The days a player already has soccer: club training, and a game. 0 = Monday. */
-export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null };
+/**
+ * The days a player already has soccer, as stored. 0 = Monday. game_days and
+ * trainer_days arrive with 0021; before it there's one game_day at most.
+ */
+export type ScheduleRow = { user_id: string; club_days: number[]; game_day: number | null; game_days?: number[]; trainer_days?: number[] };
+
+/** A player's soccer besides their sessions: days with their trainer, team practice, games. Each day is one of them, or off. */
+export type TeamDays = { trainer: number[]; practice: number[]; games: number[] };
+
+/** What placeDays keeps sessions off: their soccer, and their groups' meeting days. */
+export type Busy = Partial<TeamDays> & { meets?: number[] };
+
+/** A schedule row as its days; none set, without one. A day marked twice counts as the game, then the trainer. */
+export function teamDays(s?: Pick<ScheduleRow, 'club_days' | 'game_day' | 'game_days' | 'trainer_days'> | null): TeamDays {
+  if (!s) return { trainer: [], practice: [], games: [] };
+  const games = s.game_days?.length ? s.game_days : s.game_day === null || s.game_day === undefined ? [] : [s.game_day];
+  const trainer = (s.trainer_days ?? []).filter((d) => !games.includes(d));
+  return { trainer, games, practice: s.club_days.filter((d) => !games.includes(d) && !trainer.includes(d)) };
+}
 /** A session of a week built for one player (0010). Replaces their program that week. */
 export type CustomRow = { id: string; user_id: string; week_of: string; position: number; name: string; drill_ids: string[]; weekday: number;
   made_by?: 'rules' | 'ai' | 'trainer' | 'player'; note?: string | null;
@@ -88,21 +105,21 @@ const WEEK = [0, 1, 2, 3, 4, 5, 6];
 /**
  * Days to do `count` sessions on, around the soccer a player already has.
  *
- * Never on a game day. Not on club or group days while there are free days
- * enough; not the day after a game either, if that can be helped. Then
- * spread out across what's left, so two sessions aren't back to back when
- * they needn't be. With no soccer days known, it's just spread through the
- * week.
+ * Never on a game day. Not on practice, trainer or group days while there
+ * are off days enough; not the day after a game either, if that can be
+ * helped. Then spread out across what's left, so two sessions aren't back to
+ * back when they needn't be. With no soccer days known, it's just spread
+ * through the week.
  */
-export function placeDays(count: number, busy: { club?: number[]; game?: number | null; meets?: number[] } = {}): number[] {
+export function placeDays(count: number, busy: Busy = {}): number[] {
   if (count <= 0) return [];
-  const game = busy.game ?? null;
-  const taken = new Set([...(busy.club ?? []), ...(busy.meets ?? []), ...(game === null ? [] : [game])]);
-  const afterGame = game === null ? null : (game + 1) % 7;
+  const games = busy.games ?? [];
+  const taken = new Set([...(busy.practice ?? []), ...(busy.trainer ?? []), ...(busy.meets ?? []), ...games]);
+  const afterGame = new Set(games.map((g) => (g + 1) % 7));
   const tiers = [
-    WEEK.filter((d) => !taken.has(d) && d !== afterGame),
+    WEEK.filter((d) => !taken.has(d) && !afterGame.has(d)),
     WEEK.filter((d) => !taken.has(d)),
-    WEEK.filter((d) => d !== game),
+    WEEK.filter((d) => !games.includes(d)),
     WEEK,
   ];
   // Fill from the best days down: every day of a tier before any of the next.
@@ -178,7 +195,7 @@ export function buildWeek(input: {
     runs.push(made);
   };
 
-  const mine = input.schedules?.find((x) => x.user_id === userId);
+  const mine = teamDays(input.schedules?.find((x) => x.user_id === userId));
   const meets = myGroups.map((g) => g.meets_weekday).filter((d): d is number => d !== null);
 
   // A week built for this player is their week: it replaces the programs.
@@ -201,7 +218,7 @@ export function buildWeek(input: {
     // taking the early days; then the turns go on the days that fit.
     const order: WeekItem[] = [];
     for (let i = 0; runs.some((r) => i < r.length); i++) for (const r of runs) if (i < r.length) order.push(r[i]);
-    const days = placeDays(order.length, { club: mine?.club_days ?? [], game: mine?.game_day ?? null, meets });
+    const days = placeDays(order.length, { ...mine, meets });
     order.forEach((it, i) => { it.weekday = days[i]; });
     items.push(...order);
   }
@@ -243,8 +260,8 @@ export function buildWeek(input: {
     if (on !== undefined) { it.done = true; it.doneOn = on; }
   }
 
-  // A session on a club or group day is a second one that day: say so.
-  const practice = new Set([...(mine?.club_days ?? []), ...meets]);
+  // A session on a practice, trainer or group day is a second one that day: say so.
+  const practice = new Set([...mine.practice, ...mine.trainer, ...meets]);
   for (const it of items) if (practice.has(it.weekday)) it.practice = true;
 
   return items.sort((a, b) => a.weekday - b.weekday || (a.kind === 'addon' ? 1 : 0) - (b.kind === 'addon' ? 1 : 0));

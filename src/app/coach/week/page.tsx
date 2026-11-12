@@ -4,6 +4,7 @@ import { PageHead } from '@/components/coach/PageHead';
 import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { StatusDot } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
+import { teamDays } from '@/lib/academy-week';
 import { loadPlayers } from '@/lib/coach-data';
 import { byAttention, localDate, weekdayOf } from '@/lib/progress';
 
@@ -69,7 +70,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           </thead>
           <tbody>
             {players.map((p) => {
-              const s = content.schedules.find((x) => x.user_id === p.user_id);
+              const s = teamDays(content.schedules.find((x) => x.user_id === p.user_id));
               const meets = new Set(content.groups.filter((g) => !g.archived && g.meets_weekday !== null
                 && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number));
               return (
@@ -84,7 +85,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                   </th>
                   {DAYS.map((_, d) => {
                     const items = p.week.filter((w) => w.weekday === d);
-                    const tag = s?.game_day === d ? 'Game' : s?.club_days.includes(d) ? 'Club' : meets.has(d) ? 'Group' : null;
+                    const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'Trainer' : s.practice.includes(d) ? 'Club' : meets.has(d) ? 'Group' : null;
                     return (
                       <td key={d} className={`border-b border-l border-outline-variant px-1.5 py-2 ${tag ? 'bg-surface-container' : ''} ${d === today ? 'bg-surface-container-low' : ''}`}>
                         {tag && <span className="block px-1 text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{tag}</span>}

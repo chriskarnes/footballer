@@ -46,14 +46,14 @@ export function Waiting({ state }: { state: Wait }) {
       {/* Asked here first; once answered, the week stays on show, so they
           can see what they told us. */}
       <section className="mt-6">
-        <h2 className="h-sec">{week.schedule ? 'Team practice & games' : 'While you wait'}</h2>
+        <h2 className="h-sec">{week.schedule ? 'Your soccer week' : 'While you wait'}</h2>
         {!week.schedule && (
           <p className="mt-1.5 text-[16px] font-medium leading-snug text-on-surface-variant">
-            Tell us your team&rsquo;s days, and your sessions will go around them.
+            Tell us your soccer days, and your sessions will go around them.
           </p>
         )}
         <div className="mt-4">
-          <SoccerDaysPanel club={week.schedule?.club ?? []} game={week.schedule?.game ?? null} set={!!week.schedule} />
+          <SoccerDaysPanel days={week.schedule} />
         </div>
       </section>
 

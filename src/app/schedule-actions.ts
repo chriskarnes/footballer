@@ -2,25 +2,36 @@
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { localDate, mondayOf } from '@/lib/progress';
+import type { TeamDays } from '@/lib/academy-week';
 
 type Result = { ok: true } | { ok: false; error: string };
 const days = (xs: unknown[]) => [...new Set(xs.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
 const NOT_YET = 'Soccer days aren’t switched on yet (migration 0008).';
+const NOT_YET_0021 = 'Trainer days and more than one game aren’t switched on yet (migration 0021).';
 
 /**
- * A player's soccer days: club training, and a game day. Saved for the
+ * A player's soccer days: with their trainer, team practice, and games. A
+ * day is one of them at most; the game wins, then the trainer. Saved for the
  * player themselves, or, from the trainer area, for one of a trainer's
  * players (`userId`); RLS checks either way.
+ *
+ * game_day is still written, as the first game, for anything reading it from
+ * before 0021. Before 0021 runs, a week with one game and no trainer days
+ * still saves.
  */
-export async function saveSoccerDays(input: { club: number[]; game: number | null; userId?: string }): Promise<Result> {
+export async function saveSoccerDays(input: TeamDays & { userId?: string }): Promise<Result> {
   const v = await getViewer();
   if (!v.user) return { ok: false, error: 'Sign in first.' };
   const target = input.userId && v.staff ? input.userId : v.user.id;
-  const club = days(input.club);
-  const game = input.game === null ? null : days([input.game])[0] ?? null;
-  const { error } = await v.db.from('player_schedules').upsert({
-    user_id: target, club_days: club.filter((d) => d !== game), game_day: game, updated_at: new Date().toISOString(),
-  });
+  const games = days(input.games);
+  const trainer = days(input.trainer).filter((d) => !games.includes(d));
+  const practice = days(input.practice).filter((d) => !games.includes(d) && !trainer.includes(d));
+  const row = { user_id: target, club_days: practice, game_day: games[0] ?? null, updated_at: new Date().toISOString() };
+  let { error } = await v.db.from('player_schedules').upsert({ ...row, game_days: games, trainer_days: trainer });
+  if (error && /game_days|trainer_days/.test(error.message)) {
+    if (games.length > 1 || trainer.length) return { ok: false, error: NOT_YET_0021 };
+    ({ error } = await v.db.from('player_schedules').upsert(row));
+  }
   if (error) return { ok: false, error: /player_schedules/.test(error.message) ? NOT_YET : error.message };
   revalidatePath('/', 'layout');
   return { ok: true };

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { buildWeekFor, saveBuiltSession, savePlan, setMode } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
-import { drillTags, type CustomRow, type DrillRow } from '@/lib/academy-week';
+import { drillTags, type CustomRow, type DrillRow, type TeamDays } from '@/lib/academy-week';
 import { MAX_STEP, MINUTE_CHOICES, progressAmount, swapFor, type Target } from '@/lib/week-builder';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 
@@ -38,7 +38,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
   thisWeek: CustomRow[]; nextWeek: CustomRow[];
   /** The Mondays: this week's and next. */
   weeks: { this: string; next: string };
-  busy: { club: number[]; game: number | null; meets: number[] };
+  busy: TeamDays & { meets: number[] };
   /** Custom sessions they've done, by id, with how it felt. */
   runs?: Record<string, { feel: 'easy' | 'right' | 'hard' | null }>;
 }) {
@@ -213,7 +213,8 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
             {sorted.map((s) => {
               const total = s.drill_ids.reduce((a, id) => a + (byId.get(id)?.minutes ?? 0), 0);
               const day = s.weekday;
-              const note = busy.game === day ? 'Game day' : busy.club.includes(day) || busy.meets.includes(day) ? 'Practice day' : null;
+              const note = busy.games.includes(day) ? 'Game day' : busy.trainer.includes(day) ? 'Trainer day'
+                : busy.practice.includes(day) || busy.meets.includes(day) ? 'Practice day' : null;
               const ran = runs[s.id];
               return (
                 <li key={s.id} className="rounded-2xl border border-outline-variant p-3.5">

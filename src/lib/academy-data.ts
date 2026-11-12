@@ -55,7 +55,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     db.from('player_programs').select('user_id, program_id, starts_on').eq('academy_id', academyId),
     db.from('addons').select('id, user_id, drill_id, note, week_of').eq('academy_id', academyId).gte('week_of', since),
     // RLS: a player gets their own row; a trainer gets their players'.
-    db.from('player_schedules').select('user_id, club_days, game_day'),
+    withFallback((c) => db.from('player_schedules').select(c), 'user_id, club_days, game_day', ', game_days, trainer_days'),
     db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since),
     customQuery(db, academyId, since),
     withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress, mode', ', progress'),

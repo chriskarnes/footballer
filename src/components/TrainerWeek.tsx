@@ -43,7 +43,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
   const next = items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);
   const weekDone = !next && items.length > 0;
-  const gameDay = schedule?.game === today;
+  const gameDay = !!schedule?.games.includes(today);
 
   // One or two words on which day the headline is about.
   const when = !next ? 'This week'
@@ -148,7 +148,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
       {/* Asked once, here, because the answer moves the sessions above. After
           that it's a setting, and settings are on Me. */}
       {!schedule && items.some((i) => i.kind !== 'addon') && (
-        <div className="mt-4"><SoccerDaysPanel club={[]} game={null} set={false} /></div>
+        <div className="mt-4"><SoccerDaysPanel days={null} /></div>
       )}
     </section>
   );

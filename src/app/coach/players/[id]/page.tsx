@@ -10,6 +10,7 @@ import { PlayerPlan } from '@/components/coach/PlayerPlan';
 import { Extras, ProgramSetup, WeekList } from '@/components/coach/PlayerTraining';
 import { SoccerDays } from '@/components/SoccerDays';
 import { soccerLabel } from '@/lib/soccer-days';
+import { teamDays } from '@/lib/academy-week';
 import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { nudgeDraft } from '@/lib/nudge';
 
@@ -112,7 +113,7 @@ export default async function PlayerPage({ params, searchParams }: {
                 }
                 target={t} defaults={content.defaults} own={t.own} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
                 drills={content.drills} weeks={weeks} thisWeek={thisWeek} nextWeek={nextWeek} runs={runs}
-                busy={{ club: soccer?.club_days ?? [], game: soccer?.game_day ?? null,
+                busy={{ ...teamDays(soccer),
                   meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
                     && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />
             </section>
@@ -161,10 +162,10 @@ export default async function PlayerPage({ params, searchParams }: {
       <section className="card mt-3 p-5">
         <div className="h-card">Their soccer</div>
         <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
-          {soccer ? soccerLabel(soccer.club_days, soccer.game_day) ?? 'No practice days.' : `${p.first} hasn’t said yet.`} Sessions go on the other days.
+          {soccer ? soccerLabel(teamDays(soccer)) ?? 'All days off.' : `${p.first} hasn’t said yet.`} Sessions go on the off days.
         </p>
         <div className="mt-4">
-          <SoccerDays club={soccer?.club_days ?? []} game={soccer?.game_day ?? null} userId={p.user_id} />
+          <SoccerDays days={soccer ? teamDays(soccer) : null} userId={p.user_id} />
         </div>
       </section>
 
