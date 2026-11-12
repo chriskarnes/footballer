@@ -1,14 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { PHASES, sessionSeconds, KIND_LABELS, type PhaseId } from '@/lib/speed';
+import { PHASES, sessionSeconds, KIND_LABELS } from '@/lib/speed';
 import {
-  autoStart, isoDate, mondayOf, phaseForMonth, position, weekPlan, type DayPlan, type Position, type YearStart,
+  autoStart, mondayOf, position, weekPlan, type DayPlan, type Position, type YearStart,
 } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 import { BandTag, BandTitle } from './BandText';
-import { Chip } from './Chip';
-import { ConfirmSheet } from './ConfirmSheet';
 import { TickMark } from './TickMark';
 
 const FULL_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -17,16 +15,13 @@ type Completion = { source_ref: string | null; completed_at: string | null };
 type Shared = {
   ready: boolean; start: YearStart | null; now: Date | null; save: (s: YearStart | null) => void;
   completions: Completion[];
-  /** Whether the "start somewhere else" chooser is open. */
-  choosing: boolean; setChoosing: (open: boolean) => void;
 };
 const SpeedContext = createContext<Shared | null>(null);
 
 /**
  * Where the player is in the speed year, shared by the band at the top of
- * the Speed tab (SpeedNow), the week under it (SpeedWeek) and the start
- * controls in "For parents and coaches" (SpeedSetup). One reading of the
- * stored start, so starting in one place shows in all three.
+ * the Speed tab (SpeedNow) and the week under it (SpeedWeek). One reading of
+ * the stored start, so starting in the band shows in the week.
  *
  * Done comes from finished speed sessions in history, so ticks need an
  * account; signed out, the year still runs, just without them.
@@ -36,9 +31,8 @@ export function SpeedYearProvider({ completions, children }: { completions: Comp
   // The date after mount: the server's clock isn't the player's.
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { setNow(new Date()); }, []);
-  const [choosing, setChoosing] = useState(false);
   return (
-    <SpeedContext.Provider value={{ ready: ready && !!now, start, now, save, completions, choosing, setChoosing }}>
+    <SpeedContext.Provider value={{ ready: ready && !!now, start, now, save, completions }}>
       {children}
     </SpeedContext.Provider>
   );
@@ -72,9 +66,8 @@ const minutes = (d: Extract<DayPlan, { type: 'session' }>) => Math.round(session
 /**
  * The band at the top of the Speed tab: what to do now, as Train's band does.
  * Today's session with Start, test day with Record, or a rest day and what's
- * next. Before the year has started, one button starts it, where the
- * calendar says. Starting somewhere else is in "For parents and coaches",
- * once it's started: the band is the player's, not the adult's.
+ * next. Before the year has started, one button starts it, at the phase
+ * the calendar says it is.
  */
 export function SpeedNow() {
   const s = useSpeed();
@@ -96,7 +89,7 @@ export function SpeedNow() {
         <BandTag>Speed</BandTag>
         <BandTitle>Get faster</BandTitle>
         <p className={info}>A year of sessions to get faster, a few a week.</p>
-        <button type="button" className={big} onClick={() => { s.setChoosing(false); s.save(autoStart(s.now!)); }}>
+        <button type="button" className={big} onClick={() => s.save(autoStart(s.now!))}>
           Start my speed program
         </button>
       </>
@@ -178,19 +171,11 @@ export function SpeedNow() {
  * done, the session's name, then the day in full, or a Today pill. A row
  * opens its session (or, done, what was done). Rest days are a quiet line,
  * so the week reads Monday to Sunday with today among the days around it.
- *
- * Before the year starts this is the "start somewhere else" chooser, when
- * it's been opened.
  */
 export function SpeedWeek() {
   const s = useSpeed();
   if (!s.ready || !s.now) return null;
-  if (!s.start || !s.pos) {
-    return s.choosing
-      ? <StartYear now={s.now} onStart={(v) => { s.save(v); s.setChoosing(false); }} onCancel={() => s.setChoosing(false)} />
-      : null;
-  }
-  if (s.pos.state !== 'running') return null;
+  if (!s.start || !s.pos || s.pos.state !== 'running') return null;
   const pos = s.pos;
   const { days, isDone } = thisWeek(pos, s.now, s.completions);
   const training = days.filter((d) => d.type !== 'off');
@@ -239,79 +224,5 @@ export function SpeedWeek() {
         })}
       </ul>
     </section>
-  );
-}
-
-/**
- * In "For parents and coaches": where the year started, and starting it
- * again somewhere else. Starting again opens the chooser at the top.
- */
-export function SpeedSetup() {
-  const s = useSpeed();
-  const [open, setOpen] = useState(false);
-  if (!s.ready || !s.start) return null;
-  const phase = PHASES.find((p) => p.id === s.start!.phase)!;
-  const from = new Date(`${s.start.monday}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
-  return (
-    <div className="card p-5">
-      <p className="text-[16px] font-bold text-on-surface">Started at {phase.name}, week of {from}</p>
-      <button type="button" onClick={() => setOpen(true)} className="btn-ghost pressable mt-4 min-h-12 w-full text-[15px] font-bold">
-        Change where you started
-      </button>
-      <ConfirmSheet open={open} title="Change where you started?"
-        body="You'll pick a phase and a start week again. Finished sessions and test days stay where they are."
-        confirmLabel="Change it" onCancel={() => setOpen(false)}
-        onConfirm={() => { s.save(null); s.setChoosing(true); setOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
-    </div>
-  );
-}
-
-/**
- * Starting somewhere else: which phase, and this week or next. The phase
- * starts at the one the calendar says it is, but a player starting from
- * nothing in May might want Foundation anyway. A setup question, so an
- * ordinary card, not the band.
- */
-function StartYear({ now, onStart, onCancel }: {
-  now: Date; onStart: (s: { monday: string; phase: PhaseId }) => void; onCancel: () => void;
-}) {
-  const [phase, setPhase] = useState<PhaseId>(phaseForMonth(now));
-  const thisMonday = mondayOf(now);
-  const nextMonday = new Date(thisMonday); nextMonday.setDate(nextMonday.getDate() + 7);
-  const lateInWeek = (now.getDay() + 6) % 7 >= 3; // Thursday or later
-
-  return (
-    <div className="card animate-pop mt-5 p-5">
-      <p className="h-card">Start somewhere else</p>
-      <p className="mt-1.5 text-[15px] leading-relaxed text-on-surface-variant">
-        Pick a phase and the plan counts the weeks from there: each day&rsquo;s session, test days and blocks.
-      </p>
-      <p className="mb-2.5 mt-5 text-[15px] font-bold text-on-surface">Start at</p>
-      <div className="flex flex-wrap gap-2">
-        {PHASES.map((p) => (
-          <Chip key={p.id} on={phase === p.id} onClick={() => setPhase(p.id)}>
-            {p.number} · {p.name}
-          </Chip>
-        ))}
-      </div>
-      {/* Starting on a Thursday would make this week's Monday and Tuesday
-          sessions already missed, so late in the week the default is Monday. */}
-      <div className="mt-5 flex gap-2.5">
-        <button type="button"
-                onClick={() => onStart({ monday: isoDate(lateInWeek ? thisMonday : nextMonday), phase })}
-                className="btn-ghost pressable min-h-[52px] min-w-0 flex-1 whitespace-nowrap px-4">
-          {lateInWeek ? 'This week' : 'Next Monday'}
-        </button>
-        <button type="button"
-                onClick={() => onStart({ monday: isoDate(lateInWeek ? nextMonday : thisMonday), phase })}
-                className="btn-primary pressable min-w-0 flex-1 whitespace-nowrap px-4">
-          {lateInWeek ? 'Start Monday' : 'Start this week'}
-        </button>
-      </div>
-      <button type="button" onClick={onCancel}
-              className="pressable mt-3 min-h-12 w-full text-[15px] font-semibold text-on-surface-variant underline underline-offset-4">
-        Cancel
-      </button>
-    </div>
   );
 }

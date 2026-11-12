@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { BrandBand } from '@/components/BrandBand';
 import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS, SOURCES } from '@/lib/speed';
 import { serverClient } from '@/lib/supabase/server';
-import { SpeedNow, SpeedSetup, SpeedWeek, SpeedYearProvider } from '@/components/SpeedYear';
+import { SpeedNow, SpeedWeek, SpeedYearProvider } from '@/components/SpeedYear';
 
 const Chevron = ({ className }: { className: string }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none"
@@ -54,8 +54,6 @@ export default async function SpeedPage() {
           </summary>
 
           <div className="mt-5 space-y-9">
-            <SpeedSetup />
-
             <section>
               <h2 className="h-sec mb-3">The year</h2>
               <div className="grid grid-cols-1 gap-2.5">
