@@ -27,50 +27,37 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);
 
   // One or two words on which day the headline is about.
-  const when = !next ? ''
+  const when = !next ? 'This week'
     : next.weekday === today ? 'Today'
     : next.weekday < today ? `Missed ${DAYS[next.weekday]}`
     : doneToday ? `Today’s done · Next ${DAYS[next.weekday]}`
     : `Next · ${DAYS[next.weekday]}`;
 
-  // Nothing set yet: a new player, usually. Say they're in the right place.
-  if (!items.length) return <NothingYet />;
-
   return (
     <section>
-      {next ? (
-        <BrandBand>
-          <BandTag>{when}</BandTag>
-          <BandTitle>{next.title}</BandTitle>
-          <p className="mt-2.5 text-[16px] font-semibold text-on-surface-brand-variant">
-            {next.minutes} min · {next.drills} {next.drills === 1 ? 'drill' : 'drills'}
-          </p>
-          {/* What the trainer said about this one, in their words. */}
-          {next.note && (
-            <p className="mt-2.5 text-[15px] font-medium leading-snug text-on-surface-brand">&ldquo;{next.note}&rdquo;</p>
-          )}
+      <BrandBand>
+        <BandTag>{when}</BandTag>
+        <BandTitle>{next ? next.title : items.length ? 'All done!' : 'Nothing yet'}</BandTitle>
+        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          {next ? `${next.minutes} min · ${next.drills} ${next.drills === 1 ? 'drill' : 'drills'}`
+            : items.length ? 'You finished your whole week.' : 'Your trainer hasn’t set this week.'}
+        </p>
+        {/* What the trainer said about this one, in their words. */}
+        {next?.note && (
+          <p className="mt-3 text-[15px] font-medium leading-snug text-on-surface-brand">&ldquo;{next.note}&rdquo;</p>
+        )}
+        {next && (
           <Link href={`/train/${next.kind}/${next.ref}`}
-                className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                className="btn-primary btn-big pressable mt-6 w-full bg-on-surface-brand text-surface-brand">
             Start
           </Link>
-          <WeekStrip items={items} today={today} nextDay={next.weekday} />
-        </BrandBand>
-      ) : (
-        // The week is finished: one line, so the list and what's next sit high.
-        <BrandBand>
-          <div className="flex items-center gap-3.5">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
-              <Tick className="h-5 w-5" />
-            </span>
-            <h1 className="site-wide text-[26px] uppercase leading-none">Week done!</h1>
-          </div>
-        </BrandBand>
-      )}
+        )}
+        <WeekStrip items={items} today={today} nextDay={next?.weekday ?? null} />
+      </BrandBand>
 
       {items.length > 0 && (
         <>
-          <div className="mb-3 mt-6 flex items-baseline justify-between gap-3">
+          <div className="mb-3 mt-8 flex items-baseline justify-between gap-3">
             <h2 className="h-sec">My week</h2>
             {set.length > 0 && <p className="text-[15px] font-bold text-on-surface-variant">{done} of {set.length} done</p>}
           </div>
@@ -83,9 +70,7 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
                   </span>
                   <span className={`min-w-0 flex-1 text-[16px] font-bold leading-snug ${it.done ? 'text-on-surface-variant' : 'text-on-surface'}`}>
                     {it.title}
-                    <span className="block text-[13.5px] font-semibold text-on-surface-variant">
-                      {it.minutes} min{!it.done && it.weekday < today && ' · Missed'}
-                    </span>
+                    {!it.done && it.weekday < today && <span className="block text-[13px] font-semibold text-on-surface-variant">Missed</span>}
                   </span>
                 </Link>
                 {it.done
@@ -109,30 +94,6 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
 }
 
 /**
- * A player with nothing set: new, usually, and wondering if the link worked.
- * It did. Also what Train shows before a trainer has assigned anything.
- */
-export function NothingYet() {
-  return (
-    <section>
-      <BrandBand>
-        <BandTitle>You&rsquo;re in!</BandTitle>
-      </BrandBand>
-      <div className="card mt-6 p-6 text-center">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full"
-              style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
-          <Tick className="h-8 w-8" />
-        </span>
-        <h2 className="h-sec mt-4 text-[22px]">You&rsquo;re in the right place</h2>
-        <p className="mt-2 text-[16px] font-medium leading-snug text-on-surface-variant">
-          Your trainer is getting your training ready. It will show up here.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-/**
  * Monday to Sunday in the band. Today is the lit column; a tick is a session
  * done, on the day it was done; the solid disc is the session in the
  * headline; a ring is one still to come; a rest day is a speck.
@@ -140,7 +101,7 @@ export function NothingYet() {
 function WeekStrip({ items, today, nextDay }: { items: MyWeek['items']; today: number; nextDay: number | null }) {
   const ink = 'var(--app-on-surface-brand)';
   return (
-    <ol className="mt-5 flex max-w-sm justify-between" aria-label="This week">
+    <ol className="mt-7 flex max-w-sm justify-between" aria-label="This week">
       {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
         const todo = items.filter((x) => !x.done && x.weekday === i);
         const doneHere = items.some((x) => x.done && (x.doneOn ?? x.weekday) === i);

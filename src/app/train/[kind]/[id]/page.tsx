@@ -26,19 +26,6 @@ function asExercise(d: DrillRow, sessionId: string, i: number, step = 0): Exerci
  * session, /train/custom/<id> for one from a week built for them, /train/addon/<id> for a "just for you" drill. RLS decides what
  * this player may read; finishing records it so their trainer sees it.
  */
-/** The weekday they last finished this one, if in the last week: "Monday", or "today". */
-async function lastDone(v: Awaited<ReturnType<typeof getViewer>>, ref: string): Promise<string | null> {
-  const { data } = await v.db.from('workouts').select('completed_at')
-    .eq('user_id', v.user!.id).eq('status', 'completed').eq('source_ref', ref)
-    .gte('completed_at', new Date(Date.now() - 7 * 86400000).toISOString())
-    .order('completed_at', { ascending: false }).limit(1).maybeSingle();
-  if (!data?.completed_at) return null;
-  const tz = v.academy!.timeZone;
-  const day = (d: Date) => new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'long' }).format(d);
-  const at = new Date(data.completed_at);
-  return Date.now() - at.getTime() < 86400000 && day(at) === day(new Date()) ? 'today' : `on ${day(at)}`;
-}
-
 export default async function TrainerSessionPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
   const { kind, id } = await params;
   const v = await getViewer();
@@ -51,7 +38,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const { data: rows } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').in('id', s.drill_ids);
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
     const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i)).filter(Boolean) as Exercise[];
-    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} doneOn={await lastDone(v, s.id)} />;
+    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} />;
   }
 
   // A session from a week built for this player: runs and records as an
@@ -66,7 +53,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const byId = new Map(((rows ?? []) as DrillRow[]).map((d) => [d.id, d]));
     const steps: number[] = s.steps ?? [];
     const drills = (s.drill_ids as string[]).map((d, i) => byId.get(d) && asExercise(byId.get(d)!, s.id, i, steps[i] ?? 0)).filter(Boolean) as Exercise[];
-    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} doneOn={await lastDone(v, s.id)} />;
+    return <Runner title={s.name} drills={drills} sessionRef={s.id} source="academy" back={back} />;
   }
 
   // Any drill from the academy's library, when players may browse it.
@@ -83,7 +70,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const d = a?.drills as unknown as DrillRow | null;
     if (!a || !d) notFound();
     return <Runner title={d.name} note={a.note} drills={[asExercise(d, a.id, 0)]}
-                   sessionRef={a.id} source="addon" back={back} doneOn={await lastDone(v, a.id)} />;
+                   sessionRef={a.id} source="addon" back={back} />;
   }
   notFound();
 }

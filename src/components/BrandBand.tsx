@@ -14,7 +14,7 @@ export async function BrandBand({ right, overlap = false, children }: {
   const dot = name.indexOf('.');
   const [head, tail] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
   return (
-    <section className={`relative isolate -mx-5 px-5 pt-4 text-on-surface-brand ${overlap ? 'pb-20' : 'pb-7'}`}>
+    <section className={`relative isolate -mx-5 px-5 pt-4 text-on-surface-brand ${overlap ? 'pb-20' : 'pb-9'}`}>
       <div aria-hidden className="grain absolute bottom-0 left-[calc(50%_-_50dvw)] right-[calc(50%_-_50dvw)] -top-24 -z-10 overflow-hidden bg-surface-brand"
            style={{ backgroundImage: 'radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--app-brand-accent) 28%, transparent), transparent 70%)' }} />
       <header className="flex min-h-11 items-center justify-between gap-3">
@@ -27,7 +27,7 @@ export async function BrandBand({ right, overlap = false, children }: {
         </span>
         {right && <span className="text-[12.5px] font-semibold text-on-surface-brand-variant">{right}</span>}
       </header>
-      <div className="mt-5">{children}</div>
+      <div className="mt-9">{children}</div>
     </section>
   );
 }
@@ -44,5 +44,5 @@ export function BandTag({ children }: { children: React.ReactNode }) {
 
 /** A band headline, set like the marketing pages: wide, heavy, upper case. */
 export function BandTitle({ children }: { children: React.ReactNode }) {
-  return <h1 className="site-wide mt-3 text-[28px] uppercase leading-[.95] [overflow-wrap:anywhere]">{children}</h1>;
+  return <h1 className="site-wide mt-4 text-[34px] uppercase leading-[.95] [overflow-wrap:anywhere]">{children}</h1>;
 }

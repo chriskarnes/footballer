@@ -26,11 +26,9 @@ function playedMinutes(startedAt: number | null, openedAt: number, plannedSecond
 }
 
 export function Runner({
-  title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source, doneOn,
+  title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
 }: {
   title: string; drills: Exercise[];
-  /** When they last finished this one, in words ("Monday"), if they have this week. */
-  doneOn?: string | null;
   /** One line under the title, when there's something to say: a trainer's
    *  note on a drill set just for them, or how many rounds. */
   note?: string | null;
@@ -57,9 +55,9 @@ export function Runner({
   const [savedId, setSavedId] = useState<string | null>(workoutId ?? null);
   const [feel, setFeel] = useState<'easy' | 'right' | 'hard' | null>(null);
   const asksFeel = source === 'academy' || source === 'addon';
-  // Which step is open. The first to begin with; ticking one opens the next,
-  // so the list walks the player through itself.
-  const [howOpen, setHowOpen] = useState<string | null>(drills[0]?.id ?? null);
+  // Which drill's "How to do it" is open. One at a time: the list is the
+  // thing being worked through, and two sets of steps open push it apart.
+  const [howOpen, setHowOpen] = useState<string | null>(null);
   const openedAt = useRef(Date.now());
   const startedAt = useRef<number | null>(null);
 
@@ -80,15 +78,12 @@ export function Runner({
     if (startedAt.current === null && d) {
       startedAt.current = Date.now() - d.total_seconds * rounds * 1000;
     }
-    const ticking = !done.has(id);
-    haptic(ticking ? 'select' : 'tap');
-    const n = new Set(done);
-    if (ticking) n.add(id); else n.delete(id);
-    setDone(n);
-    // Done: on to the next one still to do, after this one first. Undone: back to it.
-    const at = drills.findIndex((x) => x.id === id);
-    const nextUp = [...drills.slice(at + 1), ...drills.slice(0, at)].find((x) => !n.has(x.id));
-    setHowOpen(ticking ? nextUp?.id ?? null : id);
+    setDone((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) { n.delete(id); haptic('tap'); }
+      else { n.add(id); haptic('select'); }
+      return n;
+    });
     // Unticking the last drill takes back an "end early" that was about to
     // become "end with nothing done".
     if (phase === 'confirm-end') setPhase('running');
@@ -214,87 +209,69 @@ export function Runner({
         </div>
       </div>
 
-      {/* Reopened after finishing it: say so. The list below is how to do it again. */}
-      {doneOn && !done.size && (
-        <div className="mt-4 flex items-center gap-3.5 rounded-2xl border-2 border-on-surface px-4 py-3.5">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-on-surface text-surface">
-            <Tick className="h-5 w-5" />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-[17px] font-extrabold text-on-surface">Completed</span>
-            <span className="block text-[14.5px] font-semibold text-on-surface-variant">
-              You did this {doneOn}. Want to do it again?
-            </span>
-          </span>
-        </div>
-      )}
-
       <ol className="stagger mt-4 space-y-3">
-        {drills.map((d, i) => {
+        {drills.map((d) => {
           const on = done.has(d.id);
           const open = howOpen === d.id;
+          const more = !!d.how?.length || !!d.video_url;
           return (
-            <li key={d.id} className={`card overflow-hidden ${open ? 'ring-2 ring-on-surface' : ''}`}>
-              <div className={`flex items-center gap-3 p-4 transition-opacity ${on && !open ? 'opacity-50' : ''}`}>
-                {/* The card opens the step. Only the circle ticks it off. */}
-                <button type="button" aria-expanded={open} onClick={() => setHowOpen(open ? null : d.id)}
-                        className="pressable flex min-w-0 flex-1 items-center gap-3 text-left">
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-bold text-on-surface-variant">Step {i + 1}</span>
-                    <span className="block text-[18px] font-bold leading-snug text-on-surface">{d.name}</span>
-                    <span className="mt-0.5 block text-[15px] font-semibold text-on-surface-variant">
-                      {/* "rest 1 min", but just "walk back": a rest that's an
-                          instruction rather than a time doesn't take "rest". */}
-                      {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
-                        ? (/^\d/.test(d.rest) ? ` · rest ${d.rest}` : ` · ${d.rest}`) : ''}`}
-                      {d.effort && ` · ${EFFORT[d.effort].label}`}
-                    </span>
+            <li key={d.id} className="card overflow-hidden">
+              {/* The whole top of the card ticks the drill off. */}
+              <div onClick={() => toggle(d.id)} role="button" tabIndex={0} aria-pressed={on}
+                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(d.id); } }}
+                   className={`pressable flex cursor-pointer items-center gap-4 p-4 transition-opacity ${on ? 'opacity-50' : ''}`}>
+                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[2.5px] transition
+                                  ${on ? 'border-on-surface bg-on-surface text-surface' : 'border-outline'}`}>
+                  {on && <Tick className="h-5 w-5" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[17px] font-bold leading-snug text-on-surface">{d.name}</span>
+                  <span className="mt-0.5 block text-[14.5px] font-semibold text-on-surface-variant">
+                    {/* "rest 1 min", but just "walk back": a rest that's an
+                        instruction rather than a time doesn't take "rest". */}
+                    {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
+                      ? (/^\d/.test(d.rest) ? ` · rest ${d.rest}` : ` · ${d.rest}`) : ''}`}
+                    {d.effort && ` · ${EFFORT[d.effort].label}`}
                   </span>
-                </button>
-                {/* Not done: a ring with a faint tick in it, which reads as
-                    "tick me" where an empty ring read as nothing at all. */}
-                <button type="button" aria-pressed={on} onClick={() => toggle(d.id)}
-                        aria-label={on ? `${d.name}: done. Tap to undo` : `Mark ${d.name} done`}
-                        className={`pressable flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-[3px] transition
-                                    ${on ? 'border-on-surface bg-on-surface text-surface' : 'border-on-surface bg-surface-container-low text-outline'}`}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6" fill="none" stroke="currentColor"
-                       strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                </button>
+                  {/* The one thing to think about at speed. */}
+                  {d.cue && <span className="mt-1 block text-[14px] font-semibold text-on-surface">&ldquo;{d.cue}&rdquo;</span>}
+                </span>
               </div>
 
-              {/* Show me how: the cue, the steps, the video, and the button
-                  that ticks it off and moves on. Videos sit last so there is
-                  room for more than one. */}
-              {open && (
-                <div className="hint-in border-t border-outline-variant px-4 pb-4 pt-4">
-                  {(!!d.how?.length || d.cue || d.video_url) && <h3 className="h-sec mb-3">Show me how</h3>}
-                  {d.cue && <p className="mb-3 text-[16px] font-semibold text-on-surface">&ldquo;{d.cue}&rdquo;</p>}
-                  {!!d.how?.length && (
-                    <ol className="space-y-3">
-                      {d.how.map((step, n) => (
-                        <li key={n} className="flex gap-3 text-[16px] leading-snug text-on-surface">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[14px] font-extrabold">{n + 1}</span>
-                          <span className="pt-0.5">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                  {d.effort && !!d.how?.length && (
-                    <p className="mt-3 text-[15px] text-on-surface-variant">
-                      <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
-                      {EFFORT[d.effort].means}
-                    </p>
-                  )}
-                  {d.video_url && (
-                    <div className={d.how?.length || d.cue ? 'mt-4' : ''}>
-                      <Watch href={d.video_url} className="btn-ghost pressable min-h-[52px] w-full gap-2 text-[15px] font-bold" />
-                    </div>
-                  )}
-                  {!on && (
-                    <button type="button" onClick={() => toggle(d.id)}
-                            className={`btn-primary btn-big pressable w-full ${d.how?.length || d.cue || d.video_url ? 'mt-4' : ''}`}>
-                      I did it
+              {/* How to do it: a video, the steps, or both. One button. */}
+              {more && !on && (
+                <div className="border-t border-outline-variant">
+                  {d.how?.length ? (
+                    <button type="button" aria-expanded={open} onClick={() => setHowOpen(open ? null : d.id)}
+                            className="pressable flex min-h-12 w-full items-center justify-between px-4 text-[14.5px] font-bold text-on-surface">
+                      Show me how
+                      <svg viewBox="0 0 24 24" aria-hidden="true"
+                           className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                           fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
                     </button>
+                  ) : (
+                    <Watch href={d.video_url!} className="pressable flex min-h-12 w-full items-center gap-2 px-4 text-[14.5px] font-bold text-on-surface" />
+                  )}
+                  {open && !!d.how?.length && (
+                    <div className="hint-in px-4 pb-4">
+                      <ol className="space-y-2.5">
+                        {d.how.map((step, n) => (
+                          <li key={n} className="flex gap-3 text-[15px] leading-snug text-on-surface">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[12.5px] font-extrabold">{n + 1}</span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                      {d.effort && (
+                        <p className="mt-3 text-[14px] text-on-surface-variant">
+                          <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
+                          {EFFORT[d.effort].means}
+                        </p>
+                      )}
+                      {d.video_url && <Watch href={d.video_url} className="btn-ghost pressable mt-4 gap-2" />}
+                    </div>
                   )}
                 </div>
               )}
