@@ -72,8 +72,9 @@ const minutes = (d: Extract<DayPlan, { type: 'session' }>) => Math.round(session
 /**
  * The band at the top of the Speed tab: what to do now, as Train's band does.
  * Today's session with Start, test day with Record, or a rest day and what's
- * next. Before the year has started, one button starts it; choosing another
- * starting point is a smaller link, for the adult who wants to.
+ * next. Before the year has started, one button starts it, where the
+ * calendar says. Starting somewhere else is in "For parents and coaches",
+ * once it's started: the band is the player's, not the adult's.
  */
 export function SpeedNow() {
   const s = useSpeed();
@@ -97,10 +98,6 @@ export function SpeedNow() {
         <p className={info}>A year of sessions to get faster, a few a week.</p>
         <button type="button" className={big} onClick={() => { s.setChoosing(false); s.save(autoStart(s.now!)); }}>
           Start my speed program
-        </button>
-        <button type="button" aria-expanded={s.choosing} onClick={() => s.setChoosing(!s.choosing)}
-                className="pressable mt-2 min-h-12 text-[15px] font-semibold text-on-surface-brand-variant underline underline-offset-4">
-          Parents and coaches: start somewhere else
         </button>
       </>
     );
