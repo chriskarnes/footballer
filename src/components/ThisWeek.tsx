@@ -11,12 +11,17 @@ import { weekState, type Completion, type DayRow } from '@/lib/plan-today';
  * and — with an active week — how much of it is done are numbers that move.
  *
  * Waits for mount: the week is the player's local week (see training-stats.ts).
+ *
+ * `quiet`: the player is waiting for their trainer to set a week, so a row of
+ * zeros would read as falling behind. Then it shows only once there's
+ * something to count.
  */
 export function ThisWeek({
-  finished, plan,
+  finished, plan, quiet = false,
 }: {
   finished: Finished[];
   plan: { name: string; days: DayRow[]; completions: Completion[] } | null;
+  quiet?: boolean;
 }) {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => { setNow(new Date()); }, []);
@@ -26,6 +31,7 @@ export function ThisWeek({
   const progress = now && plan ? weekState(plan.days, plan.completions, now) : null;
   const pct = progress?.trainingCount
     ? Math.round((progress.doneCount / progress.trainingCount) * 100) : 0;
+  if (quiet && !week?.sessions && !progress?.trainingCount) return null;
 
   return (
     <section className="mt-8">

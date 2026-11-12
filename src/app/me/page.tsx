@@ -4,7 +4,8 @@ import { serverClient } from '@/lib/supabase/server';
 import { SignIn } from '@/components/SignIn';
 import { Avatar } from '@/components/Avatar';
 import { SoccerDaysPanel } from '@/components/SoccerDays';
-import { getMyWeek, type MyWeek } from '@/lib/player-week';
+import { getMyWeek, getPlayerState, type MyWeek, type PlayerState } from '@/lib/player-week';
+import { waitingLine } from '@/components/Waiting';
 import { ThisWeek } from '@/components/ThisWeek';
 import { WorkoutList } from '@/components/WorkoutList';
 import { AccountSection } from '@/components/AccountSection';
@@ -61,6 +62,7 @@ export default async function MePage() {
   let profile: ProfileValues | null = null;
   let avatarAt: string | null = null;
   let myWeek: MyWeek | null = null;
+  let state: PlayerState = { kind: 'none' };
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
   let canBrand = false;
@@ -75,7 +77,7 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk, st] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
@@ -85,8 +87,10 @@ export default async function MePage() {
             .eq('user_id', user.id).maybeSingle(),
           readAvatarAt(db, user.id),
           getMyWeek().catch(() => null),
+          getPlayerState().catch((): PlayerState => ({ kind: 'none' })),
         ]);
         myWeek = wk;
+        state = st;
         avatarAt = photoAt;
         canBrand = viewer.canBrand;
         role = viewer.role;
@@ -135,6 +139,8 @@ export default async function MePage() {
     .map((w) => ({ source_ref: w.source_ref, completed_at: w.completed_at }));
 
   const name = profile?.display_name?.trim();
+  // Waiting on their trainer: nothing to count yet, and that isn't on them.
+  const waiting = state.kind === 'new' || state.kind === 'waiting' ? state : null;
 
   return (
     <div>
@@ -148,7 +154,7 @@ export default async function MePage() {
       </BrandBand>
       <div className="mt-6"><NoteBanner /></div>
 
-      <ThisWeek finished={finished.map(toFinished)}
+      <ThisWeek finished={finished.map(toFinished)} quiet={!!waiting}
         plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />
 
       {/* Their team's days, once answered on Train: it's a setting from then on. */}
@@ -193,6 +199,8 @@ export default async function MePage() {
         </div>
         {finished.length ? (
           <WorkoutList rows={finished.slice(0, HISTORY_ON_ME)} kind="history" />
+        ) : waiting ? (
+          <p className="pl-1 text-[15px] font-medium text-on-surface-variant">Nothing yet. {waitingLine(waiting)}</p>
         ) : (
           <p className="pl-1 text-[15px] font-medium text-on-surface-variant">
             Nothing yet. <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>

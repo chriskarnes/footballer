@@ -1,7 +1,7 @@
 'use server';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/viewer';
-import { getMyWeek } from '@/lib/player-week';
+import { readMyWeek } from '@/lib/player-week';
 import { loadContent, targetFor } from '@/lib/academy-data';
 import { addDays, localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import { buildPlayerWeek } from '@/lib/week-builder';
@@ -17,7 +17,7 @@ export async function addMySession(): Promise<{ ok: false; error: string }> {
   try {
     const v = await getViewer();
     if (!v.academy || !v.user || v.role !== 'player') return { ok: false, error: 'Only players can add a session.' };
-    const week = await getMyWeek();
+    const week = await readMyWeek();
     if (!week?.more) return { ok: false, error: 'Your trainer hasn’t turned this on.' };
     if (week.more.why) return { ok: false, error: week.more.why };
 

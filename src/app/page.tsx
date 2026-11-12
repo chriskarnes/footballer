@@ -7,11 +7,16 @@ import { TodayOnPlan } from '@/components/TodayOnPlan';
 import { Suspense } from 'react';
 import { NoteBanner } from '@/components/NoteBanner';
 import { TrainerWeek } from '@/components/TrainerWeek';
-import { getMyWeek } from '@/lib/player-week';
+import { getMyWeek, getPlayerState } from '@/lib/player-week';
+import { Waiting } from '@/components/Waiting';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
 export default async function TrainNowPage() {
   if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
+  // A player waiting on their trainer gets that, not the builder. Anyone
+  // else (signed out, staff) is through this with no lookup.
+  const state = await getPlayerState().catch(() => ({ kind: 'none' }) as const);
+  if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;
   const exercises = await getExercises();
   return (
     <div className="animate-pop">

@@ -3,7 +3,8 @@ import { Suspense } from 'react';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { NoteBanner } from './NoteBanner';
 import { TrainerWeek } from './TrainerWeek';
-import { getMyWeek } from '@/lib/player-week';
+import { getMyWeek, getPlayerState } from '@/lib/player-week';
+import { Waiting } from './Waiting';
 
 /**
  * What Train, Library and Plan show in an academy that doesn't have the drill
@@ -12,6 +13,9 @@ import { getMyWeek } from '@/lib/player-week';
  * it's the way forward from here.
  */
 export async function LibraryLocked({ title }: { title: string }) {
+  // A player with nothing set this week hears from their trainer, not Speed.
+  const state = await getPlayerState().catch(() => ({ kind: 'none' }) as const);
+  if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;
   // What their trainer has set them is the page, when there's anything.
   const week = await getMyWeek().catch(() => null);
   if (week) {
