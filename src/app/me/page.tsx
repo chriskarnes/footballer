@@ -17,6 +17,7 @@ import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection
 import { NoteBanner } from '@/components/NoteBanner';
 import { getViewer } from '@/lib/viewer';
 import { avatarSrc } from '@/lib/avatar';
+import { libraryFor } from '@/lib/library-gate';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -61,6 +62,8 @@ export default async function MePage() {
   let profile: ProfileValues | null = null;
   let avatarAt: string | null = null;
   let myWeek: MyWeek | null = null;
+  // Weekly plans are built from the drill library: no library, no entry point.
+  let canPlan = false;
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
   let canBrand = false;
@@ -75,7 +78,7 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk, lib] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
@@ -85,7 +88,9 @@ export default async function MePage() {
             .eq('user_id', user.id).maybeSingle(),
           readAvatarAt(db, user.id),
           getMyWeek().catch(() => null),
+          libraryFor().catch(() => ({ drills: false, own: false })),
         ]);
+        canPlan = lib.drills;
         myWeek = wk;
         avatarAt = photoAt;
         canBrand = viewer.canBrand;
@@ -148,13 +153,23 @@ export default async function MePage() {
       </BrandBand>
       <div className="mt-6"><NoteBanner /></div>
 
+      {/* New here, nothing set and nothing done: say they're in the right place. */}
+      {role === 'player' && !finished.length && !saved.length && !myWeek?.items.length && (
+        <div className="card mt-2 p-6 text-center">
+          <h2 className="h-sec text-[22px]">You&rsquo;re in the right place</h2>
+          <p className="mt-2 text-[16px] font-medium leading-snug text-on-surface-variant">
+            Your trainer is getting your training ready.
+          </p>
+        </div>
+      )}
+
       <ThisWeek finished={finished.map(toFinished)}
         plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />
 
       {/* Their team's days, once answered on Train: it's a setting from then on. */}
       {myWeek?.schedule && (
-        <section className="mt-8">
-          <h2 className="h-sec mb-3">My team days</h2>
+        <section className="mt-10">
+          <h2 className="h-sec mb-3.5">Team practice and games</h2>
           <SoccerDaysPanel club={myWeek.schedule.club} game={myWeek.schedule.game} set />
         </section>
       )}
@@ -169,12 +184,12 @@ export default async function MePage() {
       )}
 
       {/* Every saved week, the active one first. */}
-      {!!plans.length && <SavedPlans plans={plans} />}
+      {canPlan && !!plans.length && <SavedPlans plans={plans} />}
 
       {/* The invitation to a plan, once there's enough history to build one
           from. An ordinary card and a ghost button, like every other
           invitation in the app — it had its own outlined, tinted style. */}
-      {finished.length >= 3 && !plans.length && (
+      {canPlan && finished.length >= 3 && !plans.length && (
         <section className="card mt-8 p-5">
           <div className="h-sec">Want a weekly plan?</div>
           <Link href="/plan" className="btn-ghost mt-4 min-h-[52px] w-full text-[15px] font-bold">Make my week</Link>
@@ -195,7 +210,10 @@ export default async function MePage() {
           <WorkoutList rows={finished.slice(0, HISTORY_ON_ME)} kind="history" />
         ) : (
           <p className="pl-1 text-[15px] font-medium text-on-surface-variant">
-            Nothing yet. <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>
+            Nothing yet.{' '}
+            {(role !== 'player' || !!myWeek?.items.length) && (
+              <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>
+            )}
           </p>
         )}
       </section>

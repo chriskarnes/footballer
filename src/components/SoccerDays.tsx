@@ -2,7 +2,6 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveSoccerDays } from '@/app/schedule-actions';
-import { soccerLabel } from '@/lib/soccer-days';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 type Day = 'free' | 'club' | 'game';
@@ -53,13 +52,13 @@ export function SoccerDays({ club = [], game = null, userId, onDone, cta = 'Save
                         : 'border-on-surface bg-surface text-on-surface ring-2 ring-inset ring-on-surface'}`}>
               {label}
               <span className={`mt-0.5 text-[10.5px] font-semibold ${d === 'free' ? 'text-on-surface-variant' : ''}`}>
-                {d === 'free' ? '·' : d === 'club' ? 'Train' : 'Game'}
+                {d === 'free' ? '·' : d === 'club' ? 'Team' : 'Game'}
               </span>
             </button>
           );
         })}
       </div>
-      <p className="mt-2.5 text-[13.5px] font-medium text-on-surface-variant">Tap once for training. Tap twice for a game.</p>
+      <p className="mt-2.5 text-[14px] font-medium text-on-surface-variant">Tap once for team practice. Tap twice for a game.</p>
       {error && <p role="alert" className="mt-2 text-[13px] font-semibold text-on-surface">{error}</p>}
       <button type="button" onClick={save} disabled={pending} className="btn-primary btn-sm pressable mt-4">
         {pending ? 'Saving…' : cta}
@@ -74,18 +73,36 @@ export function SoccerDays({ club = [], game = null, userId, onDone, cta = 'Save
  */
 export function SoccerDaysPanel({ club, game, set }: { club: number[]; game: number | null; set: boolean }) {
   const [open, setOpen] = useState(!set);
-  const label = soccerLabel(club, game);
   if (!open) {
     return (
-      <div className="card flex min-h-[60px] items-center justify-between gap-3 px-4">
-        <span className="min-w-0 text-[15px] font-bold text-on-surface">{label ?? 'No team days'}</span>
-        <button type="button" onClick={() => setOpen(true)} className="btn-ghost btn-sm pressable shrink-0">Change</button>
+      <div className="card p-4">
+        {/* The week as it is: practice days filled, game day ringed, the rest quiet. */}
+        <ol className="grid grid-cols-7 gap-1.5" aria-label="My team's week">
+          {DAYS.map((d, i) => {
+            const kind = i === game ? 'Game' : club.includes(i) ? 'Practice' : null;
+            return (
+              <li key={d} aria-label={`${d}: ${kind ?? 'free'}`}
+                  className={`flex min-h-[58px] flex-col items-center justify-center rounded-xl text-[13px] font-bold
+                    ${kind === 'Game' ? 'bg-surface-brand text-on-surface-brand'
+                      : kind ? 'bg-on-surface text-surface' : 'bg-surface-container-low text-on-surface-variant'}`}>
+                {d}
+                <span className="mt-0.5 text-[10px] font-bold">{kind === 'Practice' ? 'Team' : kind ?? '·'}</span>
+              </li>
+            );
+          })}
+        </ol>
+        <div className="mt-3.5 flex items-center justify-between gap-3">
+          <p className="text-[14px] font-semibold text-on-surface-variant">
+            {game === null && !club.length ? 'No team days yet.' : 'Your sessions go on the other days.'}
+          </p>
+          <button type="button" onClick={() => setOpen(true)} className="btn-ghost btn-sm pressable shrink-0">Change</button>
+        </div>
       </div>
     );
   }
   return (
     <div className="card p-5">
-      <div className="h-sec">When does your team play?</div>
+      <div className="h-sec">Which days is your team on?</div>
       <div className="mt-4">
         <SoccerDays club={club} game={game} onDone={() => setOpen(false)} cta="Save" />
       </div>

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { NoteBanner } from './NoteBanner';
-import { TrainerWeek } from './TrainerWeek';
+import { NothingYet, TrainerWeek } from './TrainerWeek';
+import { getViewer } from '@/lib/viewer';
 import { getMyWeek } from '@/lib/player-week';
 
 /**
@@ -19,7 +20,24 @@ export async function LibraryLocked({ title }: { title: string }) {
       <div className="animate-pop">
         <TrainerWeek week={week} />
         <div className="mt-4"><Suspense fallback={null}><NoteBanner /></Suspense></div>
-        <Link href="/speed" className="btn-ghost pressable mt-8 min-h-[52px] w-full text-[15px] font-bold">Get faster</Link>
+        {/* Something to do when the week is finished; an extra otherwise. */}
+        {week.items.length > 0 && (
+          <Link href="/speed"
+                className={week.items.every((i) => i.done) ? 'btn-primary btn-big pressable mt-6 w-full'
+                  : 'btn-ghost pressable mt-6 min-h-[52px] w-full text-[15px] font-bold'}>
+            Get faster
+          </Link>
+        )}
+      </div>
+    );
+  }
+  const v = await getViewer().catch(() => null);
+  // Signed in with nothing set: they're in, and their trainer is on it.
+  if (v?.user) {
+    return (
+      <div className="animate-pop">
+        <NothingYet />
+        <div className="mt-4"><Suspense fallback={null}><NoteBanner /></Suspense></div>
       </div>
     );
   }
@@ -27,13 +45,9 @@ export async function LibraryLocked({ title }: { title: string }) {
     <div className="animate-pop">
       <BrandBand>
         <BandTag>{title}</BandTag>
-        <BandTitle>Nothing yet</BandTitle>
-        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
-          Your trainer hasn&rsquo;t set a session. Try a speed session.
-        </p>
+        <BandTitle>Sign in to train</BandTitle>
       </BrandBand>
-      <Suspense fallback={null}><NoteBanner /></Suspense>
-      <Link href="/speed" className="btn-primary btn-big pressable mt-6 w-full">Get faster</Link>
+      <Link href="/me" className="btn-primary btn-big pressable mt-6 w-full">Sign in</Link>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { PHASES, sessionSeconds, KIND_LABELS, type PhaseId } from '@/lib/speed';
+import { PHASES, sessionSeconds, type PhaseId } from '@/lib/speed';
 import {
   isoDate, mondayOf, phaseForMonth, position, weekPlan, type DayPlan,
 } from '@/lib/speed-year';
@@ -39,9 +39,8 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
       <Card>
         <Eyebrow>Your year</Eyebrow>
         <Big>Starts Monday</Big>
-        <p className="mt-2 text-[13.5px] font-medium text-on-surface-brand-variant">
-          {pos.startsOn.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })} · Phase{' '}
-          {PHASES.find((p) => p.id === start.phase)!.number}, {PHASES.find((p) => p.id === start.phase)!.name}
+        <p className="mt-2 text-[16px] font-semibold text-on-surface-brand-variant">
+          {pos.startsOn.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}
         </p>
         <RestartLink onClick={() => setRestarting(true)} />
         <Restart open={restarting} onCancel={() => setRestarting(false)} onConfirm={() => { save(null); setRestarting(false); }} />
@@ -54,12 +53,11 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
       <Card>
         <Eyebrow>Your year</Eyebrow>
         <Big>Year done</Big>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-on-surface-brand-variant">
-          Two weeks off sprinting and plyometrics, then start again at Phase 1 — this year&rsquo;s
-          test numbers are next year&rsquo;s baseline.
+        <p className="mt-2 text-[16px] font-semibold leading-snug text-on-surface-brand-variant">
+          Take two weeks off sprinting, then go again.
         </p>
         <button type="button" onClick={() => save(null)}
-                className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
           Start a new year
         </button>
       </Card>
@@ -91,11 +89,11 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
           <>
             <Eyebrow>Today</Eyebrow>
             <Big>{today.session.name}</Big>
-            <p className="mt-1 text-[14px] font-medium text-on-surface-brand-variant">
-              {Math.round(sessionSeconds(today.session) / 60)} min · {KIND_LABELS[today.session.kind]}
+            <p className="mt-1.5 text-[16px] font-semibold text-on-surface-brand-variant">
+              {Math.round(sessionSeconds(today.session) / 60)} min
             </p>
             <Link href={`/speed/session/${today.session.id}?from=speed`}
-                  className="btn-primary pressable mt-6 w-full bg-on-surface-brand text-surface-brand">
+                  className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
               Start
             </Link>
           </>
@@ -105,12 +103,12 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
           <>
             <Eyebrow>Today</Eyebrow>
             <Big>Test day</Big>
-            <p className="mt-1 text-[14px] font-medium text-on-surface-brand-variant">
-              Warm up, then the five tests.
+            <p className="mt-1.5 text-[16px] font-semibold text-on-surface-brand-variant">
+              Warm up, then do the five tests.
             </p>
             <Link href="/speed/test"
-                  className="btn-primary pressable mt-6 w-full bg-on-surface-brand text-surface-brand">
-              Record your tests
+                  className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+              Start my tests
             </Link>
           </>
         )}
@@ -118,52 +116,51 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
         {(today.type === 'off' || isDone(today)) && (
           <>
             <Big>{isDone(today) ? 'Done for today' : 'Rest day'}</Big>
-            <p className="mt-1 text-[14px] font-medium text-on-surface-brand-variant">
+            <p className="mt-1.5 text-[16px] font-semibold text-on-surface-brand-variant">
               {next
-                ? `Next: ${next.type === 'test' ? 'test day' : next.session.name}, ${FULL_DAY[next.weekday]}`
-                : 'That’s the week. Next week starts Monday.'}
+                ? `Next: ${FULL_DAY[next.weekday]}`
+                : 'Week done. See you Monday.'}
             </p>
           </>
         )}
 
-        <div className="mt-6 flex items-center justify-between gap-4 border-t border-brand-track pt-4">
-          <span className="truncate text-[12.5px] font-medium text-on-surface-brand-variant">
-            {pos.phase.name} · week {pos.weekOfYear + 1} of {pos.totalWeeks}
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-brand-track pt-4">
+          <span className="truncate text-[14px] font-semibold text-on-surface-brand-variant">
+            Week {pos.weekOfYear + 1} of {pos.totalWeeks}
           </span>
           <span className="flex shrink-0 gap-1.5" role="img" aria-label={`${doneCount} of ${training.length} done this week`}>
             {training.map((d) => (
-              <span key={d.day} className={`h-2 w-2 rounded-full ${isDone(d) ? 'bg-brand-accent' : 'bg-brand-track'}`} />
+              <span key={d.day} className={`h-3 w-3 rounded-full ${isDone(d) ? 'bg-brand-accent' : 'bg-brand-track'}`} />
             ))}
           </span>
         </div>
       </Card>
 
       {/* The week, Monday to Sunday, so today sits among the days around it. */}
-      <ol className="mt-3 space-y-2">
+      <h2 className="h-sec mb-3 mt-8">This week</h2>
+      <ol className="space-y-2.5">
         {days.map((d) => {
           const isToday = d.weekday === pos.today;
           const done = isDone(d);
           if (d.type === 'off') {
             return (
-              <li key={d.day} className="flex items-center gap-3.5 px-4 py-2">
+              <li key={d.day} className="flex items-center gap-3.5 px-4 py-1.5">
                 <DayLabel day={d.day} today={isToday} muted />
-                <span className="text-[13.5px] text-on-surface-variant">{d.label}</span>
+                <span className="text-[15px] font-medium text-on-surface-variant">Rest</span>
               </li>
             );
           }
           return (
-            <li key={d.day} className={`card flex items-center gap-3.5 p-4 ${done ? 'opacity-60' : ''}`}>
+            <li key={d.day} className={`card flex min-h-[68px] items-center gap-3.5 p-4 ${done ? 'opacity-60' : ''} ${isToday && !done ? 'ring-2 ring-on-surface' : ''}`}>
               <DayLabel day={d.day} today={isToday} />
               <div className="min-w-0 flex-1">
-                <div className="h-card truncate">{d.type === 'test' ? 'Test day' : d.session.name}</div>
-                <div className="mt-0.5 text-[12.5px] text-on-surface-variant">
-                  {d.type === 'test'
-                    ? 'Replaces Speed B this week'
-                    : `${KIND_LABELS[d.session.kind]} · ${Math.round(sessionSeconds(d.session) / 60)} min`}
+                <div className="text-[16px] font-bold leading-snug text-on-surface">{d.type === 'test' ? 'Test day' : d.session.name}</div>
+                <div className="mt-0.5 text-[13.5px] font-semibold text-on-surface-variant">
+                  {d.type === 'test' ? 'Five tests' : `${Math.round(sessionSeconds(d.session) / 60)} min`}
                 </div>
               </div>
               {done ? (
-                <span className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-on-surface-variant">
+                <span className="flex shrink-0 items-center gap-1 text-[14px] font-bold text-on-surface-variant">
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true"
                        stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
@@ -173,7 +170,7 @@ export function SpeedYear({ completions }: { completions: { source_ref: string |
               ) : (
                 <Link href={d.type === 'test' ? '/speed/test' : `/speed/session/${d.session.id}?from=speed`}
                       className="btn-primary btn-sm shrink-0">
-                  {d.type === 'test' ? 'Record' : 'Start'}
+                  Start
                 </Link>
               )}
             </li>
@@ -201,51 +198,55 @@ function StartYear({ now, onStart }: { now: Date; onStart: (s: { monday: string;
   const nextMonday = new Date(thisMonday); nextMonday.setDate(nextMonday.getDate() + 7);
   const lateInWeek = (now.getDay() + 6) % 7 >= 3; // Thursday or later
 
-  // An ordinary card, not the brand block: the brand block is the "do this
-  // now" surface, and choosing a starting point is a setup question. The
-  // chips here are the same chips as everywhere else.
+  // The brand block: starting is the one thing to do here. The calendar picks
+  // the phase; choosing another is there for the few who want it, folded away.
+  const [choosing, setChoosing] = useState(false);
   return (
-    <div className="card animate-pop mt-7 p-5">
-      <p className="h-card">Start the program</p>
-      <p className="mt-1.5 text-[13.5px] leading-relaxed text-on-surface-variant">
-        Pick where to begin and the plan counts the weeks: today&rsquo;s session, test days and
-        blocks, without working out which of the 60 it is.
+    <Card>
+      <Big>Ready to get faster?</Big>
+      <p className="mt-1.5 text-[16px] font-semibold text-on-surface-brand-variant">
+        Short speed sessions, a few times a week.
       </p>
-      <p className="mb-2.5 mt-5 text-[14px] font-bold text-on-surface">Start at</p>
-      <div className="flex flex-wrap gap-2">
-        {PHASES.map((p) => (
-          <Chip key={p.id} on={phase === p.id} onClick={() => setPhase(p.id)}>
-            {p.number} · {p.name}
-          </Chip>
-        ))}
-      </div>
-      {/* Starting on a Thursday would make this week's Monday and Tuesday
-          sessions already missed, so late in the week the default is Monday. */}
-      <div className="mt-5 flex gap-2.5">
-        <button type="button"
-                onClick={() => onStart({ monday: isoDate(lateInWeek ? thisMonday : nextMonday), phase })}
-                className="btn-ghost pressable min-h-[52px] min-w-0 flex-1 whitespace-nowrap px-4">
-          {lateInWeek ? 'This week' : 'Next Monday'}
+      {/* Starting on a Thursday would make Monday's and Tuesday's sessions
+          already missed, so late in the week the big button is next Monday. */}
+      <button type="button"
+              onClick={() => onStart({ monday: isoDate(lateInWeek ? nextMonday : thisMonday), phase })}
+              className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+        {lateInWeek ? 'Start on Monday' : 'Start this week'}
+      </button>
+      <button type="button"
+              onClick={() => onStart({ monday: isoDate(lateInWeek ? thisMonday : nextMonday), phase })}
+              className="btn-ghost pressable mt-2.5 min-h-[52px] w-full border-on-surface-brand-variant text-[15px] font-bold text-on-surface-brand">
+        {lateInWeek ? 'Start this week' : 'Start next Monday'}
+      </button>
+      {choosing ? (
+        <div className="hint-in mt-5 rounded-2xl bg-surface-container-lowest p-4">
+          <p className="mb-2.5 text-[15px] font-bold text-on-surface">Start at</p>
+          <div className="flex flex-wrap gap-2">
+            {PHASES.map((p) => (
+              <Chip key={p.id} on={phase === p.id} onClick={() => setPhase(p.id)}>{p.name}</Chip>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setChoosing(true)}
+                className="pressable mt-4 text-[14px] font-semibold text-on-surface-brand-variant underline underline-offset-4">
+          Starting at {PHASES.find((p) => p.id === phase)!.name}. Change
         </button>
-        <button type="button"
-                onClick={() => onStart({ monday: isoDate(lateInWeek ? nextMonday : thisMonday), phase })}
-                className="btn-primary pressable min-w-0 flex-1 whitespace-nowrap px-4">
-          {lateInWeek ? 'Start Monday' : 'Start this week'}
-        </button>
-      </div>
-    </div>
+      )}
+    </Card>
   );
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="animate-pop mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
+    <div className="animate-pop mt-6 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
       {children}
     </div>
   );
 }
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-accent">{children}</p>
+  <p className="mb-1.5 text-[15px] font-extrabold text-brand-accent">{children}</p>
 );
 const Big = ({ children }: { children: React.ReactNode }) => (
   <p className="font-brand text-[30px] font-extrabold leading-tight tracking-tight text-on-surface-brand">{children}</p>
@@ -253,10 +254,10 @@ const Big = ({ children }: { children: React.ReactNode }) => (
 
 function DayLabel({ day, today, muted }: { day: string; today: boolean; muted?: boolean }) {
   return (
-    <span className={`w-10 shrink-0 font-brand text-[13px] font-bold
+    <span className={`w-11 shrink-0 font-brand text-[15px] font-extrabold
                       ${muted && !today ? 'text-on-surface-variant' : 'text-on-surface'}`}>
       {day}
-      {today && <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Today</span>}
+      {today && <span className="block text-[11.5px] font-bold text-on-surface-variant">Today</span>}
     </span>
   );
 }
@@ -266,16 +267,16 @@ function RestartLink({ onClick, muted }: { onClick: () => void; muted?: boolean 
     <button type="button" onClick={onClick}
             className={`pressable mt-3 text-[13px] font-semibold underline underline-offset-4
                         ${muted ? 'text-on-surface-variant' : 'text-on-surface-brand-variant'}`}>
-      Change where you started
+      Start over
     </button>
   );
 }
 
 function Restart({ open, onCancel, onConfirm }: { open: boolean; onCancel: () => void; onConfirm: () => void }) {
   return (
-    <ConfirmSheet open={open} title="Change where you started?"
-      body="You'll pick a phase and a start week again. Finished sessions and test days stay where they are."
-      confirmLabel="Change it" onConfirm={onConfirm} onCancel={onCancel} />
+    <ConfirmSheet open={open} title="Start over?"
+      body="You'll pick where to start again. Sessions you've finished stay finished."
+      confirmLabel="Start over" onConfirm={onConfirm} onCancel={onCancel} />
   );
 }
 
