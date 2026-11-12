@@ -19,6 +19,7 @@ import { NoteBanner } from '@/components/NoteBanner';
 import { getViewer } from '@/lib/viewer';
 import { avatarSrc } from '@/lib/avatar';
 import { libraryAllowed } from '@/lib/library-gate';
+import { speedAllowed } from '@/lib/speed-gate';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -217,7 +218,7 @@ export default async function MePage() {
         )}
       </section>
 
-      {calendar !== undefined && <CalendarSection initial={calendar} />}
+      {calendar !== undefined && <CalendarSection initial={calendar} speed={await speedAllowed().catch(() => true)} />}
 
       <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={role} />
     </div>

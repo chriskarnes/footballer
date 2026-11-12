@@ -7,6 +7,7 @@ import { AddSession } from './AddSession';
 import { Avatar } from './Avatar';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { StartLink } from './StartLink';
+import { speedAllowed } from '@/lib/speed-gate';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -26,14 +27,21 @@ const Tick = ({ className }: { className: string }) => (
  * about this session) in their words, with their face, just above Start, and
  * when the player next sees them. The band is the compact one, so Start and
  * the first of the week fit on a small phone together.
+ *
+ * With the week done, the band says so and has the one way on: a bonus
+ * session if their trainer allows extras and there's one left, else Speed if
+ * their trainer offers it. No week strip then; seven ticks would only say
+ * "done" again. On a game day it's rest instead.
  */
 export async function TrainerWeek({ week }: { week: MyWeek }) {
   const { items, today, schedule } = week;
-  const [trainer, unread] = await Promise.all([getTrainer().catch(() => null), getUnread()]);
+  const [trainer, unread, speed] = await Promise.all([getTrainer().catch(() => null), getUnread(), speedAllowed().catch(() => true)]);
   const set = items.filter((i) => !i.extra);
   const done = set.filter((i) => i.done).length;
   const next = items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);
+  const weekDone = !next && items.length > 0;
+  const gameDay = schedule?.game === today;
 
   // One or two words on which day the headline is about.
   const when = !next ? 'This week'
@@ -58,11 +66,25 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
     <section>
       <BrandBand compact>
         <BandTag>{when}</BandTag>
-        <BandTitle>{next ? next.title : items.length ? 'All done!' : 'Nothing yet'}</BandTitle>
-        <p className="mt-2 text-[16px] font-semibold text-on-surface-brand-variant">
-          {next ? `${next.minutes} min · ${next.drills} ${next.drills === 1 ? 'drill' : 'drills'}`
-            : items.length ? 'You finished your whole week.' : 'Your trainer hasn’t set this week.'}
-        </p>
+        {weekDone ? (
+          <BandTitle>
+            <span className="flex items-center gap-3">
+              Week done!
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+                <Tick className="h-4 w-4" />
+              </span>
+            </span>
+          </BandTitle>
+        ) : (
+          <BandTitle>{next ? next.title : 'Nothing yet'}</BandTitle>
+        )}
+        {(!weekDone || gameDay) && (
+          <p className="mt-2 text-[16px] font-semibold text-on-surface-brand-variant">
+            {next ? `${next.minutes} min · ${next.drills} ${next.drills === 1 ? 'drill' : 'drills'}`
+              : weekDone ? 'Game day. Rest up.' : 'Your trainer hasn’t set this week.'}
+          </p>
+        )}
         {/* The trainer, in their words, where the player is about to press. */}
         {said && (
           <TrainerSays href={note ? '/me/notes' : null} body={said}
@@ -74,7 +96,12 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
             Start
           </StartLink>
         )}
-        <WeekStrip items={items} today={today} nextDay={next?.weekday ?? null} />
+        {weekDone && !gameDay && (
+          week.more && !week.more.why ? <AddSession why={null} inBand />
+          : speed ? <Link href="/speed" className="btn-primary btn-big pressable mt-4 w-full bg-on-surface-brand text-surface-brand">Get faster</Link>
+          : null
+        )}
+        {!weekDone && <WeekStrip items={items} today={today} nextDay={next?.weekday ?? null} />}
         {meetLabel && (
           <p className="mt-2 text-[15px] font-semibold text-on-surface-brand-variant">
             Next with {trainer?.name ?? 'your trainer'}: {meetLabel}
@@ -112,7 +139,8 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
         </>
       )}
 
-      {week.more && <AddSession why={week.more.why} />}
+      {/* With the week done, the band has it. */}
+      {week.more && !weekDone && <AddSession why={week.more.why} />}
 
       {/* Asked once, here, because the answer moves the sessions above. After
           that it's a setting, and settings are on Me. */}

@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/roboto-flex/wdth.css';
 import '@fontsource-variable/noto-sans';
 import './globals.css';
+import { speedAllowed } from '@/lib/speed-gate';
 import { TabBar } from '@/components/TabBar';
 import { InstallNudge } from '@/components/InstallNudge';
 import { ServiceWorker } from '@/components/ServiceWorker';
@@ -116,7 +117,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </html>
     );
   }
-  const lib = await libraryFor().catch(() => ({ drills: true, own: false }));
+  const [lib, speed] = await Promise.all([
+    libraryFor().catch(() => ({ drills: true, own: false })),
+    speedAllowed().catch(() => true),
+  ]);
   return (
     <html lang="en">
       <body className="pad-nav min-h-dvh antialiased">
@@ -125,7 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             at equal specificity. Values are validated #RRGGBB, never raw input. */}
         {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
         <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">{children}</main>
-        <TabBar academyId={academy?.id ?? null} library={lib.drills || lib.own} plan={lib.drills} />
+        <TabBar academyId={academy?.id ?? null} library={lib.drills || lib.own} plan={lib.drills} speed={speed} />
         <InstallNudge />
         <ServiceWorker />
         <PendingSaves />

@@ -72,15 +72,25 @@ export async function setMode(userId: string, mode: 'program' | 'custom'): Promi
   } catch (e) { return fail(e); }
 }
 
-/** What players may do on their own: browse the library, add up to `extras` sessions a week. */
-export async function savePlayerOptions(library: boolean, extras: number): Promise<Result> {
+/**
+ * What players may do on their own: browse the library, add up to `extras`
+ * sessions a week, and have Speed & Stamina.
+ */
+export async function savePlayerOptions(library: boolean, extras: number, speed: boolean): Promise<Result> {
   try {
     const v = await staff();
     const d = await loadDefaults(v.db, v.academy.id);
-    const { error } = await v.db.from('academy_plan_defaults').upsert({
+    const row = {
       academy_id: v.academy.id, sessions: d.sessions, minutes: d.minutes,
       player_library: !!library, player_extras: clamp(extras, 0, 3) ?? 0, updated_at: new Date().toISOString(),
-    });
+    };
+    let { error } = await v.db.from('academy_plan_defaults').upsert({ ...row, player_speed: !!speed });
+    // Before 0019 there's no Speed setting, and Speed is on: fine, unless
+    // they're turning it off.
+    if (error && /player_speed/.test(error.message)) {
+      if (!speed) return { ok: false, error: 'Run migration 0019 in Supabase first.' };
+      ({ error } = await v.db.from('academy_plan_defaults').upsert(row));
+    }
     if (error && /player_/.test(error.message)) return { ok: false, error: 'Run migration 0015 in Supabase first.' };
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };

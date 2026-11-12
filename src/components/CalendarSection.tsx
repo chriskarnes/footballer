@@ -23,7 +23,11 @@ const zone = () => {
  * sometime") or start at a set time. The zone is the device's, sent with
  * every change, so a timed 5 pm stays 5 pm where the player is.
  */
-export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
+export function CalendarSection({ initial, speed = true }: {
+  initial: CalendarFeed | null;
+  /** Whether they get Speed & Stamina: off when their trainer has it off. */
+  speed?: boolean;
+}) {
   const [feed, setFeed] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -62,7 +66,7 @@ export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
         <div className="card p-5">
           <div className="h-card">Put your training in your calendar</div>
           <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
-            Your plan and speed sessions appear on the right days in Apple or Google Calendar, and
+            {speed ? 'Your plan and speed sessions appear' : 'Your sessions appear'} on the right days in Apple or Google Calendar, and
             tick off as you finish them.
           </p>
           <button type="button" disabled={busy} className="btn-ghost pressable mt-4 w-full"
@@ -103,7 +107,7 @@ export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
         <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Include</p>
         <div className="flex flex-wrap gap-2">
           <Chip on={feed.include_plan} onClick={() => update({ include_plan: !feed.include_plan })}>Weekly plan</Chip>
-          <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed &amp; Stamina</Chip>
+          {speed && <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed &amp; Stamina</Chip>}
         </div>
 
         <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Show sessions</p>

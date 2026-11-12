@@ -75,7 +75,7 @@ export default async function TeamPage() {
         <p className="eyebrow mb-3">Training</p>
         <div className="space-y-3">
           <BuildDefaults defaults={defaults} ai={ai} />
-          <PlayerOptions library={defaults.playerLibrary} extras={defaults.playerExtras} />
+          <PlayerOptions library={defaults.playerLibrary} extras={defaults.playerExtras} speed={defaults.playerSpeed} />
         </div>
       </section>
 

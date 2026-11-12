@@ -11,6 +11,8 @@ export type Defaults = Target & {
   progress: boolean;
   /** What players may do on their own (0015): browse the library; add up to this many sessions a week. */
   playerLibrary: boolean; playerExtras: number;
+  /** Whether players get Speed & Stamina (0019). On unless the trainer turns it off. */
+  playerSpeed: boolean;
 };
 
 export type AcademyContent = {
@@ -85,11 +87,11 @@ async function withFallback(q: (cols: string) => any, cols: string, ...extras: s
 /** The academy's default target and step-up setting; the built-in ones when unset. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadDefaults(db: any, academyId: string): Promise<Defaults> {
-  const { data } = await withFallback((c) => db.from('academy_plan_defaults').select(c).eq('academy_id', academyId).maybeSingle(), 'sessions, minutes', ', progress, player_library, player_extras', ', progress');
+  const { data } = await withFallback((c) => db.from('academy_plan_defaults').select(c).eq('academy_id', academyId).maybeSingle(), 'sessions, minutes', ', progress, player_library, player_extras, player_speed', ', progress, player_library, player_extras', ', progress');
   return data
     ? { sessions: data.sessions, minutes: sessionMinutes(data.minutes), progress: data.progress ?? true,
-        playerLibrary: data.player_library ?? false, playerExtras: data.player_extras ?? 0 }
-    : { ...DEFAULT_TARGET, progress: true, playerLibrary: false, playerExtras: 0 };
+        playerLibrary: data.player_library ?? false, playerExtras: data.player_extras ?? 0, playerSpeed: data.player_speed ?? true }
+    : { ...DEFAULT_TARGET, progress: true, playerLibrary: false, playerExtras: 0, playerSpeed: true };
 }
 
 /** Built-week sessions with their notes; without them before migration 0011 adds the column. */
