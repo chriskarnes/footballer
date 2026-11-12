@@ -653,6 +653,24 @@ input, textarea, [data-selectable] {
     opacity: var(--md-sys-state-hover-state-layer-opacity);
   }
 }
+
+/* A card whose main part is one button, with another control beside it: a
+   drill in a session, which opens to show how, next to its tick. The card is
+   what's hovered, pressed and focused, the way a linked card is, rather than
+   a box drawn inside it around the button (.card-hit). The other control
+   keeps its own states. */
+.card-press {
+  outline: 1.5px solid transparent;
+  outline-offset: -1.5px;
+  transition: outline-color var(--md-sys-motion-duration-short2),
+              background-color var(--md-sys-motion-duration-short2);
+}
+@media (hover: hover) {
+  .card-press:has(.card-hit:hover) { outline-color: var(--md-sys-color-on-surface); }
+}
+.card-press:has(.card-hit:active) { background-color: var(--md-sys-color-surface-container-low); }
+.card-hit:focus-visible { outline: none; }
+.card-press:has(.card-hit:focus-visible) { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
 /* Press is the tint alone. It used to also scale to .965, which is 17px off
    the width of a library row — the "why did that card just resize" everyone
    noticed — and inside the segmented switch it was worse: the segments are

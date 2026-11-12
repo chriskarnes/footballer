@@ -15,6 +15,16 @@ type Phase = 'running' | 'confirm-end' | 'finished';
  *  browser for an account — see pending.ts. */
 type Save = 'saving' | 'saved' | 'signin' | 'error';
 type Trainer = { name: string | null; photo: string | null };
+type Feel = 'easy' | 'right' | 'hard';
+
+// How the session felt, onto the saved session. Nothing to say if it fails:
+// it's a nice-to-have on top of a session that's already kept.
+function sendFeel(id: string, feel: Feel) {
+  fetch('/api/workouts', {
+    method: 'PATCH', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ id, feel }), keepalive: true,
+  }).catch(() => {});
+}
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -88,7 +98,10 @@ export function Runner({
   const [played, setPlayed] = useState(0);
   // A trainer's session asks how it felt: that's what steps the next week up.
   const [savedId, setSavedId] = useState<string | null>(workoutId ?? null);
-  const [feel, setFeel] = useState<'easy' | 'right' | 'hard' | null>(null);
+  const [feel, setFeel] = useState<Feel | null>(null);
+  // The feel can be picked while the save is still on its way: it rides along
+  // as soon as there's a session to put it on, even if they've left by then.
+  const feelRef = useRef<Feel | null>(null);
   const asksFeel = source === 'academy' || source === 'addon';
   // Done already this week: shown done, every drill ticked and nothing to
   // change, until they choose to go again. A redo is a new session of its
@@ -176,10 +189,18 @@ export function Runner({
       if (res.status === 401 && !workoutId) { pendingWorkout.stash(body); setSave('signin'); }
       else {
         setSave(res.ok ? 'saved' : 'error');
-        if (res.ok && !workoutId) { const j = await res.json().catch(() => null); if (j?.id) setSavedId(j.id); }
+        if (res.ok && !workoutId) {
+          const j = await res.json().catch(() => null);
+          if (j?.id) { setSavedId(j.id); if (feelRef.current) sendFeel(j.id, feelRef.current); }
+        }
       }
     } catch { setSave('error'); }
   }
+
+  const pickFeel = (k: Feel) => {
+    setFeel(k); feelRef.current = k; haptic('tap');
+    if (savedId) sendFeel(savedId, k);
+  };
 
   function finish() {
     const minutes = tickedMinutes(drills, done, rounds);
@@ -241,7 +262,8 @@ export function Runner({
           )}
         </div>
 
-        {asksFeel && savedId && (
+        {/* Asked straight away, above the button: not after the save is back. */}
+        {asksFeel && save !== 'signin' && (
           <div className="mt-7">
             <h2 className="h-sec text-center">{ask}</h2>
             <div className="mt-3 grid grid-cols-3 gap-2.5" role="group" aria-label={ask}>
@@ -249,17 +271,14 @@ export function Runner({
                 <button key={k} type="button" aria-pressed={feel === k}
                         className={`pressable min-h-[60px] rounded-2xl border-2 text-[15px] font-bold
                                     ${feel === k ? 'border-on-surface bg-on-surface text-surface' : 'border-outline text-on-surface'}`}
-                        onClick={() => {
-                          setFeel(k); haptic('tap');
-                          fetch('/api/workouts', { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: savedId, feel: k }) }).catch(() => {});
-                        }}>{l}</button>
+                        onClick={() => pickFeel(k)}>{l}</button>
               ))}
             </div>
           </div>
         )}
 
         <Link href={doneHref ?? back?.href ?? '/'} className="btn-primary btn-big pressable mt-7 w-full">
-          Done
+          Session complete
         </Link>
       </div>
     );
@@ -348,16 +367,17 @@ export function Runner({
             );
             return (
               <li key={d.id} ref={(el) => { if (el) rows.current.set(d.id, el); else rows.current.delete(d.id); }}
-                  className="card scroll-mt-[calc(env(safe-area-inset-top)+112px)] overflow-hidden">
+                  className={`card scroll-mt-[calc(env(safe-area-inset-top)+112px)] overflow-hidden ${opens ? 'card-press' : ''}`}>
                 <div className="flex items-center gap-1.5 p-3">
                   <Circle on={on} here={d.id === current} locked={review} name={d.name} onTick={() => toggle(d.id)} />
                   {/* Two parts, one job each: the circle ticks, the drill opens.
                       A chevron marks a drill with steps or a video behind it;
                       one with nothing is just its name and amount, and doesn't
-                      pretend to be a button. */}
+                      pretend to be a button. Hover, press and focus show on the
+                      whole card (card-press), not as a box inside it. */}
                   {opens ? (
                     <button type="button" aria-expanded={open} onClick={() => setHowOpen(open ? null : d.id)}
-                            className="pressable flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-2 pl-1.5 pr-1 text-left">
+                            className="card-hit flex min-w-0 flex-1 items-center gap-2.5 py-2 pl-1.5 pr-1 text-left">
                       <span className="min-w-0 flex-1">{body}</span>
                       <svg viewBox="0 0 24 24" aria-hidden="true"
                            className={`h-6 w-6 shrink-0 text-on-surface-variant transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
