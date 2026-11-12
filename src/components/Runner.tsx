@@ -6,6 +6,7 @@ import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { pendingWorkout } from '@/lib/pending';
 import { EFFORT } from '@/lib/speed-guide';
+import { isYoutubeShort, youtubeId } from '@/lib/video';
 import { BackLink } from './BackLink';
 
 type Phase = 'running' | 'confirm-end' | 'finished';
@@ -213,7 +214,12 @@ export function Runner({
         {drills.map((d) => {
           const on = done.has(d.id);
           const open = howOpen === d.id;
-          const more = !!d.how?.length || !!d.video_url;
+          const steps = !!d.how?.length;
+          // A YouTube video plays here, in the session. Any other link still
+          // opens on its own: there's no player to put it in.
+          const yt = youtubeId(d.video_url);
+          const more = steps || !!yt;
+          const away = !!d.video_url && !yt;
           return (
             <li key={d.id} className="card overflow-hidden">
               {/* The whole top of the card ticks the drill off. */}
@@ -239,9 +245,9 @@ export function Runner({
               </div>
 
               {/* How to do it: a video, the steps, or both. One button. */}
-              {more && !on && (
+              {(more || away) && !on && (
                 <div className="border-t border-outline-variant">
-                  {d.how?.length ? (
+                  {more ? (
                     <button type="button" aria-expanded={open} onClick={() => setHowOpen(open ? null : d.id)}
                             className="pressable flex min-h-12 w-full items-center justify-between px-4 text-[14.5px] font-bold text-on-surface">
                       Show me how
@@ -254,23 +260,26 @@ export function Runner({
                   ) : (
                     <Watch href={d.video_url!} className="pressable flex min-h-12 w-full items-center gap-2 px-4 text-[14.5px] font-bold text-on-surface" />
                   )}
-                  {open && !!d.how?.length && (
+                  {open && more && (
                     <div className="hint-in px-4 pb-4">
-                      <ol className="space-y-2.5">
-                        {d.how.map((step, n) => (
-                          <li key={n} className="flex gap-3 text-[15px] leading-snug text-on-surface">
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[12.5px] font-extrabold">{n + 1}</span>
-                            <span>{step}</span>
-                          </li>
-                        ))}
-                      </ol>
+                      {yt && <Video id={yt} upright={isYoutubeShort(d.video_url)} title={d.name} href={d.video_url!} />}
+                      {steps && (
+                        <ol className="space-y-2.5">
+                          {d.how!.map((step, n) => (
+                            <li key={n} className="flex gap-3 text-[15px] leading-snug text-on-surface">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[12.5px] font-extrabold">{n + 1}</span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
                       {d.effort && (
                         <p className="mt-3 text-[14px] text-on-surface-variant">
                           <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
                           {EFFORT[d.effort].means}
                         </p>
                       )}
-                      {d.video_url && <Watch href={d.video_url} className="btn-ghost pressable mt-4 gap-2" />}
+                      {away && <Watch href={d.video_url!} className="btn-ghost pressable mt-4 gap-2" />}
                     </div>
                   )}
                 </div>
@@ -305,6 +314,31 @@ export function Runner({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * A YouTube video, played in the session rather than on YouTube: no leaving
+ * mid-session, and no recommendations queued up after it. The privacy-
+ * enhanced host, since the players are children. Shorts were filmed upright
+ * and get an upright frame. Some videos can't be embedded, so the way out to
+ * YouTube stays underneath, small.
+ */
+function Video({ id, upright, title, href }: { id: string; upright: boolean; title: string; href: string }) {
+  return (
+    <div className="mb-4">
+      <div className={`overflow-hidden rounded-xl bg-black ${upright ? 'mx-auto max-w-full' : 'w-full'}`}
+           style={upright ? { aspectRatio: '9 / 16', height: 'min(64dvh, 520px)' } : { aspectRatio: '16 / 9' }}>
+        <iframe src={`https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0`}
+                title={`${title}: video`} loading="lazy" className="h-full w-full"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+      </div>
+      <a href={href} target="_blank" rel="noopener"
+         className="mt-2 block text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+        Not playing? Open it on YouTube
+      </a>
     </div>
   );
 }

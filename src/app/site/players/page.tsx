@@ -40,8 +40,8 @@ export default function PlayersPage() {
           <Step n="1" title="Your trainer picks your week">
             After your session, your trainer picks drills for the days ahead. Open the app and today&rsquo;s session is ready.
           </Step>
-          <Step n="2" title="Every drill has a video and a timer">
-            Watch the drill, see how many reps to do, and start the clock. Most sessions take 15 to 30 minutes.
+          <Step n="2" title="Watch it, then do it">
+            Watch how each drill goes, right in the app, and see how many reps to do. Most sessions take 15 to 30 minutes.
           </Step>
           <Step n="3" title="Your trainer sees it">
             Check off a session when you finish, and your trainer knows. They can send you a note during the week. Next session, you start from what you practiced.

@@ -67,7 +67,7 @@ export default function SiteHome() {
             After your session, pick two or three short sessions for the week, like ball mastery or first touch.
           </Step>
           <Step n="2" title="Your player trains at home">
-            Each session is a list of drills. Every drill has a video and a timer. A session takes 15 to 30 minutes.
+            Each session is a list of drills, with videos that play right in the app. A session takes 15 to 30 minutes.
           </Step>
           <Step n="3" title="You see who did it">
             When a player finishes a session, you see it. If a player falls behind, you can send a reminder in one tap.

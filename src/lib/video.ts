@@ -3,6 +3,14 @@
  * youtu.be/ID, youtube.com/watch?v=ID, /shorts/ID, /embed/ID, /live/ID.
  * Null for anything else, which is then just a link.
  */
+/**
+ * Whether a YouTube link is a Short: filmed upright, so it wants an upright
+ * frame. A Short in a widescreen frame plays as a sliver down the middle.
+ */
+export function isYoutubeShort(raw: string | null | undefined): boolean {
+  return !!raw && /youtube(?:-nocookie)?\.com\/shorts\//i.test(raw);
+}
+
 export function youtubeId(raw: string | null | undefined): string | null {
   if (!raw) return null;
   try {
