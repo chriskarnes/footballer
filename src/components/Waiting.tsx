@@ -43,15 +43,19 @@ export function Waiting({ state }: { state: Wait }) {
       {/* A note from the trainer outranks everything else on the page. */}
       <Suspense fallback={null}><NoteBanner /></Suspense>
 
-      {!week.schedule && (
-        <section className="mt-6">
-          <h2 className="h-sec">While you wait</h2>
-          <p className="mb-4 mt-1.5 text-[16px] font-medium leading-snug text-on-surface-variant">
-            Pick the days your team trains and plays. Your sessions will go on the other days.
+      {/* Asked here first; once answered, the week stays on show, so they
+          can see what they told us. */}
+      <section className="mt-6">
+        <h2 className="h-sec">{week.schedule ? 'Team practice & games' : 'While you wait'}</h2>
+        {!week.schedule && (
+          <p className="mt-1.5 text-[16px] font-medium leading-snug text-on-surface-variant">
+            Tell us your team&rsquo;s days, and your sessions will go around them.
           </p>
-          <SoccerDaysPanel club={[]} game={null} set={false} />
-        </section>
-      )}
+        )}
+        <div className="mt-4">
+          <SoccerDaysPanel club={week.schedule?.club ?? []} game={week.schedule?.game ?? null} set={!!week.schedule} />
+        </div>
+      </section>
 
       {/* Their trainer lets them add their own: worth offering while they wait. */}
       {week.more && !week.more.why && <AddSession why={null} />}

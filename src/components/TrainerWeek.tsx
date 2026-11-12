@@ -70,7 +70,10 @@ export function TrainerWeek({ week }: { week: MyWeek }) {
                   </span>
                   <span className={`min-w-0 flex-1 text-[16px] font-bold leading-snug ${it.done ? 'text-on-surface-variant' : 'text-on-surface'}`}>
                     {it.title}
-                    {!it.done && it.weekday < today && <span className="block text-[13px] font-semibold text-on-surface-variant">Missed</span>}
+                    {/* How long, so a player can pick one that fits the time they have. */}
+                    <span className="mt-0.5 block text-[14px] font-semibold text-on-surface-variant">
+                      {it.minutes} min{!it.done && it.weekday < today ? ' · Missed' : ''}
+                    </span>
                   </span>
                 </Link>
                 {it.done

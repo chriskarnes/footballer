@@ -161,7 +161,7 @@ export default async function PlayerPage({ params, searchParams }: {
       <section className="card mt-3 p-5">
         <div className="h-card">Their soccer</div>
         <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
-          {soccer ? soccerLabel(soccer.club_days, soccer.game_day) ?? 'No club days.' : `${p.first} hasn’t said yet.`} Sessions go on the other days.
+          {soccer ? soccerLabel(soccer.club_days, soccer.game_day) ?? 'No practice days.' : `${p.first} hasn’t said yet.`} Sessions go on the other days.
         </p>
         <div className="mt-4">
           <SoccerDays club={soccer?.club_days ?? []} game={soccer?.game_day ?? null} userId={p.user_id} />

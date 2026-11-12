@@ -160,7 +160,7 @@ export default async function MePage() {
       {/* Their team's days, once answered on Train: it's a setting from then on. */}
       {myWeek?.schedule && (
         <section className="mt-8">
-          <h2 className="h-sec mb-3">My team days</h2>
+          <h2 className="h-sec mb-3">Team practice &amp; games</h2>
           <SoccerDaysPanel club={myWeek.schedule.club} game={myWeek.schedule.game} set />
         </section>
       )}
