@@ -36,15 +36,17 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
     if (!open && d.open) d.close();
   }, [open]);
 
-  const look = `pressable flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full border-2 text-[17px] font-bold ${
-    onBrand ? 'text-on-surface-brand' : 'border-outline text-on-surface'} ${className}`;
-  const edge = onBrand ? { borderColor: 'color-mix(in srgb, var(--app-on-surface-brand) 55%, transparent)' } : undefined;
+  // Outlined in its own ink (.btn-outline): white or black on the band,
+  // whichever the band's colour takes, never a see-through white that turns
+  // pink on a red band or brown on a yellow one.
+  const look = `btn-outline flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full text-[17px] font-bold ${
+    onBrand ? 'text-on-surface-brand' : 'text-on-surface'} ${className}`;
   const inner = <><Icon d={WATCH} className="h-5 w-5" />{start ? 'My speed program' : 'Try the speed program'}</>;
 
   // Until the stored start is read, hold the button's place: it could be
   // either one.
-  if (!ready) return <span aria-hidden className={`${look} invisible`} style={edge}>{inner}</span>;
-  if (start) return <Link href="/speed" className={look} style={edge}>{inner}</Link>;
+  if (!ready) return <span aria-hidden className={`${look} invisible`}>{inner}</span>;
+  if (start) return <Link href="/speed" className={look}>{inner}</Link>;
 
   const begin = () => {
     haptic('success');
@@ -55,7 +57,7 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
 
   return (
     <>
-      <button type="button" className={look} style={edge} onClick={() => { haptic('tap'); setOpen(true); }}>{inner}</button>
+      <button type="button" className={look} onClick={() => { haptic('tap'); setOpen(true); }}>{inner}</button>
       <dialog ref={ref} className="confirm-sheet" aria-labelledby="speed-invite-title"
               onCancel={(e) => { e.preventDefault(); setOpen(false); }}
               // A tap on the backdrop lands on the dialog itself, outside the card.

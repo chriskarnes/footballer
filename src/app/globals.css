@@ -1135,6 +1135,18 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
 .tabbar-surface {
   background: color-mix(in srgb, var(--md-sys-color-surface-container-lowest) 85%, transparent);
 }
+/* An outlined button in whatever ink it's set in: Speed's invite, on a brand
+   band or the page. The border is that ink at full strength, so it stays
+   crisp on any brand colour. Hover and press fill it faintly with the same
+   ink, in place of .pressable's ring, which drew black inside the border. */
+.btn-outline {
+  border: 2px solid currentColor;
+  transition: background-color var(--md-sys-motion-duration-short2);
+}
+@media (hover: hover) { .btn-outline:hover { background-color: color-mix(in srgb, currentColor 12%, transparent); } }
+.btn-outline:active { background-color: color-mix(in srgb, currentColor 20%, transparent); }
+.btn-outline:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+
 /* A tab has no box of its own, so no hover outline or press layer: those drew
    a circle around it. Hover inks it; a press dims it. */
 @media (hover: hover) { .tab:hover { color: var(--md-sys-color-on-surface); } }
