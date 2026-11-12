@@ -18,6 +18,7 @@ import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection
 import { NoteBanner } from '@/components/NoteBanner';
 import { getViewer } from '@/lib/viewer';
 import { avatarSrc } from '@/lib/avatar';
+import { libraryAllowed } from '@/lib/library-gate';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -63,6 +64,8 @@ export default async function MePage() {
   let avatarAt: string | null = null;
   let myWeek: MyWeek | null = null;
   let state: PlayerState = { kind: 'none' };
+  // Weekly plans are built from the drill library: without it, no plans.
+  let library = false;
   let plans: SavedPlan[] = [];
   let planDays: DayRow[] = [];
   let canBrand = false;
@@ -77,7 +80,7 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk, st] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk, st, lib] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
@@ -88,7 +91,9 @@ export default async function MePage() {
           readAvatarAt(db, user.id),
           getMyWeek().catch(() => null),
           getPlayerState().catch((): PlayerState => ({ kind: 'none' })),
+          libraryAllowed().catch(() => false),
         ]);
+        library = lib;
         myWeek = wk;
         state = st;
         avatarAt = photoAt;
@@ -133,7 +138,9 @@ export default async function MePage() {
 
   const finished = finishedRows(workouts);
   const saved = workouts.filter((w) => w.status !== 'completed').map(toRow);
-  const activePlan = plans.find((p) => p.active);
+  const activePlan = library ? plans.find((p) => p.active) : undefined;
+  // The week their trainer set, counted as Train counts it.
+  const set = myWeek?.items.filter((i) => !i.extra) ?? [];
   const completions = workouts
     .filter((w) => w.status === 'completed' && w.source === 'library')
     .map((w) => ({ source_ref: w.source_ref, completed_at: w.completed_at }));
@@ -152,14 +159,16 @@ export default async function MePage() {
           <h1 className="site-wide min-w-0 flex-1 text-[30px] uppercase leading-[.95] [overflow-wrap:anywhere]">{name || 'Me'}</h1>
         </div>
       </BrandBand>
-      <div className="mt-6"><NoteBanner /></div>
+      {/* Every section 40px from the last. NoteBanner keeps its own gap below. */}
+      <div className="mt-10"><NoteBanner /></div>
 
       <ThisWeek finished={finished.map(toFinished)} quiet={!!waiting}
+        trainer={set.length ? { done: set.filter((i) => i.done).length, set: set.length } : null}
         plan={activePlan ? { name: activePlan.name, days: planDays, completions } : null} />
 
       {/* Their team's days, once answered on Train: it's a setting from then on. */}
       {myWeek?.schedule && (
-        <section className="mt-8">
+        <section className="mt-10">
           <h2 className="h-sec mb-3">Team practice &amp; games</h2>
           <SoccerDaysPanel club={myWeek.schedule.club} game={myWeek.schedule.game} set />
         </section>
@@ -168,26 +177,26 @@ export default async function MePage() {
       {/* Kept from Train for later. Starting one and finishing it moves it
           down into history; removing it is for the ones you won't. */}
       {!!saved.length && (
-        <section className="mt-8">
+        <section className="mt-10">
           <h2 className="h-sec mb-3">Saved for later</h2>
           <WorkoutList rows={saved} kind="saved" />
         </section>
       )}
 
       {/* Every saved week, the active one first. */}
-      {!!plans.length && <SavedPlans plans={plans} />}
+      {library && !!plans.length && <SavedPlans plans={plans} />}
 
       {/* The invitation to a plan, once there's enough history to build one
           from. An ordinary card and a ghost button, like every other
           invitation in the app — it had its own outlined, tinted style. */}
-      {finished.length >= 3 && !plans.length && (
-        <section className="card mt-8 p-5">
+      {library && finished.length >= 3 && !plans.length && (
+        <section className="card mt-10 p-5">
           <div className="h-sec">Want a weekly plan?</div>
           <Link href="/plan" className="btn-ghost mt-4 min-h-[52px] w-full text-[15px] font-bold">Make my week</Link>
         </section>
       )}
 
-      <section className="mt-8">
+      <section className="mt-10">
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="h-sec">Done</h2>
           {finished.length > HISTORY_ON_ME && (

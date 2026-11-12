@@ -57,7 +57,7 @@ export function CalendarSection({ initial }: { initial: CalendarFeed | null }) {
 
   if (!feed) {
     return (
-      <section className="mt-9">
+      <section className="mt-10">
         <h2 className="h-sec mb-3">Calendar</h2>
         <div className="card p-5">
           <div className="h-card">Put your training in your calendar</div>

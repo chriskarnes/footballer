@@ -1,5 +1,5 @@
 /**
- * This week and the streak, from finished sessions.
+ * This week and weeks in a row, from finished sessions.
  *
  * Run in the browser for the same reason as plan-today.ts: "this week" and
  * "yesterday" are the player's local calendar, not the server's UTC.
@@ -38,16 +38,18 @@ export function thisWeek(finished: Finished[], now = new Date()) {
 }
 
 /**
- * Days in a row with at least one finished session. Still alive if the last
- * one was yesterday — today isn't over, and a streak that reads 0 every
- * morning until you train would punish exactly the people keeping it.
+ * Weeks in a row with at least one finished session, up to this one. This
+ * week only counts against it once it's over. It was days in a row, which
+ * broke on every rest day and game day the week itself plans. The rule is
+ * the one the trainer's view of the player uses (progress.ts), so the two
+ * say the same number.
  */
-export function streak(finished: Finished[], now = new Date()): number {
-  const days = new Set(finished.map((f) => dayKey(f.at)));
-  const d = dayStart(now);
-  if (!days.has(d.getTime())) d.setDate(d.getDate() - 1);
+export function weeksInARow(finished: Finished[], now = new Date()): number {
+  const weeks = new Set(finished.map((f) => weekStart(new Date(f.at)).getTime()));
+  const m = weekStart(now);
+  if (!weeks.has(m.getTime())) m.setDate(m.getDate() - 7);
   let n = 0;
-  while (days.has(d.getTime())) { n++; d.setDate(d.getDate() - 1); }
+  while (weeks.has(m.getTime()) && n < 520) { n++; m.setDate(m.getDate() - 7); }
   return n;
 }
 

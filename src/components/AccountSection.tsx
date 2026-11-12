@@ -20,7 +20,7 @@ export function AccountSection({ email, version, canBrand, role }: {
   useEffect(() => watchInstallable(setInstallable), []);
 
   return (
-    <section className="mt-9">
+    <section className="mt-10">
       <h2 className="h-sec mb-3">Account</h2>
       <div className="card divide-y divide-outline-variant">
         <Link href="/me/profile" className="pressable block">

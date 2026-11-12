@@ -19,15 +19,14 @@ type Trainer = { name: string | null; photo: string | null };
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 /**
- * Time is counted from the first tick, backdated by that drill's own length —
- * the first tick lands when the first drill ENDS, and time spent reading the
- * list before starting isn't training. Capped at twice the plan, because a
- * phone left on the grass with the tab open is not a three-hour session.
+ * The minutes a session counts for: the planned length of the drills ticked.
+ * It used to be the time between ticks, and players train with the phone in
+ * a bag and tick the lot at the end, so a 20-minute session went down as
+ * one. A drill done counts for its length, however fast the ticks were.
  */
-function playedMinutes(startedAt: number | null, openedAt: number, plannedSeconds: number): number {
-  if (startedAt === null) return 0;
-  const ms = Math.max(0, Date.now() - Math.max(startedAt, openedAt));
-  return Math.max(1, Math.round(Math.min(ms / 1000, plannedSeconds * 2) / 60));
+function tickedMinutes(drills: Exercise[], done: Set<string>, rounds: number): number {
+  const seconds = drills.filter((d) => done.has(d.id)).reduce((a, d) => a + d.total_seconds, 0) * rounds;
+  return seconds ? Math.max(1, Math.round(seconds / 60)) : 0;
 }
 
 /** Whether a drill has anything behind "Show me how": steps, or a video that plays here. */
@@ -101,8 +100,6 @@ export function Runner({
   // thing being worked through. A run starts with the first one open.
   const [howOpen, setHowOpen] = useState<string | null>(
     () => (completedDay === null && showable(drills[0]) ? drills[0].id : null));
-  const openedAt = useRef(Date.now());
-  const startedAt = useRef<number | null>(null);
   const rows = useRef(new Map<string, HTMLLIElement>());
   const finishRef = useRef<HTMLButtonElement>(null);
 
@@ -130,10 +127,6 @@ export function Runner({
 
   const toggle = (id: string) => {
     if (finished || review) return;
-    const d = drills.find((x) => x.id === id);
-    if (startedAt.current === null && d) {
-      startedAt.current = Date.now() - d.total_seconds * rounds * 1000;
-    }
     const next = new Set(done);
     const ticking = !next.has(id);
     if (ticking) { next.add(id); haptic('select'); } else { next.delete(id); haptic('tap'); }
@@ -157,8 +150,6 @@ export function Runner({
     setDoneDay(null);
     setDone(new Set());
     setHowOpen(showable(drills[0]) ? drills[0].id : null);
-    openedAt.current = Date.now();
-    startedAt.current = null;
     window.scrollTo({ top: 0 });
   };
 
@@ -190,7 +181,7 @@ export function Runner({
   }
 
   function finish() {
-    const minutes = playedMinutes(startedAt.current, openedAt.current, total);
+    const minutes = tickedMinutes(drills, done, rounds);
     setPlayed(minutes);
     setPhase('finished');
     // The success buzz moved here from the last tick: Finish is the moment, and
