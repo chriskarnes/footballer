@@ -32,7 +32,7 @@ export default async function SpeedPage() {
       <BrandBand>
         <BandTag>Speed</BandTag>
         <BandTitle>Speed &amp; Stamina</BandTitle>
-        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">A year of sessions to get faster. For ages 13 and up.</p>
+        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">A year of sessions to get faster.</p>
       </BrandBand>
 
       <SpeedYear completions={completions} />

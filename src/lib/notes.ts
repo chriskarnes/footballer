@@ -1,4 +1,6 @@
 import 'server-only';
+import { cache } from 'react';
+import { getViewer } from './viewer';
 
 export type InboxNote = { id: string; body: string; kind: string; author: string; at: string; seen: boolean };
 
@@ -30,3 +32,18 @@ export function ago(at: string, now = Date.now()) {
   if (h < 48) return 'yesterday';
   return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(at));
 }
+
+/**
+ * The signed-in player's unread notes here, newest first; empty for anyone
+ * who isn't a player. Once per render, so Train's band and the note banner
+ * share one read.
+ */
+export const getUnread = cache(async (): Promise<InboxNote[]> => {
+  try {
+    const v = await getViewer();
+    if (!v.user || !v.academy || v.role !== 'player') return [];
+    return (await readInbox(v.db, v.user.id, v.academy.id, 20)).filter((n) => !n.seen);
+  } catch {
+    return [];
+  }
+});

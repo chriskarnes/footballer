@@ -22,7 +22,6 @@ export async function LibraryLocked({ title }: { title: string }) {
     return (
       <div className="animate-pop">
         <TrainerWeek week={week} />
-        <div className="mt-4"><Suspense fallback={null}><NoteBanner /></Suspense></div>
         <Link href="/speed" className="btn-ghost pressable mt-8 min-h-[52px] w-full text-[15px] font-bold">Get faster</Link>
       </div>
     );

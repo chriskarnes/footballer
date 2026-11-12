@@ -8,7 +8,7 @@ import { localDate } from './progress';
 export type MyWeek = {
   items: WeekItem[];
   /** The groups they're in, with when they meet: "U12 Tuesday · Tue 5:00 pm". */
-  groups: { name: string; when: string | null }[];
+  groups: { name: string; when: string | null; day: number | null }[];
   today: number;
   /** A program description, when one program is the week. */
   about: string | null;
@@ -63,7 +63,7 @@ export const readMyWeek = cache(async (): Promise<MyWeek | null> => {
   const about = programIds.size === 1 ? c.programs.find((p) => programIds.has(p.id))?.description ?? null : null;
   return {
     items,
-    groups: mine.map((g) => ({ name: g.name, when: meetingLabel(g) })),
+    groups: mine.map((g) => ({ name: g.name, when: meetingLabel(g), day: g.meets_weekday })),
     today: weekday,
     more: allowed ? { left, why } : null,
     about,

@@ -24,10 +24,9 @@ export default async function TrainNowPage() {
       {/* The trainer's week, when they've set one, leads in the academy's
           colours; otherwise the plain bar. Its own Suspense, so signed-out
           visitors never wait on the lookup. */}
+      {/* With a week, its band carries the trainer's note; without, the note
+          banner does. */}
       <Suspense fallback={<Bar />}><MyTrainerWeek /></Suspense>
-
-      {/* A note from the trainer outranks everything else on the page. */}
-      <Suspense fallback={null}><NoteBanner /></Suspense>
 
       {/* The headline lives in Coach now: it changes with the step, from
           "Start training now" to the session you've just made. */}
@@ -52,5 +51,7 @@ function Bar() {
 
 async function MyTrainerWeek() {
   const week = await getMyWeek().catch(() => null);
-  return week ? <div className="mb-10"><TrainerWeek week={week} /></div> : <Bar />;
+  return week
+    ? <div className="mb-10"><TrainerWeek week={week} /></div>
+    : <><Bar /><Suspense fallback={null}><NoteBanner /></Suspense></>;
 }
