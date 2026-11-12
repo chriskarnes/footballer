@@ -29,7 +29,8 @@ function asExercise(d: DrillRow, sessionId: string, i: number, step = 0): Exerci
  *
  * Done already this week, it opens as done, from the same week Train reads,
  * so the two can't disagree. The drills are the trainer's, so a player sees
- * the trainer's name and face on them; a trainer previewing sees neither.
+ * the trainer's name and face at the top, with their note on the session; a
+ * trainer previewing sees neither.
  */
 export default async function TrainerSessionPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
   const { kind, id } = await params;
@@ -40,7 +41,8 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
   const [week, trainer] = player ? await Promise.all([getMyWeek().catch(() => null), getTrainer()]) : [null, undefined];
   const item = week?.items.find((i) => i.kind === kind && i.ref === id);
   const completedDay = item?.done ? item.doneOn ?? item.weekday : null;
-  const mine = { trainer, completedDay };
+  // What the trainer said about this session, said once at the top of it.
+  const mine = { trainer, completedDay, note: item?.note ?? null };
 
   if (kind === 'session') {
     const { data: s } = await v.db.from('academy_sessions').select('id, name, drill_ids').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
@@ -79,8 +81,8 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
       .eq('id', id).eq('user_id', v.user.id).maybeSingle();
     const d = a?.drills as unknown as DrillRow | null;
     if (!a || !d) notFound();
-    return <Runner title={d.name} note={a.note} drills={[asExercise(d, a.id, 0)]}
-                   sessionRef={a.id} source="addon" back={back} {...mine} />;
+    return <Runner title={d.name} drills={[asExercise(d, a.id, 0)]}
+                   sessionRef={a.id} source="addon" back={back} {...mine} note={a.note} />;
   }
   notFound();
 }

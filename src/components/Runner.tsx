@@ -29,7 +29,7 @@ function tickedMinutes(drills: Exercise[], done: Set<string>, rounds: number): n
   return seconds ? Math.max(1, Math.round(seconds / 60)) : 0;
 }
 
-/** Whether a drill has anything behind "Show me how": steps, or a video that plays here. */
+/** Whether a drill opens to show how: steps, or a video that plays here. */
 const showable = (d: Exercise | undefined) => !!d && (!!d.how?.length || !!youtubeId(d.video_url));
 
 /** The weekday (Monday 0) of the first of these in the player's own week, or null. */
@@ -54,8 +54,9 @@ export function Runner({
   completedDay = null, completedAt, trainer,
 }: {
   title: string; drills: Exercise[];
-  /** One line under the title, when there's something to say: a trainer's
-   *  note on a drill set just for them, or how many rounds. */
+  /** One line under the title, when there's something to say: the trainer's
+   *  note on this session or on a drill set just for them, or how many rounds.
+   *  With a trainer, it's in their words, beside their face. */
   note?: string | null;
   workoutId?: string; sessionRef?: string;
   /** Where the drills came from. Defaults to library when there's a sessionRef,
@@ -78,7 +79,7 @@ export function Runner({
    *  is the player's own week, so it's worked out here, once on the phone. */
   completedAt?: string[];
   /** The trainer, when the drills are theirs and a player is looking: their
-   *  face on Show me how, and their name on the finish. */
+   *  face once, under the title, and their name on the finish. */
   trainer?: Trainer;
 }) {
   const [done, setDone] = useState<Set<string>>(new Set());
@@ -96,7 +97,7 @@ export function Runner({
   const [doneDay, setDoneDay] = useState<number | null>(completedDay);
   const [checked, setChecked] = useState(!completedAt?.length);
   const review = doneDay !== null;
-  // Which drill's "Show me how" is open. One at a time: the list is the
+  // Which drill is open to show how. One at a time: the list is the
   // thing being worked through. A run starts with the first one open.
   const [howOpen, setHowOpen] = useState<string | null>(
     () => (completedDay === null && showable(drills[0]) ? drills[0].id : null));
@@ -268,7 +269,18 @@ export function Runner({
     <div className="animate-pop">
       {back && <BackLink href={back.href} label={back.label} />}
       <h1 className="h-page">{title}</h1>
-      {note && <p className="mt-2 text-[16px] font-medium leading-snug text-on-surface-variant">{note}</p>}
+      {/* The trainer once, here, with what they said about it; not on every drill. */}
+      {face ? (
+        <div className="mt-3 flex items-center gap-3">
+          <Avatar name={trainer!.name} src={trainer!.photo} className="h-10 w-10 text-[15px]" />
+          <p className="min-w-0 leading-snug">
+            <span className="block text-[16px] font-bold text-on-surface">
+              {note ? trainer!.name ?? 'Your trainer' : `From ${who}`}
+            </span>
+            {note && <span className="block text-[16px] font-medium text-on-surface-variant">&ldquo;{note}&rdquo;</span>}
+          </p>
+        </div>
+      ) : note && <p className="mt-2 text-[16px] font-medium leading-snug text-on-surface-variant">{note}</p>}
 
       {/* Speed works out "this week" on the phone; until it has, nothing. */}
       {checked && (review ? (
@@ -318,6 +330,8 @@ export function Runner({
             const yt = youtubeId(d.video_url);
             const more = steps || !!yt;
             const away = !!d.video_url && !yt;
+            // Ticked in this run, a drill is done with: it doesn't open.
+            const opens = more && !dim;
             const body = (
               <>
                 <span className="block text-[17px] font-bold leading-snug text-on-surface">{d.name}</span>
@@ -330,21 +344,26 @@ export function Runner({
                 </span>
                 {/* The one thing to think about at speed. */}
                 {d.cue && <span className="mt-1.5 block text-[15px] font-semibold leading-snug text-on-surface">&ldquo;{d.cue}&rdquo;</span>}
-                {more && !dim && <ShowHow open={open} trainer={face ? trainer : undefined} />}
               </>
             );
             return (
               <li key={d.id} ref={(el) => { if (el) rows.current.set(d.id, el); else rows.current.delete(d.id); }}
                   className="card scroll-mt-[calc(env(safe-area-inset-top)+112px)] overflow-hidden">
-                <div className="flex items-start gap-1.5 p-3">
+                <div className="flex items-center gap-1.5 p-3">
                   <Circle on={on} here={d.id === current} locked={review} name={d.name} onTick={() => toggle(d.id)} />
-                  {/* The card opens "Show me how"; only the circle ticks. A drill
-                      with nothing behind it is just its name and amount, and
-                      doesn't pretend to be a button. */}
-                  {more ? (
+                  {/* Two parts, one job each: the circle ticks, the drill opens.
+                      A chevron marks a drill with steps or a video behind it;
+                      one with nothing is just its name and amount, and doesn't
+                      pretend to be a button. */}
+                  {opens ? (
                     <button type="button" aria-expanded={open} onClick={() => setHowOpen(open ? null : d.id)}
-                            className={`pressable min-w-0 flex-1 rounded-xl py-2 pl-1.5 pr-2 text-left transition-opacity ${dim ? 'opacity-50' : ''}`}>
-                      {body}
+                            className="pressable flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-2 pl-1.5 pr-1 text-left">
+                      <span className="min-w-0 flex-1">{body}</span>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"
+                           className={`h-6 w-6 shrink-0 text-on-surface-variant transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                           fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
                     </button>
                   ) : (
                     <div className={`min-w-0 flex-1 py-2 pl-1.5 pr-2 transition-opacity ${dim ? 'opacity-50' : ''}`}>{body}</div>
@@ -358,39 +377,31 @@ export function Runner({
                   </div>
                 )}
 
-                {/* How to do it: a video, the steps, or both, then "I did it". */}
-                {open && more && (
-                  <div className="hint-in border-t border-outline-variant px-4 pb-4 pt-4">
-                    {trainer?.name && (
-                      <p className="mb-3 flex items-center gap-2.5 text-[15px] font-bold text-on-surface">
-                        <Avatar name={trainer.name} src={trainer.photo} className="h-8 w-8 text-[13px]" />
-                        From {trainer.name}
-                      </p>
-                    )}
-                    {yt && <Video id={yt} upright={isYoutubeShort(d.video_url)} title={d.name} href={d.video_url!} />}
-                    {steps && (
-                      <ol className="space-y-3">
-                        {d.how!.map((step, n) => (
-                          <li key={n} className="flex gap-3 text-[17px] leading-snug text-on-surface">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high text-[15px] font-extrabold">{n + 1}</span>
-                            <span className="pt-1">{step}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                    {d.effort && (
-                      <p className="mt-3 text-[15px] text-on-surface-variant">
-                        <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
-                        {EFFORT[d.effort].means}
-                      </p>
-                    )}
-                    {away && <Watch href={d.video_url!} className="btn-ghost pressable mt-4 gap-2" />}
-                    {/* Words for the kids who don't read the circle as a button. */}
-                    {!on && (
-                      <button type="button" onClick={() => toggle(d.id)} className="btn-primary btn-big pressable mt-5 w-full">
-                        I did it
-                      </button>
-                    )}
+                {/* How to do it, inside the drill: a video across the card,
+                    then the steps under the drill's name. No header and no
+                    second way to tick; the circle is the tick. */}
+                {open && opens && (
+                  <div className="hint-in pb-4">
+                    {yt && <div className="px-4"><Video id={yt} upright={isYoutubeShort(d.video_url)} title={d.name} href={d.video_url!} /></div>}
+                    <div className="pl-[76px] pr-4">
+                      {steps && (
+                        <ol className="space-y-2.5">
+                          {d.how!.map((step, n) => (
+                            <li key={n} className="flex gap-2.5 text-[17px] leading-snug text-on-surface">
+                              <span className="w-4 shrink-0 font-extrabold text-primary">{n + 1}</span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                      {d.effort && (
+                        <p className="mt-3 text-[15px] text-on-surface-variant">
+                          <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
+                          {EFFORT[d.effort].means}
+                        </p>
+                      )}
+                      {away && <Watch href={d.video_url!} className="btn-ghost pressable mt-4 gap-2" />}
+                    </div>
                   </div>
                 )}
               </li>
@@ -462,25 +473,6 @@ function Circle({ on, here, locked, name, onTick }: {
             className="pressable flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full">
       {mark}
     </button>
-  );
-}
-
-/**
- * "Show me how", as a chip in the academy's colour rather than a line of
- * small text, so it's seen. On a trainer's drill it carries their face.
- */
-function ShowHow({ open, trainer }: { open: boolean; trainer?: Trainer }) {
-  return (
-    <span className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[16px] font-bold text-on-surface"
-          style={{ background: 'color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent)' }}>
-      {trainer && <Avatar name={trainer.name} src={trainer.photo} className="-ml-2 h-7 w-7 text-[12px]" />}
-      {open ? 'Hide' : 'Show me how'}
-      <svg viewBox="0 0 24 24" aria-hidden="true"
-           className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-           fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </span>
   );
 }
 
