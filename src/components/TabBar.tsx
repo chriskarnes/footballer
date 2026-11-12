@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Suspense } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { haptic } from '@/lib/haptics';
 import { useAcademyRole } from '@/lib/use-academy-role';
 
@@ -20,12 +21,41 @@ const TABS = [
 // app. A clipboard.
 const COACH = { href: '/coach', label: 'Coach', d: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M9 12h6M9 16h4' };
 
-export function TabBar({ academyId, library = true, plan = true, speed = true }: {
+// A session opened from somewhere says so in ?from=, and keeps that tab lit.
+const FROM: Record<string, string> = { train: '/', plan: '/plan', history: '/me' };
+
+/**
+ * The tab a page belongs to. A session is a step into the tab it was opened
+ * from, not somewhere else, so that tab stays lit: Train's own sessions and
+ * the ones it builds, and a session from Plan, Me's history or the Library.
+ */
+function tabFor(path: string, from: string | null): string | null {
+  if (path === '/' || path.startsWith('/train/') || path === '/session/custom') return '/';
+  const session = path.startsWith('/session/') || path.startsWith('/speed/session/');
+  if (session && from && FROM[from]) return FROM[from];
+  if (path.startsWith('/session/')) return '/library';
+  return [COACH, ...TABS].find((t) => t.href !== '/' && path.startsWith(t.href))?.href ?? null;
+}
+
+type Props = {
   academyId: string | null;
   /** Whether this viewer gets Library, Plan and Speed: their trainer decides for players. */
   library?: boolean; plan?: boolean; speed?: boolean;
-}) {
+};
+
+// Reading ?from= suspends a prerendered page, so the bar is drawn without it
+// until the page is live; only session pages carry it.
+export function TabBar(props: Props) {
+  return <Suspense fallback={<Bar {...props} from={null} />}><BarFrom {...props} /></Suspense>;
+}
+
+function BarFrom(props: Props) {
+  return <Bar {...props} from={useSearchParams().get('from')} />;
+}
+
+function Bar({ academyId, library = true, plan = true, speed = true, from }: Props & { from: string | null }) {
   const path = usePathname();
+  const lit = tabFor(path, from);
   const role = useAcademyRole(academyId, path.startsWith('/coach'));
   const mine = TABS.filter((t) => (t.href !== '/library' || library) && (t.href !== '/plan' || plan) && (t.href !== '/speed' || speed));
   const tabs = role === 'owner' || role === 'trainer' ? [COACH, ...mine] : mine;
@@ -38,12 +68,12 @@ export function TabBar({ academyId, library = true, plan = true, speed = true }:
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-outline-variant
                       tabbar-surface p-1.5 shadow-level2 backdrop-blur-xl">
         {tabs.map((t) => {
-          const on = t.href === '/' ? path === '/' : path.startsWith(t.href);
+          const on = t.href === lit;
           return (
             // The tab you're on is in full ink with a short bar under its name.
             // It had been a filled black blob, about as wide as it was tall, so
             // it read as a circle stamped on the bar.
-            <Link key={t.href} href={t.href} aria-current={on ? 'page' : undefined}
+            <Link key={t.href} href={t.href} aria-current={on ? (path === t.href ? 'page' : 'true') : undefined}
               onClick={() => { if (!on) haptic('tap'); }}
               className={`tab flex min-h-[52px] min-w-[54px] flex-col items-center justify-center rounded-xl px-3 pt-1
                           text-[11.5px] font-bold tracking-tight transition-colors duration-300

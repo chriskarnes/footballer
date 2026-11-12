@@ -7,6 +7,7 @@ import { AddSession } from './AddSession';
 import { Avatar } from './Avatar';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { StartLink } from './StartLink';
+import { TickMark } from './TickMark';
 import { speedAllowed } from '@/lib/speed-gate';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -115,17 +116,18 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
             <h2 className="h-sec">My week</h2>
             {set.length > 0 && <p className="text-[15px] font-bold text-on-surface-variant">{done} of {set.length} done</p>}
           </div>
-          <ul className="space-y-2.5">
+          {/* Built like a drill in the session: the same tick mark, the same
+              type, and the whole card lit on hover and press. The tick here is
+              only a mark; the card opens the session, where the ticking is. */}
+          <ul className="space-y-3">
             {items.map((it) => (
-              <li key={it.key} className="card flex min-h-[68px] items-center gap-2 pr-3">
-                <Link href={`/train/${it.kind}/${it.ref}`} className="flex min-w-0 flex-1 items-center gap-3.5 py-3 pl-4">
-                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${it.done ? 'border-on-surface bg-on-surface' : 'border-outline'}`}>
-                    {it.done && <Tick className="h-4 w-4 text-surface" />}
-                  </span>
-                  <span className={`min-w-0 flex-1 text-[16px] font-bold leading-snug ${it.done ? 'text-on-surface-variant' : 'text-on-surface'}`}>
-                    {it.title}
+              <li key={it.key} className="card card-press flex items-center gap-1.5 p-3">
+                <Link href={`/train/${it.kind}/${it.ref}`} className="card-hit flex min-w-0 flex-1 items-center gap-1.5 text-left">
+                  <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center"><TickMark on={it.done} /></span>
+                  <span className="min-w-0 flex-1 py-2 pl-1.5 pr-1">
+                    <span className="block text-[17px] font-bold leading-snug text-on-surface">{it.title}</span>
                     {/* How long, so a player can pick one that fits the time they have. */}
-                    <span className="mt-0.5 block text-[14px] font-semibold text-on-surface-variant">
+                    <span className="mt-1 block text-[16px] font-semibold text-on-surface-variant">
                       {it.minutes} min{!it.done && it.weekday < today ? ' · Missed' : ''}
                     </span>
                   </span>

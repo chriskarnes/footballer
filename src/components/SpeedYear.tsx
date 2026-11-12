@@ -9,13 +9,9 @@ import { useYearStart } from '@/lib/use-year-start';
 import { BandTag, BandTitle } from './BandText';
 import { Chip } from './Chip';
 import { ConfirmSheet } from './ConfirmSheet';
+import { TickMark } from './TickMark';
 
 const FULL_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const Tick = ({ className }: { className: string }) => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor"
-       strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-);
 
 type Completion = { source_ref: string | null; completed_at: string | null };
 type Shared = {
@@ -227,11 +223,11 @@ export function SpeedWeek() {
             : FULL_DAY[d.weekday];
           if (d.type === 'off') {
             return (
-              <li key={d.day} className="flex min-h-12 items-center gap-3.5 px-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center" aria-hidden="true">
+              <li key={d.day} className="flex min-h-12 items-center gap-1.5 px-3">
+                <span className="flex w-[52px] shrink-0 items-center justify-center" aria-hidden="true">
                   <span className="h-1.5 w-1.5 rounded-full bg-outline" />
                 </span>
-                <span className="min-w-0 flex-1 text-[15px] font-semibold text-on-surface-variant">{day} · {d.label}</span>
+                <span className="min-w-0 flex-1 pl-1.5 text-[15px] font-semibold text-on-surface-variant">{day} · {d.label}</span>
               </li>
             );
           }
@@ -239,15 +235,14 @@ export function SpeedWeek() {
           const missed = !done && d.type === 'session' && d.weekday < pos.today;
           return (
             <li key={d.day}>
-              <Link href={href(d)} className="card pressable flex min-h-[68px] items-center gap-3.5 px-4 py-3">
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${done ? 'border-on-surface bg-on-surface' : 'border-outline'}`}>
-                  {done && <Tick className="h-4 w-4 text-surface" />}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className={`block text-[17px] font-bold leading-snug ${done ? 'text-on-surface-variant' : 'text-on-surface'}`}>
+              {/* Built like a drill in the session, as Train's week is. */}
+              <Link href={href(d)} className="card pressable flex items-center gap-1.5 p-3">
+                <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center"><TickMark on={done} /></span>
+                <span className="min-w-0 flex-1 py-2 pl-1.5 pr-1">
+                  <span className="block text-[17px] font-bold leading-snug text-on-surface">
                     {d.type === 'test' ? 'Test day' : d.session.name}
                   </span>
-                  <span className="mt-0.5 block text-[14px] font-semibold text-on-surface-variant">
+                  <span className="mt-1 block text-[16px] font-semibold text-on-surface-variant">
                     {day} · {d.type === 'test' ? 'replaces Speed B' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
                     {missed ? ' · Missed' : ''}
                   </span>

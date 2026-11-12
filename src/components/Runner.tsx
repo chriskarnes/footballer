@@ -9,6 +9,7 @@ import { EFFORT } from '@/lib/speed-guide';
 import { isYoutubeShort, youtubeId } from '@/lib/video';
 import { Avatar } from './Avatar';
 import { BackLink } from './BackLink';
+import { Tick, TickMark } from './TickMark';
 
 type Phase = 'running' | 'confirm-end' | 'finished';
 /** What became of the finished session. `signin` means it's waiting in this
@@ -459,34 +460,15 @@ export function Runner({
   );
 }
 
-/** A tick. `draw` draws it in, for the moment something gets done. */
-function Tick({ className, draw = false }: { className: string; draw?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor"
-         strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-      <path className={draw ? 'celebrate-tick' : undefined} d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
 /**
- * The drill's own tick button, 52px to tap. Not yet done, it's a ring in the
- * academy's colour with a faint tick inside, so it reads as "a tick goes
- * here"; the next one to do breathes. Tapped, it fills and the tick draws in.
- * On a session already done it's only a mark.
+ * The drill's own tick button, 52px to tap, around the shared tick mark: the
+ * next one to do breathes, and a tap fills it and draws the tick in. On a
+ * session already done it's only a mark.
  */
 function Circle({ on, here, locked, name, onTick }: {
   on: boolean; here: boolean; locked: boolean; name: string; onTick: () => void;
 }) {
-  const mark = on ? (
-    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-on-primary">
-      <Tick className="h-5 w-5" draw={!locked} />
-    </span>
-  ) : (
-    <span className={`flex h-11 w-11 items-center justify-center rounded-full border-[2.5px] border-primary text-primary ${here ? 'tick-here' : ''}`}>
-      <Tick className="h-5 w-5 opacity-25" />
-    </span>
-  );
+  const mark = <TickMark on={on} here={here} draw={!locked} />;
   if (locked) return <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center">{mark}</span>;
   return (
     <button type="button" aria-pressed={on} aria-label={`Mark ${name} done`} onClick={onTick}
