@@ -1,6 +1,7 @@
 import { SignIn } from '@/components/SignIn';
 import { getViewer } from '@/lib/viewer';
 import { ago } from '@/lib/notes';
+import { ApproveRequest } from '@/components/ApproveRequest';
 
 export const metadata = { title: 'Academy requests', robots: { index: false } };
 
@@ -8,12 +9,15 @@ type Req = {
   id: string; name: string; email: string; academy_name: string; slug: string | null; city: string | null;
   players: string | null; trainers: string | null; content: string | null; message: string | null;
   status: string; created_at: string;
+  // From 0020; undefined before it runs.
+  academy_id?: string | null; claim_code?: string | null; claimed_at?: string | null;
 };
 
 /**
  * Every "Get started" from the marketing site, newest first. Platform admins
- * only (the database enforces it). Setting one up is still create_academy()
- * in the SQL editor; see SETUP.md.
+ * only (the database enforces it). Approve makes the academy and gives the
+ * trainer's claim link; they claim it, signed in with the email they asked
+ * with, and set it up from a checklist (0020).
  */
 export default async function RequestsPage() {
   const v = await getViewer();
@@ -44,6 +48,11 @@ export default async function RequestsPage() {
                 r.trainers && `${r.trainers} coaches`, r.content].filter(Boolean).join(' · ')}
             </p>
             {r.message && <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-on-surface">{r.message}</p>}
+            {r.status !== 'declined' && (
+              <ApproveRequest id={r.id} slug={r.slug} academyName={r.academy_name} email={r.email} trainer={r.name}
+                approved={r.academy_id && r.claim_code && r.slug
+                  ? { slug: r.slug, code: r.claim_code, claimed: !!r.claimed_at } : null} />
+            )}
           </li>
         ))}
       </ul>

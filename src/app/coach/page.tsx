@@ -11,6 +11,8 @@ import { PageHead } from '@/components/coach/PageHead';
 import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { nudgeDraft } from '@/lib/nudge';
 import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
+import { TickMark } from '@/components/TickMark';
+import { readSetup, setupSteps } from '@/lib/setup';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
 
@@ -21,12 +23,14 @@ export const metadata = { title: 'Coach', robots: { index: false } };
  * question a trainer opens this with. The list is sorted worst first, so the
  * players to act on are at the top and the Nudge button is next to them.
  */
-export default async function CoachPage({ searchParams }: { searchParams: Promise<{ sent?: string; group?: string }> }) {
+export default async function CoachPage({ searchParams }: { searchParams: Promise<{ sent?: string; group?: string; ready?: string }> }) {
   const gate = await staffOnly('/coach');
   if ('page' in gate) return gate.page;
-  const { db, academy } = gate.viewer;
-  const { sent, group } = await searchParams;
-  const content = await loadContent(db, academy.id);
+  const { db, academy, role } = gate.viewer;
+  const { sent, group, ready } = await searchParams;
+  const [content, setup] = await Promise.all([loadContent(db, academy.id), readSetup(db, academy.id)]);
+  // A new academy's owner is led back to the checklist until it's done.
+  const steps = role === 'owner' && setup.ready && !setup.done ? setupSteps(setup, content) : null;
 
   const [{ players: all, error }, { data: invite }, { data: asking }] = await Promise.all([
     loadPlayers(db, academy, { content }),
@@ -75,6 +79,22 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           {' · '}{sessions} {sessions === 1 ? 'session' : 'sessions'} · {minutes} min
         </>}
       </PageHead>
+
+      {steps && (
+        <section className="card mt-5 flex items-center gap-4 p-5 lg:max-w-xl">
+          <span className="shrink-0"><TickMark on={false} here /></span>
+          <div className="min-w-0 flex-1">
+            <div className="h-card">Finish setting up {academy.name}</div>
+            <p className="mt-0.5 text-[14px] text-on-surface-variant">{steps.filter(Boolean).length} of 5 done</p>
+          </div>
+          <Link href="/coach/setup" className="btn-primary btn-sm pressable shrink-0">Continue</Link>
+        </section>
+      )}
+      {ready && (
+        <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
+          {academy.name} is open. Players can find you by name in Find your trainer.
+        </p>
+      )}
 
       {sent && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">

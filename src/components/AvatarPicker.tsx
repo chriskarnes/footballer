@@ -21,7 +21,11 @@ async function shrink(file: File): Promise<Blob> {
  * and the two things to do with it. Skipping it changes nothing; the circle
  * keeps the player's first initial.
  */
-export function AvatarPicker({ name, email, updatedAt }: { name?: string | null; email?: string; updatedAt?: string | null }) {
+export function AvatarPicker({ name, email, updatedAt, note = 'Optional. Only you see it.' }: {
+  name?: string | null; email?: string; updatedAt?: string | null;
+  /** Under the buttons. A player's photo is theirs alone; a trainer's goes to their players. */
+  note?: string;
+}) {
   const [at, setAt] = useState(updatedAt ?? null);
   const [err, setErr] = useState('');
   const [busy, start] = useTransition();
@@ -62,7 +66,7 @@ export function AvatarPicker({ name, email, updatedAt }: { name?: string | null;
           )}
         </div>
         <p className="mt-1.5 text-[12.5px] text-on-surface-variant" role={err ? 'alert' : undefined}>
-          {err || 'Optional. Only you see it.'}
+          {err || note}
         </p>
         <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1}
                aria-label="Profile photo" onChange={(e) => pick(e.target.files?.[0])} />
