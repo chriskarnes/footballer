@@ -80,9 +80,11 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
                 </ul>
               )}
               <div className="mt-3 flex flex-wrap gap-2">
-                <Link href={`/coach/programs/${p.id}/session?week=${n}`} className="btn-ghost btn-sm pressable">
-                  {own ? 'Add a session' : repeats ? `Change week ${n}` : 'Build this week'}
-                </Link>
+                {repeats
+                  ? <CopyWeek programId={p.id} from={repeats} to={n} label={`Change week ${n}`} />
+                  : <Link href={`/coach/programs/${p.id}/session?week=${n}`} className="btn-ghost btn-sm pressable">
+                      {own ? 'Add a session' : 'Build this week'}
+                    </Link>}
                 {own && n < p.weeks && !built.has(n + 1) && <CopyWeek programId={p.id} from={n} to={n + 1} />}
               </div>
             </li>

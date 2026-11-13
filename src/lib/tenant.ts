@@ -26,3 +26,10 @@ export function academyOrigin(slug: string, current: string): string {
   return local ? `${u.protocol}//${slug}.localhost${u.port ? `:${u.port}` : ''}`
                : `https://${slug}.${ROOT_DOMAIN}`;
 }
+
+/** The main site's address (where Find your trainer is), from any academy's. */
+export function rootOrigin(current: string): string {
+  const u = new URL(current);
+  const local = u.hostname === 'localhost' || u.hostname.endsWith('.localhost');
+  return local ? `${u.protocol}//localhost${u.port ? `:${u.port}` : ''}` : `https://${ROOT_DOMAIN}`;
+}

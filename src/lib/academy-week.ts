@@ -161,6 +161,8 @@ export function buildWeek(input: {
   const programs = new Map(input.programs.map((p) => [p.id, p]));
   const drills = new Map(input.drills.map((d) => [d.id, d]));
   const minutesOf = (ids: string[]) => ids.reduce((a, id) => a + (drills.get(id)?.minutes ?? 0), 0);
+  // Drills that still exist: a deleted one shouldn't count toward "4 drills".
+  const countOf = (ids: string[]) => (drills.size ? ids.filter((id) => drills.has(id)).length : ids.length);
   const items: WeekItem[] = [];
   // The same sessions reached two ways (two groups, or a group and on their
   // own) appear once, under every group that set them.
@@ -189,7 +191,7 @@ export function buildWeek(input: {
     const made = list.map((s) => ({
       key: `s:${s.id}`, kind: 'session' as const, ref: s.id, title: s.name,
       from: `${p.name} · Week ${n} of ${p.weeks}`, groups: label ? [label] : [],
-      weekday: 0, minutes: minutesOf(s.drill_ids), drills: s.drill_ids.length, done: false,
+      weekday: 0, minutes: minutesOf(s.drill_ids), drills: countOf(s.drill_ids), done: false,
     }));
     seen.set(sig, made);
     runs.push(made);
@@ -207,7 +209,7 @@ export function buildWeek(input: {
   if (built.length) {
     for (const c of built) items.push({
       key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
-      weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, note: c.note ?? null, done: false,
+      weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: countOf(c.drill_ids), note: c.note ?? null, done: false,
       light: !!c.light, ups: (c.changes ?? []).filter((x) => x === 'up' || x === 'harder').length,
     });
   } else {
@@ -225,7 +227,7 @@ export function buildWeek(input: {
 
   for (const c of own) items.push({
     key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Added by you', groups: [],
-    weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: c.drill_ids.length, note: null, done: false, extra: true,
+    weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: countOf(c.drill_ids), note: null, done: false, extra: true,
   });
 
   for (const a of input.addons.filter((x) => x.user_id === userId && x.week_of === monday)) {

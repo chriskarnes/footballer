@@ -1,6 +1,7 @@
 import { SignIn } from '@/components/SignIn';
 import { getViewer } from '@/lib/viewer';
 import { SignOut } from '@/components/SignOut';
+import { rootHref } from '@/lib/root-link';
 
 /**
  * The trainer area's front door. Returns the viewer when they're staff here,
@@ -9,7 +10,11 @@ import { SignOut } from '@/components/SignOut';
 export async function staffOnly(next: string) {
   const v = await getViewer();
   if (!v.academy) {
-    return { page: <Note title="Open your academy">The trainer area lives at your academy&rsquo;s own address, like <b>yourname.train.futbol/coach</b>.</Note> };
+    return { page: <Note title="Open your academy">The trainer area lives at your academy&rsquo;s own address, like <b>yourname.train.futbol/coach</b>.
+      <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+        <a href={await rootHref('/players')} className="btn-ghost pressable">Find your academy</a>
+        <a href={await rootHref('/start')} className="btn-ghost pressable">Start an academy</a>
+      </div></Note> };
   }
   if (!v.user) {
     return { page: <Note title={`${v.academy.name} trainers`}>Sign in with your trainer account.<div className="mt-5"><SignIn next={next} /></div></Note> };

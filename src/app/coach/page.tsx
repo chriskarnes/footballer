@@ -64,7 +64,9 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
     members: content.memberships.filter((m) => m.group_id === g.id && all.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
   }));
 
-  const headline = !players.length ? (inGroup ? `No one in ${inGroup.name} yet` : 'No players yet')
+  // A failed load isn't an empty academy: no "No players yet", no invite card.
+  const headline = error ? 'Couldn’t load your players'
+    : !players.length ? (inGroup ? `No one in ${inGroup.name} yet` : 'No players yet')
     : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
     : 'Everyone’s on track';
 
@@ -187,7 +189,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       )}
 
       {/* The invite link leads only while there's nobody to list; after that it lives under Academy. */}
-      {!all.length && (
+      {!all.length && !error && (
         <section className="mt-6 lg:max-w-xl">
           <div className="card p-5">
             <div className="h-card">Invite your players</div>

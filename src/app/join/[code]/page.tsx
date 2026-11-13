@@ -36,6 +36,7 @@ export default async function JoinPage({ params, searchParams }: {
         <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">
           It may have been replaced with a new one. Ask your trainer to send it again.
         </p>
+        <Link href="/" className="btn-ghost pressable mt-6 min-h-13 w-full">Go to Train</Link>
       </Shell>
     );
   }
@@ -73,6 +74,11 @@ export default async function JoinPage({ params, searchParams }: {
             <p className="mt-1 text-body text-on-surface-variant">
               Signed in as {v.user.email}. Not you? <SignOut to={`/join/${code}`} className="pressable font-semibold text-on-surface underline underline-offset-4" />
             </p>
+            {!v.staff && (
+              <p className="mt-2 text-body text-on-surface-variant">
+                Signing up another player? Each player needs their own email: sign out, then join with theirs.
+              </p>
+            )}
             <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>

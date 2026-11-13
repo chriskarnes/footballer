@@ -99,6 +99,15 @@ function Train({
   // gesture. If the session arrived by URL — a refresh, the runner's back link —
   // going back would leave Train altogether, so Back replaces instead.
   const pushed = useRef(false);
+  // The result's own top, not the page's: on Train the trainer's week sits
+  // above this, and the top of the page is that week, not "Your session".
+  const resultRef = useRef<HTMLDivElement>(null);
+  const toResult = useRef(false);
+  useEffect(() => {
+    if (!toResult.current || !resultRef.current) return;
+    toResult.current = false;
+    window.scrollTo({ top: Math.max(0, resultRef.current.getBoundingClientRect().top + window.scrollY - 16) });
+  });
 
   // A session that arrived by URL fills the inputs it came from, so Back lands
   // on a form that describes it rather than an empty one. Only what was actually
@@ -146,7 +155,7 @@ function Train({
     if (how === 'push') {
       window.history.pushState(null, '', url);
       pushed.current = true;
-      window.scrollTo({ top: 0 });
+      toResult.current = true;
     } else {
       window.history.replaceState(null, '', url);
     }
@@ -223,7 +232,7 @@ function Train({
     return (
       // Keyed on the step, so arriving here plays the same lift-in a new page
       // does. This is the "you made something" moment the old layout lacked.
-      <div key="session" className="animate-pop">
+      <div key="session" ref={resultRef} className="animate-pop">
         <div className="mt-6"><BackButton onClick={change} label="Back" destination="your choices" /></div>
         <section>
           <h1 className="h-page">Your session</h1>

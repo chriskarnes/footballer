@@ -25,7 +25,8 @@ export function ClaimButton({ code, name, email, hint }: { code: string; name: s
               }}>
         {busy ? 'One moment…' : `Make ${name} mine`}
       </button>
-      <p className="mt-3 text-body text-on-surface-variant">Signed in as {email}.</p>
+      {/* Said before the tap, not only after one fails. */}
+      <p className="mt-3 text-body text-on-surface-variant">Signed in as {email}. This link is for {hint}.</p>
       {err === 'wrong-email' ? (
         <div role="status" className="mt-3 text-body leading-snug text-on-surface">
           <p><b>This link is for {hint}.</b> Sign out, then sign in with that address.</p>

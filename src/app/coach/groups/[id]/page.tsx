@@ -59,7 +59,8 @@ export default async function GroupPage({ params }: {
     <div className="animate-pop">
       <PageHead back={{ href: '/coach/groups', label: 'Groups' }} title={g.name}
                 action={!!members.length && <NoteButton group={g.id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>}>
-        {meta}{!program && <>{meta && ' · '}<b className="font-semibold text-on-surface">No program yet</b>, so players get nothing at home.</>}
+        {g.archived && <><b className="font-semibold text-on-surface">Finished</b>{meta && ' · '}</>}
+        {meta}{!program && !g.archived && <>{meta && ' · '}<b className="font-semibold text-on-surface">No program yet</b>, so players get nothing at home.</>}
       </PageHead>
 
       {!!homework.length && (

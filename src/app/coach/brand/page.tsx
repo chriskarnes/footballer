@@ -2,6 +2,7 @@ import { BrandingAdmin } from '@/components/BrandingAdmin';
 import { PageHead } from '@/components/coach/PageHead';
 import { staffOnly } from '@/components/coach/Gate';
 import { getViewer } from '@/lib/viewer';
+import { inSetup } from '@/lib/setup';
 
 export const metadata = { title: 'Brand settings', robots: { index: false } };
 
@@ -21,9 +22,11 @@ export default async function BrandPage() {
       </div>
     );
   }
+  // Opened from setup step 1, the way back is the checklist.
+  const setup = await inSetup(v.db, v.academy.id, v.role);
   return (
     <div className="lg:max-w-2xl">
-      <PageHead back={{ href: '/coach/team', label: 'Academy' }} eyebrow={v.academy.name} title="Brand settings">
+      <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/team', label: 'Academy' }} eyebrow={v.academy.name} title="Brand settings">
         Pick your colors, add your crest, and every player sees it on their next load.
       </PageHead>
       <BrandingAdmin initial={v.academy.branding} academyName={v.academy.name} />

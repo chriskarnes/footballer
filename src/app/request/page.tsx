@@ -3,6 +3,8 @@ import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { SignIn } from '@/components/SignIn';
 import { AskToJoin } from '@/components/AskToJoin';
 import { getViewer } from '@/lib/viewer';
+import { SignOut } from '@/components/SignOut';
+import { rootHref } from '@/lib/root-link';
 
 export const metadata = { title: 'Ask to join', robots: { index: false } };
 
@@ -17,6 +19,7 @@ export default async function RequestPage() {
       <div className="pt-10">
         <h1 className="h-page">Open your trainer&rsquo;s address</h1>
         <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">Asking to join happens on your trainer&rsquo;s own page.</p>
+        <a href={await rootHref()} className="btn-primary pressable mt-6 w-full">Find your trainer</a>
       </div>
     );
   }
@@ -44,7 +47,14 @@ export default async function RequestPage() {
         ) : v.role ? (
           <div className="card p-5">
             <div className="h-card">You&rsquo;re already in</div>
-            <p className="mt-1 text-body text-on-surface-variant">Signed in as {v.user.email}.</p>
+            <p className="mt-1 text-body text-on-surface-variant">
+              Signed in as {v.user.email}. Not you? <SignOut to="/request" className="pressable font-semibold text-on-surface underline underline-offset-4" />
+            </p>
+            {!v.staff && (
+              <p className="mt-2 text-body text-on-surface-variant">
+                Signing up another player? Each player needs their own email: sign out, then join with theirs.
+              </p>
+            )}
             <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>

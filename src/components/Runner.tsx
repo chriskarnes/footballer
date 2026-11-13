@@ -320,6 +320,24 @@ export function Runner({
     );
   }
 
+  // Every drill in it has since been deleted: say so, rather than a list of
+  // nothing with no way to finish.
+  if (!drills.length) {
+    return (
+      <div className="animate-pop">
+        {back && <BackLink href={back.href} label={back.label} />}
+        <h1 className="h-page">{title}</h1>
+        <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
+          The drills in this session aren&rsquo;t there any more{trainer ? `. ${who.replace(/^your/, 'Your')} may be changing it` : ''}.
+          Pick another session for now.
+        </p>
+        <Link href={back?.href ?? '/'} className="btn-primary btn-big pressable mt-6 w-full">
+          {back?.label ? `Back to ${back.label}` : 'Back to Train'}
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-pop">
       {back && <BackLink href={back.href} label={back.label} />}

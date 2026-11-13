@@ -1,6 +1,7 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { askToJoin } from '@/app/request/actions';
+import { SignOut } from '@/components/SignOut';
 
 /** Who you are, in words the trainer will recognise, and one button. */
 export function AskToJoin({ academy, email, pending: wasPending }: { academy: string; email: string; pending: boolean }) {
@@ -29,7 +30,9 @@ export function AskToJoin({ academy, email, pending: wasPending }: { academy: st
         if (r.ok) setSent(true); else setErr(r.error);
       });
     }}>
-      <p className="text-body text-on-surface-variant">Signed in as {email}.</p>
+      <p className="text-body text-on-surface-variant">
+        Signed in as {email}. Not you? <SignOut to="/request" className="pressable font-semibold text-on-surface underline underline-offset-4" />
+      </p>
       <label className="text-field">
         <span>Player&rsquo;s name</span>
         <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="name" />

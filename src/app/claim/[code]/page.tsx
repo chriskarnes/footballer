@@ -9,6 +9,7 @@ import { SignOut } from '@/components/SignOut';
 import { readSetup } from '@/lib/setup';
 import { getViewer } from '@/lib/viewer';
 import { academyOrigin } from '@/lib/tenant';
+import { rootHref } from '@/lib/root-link';
 
 export const metadata = { title: 'Your academy', robots: { index: false } };
 
@@ -33,6 +34,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
         <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">
           Check it&rsquo;s the whole link from the email. If it still doesn&rsquo;t open, reply to that email and we&rsquo;ll sort it out.
         </p>
+        <a href={await rootHref('/')} className="btn-ghost pressable mt-6 min-h-13 w-full">Go to Train.futbol</a>
       </Shell>
     );
   }
@@ -63,16 +65,21 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
         {claim.claimed ? (
           <>
             <div className="card p-5">
-              <p className="text-body-lg leading-relaxed text-on-surface">
-                If that&rsquo;s you, sign in with the email you asked with.
-              </p>
-              {v.user && (
+              {v.user ? (
                 <>
-                  <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">Open the app</Link>
-                  {/* Signed in as someone else: the way to switch. */}
-                  <p className="mt-4 text-body text-on-surface-variant">Signed in as {v.user.email}. Not the address you asked with?</p>
-                  <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-2 min-h-12 w-full text-body-lg font-bold" />
+                  {/* The owner never sees this (they're sent on above), so
+                      whoever is signed in isn't them: switching comes first. */}
+                  <p className="text-body-lg leading-relaxed text-on-surface">
+                    You&rsquo;re signed in as {v.user.email}, which isn&rsquo;t the owner. If you asked for {claim.name},
+                    sign out and sign in with the email you asked with ({claim.hint}).
+                  </p>
+                  <SignOut to={`/claim/${code}`} className="btn-primary pressable mt-4 w-full" />
+                  {v.role && <Link href={v.staff ? '/coach' : '/'} className="btn-ghost pressable mt-2.5 min-h-12 w-full">Open the app</Link>}
                 </>
+              ) : (
+                <p className="text-body-lg leading-relaxed text-on-surface">
+                  If that&rsquo;s you, sign in with the email you asked with.
+                </p>
               )}
             </div>
             {!v.user && <div className="mt-3"><SignIn next="/coach" /></div>}
