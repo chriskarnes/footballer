@@ -113,7 +113,10 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                             <span key={it.key} title={`${it.title} · ${it.minutes} min${it.moved ? ' · moved by player' : ''}`}
                                   className={`mt-1 block truncate rounded-small px-1.5 py-1 text-caption font-semibold
                                     ${it.done ? 'bg-on-surface text-surface' : missed ? 'border border-dashed border-on-surface-variant text-on-surface-variant' : 'border border-outline text-on-surface'}`}>
-                              {it.done && '✓ '}{it.title}{it.moved && ' ↷'}
+                              {it.done && <span aria-hidden="true">✓ </span>}
+                              {/* The mark and the border carry these by sight; say them too. */}
+                              <span className="sr-only">{it.done ? 'Done: ' : missed ? 'Missed: ' : ''}</span>
+                              {it.title}{it.moved && <><span aria-hidden="true"> ↷</span><span className="sr-only"> (moved by player)</span></>}
                             </span>
                           );
                         })}

@@ -33,7 +33,7 @@ export function GroupForm({ group, programs, today }: {
       <Field label="Program" hint={programs.length ? 'What they do at home between sessions.' : 'Make a program first, under Library.'}>
         <select name="program_id" defaultValue={group?.program_id ?? ''}>
           <option value="">None yet</option>
-          {programs.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.weeks} weeks)</option>)}
+          {programs.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.weeks} {p.weeks === 1 ? 'week' : 'weeks'})</option>)}
         </select>
       </Field>
       <Field label="Starts" hint="Week 1 is the week this date is in.">

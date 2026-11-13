@@ -80,6 +80,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
         <input
           value={email} onChange={(e) => setEmail(e.target.value)} type="email"
           placeholder="you@example.com" aria-label="Email"
+          aria-invalid={err ? true : undefined} aria-describedby={err ? 'signin-error' : undefined}
           // inputMode + autoComplete get the right keyboard and offer the saved
           // address, which is most of what makes a mobile form feel native.
           inputMode="email" autoComplete="email" enterKeyHint="send"
@@ -89,7 +90,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
       <button type="submit" disabled={busy} className="btn-primary pressable mt-3 w-full">
         {busy ? 'Sending…' : button}
       </button>
-      {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
+      {err && <p id="signin-error" role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }

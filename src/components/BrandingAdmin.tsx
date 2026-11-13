@@ -7,6 +7,7 @@ import { brandCss, isHex } from '@/lib/brand-colors';
 import { LOGO_MAX_BYTES, LOGO_TYPES, PALETTES, type Branding } from '@/lib/branding';
 import { removeLogo, resetBranding, saveBranding, uploadLogo } from '@/app/admin/actions';
 import { ConfirmSheet } from './ConfirmSheet';
+import { useToast } from './coach/Toast';
 
 /** 'none' is the monochrome app; 'custom' is two colours picked by hand. */
 type Choice = string | 'none' | 'custom';
@@ -27,6 +28,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
     primary: initial?.primary ?? '#1D4ED8', accent: initial?.accent ?? '#FACC15' });
   const [logo, setLogo] = useState<string | null>(initial?.logo ?? null);
   const [status, setStatus] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
+  const toast = useToast();
   const [saving, startSave] = useTransition();
   const [logoBusy, startLogo] = useTransition();
   const [resetting, setResetting] = useState(false);
@@ -67,7 +69,8 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
         name, paletteId: choice === 'none' || choice === 'custom' ? null : choice,
         primary: colours?.primary ?? null, accent: colours?.accent ?? null,
       });
-      setStatus(r.ok ? { tone: 'ok', text: 'Saved. Players see it on their next load.' } : { tone: 'err', text: r.error });
+      // Success is the trainer area's toast, like every other save; a problem stays here, by the controls.
+      if (r.ok) toast('Saved. Players see it on their next load.'); else setStatus({ tone: 'err', text: r.error });
       if (r.ok) router.refresh();
     });
   }
@@ -101,7 +104,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
     setResetting(false);
     if (!r.ok) return setStatus({ tone: 'err', text: r.error });
     setChoice('none'); setLogo(null);
-    setStatus({ tone: 'ok', text: 'Back to black and white.' });
+    toast('Back to black and white.');
     router.refresh();
   }
 
@@ -151,7 +154,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
           The main color fills buttons, the selected chip and the session card; the accent sits
           on it. Text colors are worked out for contrast, so every choice stays readable.
         </p>
-        <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Color palette">
+        <div className="grid grid-cols-2 gap-2.5" role="group" aria-label="Color palette">
           <Swatch on={choice === 'none'} onPick={() => setChoice('none')}
                   name="Unbranded" note="Black and white" primary="#1B1B1B" accent="#FFFFFF" />
           {PALETTES.map((p) => (
@@ -235,7 +238,9 @@ function Swatch({ on, onPick, name, note, primary, accent }: {
   on: boolean; onPick: () => void; name: string; note: string; primary: string; accent: string;
 }) {
   return (
-    <button type="button" role="radio" aria-checked={on} onClick={onPick}
+    // Pressed, not a radio: a radio promises arrow keys between them, and
+    // these are tabbed through like any other buttons.
+    <button type="button" aria-pressed={on} onClick={onPick}
             className={`tile pressable overflow-hidden p-0 text-left ${on ? 'tile-on' : ''}`}>
       <span className="relative block h-16" style={{ background: primary }}>
         <span className="absolute inset-x-0 top-0 h-1.5" style={{ background: accent }} />

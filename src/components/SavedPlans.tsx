@@ -75,7 +75,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
   return (
     <section id="plans" className="mt-10 scroll-mt-5">
       <h2 className="h-sec mb-3">Your plans</h2>
-      <ul role="radiogroup" aria-label="Active weekly plan" className="space-y-2">
+      <ul aria-label="Your plans" className="space-y-2">
         {plans.map((p) => (
           <li key={p.id} className="card p-4">
             {renaming === p.id ? (
@@ -103,9 +103,9 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
                   </div>
                 </Link>
 
-                {/* Still a radio to anything reading the page out: one of these
-                    is checked, and choosing another unchecks it. */}
-                <button type="button" role="radio" aria-checked={p.active}
+                {/* A toggle, not a radio: each sits in its own row beside
+                    Rename and Delete, which a radio group can't hold. */}
+                <button type="button" aria-pressed={p.active}
                         aria-label={p.active ? `${p.name} is active` : `Make ${p.name} active`}
                         title={p.active ? 'Active' : 'Make active'}
                         onClick={() => { if (!p.active) setSwitching(p); }}

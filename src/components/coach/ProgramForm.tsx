@@ -35,7 +35,7 @@ export function ProgramForm({ program, solo = 0 }: { program?: { id: string; nam
           <button type="button" onClick={() => setConfirm(true)}
                   className="w-full text-center text-body font-semibold text-on-surface-variant underline underline-offset-4">Delete this program</button>
           <ConfirmSheet open={confirm} busy={deleting} title="Delete this program?" confirmLabel="Delete"
-            body={`Its sessions go too, and any group using it is left without one.${solo ? ` ${solo === 1 ? '1 player has' : `${solo} players have`} it on their own and stop getting it.` : ''} Drills stay.`}
+            body={`Its weeks go, and any group using it is left without one.${solo ? ` ${solo === 1 ? '1 player has' : `${solo} players have`} it on their own and stop getting it.` : ''} Your sessions and drills stay in the library.`}
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
               setDeleting(true);

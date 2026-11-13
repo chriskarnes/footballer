@@ -35,7 +35,7 @@ const KIT = ['ball', 'cones', 'wall', 'goal', 'box', 'ladder', 'hurdles', 'weigh
 const KIT_LABEL: Record<string, string> = {
   ball: 'Ball', cones: 'Cones', wall: 'Wall', goal: 'Goal', box: 'Box',
   ladder: 'Ladder', hurdles: 'Hurdles', weights: 'Weights',
-  jump_rope: 'Skipping rope', partner: 'A partner',
+  jump_rope: 'Jump rope', partner: 'A partner',
 };
 
 type Props = {

@@ -236,7 +236,7 @@ const BUILD: BlockSessions[] = [
       d('Repeat sprints at 90%, 6 × 30 m, 20 s rest', '2', '6 × 30 m', '4 min', 780, 'conditioning', 'Every rep is a race', { intensity: 'high', equipment: cones }),
     ] },
     games: { name: '3v3, 25 × 15 m', where: 'outdoor', sprintMetres: 0, drills: [
-      d('3v3 small-sided game', '6', '3 min', '90 s', 1620, 'conditioning', 'Small pitch, constant sprinting', { equipment: [...ball, ...cones], touches: 250, intensity: 'high' }),
+      d('3v3 small-sided game', '6', '3 min', '90 s', 1620, 'conditioning', 'Small field, constant sprinting', { equipment: [...ball, ...cones], touches: 250, intensity: 'high' }),
     ] },
     strength: { name: 'Single-leg strength', where: 'indoor', sprintMetres: 0, drills: [
       d('Rear-foot-elevated split squat', '3', '8 each', '60 s', 420, 'strength', 'Back knee to the floor, front knee over the toe', { equipment: ['bench'] }),
@@ -287,7 +287,7 @@ const BUILD: BlockSessions[] = [
       d('Repeat sprints at 90%, 8 × 30 m, 20 s rest', '2', '8 × 30 m', '4 min', 920, 'conditioning', 'Every rep is a race', { intensity: 'high', equipment: cones }),
     ] },
     games: { name: '3v3, 25 × 15 m', where: 'outdoor', sprintMetres: 0, drills: [
-      d('3v3 small-sided game', '6', '3 min', '90 s', 1620, 'conditioning', 'Small pitch, constant sprinting', { equipment: [...ball, ...cones], touches: 250, intensity: 'high' }),
+      d('3v3 small-sided game', '6', '3 min', '90 s', 1620, 'conditioning', 'Small field, constant sprinting', { equipment: [...ball, ...cones], touches: 250, intensity: 'high' }),
     ] },
     strength: { name: 'Single-leg strength', where: 'indoor', sprintMetres: 0, drills: [
       d('Rear-foot-elevated split squat', '3', '10 each', '60 s', 480, 'strength', 'Back knee to the floor, front knee over the toe', { equipment: ['bench'] }),
@@ -602,7 +602,7 @@ export const SOURCES: Source[] = [
     finding: 'In 21 professional players, mean sprint time tracked fitness and body composition; the percentage decrement did not relate to RSA performance.',
     cite: 'Pareja-Blanco et al. 2016, J Hum Kinet', url: 'https://johk.pl/?p=4049' },
   { element: 'Small-sided games for stamina',
-    finding: 'Aerobic strain is highest in 2v2 to 4v4 formats at about 100–150 m² per player; the pitch sizes here sit in that range.',
+    finding: 'Aerobic strain is highest in 2v2 to 4v4 formats at about 100–150 m² per player; the field sizes here sit in that range.',
     cite: 'Umbrella review, Biol Sport 2026', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13617480/' },
   { element: 'Train by maturity, not birthday',
     finding: 'Most physical qualities are trainable across childhood and adolescence; emphasis shifts with maturation and strength underpins the rest.',

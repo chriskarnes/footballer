@@ -258,7 +258,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     video: 'https://www.youtube.com/watch?v=CzlZgdRrYhg',
     plain: '4 v 4 game', effort: 'fast',
     how: [
-      'Mark a small pitch about 30 m by 20 m with two small goals or gates.',
+      'Mark a small field about 30 m by 20 m with two small goals or gates.',
       'Play 4 against 4. Rest between games.',
       'Keep moving the whole time: chase the ball when you lose it, find space when your team has it.',
     ],
@@ -524,15 +524,15 @@ export const GUIDE: Record<string, DrillGuide> = {
     video: 'https://www.youtube.com/watch?v=CzlZgdRrYhg',
     plain: '3 v 3 game', effort: 'fast',
     how: [
-      'Play 3 against 3 on a small pitch with small goals.',
-      'Small pitch means lots of short sprints. Keep moving.',
+      'Play 3 against 3 on a small field with small goals.',
+      'Small field means lots of short sprints. Keep moving.',
       'Rest between games.',
     ],
   },
   '3v3 with a 20 m sprint to a target after every score': {
     plain: '3 v 3, sprint after you score', effort: 'fast',
     how: [
-      'Play 3 against 3 on a small pitch.',
+      'Play 3 against 3 on a small field.',
       'When your team scores, everyone on it sprints to a cone 20 m away, then gets straight back into the game.',
       'No celebrating first.',
     ],
@@ -541,7 +541,7 @@ export const GUIDE: Record<string, DrillGuide> = {
     video: 'https://www.youtube.com/watch?v=Wy8BFM0K-TQ',
     plain: '2 v 2 quick-switch game', coach: 'Transition game', effort: 'fast',
     how: [
-      'Play 2 against 2 on a small pitch with two goals, in 30-second bursts.',
+      'Play 2 against 2 on a small field with two goals, in 30-second bursts.',
       'The moment the ball changes team, both teams switch — attackers sprint back, defenders sprint forward.',
     ],
   },

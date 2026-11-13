@@ -110,6 +110,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           region: region.trim() || null, club: club.trim() || null,
         }),
       });
+      if (r.status === 401) { setError('You’ve been signed out. Sign in again from Me, then save.'); setBusy(false); return; }
       if (!r.ok) throw new Error(String(r.status));
       // First time through, go where the answers are used: the week, when
       // this academy has one, otherwise Train. Someone correcting one answer

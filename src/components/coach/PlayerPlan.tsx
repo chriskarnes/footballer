@@ -46,6 +46,10 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
+  // Where the error belongs: a session's id, `week:this|next`, or null (the
+  // settings above). Drawn there, not at the foot of both weeks.
+  const [errAt, setErrAt] = useState<string | null>(null);
+  const fault = (text: string, at: string | null = null) => { setErr(text); setErrAt(at); };
   // Why the last build skipped the AI, when it did.
   const [why, setWhy] = useState('');
   const [sessions, setSessions] = useState(target.sessions);
@@ -71,11 +75,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
 
   // `close` runs either way: a confirm sheet left open on failure would hide
   // the error, which is drawn on the page behind it.
-  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void, said = 'Saved.', close?: () => void) => start(async () => {
+  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void, said = 'Saved.', close?: () => void, at: string | null = null) => start(async () => {
     setErr('');
     const r = await f();
     close?.();
-    if (!r.ok) setErr(r.error ?? 'That didn’t work.');
+    if (!r.ok) fault(r.error ?? 'That didn’t work.', at);
     else { if ('why' in r) setWhy(r.why ?? ''); after?.(); toast(said); router.refresh(); }
   });
 
@@ -185,7 +189,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
         </>
       )}
       {why && <p role="status" className="text-body-sm text-on-surface-variant">{why}.</p>}
-      {err && <p role="alert" className="text-body font-semibold text-on-surface">{err}</p>}
+      {err && !errAt && <p role="alert" className="text-body font-semibold text-on-surface">{err}</p>}
 
       <ConfirmSheet open={confirm} title="Back to their program?" confirmLabel="Back to program" busy={pending}
         body={`${first}’s custom weeks from this week on are taken away, and their program is their week again.`}
@@ -194,7 +198,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
       <ConfirmSheet open={!!rebuild} title={`Rebuild ${rebuild === 'next' ? 'next' : 'this'} week?`} confirmLabel="Rebuild" busy={pending}
         body={`${first}’s sessions for that week are built again from their settings. Any drills you changed by hand are replaced; sessions they’ve done stay done.`}
         onCancel={() => setRebuild(null)}
-        onConfirm={() => rebuild && run(() => buildWeekFor(userId, rebuild), undefined, 'Week rebuilt.', () => setRebuild(null))} />
+        onConfirm={() => rebuild && run(() => buildWeekFor(userId, rebuild), undefined, 'Week rebuilt.', () => setRebuild(null), `week:${rebuild}`)} />
     </div>
   );
 
@@ -215,7 +219,9 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
           </div>
           {rows.length > 0 && (
             <button type="button" disabled={pending || dirty} onClick={() => setRebuild(which)}
-                    className="shrink-0 text-body font-semibold underline underline-offset-4">Rebuild</button>
+                    className="shrink-0 text-body font-semibold underline underline-offset-4 disabled:no-underline disabled:text-on-surface-variant">
+              {dirty ? 'Save first to rebuild' : 'Rebuild'}
+            </button>
           )}
         </div>
 
@@ -241,7 +247,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                       {s.note && <span className="mt-1 block text-body-sm italic leading-snug text-on-surface">“{s.note}”</span>}
                     </span>
                     <select aria-label={`Day for ${s.name}`} value={day} disabled={pending}
-                            onChange={(e) => run(() => saveBuiltSession(s.id, { weekday: Number(e.target.value) }))}
+                            onChange={(e) => run(() => saveBuiltSession(s.id, { weekday: Number(e.target.value) }), undefined, 'Saved.', undefined, s.id)}
                             className="h-11 rounded-small border border-outline bg-surface px-3 text-body font-semibold">
                       {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
                     </select>
@@ -249,6 +255,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                   <ul className="mt-2.5 divide-y divide-outline-variant">
                     {s.drill_ids.map((id, i) => drillRow(s, sorted, id, i, byId.get(id)))}
                   </ul>
+                  {err && errAt === s.id && <p role="alert" className="mt-2.5 text-body font-semibold text-on-surface">{err}</p>}
                 </li>
               );
             })}
@@ -258,12 +265,13 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
             <p className="mt-1 text-body text-on-surface-variant">
               {which === 'this' ? `Not built yet, so ${first} is on their program this week.` : 'Not built yet.'} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
             </p>
-            <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))}
+            <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which), undefined, 'Saved.', undefined, `week:${which}`)}
                     className="btn-ghost pressable mt-4 w-full">
               {pending ? 'Building…' : dirty ? 'Save first' : `Build ${title.toLowerCase()}`}
             </button>
           </>
         )}
+        {err && errAt === `week:${which}` && <p role="alert" className="mt-2.5 text-body font-semibold text-on-surface">{err}</p>}
       </section>
     );
   }
@@ -275,7 +283,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
     const step = s.steps?.[i] ?? 0;
     const change = CHANGE[s.changes?.[i] ?? ''];
     const save = (drill_ids: string[], steps: number[], changes: string[]) =>
-      run(() => saveBuiltSession(s.id, { drill_ids, steps, changes }));
+      run(() => saveBuiltSession(s.id, { drill_ids, steps, changes }), undefined, 'Saved.', undefined, s.id);
     const steps = s.drill_ids.map((_, k) => s.steps?.[k] ?? 0);
     const changes = s.drill_ids.map((_, k) => s.changes?.[k] ?? 'new');
     // Set by hand: the trainer's level, no label.
@@ -311,7 +319,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                     onClick={() => {
                       const gone = [...(tried[s.id] ?? []), id];
                       const alt = swapFor(drills, s.drill_ids, id, focus, [...gone, ...sorted.flatMap((x) => x.drill_ids)]);
-                      if (!alt) { setErr('No other drill to swap in.'); return; }
+                      if (!alt) { fault('No other drill to swap in.', s.id); return; }
                       setTried({ ...tried, [s.id]: gone });
                       save(s.drill_ids.map((x, k) => k === i ? alt.id : x), steps.map((x, k) => k === i ? 0 : x), changes.map((c, k) => k === i ? 'new' : c));
                     }}>Swap</button>

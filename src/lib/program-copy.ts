@@ -21,7 +21,7 @@ export const PROGRAM_BLURBS: Record<string, string> = {
   'position-specific-program': 'Sessions built around what your position asks of you.',
   'at-home-program': 'Speed, strength and power work you can do at home with little or no kit.',
   'core-program': 'A strong, stable core for balance, shooting power and holding your ground.',
-  'saq-program': 'Speed, agility and quickness: ladders, hurdles and footwork that carry onto the pitch.',
+  'saq-program': 'Speed, agility and quickness: ladders, hurdles and footwork that carry onto the field.',
   'speed-kills-2-0': 'First-step quickness, acceleration and jumping power — the speed that wins the ball.',
   'crossing-program': 'The three crosses every wide player needs: standing, on the move, and out of a cut.',
   'advanced-crossing-program': 'Cross at game speed, with the timing and choices that turn wide play into chances.',

@@ -127,6 +127,8 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
   drills: DrillRow[];
 }) {
   const { busy, start, err, setErr, run } = useRun();
+  // Its own flag: "Thinking…" while Add to week is saving read as a second job.
+  const [suggesting, setSuggesting] = useState(false);
   const [adding, setAdding] = useState(false);
   const [drill, setDrill] = useState('');
   const [note, setNote] = useState('');
@@ -149,7 +151,7 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
                 <span className="block truncate text-body-lg font-semibold text-on-surface">{a.name}</span>
                 {a.note && <span className="block text-body-sm leading-snug text-on-surface-variant">{a.note}</span>}
               </span>
-              <button type="button" disabled={busy} className="icon-btn" aria-label={`Remove ${a.name}`} onClick={() => run(() => removeAddon(a.id))}>×</button>
+              <button type="button" disabled={busy} className="icon-btn" aria-label={`Remove ${a.name}`} onClick={() => run(() => removeAddon(a.id), undefined, 'Removed.')}>×</button>
             </li>
           ))}
         </ul>
@@ -175,12 +177,12 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
         <div className="card space-y-4 p-4">
           <button type="button" disabled={busy} className="btn-ghost btn-sm pressable w-full"
                   onClick={() => start(async () => {
-                    setErr('');
-                    const r = await suggestAddon(userId);
+                    setErr(''); setSuggesting(true);
+                    const r = await suggestAddon(userId).finally(() => setSuggesting(false));
                     if (!r.ok) { setErr(r.error); return; }
                     setDrill(r.drillId); setNote(r.note); setWhy(`${r.by === 'ai' ? 'Suggested' : 'Picked'}: ${r.why}`);
                   })}>
-            {busy ? 'Thinking…' : `Suggest one for ${first}`}
+            {suggesting ? 'Thinking…' : `Suggest one for ${first}`}
           </button>
           {why && <p className="text-body-sm font-semibold text-on-surface-variant">{why}</p>}
           <label className="text-field">

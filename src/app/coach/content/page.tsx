@@ -38,7 +38,7 @@ export default async function ContentPage() {
                     <span className="min-w-0">
                       <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
                       <span className="mt-0.5 block text-body text-on-surface-variant">
-                        {p.weeks} weeks · {sessions.length ? `${weeks} ${weeks === 1 ? 'week' : 'weeks'} built` : 'nothing built yet'}
+                        {p.weeks} {p.weeks === 1 ? 'week' : 'weeks'} · {sessions.length ? `${weeks} ${weeks === 1 ? 'week' : 'weeks'} built` : 'nothing built yet'}
                         {groups ? ` · ${groups} ${groups === 1 ? 'group' : 'groups'}` : ''}
                       </span>
                     </span>

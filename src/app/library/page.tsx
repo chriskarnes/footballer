@@ -22,7 +22,7 @@ const ART: Record<string, string> = {
   'Finishing & Crossing': 'from-app-category-finishing-dim to-app-category-finishing',
 };
 const KID: Record<string, string> = {
-  'Technical': 'Ball Skills', 'Physical': 'Speed & Strength',
+  'Technical': 'Ball Skills', 'Physical': 'Fitness',
   'Finishing & Crossing': 'Scoring Goals',
 };
 

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { rotateInvite } from '@/app/coach/actions';
+import { useToast } from './Toast';
 
 /**
  * An invite link with the ways a trainer actually sends one: the phone's
@@ -11,6 +12,7 @@ import { rotateInvite } from '@/app/coach/actions';
 export function InviteLink({ path, role, canRotate = true }: {
   path: string; role: 'player' | 'trainer'; canRotate?: boolean;
 }) {
+  const toast = useToast();
   const [current, setCurrent] = useState(path);
   const [origin, setOrigin] = useState('');
   const [copied, setCopied] = useState(false);
@@ -53,9 +55,9 @@ export function InviteLink({ path, role, canRotate = true }: {
         onCancel={() => setConfirm(false)}
         onConfirm={async () => {
           setBusy(true);
-          const r = await rotateInvite(role);
+          const r = await rotateInvite(role).catch(() => ({ ok: false as const, error: 'Couldn’t reach us. Check your signal and try again.' }));
           setBusy(false); setConfirm(false);
-          if (r.ok) setCurrent(`/join/${r.code}`); else setErr(r.error);
+          if (r.ok) { setCurrent(`/join/${r.code}`); toast('New link made. The old one no longer works.'); } else setErr(r.error);
         }} />
     </div>
   );

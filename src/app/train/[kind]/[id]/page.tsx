@@ -39,10 +39,10 @@ export default async function TrainerSessionPage({ params, searchParams }: {
   const { kind, id } = await params;
   // "Do it again" from your history: back to the history, and run as new
   // rather than opening as this week's finished one.
-  const history = (await searchParams).from === 'history';
+  const { from } = await searchParams;
+  const history = from === 'history';
   const v = await getViewer();
   if (!v.academy || !v.user || !/^[0-9a-f-]{36}$/.test(id)) notFound();
-  const from = (await searchParams).from;
   const back = history ? { href: '/me', label: 'Your training' }
     : from === 'library' ? { href: '/library', label: 'Library' }
     : { href: '/', label: 'Train' };

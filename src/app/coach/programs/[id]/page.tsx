@@ -37,7 +37,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="animate-pop">
-      <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/content', label: 'Programs' }} eyebrow={`${p.weeks} weeks`} title={p.name}>
+      <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/content', label: 'Programs' }} eyebrow={`${p.weeks} ${p.weeks === 1 ? 'week' : 'weeks'}`} title={p.name}>
         {p.description}
       </PageHead>
       <p className="mt-3 text-body text-on-surface-variant">
