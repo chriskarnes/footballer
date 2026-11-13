@@ -127,26 +127,26 @@ export default async function PlayerPage({ params }: {
       <section className="card mt-9 p-5 xl:mt-0">
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
-          <div className="text-[14px] text-on-surface-variant">
+          <div className="text-body text-on-surface-variant">
             {pr.hasPlan ? `${pr.done} of ${pr.planned}` : pr.done} · {pr.minutesThisWeek} min
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
 
         <div className="mt-6 flex items-baseline justify-between border-t border-outline-variant pt-5">
-          <div className="text-[14px] font-semibold text-on-surface">Last four weeks</div>
-          <div className="text-[14px] text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
+          <div className="text-body font-semibold text-on-surface">Last four weeks</div>
+          <div className="text-body text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
         </div>
         <div className="mt-3 flex h-24 gap-3" role="img"
              aria-label={pr.weeks.map((w) => `${w.done} sessions`).join(', ')}>
           {pr.weeks.map((w, i) => (
             <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="text-[12px] font-bold text-on-surface">{w.done}</span>
+              <span className="text-caption font-bold text-on-surface">{w.done}</span>
               <div className="relative w-full flex-1">
-                <div className={`absolute inset-x-1 bottom-0 rounded-md ${i === 3 ? 'bg-on-surface' : 'bg-surface-container-highest'}`}
+                <div className={`absolute inset-x-1 bottom-0 rounded-small ${i === 3 ? 'bg-on-surface' : 'bg-surface-container-highest'}`}
                      style={{ height: `${Math.max(4, (w.done / max) * 100)}%` }} />
               </div>
-              <span className="text-[11px] text-on-surface-variant">{i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} wks ago`}</span>
+              <span className="text-label-sm text-on-surface-variant">{i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} wks ago`}</span>
             </div>
           ))}
         </div>
@@ -154,7 +154,7 @@ export default async function PlayerPage({ params }: {
 
       <section className="card mt-3 p-5">
         <div className="h-card">Their soccer</div>
-        <p className="mt-1 text-[14px] leading-snug text-on-surface-variant">
+        <p className="mt-1 text-body leading-snug text-on-surface-variant">
           {soccer ? soccerLabel(teamDays(soccer)) ?? 'All days off.' : `${p.first} hasn’t said yet.`} Sessions go on the off days.
         </p>
         <div className="mt-4">
@@ -169,14 +169,14 @@ export default async function PlayerPage({ params }: {
             {p.done.slice(0, 5).map((d, i) => (
               <li key={i} className="flex items-center justify-between gap-4 px-4 py-3">
                 <span className="min-w-0">
-                  <span className="block truncate text-[14px] font-semibold text-on-surface">{d.title}</span>
-                  <span className="text-[12px] text-on-surface-variant">{dayLabel(d.at, tz)}</span>
+                  <span className="block truncate text-body font-semibold text-on-surface">{d.title}</span>
+                  <span className="text-caption text-on-surface-variant">{dayLabel(d.at, tz)}</span>
                 </span>
-                <span className="shrink-0 text-[14px] text-on-surface-variant">{Math.round(Number(d.minutes) || 0)} min</span>
+                <span className="shrink-0 text-body text-on-surface-variant">{Math.round(Number(d.minutes) || 0)} min</span>
               </li>
             ))}
           </ul>
-        ) : <p className="pl-1 text-[14px] text-on-surface-variant">Nothing finished yet.</p>}
+        ) : <p className="pl-1 text-body text-on-surface-variant">Nothing finished yet.</p>}
       </section>
 
       <section className="mt-9">
@@ -185,14 +185,14 @@ export default async function PlayerPage({ params }: {
           <ul className="space-y-2.5">
             {sentNotes.map(({ seen_at, notes: n }) => (
               <li key={n.id} className="card p-4">
-                <p className="whitespace-pre-line text-[14px] leading-snug text-on-surface">{n.body}</p>
-                <p className="mt-2 text-[12px] text-on-surface-variant">
+                <p className="whitespace-pre-line text-body leading-snug text-on-surface">{n.body}</p>
+                <p className="mt-2 text-caption text-on-surface-variant">
                   {n.author_name} · {dayLabel(n.created_at, tz)} · <b className="text-on-surface">{seen_at ? 'Seen' : 'Not seen yet'}</b>
                 </p>
               </li>
             ))}
           </ul>
-        ) : <p className="pl-1 text-[14px] text-on-surface-variant">No notes yet.</p>}
+        ) : <p className="pl-1 text-body text-on-surface-variant">No notes yet.</p>}
       </section>
 
       <div className="xl:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>

@@ -31,23 +31,23 @@ export default async function RequestsPage() {
     <div className="pt-8">
       <p className="eyebrow mb-3">Get started</p>
       <h1 className="h-page">Academy requests</h1>
-      {error && <p className="mt-3 text-[13px] text-on-surface-variant">Couldn&rsquo;t load: {error.message}. Has migration 0006 run?</p>}
-      {!error && !rows.length && <p className="mt-3 text-[14px] text-on-surface-variant">None yet.</p>}
+      {error && <p className="mt-3 text-body-sm text-on-surface-variant">Couldn&rsquo;t load: {error.message}. Has migration 0006 run?</p>}
+      {!error && !rows.length && <p className="mt-3 text-body text-on-surface-variant">None yet.</p>}
       <ul className="mt-6 space-y-3">
         {rows.map((r) => (
           <li key={r.id} className="card p-5">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="truncate text-[15px] font-bold text-on-surface">{r.academy_name}</span>
-              <span className="shrink-0 text-[12.5px] text-on-surface-variant">{ago(r.created_at)}</span>
+              <span className="truncate text-body-lg font-bold text-on-surface">{r.academy_name}</span>
+              <span className="shrink-0 text-body-sm text-on-surface-variant">{ago(r.created_at)}</span>
             </div>
-            <p className="mt-1 text-[13.5px] text-on-surface-variant">
+            <p className="mt-1 text-body text-on-surface-variant">
               {r.name} · <a href={`mailto:${r.email}`} className="font-semibold text-on-surface underline underline-offset-2">{r.email}</a>
             </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-on-surface-variant">
+            <p className="mt-2 text-body-sm leading-relaxed text-on-surface-variant">
               {[r.slug && `${r.slug}.train.futbol`, r.city, r.players && `${r.players} players`,
                 r.trainers && (r.trainers === 'Just me' ? 'trainer on their own' : `${r.trainers} trainers`), r.content].filter(Boolean).join(' · ')}
             </p>
-            {r.message && <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-on-surface">{r.message}</p>}
+            {r.message && <p className="mt-2 whitespace-pre-line text-body leading-relaxed text-on-surface">{r.message}</p>}
             {r.status !== 'declined' && (
               <ApproveRequest id={r.id} slug={r.slug} academyName={r.academy_name} email={r.email} trainer={r.name}
                 approved={r.academy_id && r.claim_code && r.slug

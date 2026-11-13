@@ -69,7 +69,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ progra
 
       <h1 className="h-page">{program.name}</h1>
       {blurb && (
-        <p className="mt-3 text-[15px] leading-relaxed text-on-surface-variant">{blurb}</p>
+        <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">{blurb}</p>
       )}
 
       <dl className="mt-6 flex divide-x divide-outline-variant">
@@ -121,8 +121,8 @@ async function finishedCounts(ids: string[]): Promise<Map<string, number> | null
 function Stat({ value, label, first }: { value: string; label: string; first?: boolean }) {
   return (
     <div className={`flex min-w-0 flex-col-reverse ${first ? 'pr-4' : 'px-4'}`}>
-      <dt className="mt-0.5 text-[12px] text-on-surface-variant">{label}</dt>
-      <dd className="truncate font-brand text-[19px] font-bold tracking-tighter text-on-surface">{value}</dd>
+      <dt className="mt-0.5 text-caption text-on-surface-variant">{label}</dt>
+      <dd className="truncate font-brand text-title-lg font-bold tracking-brand-snug text-on-surface">{value}</dd>
     </div>
   );
 }

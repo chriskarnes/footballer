@@ -35,7 +35,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
       <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/content', label: 'Programs' }} eyebrow={`${p.weeks} weeks`} title={p.name}>
         {p.description}
       </PageHead>
-      <p className="mt-3 text-[14px] text-on-surface-variant">
+      <p className="mt-3 text-body text-on-surface-variant">
         {groups.length || players
           ? <>Used by {[...groups.map((g) => g.name), players ? `${players} ${players === 1 ? 'player' : 'players'} on their own` : ''].filter(Boolean).join(', ')}</>
           : 'Not given to anyone yet. Add it to a group, or to a player from their page.'}
@@ -50,7 +50,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
             <li key={n} id={`week-${n}`} className={own ? 'card p-5' : 'card-flat p-5'}>
               <div className="flex items-baseline justify-between gap-3">
                 <div className="h-card">Week {n}</div>
-                <span className="text-[13px] text-on-surface-variant">
+                <span className="text-body-sm text-on-surface-variant">
                   {own ? `${shown.length} ${shown.length === 1 ? 'session' : 'sessions'}` : repeats ? `Repeats week ${repeats}` : 'Nothing yet'}
                 </span>
               </div>
@@ -62,12 +62,12 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
                       <li key={s.id}>
                         <Link href={`/coach/programs/${p.id}/session?id=${s.id}`} className="flex items-center justify-between gap-3 py-3">
                           <span className="min-w-0">
-                            <span className="block truncate text-[14.5px] font-semibold text-on-surface">{s.name}</span>
-                            <span className="block truncate text-[13px] text-on-surface-variant">
+                            <span className="block truncate text-body-lg font-semibold text-on-surface">{s.name}</span>
+                            <span className="block truncate text-body-sm text-on-surface-variant">
                               {s.drill_ids.map((d) => drills.get(d)?.name).filter(Boolean).join(', ')}
                             </span>
                           </span>
-                          <span className="shrink-0 text-[13px] text-on-surface-variant">{mins} min</span>
+                          <span className="shrink-0 text-body-sm text-on-surface-variant">{mins} min</span>
                         </Link>
                       </li>
                     );
@@ -86,7 +86,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
       </ol>
 
       <details className="mt-9">
-        <summary className="cursor-pointer text-[14px] font-semibold text-on-surface">Name, length and description</summary>
+        <summary className="cursor-pointer text-body font-semibold text-on-surface">Name, length and description</summary>
         <div className="mt-5"><ProgramForm program={p} /></div>
       </details>
     </div>

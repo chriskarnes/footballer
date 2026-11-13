@@ -155,7 +155,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           ))}
         </div>
         {/* At the question, not in the footer — this is where it becomes relevant. */}
-        {!parent && <p className="mt-3 pl-0.5 text-[14px] font-medium leading-snug text-on-surface-variant">
+        {!parent && <p className="mt-3 pl-0.5 text-body font-medium leading-snug text-on-surface-variant">
           Under 13? Get a parent to do this with you.
         </p>}
       </div>
@@ -213,7 +213,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
               className="btn-primary btn-big mt-8 w-full">
         {busy ? 'Saving…' : returning ? 'Save' : 'Done'}
       </button>
-      {error && <p className="mt-3 text-[13px] font-medium text-error">{error}</p>}
+      {error && <p className="mt-3 text-body-sm font-medium text-error">{error}</p>}
 
     </div>
   );

@@ -18,10 +18,10 @@ export default async function PhasePage({ params }: { params: Promise<{ phaseId:
       <BackLink href="/speed" label="Speed" />
 
       <h1 className="h-page">{phase.name}</h1>
-      <p className="mt-3 text-[15px] font-semibold text-primary">
+      <p className="mt-3 text-body-lg font-semibold text-primary">
         Up to {phase.sprintCap} m of sprints and {phase.contactCap} jumps a session
       </p>
-      <p className="mt-4 text-[16px] leading-relaxed text-on-surface-variant">{phase.goal}</p>
+      <p className="mt-4 text-title-sm leading-relaxed text-on-surface-variant">{phase.goal}</p>
 
       <div className="stagger mt-8 space-y-8">
         {([1, 2, 3] as const).map((b) => {
@@ -30,7 +30,7 @@ export default async function PhasePage({ params }: { params: Promise<{ phaseId:
             <section key={b}>
               <div className="mb-3 flex items-baseline justify-between">
                 <h2 className="h-card">Block {b}</h2>
-                <span className="text-[14px] font-medium text-on-surface-variant">
+                <span className="text-body font-medium text-on-surface-variant">
                   Weeks {(b - 1) * 4 + 1}–{b * 4} · test day in week {b * 4}
                 </span>
               </div>
@@ -38,24 +38,24 @@ export default async function PhasePage({ params }: { params: Promise<{ phaseId:
                 {mine.map((s) => (
                   <Link key={s.id} href={`/speed/session/${s.id}`}
                     className="card pressable flex items-center gap-4 p-4">
-                    <span className="w-9 font-brand text-[14px] font-bold text-on-surface-variant">{s.day}</span>
+                    <span className="w-9 font-brand text-body font-bold text-on-surface-variant">{s.day}</span>
                     <div className="min-w-0 flex-1">
                       <div className="h-card truncate">{s.name}</div>
-                      <div className="mt-1 text-[14px] font-medium text-on-surface-variant">
+                      <div className="mt-1 text-body font-medium text-on-surface-variant">
                         {KIND_LABELS[s.kind]}{s.sprintMetres ? ` · ${s.sprintMetres} m sprinting` : ''}
                         {s.where === 'indoor' ? ' · indoor' : ''}
                       </div>
                     </div>
-                    <div className="font-brand text-[15px] font-bold tracking-tighter">
+                    <div className="font-brand text-body-lg font-bold tracking-brand-snug">
                       {Math.round(sessionSeconds(s) / 60)}m
                     </div>
                   </Link>
                 ))}
                 <Link href="/speed/test" className="card-flat pressable flex items-center gap-4 p-4">
-                  <span className="w-9 font-brand text-[14px] font-bold text-on-surface-variant">Thu</span>
+                  <span className="w-9 font-brand text-body font-bold text-on-surface-variant">Thu</span>
                   <div className="min-w-0 flex-1">
                     <div className="h-card">Test day</div>
-                    <div className="mt-1 text-[14px] font-medium text-on-surface-variant">
+                    <div className="mt-1 text-body font-medium text-on-surface-variant">
                       Week {b * 4} · replaces top speed · 45 min after the warm-up
                     </div>
                   </div>
@@ -66,12 +66,12 @@ export default async function PhasePage({ params }: { params: Promise<{ phaseId:
         })}
       </div>
 
-      <section className="mt-9 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
-        <p className="text-[14px] font-bold uppercase tracking-[0.12em] text-on-surface-brand-variant">
+      <section className="mt-9 brand-card p-6">
+        <p className="eyebrow text-on-surface-brand-variant">
           Gate to {phase.number < 4 ? `Phase ${phase.number + 1}` : 'next year'}
         </p>
-        <p className="mt-2 text-[16px] leading-relaxed text-on-surface-brand">{phase.gate}</p>
-        <p className="mt-3 text-[14px] font-medium text-on-surface-brand-variant">
+        <p className="mt-2 text-title-sm leading-relaxed text-on-surface-brand">{phase.gate}</p>
+        <p className="mt-3 text-body font-medium text-on-surface-brand-variant">
           An athlete who fails a gate repeats the last block, not the whole phase.
         </p>
       </section>

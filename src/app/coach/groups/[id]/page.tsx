@@ -61,13 +61,13 @@ export default async function GroupPage({ params }: {
         <section className="mt-8">
           <div className="mb-3 flex items-baseline justify-between">
             <p className="eyebrow">This week at home</p>
-            {program && <Link href={`/coach/programs/${program.id}#week-${n}`} className="text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">Edit</Link>}
+            {program && <Link href={`/coach/programs/${program.id}#week-${n}`} className="text-body font-semibold text-on-surface-variant underline underline-offset-4">Edit</Link>}
           </div>
           <ul className="card divide-y divide-outline-variant">
             {homework.map((s) => (
-              <li key={s.id} className="flex items-center justify-between gap-4 px-4 py-3 text-[14px]">
+              <li key={s.id} className="flex items-center justify-between gap-4 px-4 py-3 text-body">
                 <span className="min-w-0 truncate font-semibold text-on-surface">{s.name}</span>
-                <span className="shrink-0 text-[14px] text-on-surface-variant">{s.drill_ids.length} {s.drill_ids.length === 1 ? 'drill' : 'drills'}</span>
+                <span className="shrink-0 text-body text-on-surface-variant">{s.drill_ids.length} {s.drill_ids.length === 1 ? 'drill' : 'drills'}</span>
               </li>
             ))}
           </ul>
@@ -85,8 +85,8 @@ export default async function GroupPage({ params }: {
                 <li key={p.user_id}>
                   <Link href={`/coach/players/${p.user_id}`} className="flex items-center gap-4 px-4 py-3.5 hover:bg-surface-container-low">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[14.5px] font-bold text-on-surface">{p.name}</span>
-                      <span className="mt-0.5 flex items-center gap-2 text-[14px] text-on-surface-variant">
+                      <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
+                      <span className="mt-0.5 flex items-center gap-2 text-body text-on-surface-variant">
                         <StatusDot status={p.progress.status} />
                         <span className="truncate"><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
                       </span>
@@ -113,7 +113,7 @@ export default async function GroupPage({ params }: {
             </div>
             </Disclose>
           </div>
-        ) : <p className="pl-1 text-[14px] text-on-surface-variant">No players in the academy yet. Invite them from Academy.</p>}
+        ) : <p className="pl-1 text-body text-on-surface-variant">No players in the academy yet. Invite them from Academy.</p>}
       </section>
 
       <section className="mt-8">

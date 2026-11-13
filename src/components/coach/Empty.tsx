@@ -9,7 +9,7 @@ export function Empty({ title, href, cta, children }: { title: string; href: str
   return (
     <div className="card-flat p-5 lg:max-w-2xl">
       <div className="h-card">{title}</div>
-      <p className="mt-1 text-[14px] leading-relaxed text-on-surface-variant">{children}</p>
+      <p className="mt-1 text-body leading-relaxed text-on-surface-variant">{children}</p>
       <Link href={href} className="btn-ghost btn-sm pressable mt-4">{cta}</Link>
     </div>
   );

@@ -55,14 +55,14 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
   if (sent) return (
     <div className="card p-5" role="status">
       <div className="h-card">Check your email</div>
-      <p className="mt-1.5 text-[14px] leading-relaxed text-on-surface-variant">
+      <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
         We sent a sign-in link to <b className="font-semibold text-on-surface">{email.trim()}</b>.
         {/* The link has to open in this browser to find the session — say so,
             since a mail app's own browser is where it usually opens. */}
         {' '}Open it on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.
       </p>
       <button type="button" onClick={() => { setSent(false); setErr(''); }}
-              className="mt-4 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+              className="mt-4 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
         Use a different email
       </button>
     </div>
@@ -72,8 +72,8 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
     <form className="card p-5" onSubmit={(e) => { e.preventDefault(); send(); }}>
       {title && <div className="h-card mb-1">{title}</div>}
       {/* The reason most people are here: they just finished a session. */}
-      {waiting && <p className="mb-1 text-[14px] font-medium leading-snug text-on-surface">{waiting}</p>}
-      <p className="mb-4 text-[13.5px] leading-snug text-on-surface-variant">
+      {waiting && <p className="mb-1 text-body font-medium leading-snug text-on-surface">{waiting}</p>}
+      <p className="mb-4 text-body leading-snug text-on-surface-variant">
         {note ?? 'No password. We’ll email you a link.'}
       </p>
       <label className="text-field">
@@ -89,7 +89,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
       <button type="submit" disabled={busy} className="btn-primary pressable mt-3 w-full">
         {busy ? 'Sending…' : button}
       </button>
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }

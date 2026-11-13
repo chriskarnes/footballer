@@ -111,10 +111,10 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
               drawing a gold italic F long after the brand changed. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={icon} alt="" width={44} height={44}
-               className="h-11 w-11 shrink-0 rounded-[13px]" />
+               className="h-11 w-11 shrink-0 rounded-medium" />
           <div className="min-w-0 flex-1">
             <p className="h-card">Keep {name} one tap away</p>
-            <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
+            <p className="mt-1 text-body-sm leading-snug text-on-surface-variant">
               {platform === 'ios'
                 ? 'Add it to your home screen and it opens full screen, with its own icon.'
                 : 'Install it and it opens full screen, with its own icon.'}
@@ -131,7 +131,7 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
 
         {platform === 'ios' ? (
           <ol className="mt-4 space-y-2.5 border-t border-outline-variant pt-4">
-            <li className="flex items-center gap-3 text-[13.5px] font-semibold">
+            <li className="flex items-center gap-3 text-body font-semibold">
               <span className="tag tag-accent w-5 text-center">1</span>
               <span className="flex items-center gap-1.5">
                 Tap
@@ -146,7 +146,7 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
                 in the toolbar
               </span>
             </li>
-            <li className="flex items-center gap-3 text-[13.5px] font-semibold">
+            <li className="flex items-center gap-3 text-body font-semibold">
               <span className="tag tag-accent w-5 text-center">2</span>
               <span>Choose <em className="not-italic text-primary">Add to Home Screen</em></span>
             </li>

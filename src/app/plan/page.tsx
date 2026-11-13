@@ -112,7 +112,7 @@ export default async function PlanPage({
         <BrandBand right={toPlans}>
           <BandTag>Plan</BandTag>
           <BandTitle>{shown.name}</BandTitle>
-          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
             {training.length} session{training.length === 1 ? '' : 's'} a week · {minutes} min
           </p>
         </BrandBand>

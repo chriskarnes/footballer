@@ -44,7 +44,7 @@ export default async function DrillPage({ params, searchParams }: {
   const sessions = (
     <section className={`card p-5 ${fresh ? '' : 'mt-10'}`}>
       <div className="h-card">{fresh ? 'Add it to sessions?' : 'In sessions'}</div>
-      <p className="mb-4 mt-1 text-[14px] leading-snug text-on-surface-variant">
+      <p className="mb-4 mt-1 text-body leading-snug text-on-surface-variant">
         {fresh ? 'Tick any it belongs in. It goes at the end of each; you can reorder in the session.'
           : 'Tick to add it to a session, untick to take it out.'}
       </p>

@@ -30,11 +30,11 @@ export function Waiting({ state }: { state: Wait }) {
         <BandTag>{state.kind === 'new' ? 'Welcome' : 'This week'}</BandTag>
         <BandTitle>{state.kind === 'new' ? 'You’re in!' : 'Nothing yet'}</BandTitle>
         <div className="mt-5 flex items-center gap-3.5">
-          {(trainer.name || trainer.photo) && <Avatar name={trainer.name} src={trainer.photo} className="h-14 w-14 text-[20px]" onBrand />}
-          <p className="min-w-0 text-[17px] font-semibold leading-snug text-on-surface-brand">{waitingLine(state)}</p>
+          {(trainer.name || trainer.photo) && <Avatar name={trainer.name} src={trainer.photo} className="h-14 w-14 text-title-lg" onBrand />}
+          <p className="min-w-0 text-title font-semibold leading-snug text-on-surface-brand">{waitingLine(state)}</p>
         </div>
         {meets && (
-          <p className="mt-4 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-4 text-title-sm font-semibold text-on-surface-brand-variant">
             Next with {trainer.name ?? 'your trainer'}: {meets}
           </p>
         )}
@@ -48,7 +48,7 @@ export function Waiting({ state }: { state: Wait }) {
       <section className="mt-6">
         <h2 className="h-sec">{week.schedule ? 'Your soccer week' : 'While you wait'}</h2>
         {!week.schedule && (
-          <p className="mt-1.5 text-[16px] font-medium leading-snug text-on-surface-variant">
+          <p className="mt-1.5 text-title-sm font-medium leading-snug text-on-surface-variant">
             Tell us your soccer days, and your sessions will go around them.
           </p>
         )}

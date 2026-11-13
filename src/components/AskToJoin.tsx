@@ -14,7 +14,7 @@ export function AskToJoin({ academy, email, pending: wasPending }: { academy: st
     return (
       <div className="card p-5" role="status">
         <div className="h-card">Asked</div>
-        <p className="mt-1 text-[14px] leading-relaxed text-on-surface-variant">
+        <p className="mt-1 text-body leading-relaxed text-on-surface-variant">
           {academy} will see your request next time they open their players. Once they let you in, your sessions are here.
         </p>
       </div>
@@ -29,7 +29,7 @@ export function AskToJoin({ academy, email, pending: wasPending }: { academy: st
         if (r.ok) setSent(true); else setErr(r.error);
       });
     }}>
-      <p className="text-[13.5px] text-on-surface-variant">Signed in as {email}.</p>
+      <p className="text-body text-on-surface-variant">Signed in as {email}.</p>
       <label className="text-field">
         <span>Player&rsquo;s name</span>
         <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="name" />
@@ -39,7 +39,7 @@ export function AskToJoin({ academy, email, pending: wasPending }: { academy: st
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={300}
                   placeholder="e.g. U12 Tuesday group" />
       </label>
-      {err && <p role="alert" className="text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="text-body-sm font-semibold text-on-surface">{err}</p>}
       <button type="submit" disabled={busy} className="btn-primary pressable w-full">{busy ? 'Asking…' : 'Ask to join'}</button>
     </form>
   );

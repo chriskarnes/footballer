@@ -30,7 +30,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
     return (
       <Shell>
         <h1 className="h-page">This link doesn&rsquo;t work</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
+        <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">
           Check it&rsquo;s the whole link from the email. If it still doesn&rsquo;t open, reply to that email and we&rsquo;ll sort it out.
         </p>
       </Shell>
@@ -51,7 +51,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
       <BrandBand overlap name={claim.name}>
         <BandTag>{claim.claimed ? 'Already claimed' : 'Your academy is ready'}</BandTag>
         <BandTitle>{claim.claimed ? claim.name : `Welcome, ${claim.trainer}`}</BandTitle>
-        <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+        <p className="mt-4 text-title-sm leading-relaxed text-on-surface-brand-variant">
           {claim.claimed
             ? `${claim.name} already has its owner.`
             : `${claim.name} lives at ${claim.slug}.train.futbol. Make it yours, then a short checklist gets your first sessions in before your players arrive.`}
@@ -62,15 +62,15 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
         <div className="card p-5">
           {claim.claimed ? (
             <>
-              <p className="text-[15px] leading-relaxed text-on-surface">
+              <p className="text-body-lg leading-relaxed text-on-surface">
                 If that&rsquo;s you, sign in with the email you asked with.
               </p>
               {v.user
                 ? <>
                     <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">Open the app</Link>
                     {/* Signed in as someone else: the way to switch. */}
-                    <p className="mt-4 text-[14px] text-on-surface-variant">Signed in as {v.user.email}. Not the address you asked with?</p>
-                    <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-2 min-h-12 w-full text-[15px] font-bold" />
+                    <p className="mt-4 text-body text-on-surface-variant">Signed in as {v.user.email}. Not the address you asked with?</p>
+                    <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-2 min-h-12 w-full text-body-lg font-bold" />
                   </>
                 : <div className="mt-4"><SignIn next="/coach" /></div>}
             </>

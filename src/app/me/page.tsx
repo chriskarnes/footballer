@@ -126,14 +126,14 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         <BrandBand>
           <BandTag>Me</BandTag>
           <BandTitle>Sign in</BandTitle>
-          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
             Save your sessions and see your week.
           </p>
         </BrandBand>
         {linkFailed && (
           <div className="card mt-5 p-5" role="alert">
             <div className="h-card">That link didn’t work</div>
-            <p className="mt-1.5 text-[14px] leading-relaxed text-on-surface-variant">
+            <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
               Sign-in links work once, for an hour, in the browser you asked from. Send yourself a new one.
             </p>
           </div>
@@ -175,8 +175,8 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       <BrandBand>
         <BandTag>Me</BandTag>
         <div className="mt-4 flex items-center gap-4">
-          <Avatar name={name} email={user.email} src={avatarSrc(avatarAt)} className="h-16 w-16 text-[24px]" />
-          <h1 className="site-wide min-w-0 flex-1 text-[34px] uppercase leading-[.95] [overflow-wrap:anywhere]">{name || 'Me'}</h1>
+          <Avatar name={name} email={user.email} src={avatarSrc(avatarAt)} className="h-16 w-16 text-display" />
+          <h1 className="site-wide min-w-0 flex-1 text-headline-lg uppercase leading-[.95] [overflow-wrap:anywhere]">{name || 'Me'}</h1>
         </div>
       </BrandBand>
       {/* Every section 40px from the last. NoteBanner keeps its own gap below. */}
@@ -208,7 +208,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       {library && finished.length >= 3 && !plans.length && (
         <section className="card mt-10 p-5">
           <div className="h-sec">Want a weekly plan?</div>
-          <Link href="/plan" className="btn-ghost mt-4 min-h-[52px] w-full text-[15px] font-bold">Make my week</Link>
+          <Link href="/plan" className="btn-ghost mt-4 min-h-[52px] w-full text-body-lg font-bold">Make my week</Link>
         </section>
       )}
 
@@ -217,7 +217,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <h2 className="h-sec">Your training</h2>
           {finished.length > HISTORY_ON_ME && (
             <Link href="/me/history"
-                  className="text-[13px] font-semibold text-primary underline underline-offset-4">
+                  className="text-body-sm font-semibold text-primary underline underline-offset-4">
               See all {finished.length}
             </Link>
           )}
@@ -225,9 +225,9 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         {finished.length ? (
           <WorkoutList rows={finished.slice(0, HISTORY_ON_ME)} kind="history" />
         ) : waiting ? (
-          <p className="pl-1 text-[15px] font-medium text-on-surface-variant">Nothing yet. {waitingLine(waiting)}</p>
+          <p className="pl-1 text-body-lg font-medium text-on-surface-variant">Nothing yet. {waitingLine(waiting)}</p>
         ) : (
-          <p className="pl-1 text-[15px] font-medium text-on-surface-variant">
+          <p className="pl-1 text-body-lg font-medium text-on-surface-variant">
             Nothing yet. <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>
           </p>
         )}

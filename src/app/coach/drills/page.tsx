@@ -37,12 +37,12 @@ export default async function DrillsPage() {
                 <li key={d.id}>
                   <Link href={`/coach/drills/${d.id}`} className="flex items-center justify-between gap-4 px-4 py-3.5">
                     <span className="min-w-0">
-                      <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d.name}</span>
-                      <span className="mt-0.5 block truncate text-[13px] text-on-surface-variant">
+                      <span className="block truncate text-body-lg font-semibold text-on-surface">{d.name}</span>
+                      <span className="mt-0.5 block truncate text-body-sm text-on-surface-variant">
                         {[d.amount, `${d.minutes} min`, tagLabels(d)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
-                    {d.video_url && <span className="shrink-0 text-[12px] font-semibold text-on-surface-variant">{youtubeId(d.video_url) ? 'Video' : 'Link'}</span>}
+                    {d.video_url && <span className="shrink-0 text-caption font-semibold text-on-surface-variant">{youtubeId(d.video_url) ? 'Video' : 'Link'}</span>}
                   </Link>
                 </li>
               ))}
@@ -50,8 +50,8 @@ export default async function DrillsPage() {
 
             {/* Laptop: a table. */}
             <div className="card hidden overflow-hidden lg:block">
-              <table className="w-full text-left text-[14px]">
-                <thead className="border-b border-outline-variant text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">
+              <table className="w-full text-left text-body">
+                <thead className="border-b border-outline-variant eyebrow">
                   <tr><Th>Drill</Th><Th>Amount</Th><Th>Time</Th><Th>Focus</Th><Th>Video</Th><Th>In sessions</Th></tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">

@@ -22,13 +22,13 @@ export function ClaimButton({ code, name, email, hint }: { code: string; name: s
               }}>
         {busy ? 'One moment…' : `Make ${name} mine`}
       </button>
-      <p className="mt-3 text-[13.5px] text-on-surface-variant">Signed in as {email}.</p>
+      <p className="mt-3 text-body text-on-surface-variant">Signed in as {email}.</p>
       {err === 'wrong-email' ? (
-        <div role="status" className="mt-3 text-[14px] leading-snug text-on-surface">
+        <div role="status" className="mt-3 text-body leading-snug text-on-surface">
           <p><b>This link is for {hint}.</b> Sign out, then sign in with that address.</p>
-          <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-3 min-h-12 w-full text-[15px] font-bold" />
+          <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-3 min-h-12 w-full text-body-lg font-bold" />
         </div>
-      ) : err && <p role="status" className="mt-3 text-[14px] font-semibold text-on-surface">{err}</p>}
+      ) : err && <p role="status" className="mt-3 text-body font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

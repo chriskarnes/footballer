@@ -207,50 +207,6 @@
   --app-brand-edge:                         #3A3A3A;
 } }
 
-:root[data-theme="dark"] { color-scheme: dark;
-  --md-sys-color-primary:                   #E3E3E3;
-  --md-sys-color-on-primary:                #1B1B1B;
-  --md-sys-color-primary-container:         #474747;
-  --md-sys-color-on-primary-container:      #E3E3E3;
-  --md-sys-color-secondary:                 #C7C7C7;
-  --md-sys-color-on-secondary:              #303030;
-  /* The brand pair, swapped: on a dark background the emphasised thing is the
-     light one. Tone 90 rather than the brand's own #FFFFFF — a pure-white
-     block on a near-black page glares, and every filled surface in the dark
-     scheme already stops here. */
-  --md-sys-color-secondary-container:       #E3E3E3;
-  --md-sys-color-on-secondary-container:    var(--app-brand-primary);
-  --md-sys-color-tertiary:                  #C7C7C7;
-  --md-sys-color-on-tertiary:               #303030;
-  --md-sys-color-tertiary-container:        #474747;
-  --md-sys-color-on-tertiary-container:     #E3E3E3;
-  --md-sys-color-error:                     #C7C7C7;
-  --md-sys-color-on-error:                  #303030;
-  --md-sys-color-error-container:           #474747;
-  --md-sys-color-on-error-container:        #E3E3E3;
-  --md-sys-color-surface:                   #121212;
-  --md-sys-color-on-surface:                #E3E3E3;
-  --md-sys-color-surface-variant:           #474747;
-  --md-sys-color-on-surface-variant:        #C7C7C7;
-  --md-sys-color-surface-container-lowest:  #0C0C0C;
-  --md-sys-color-surface-container-low:     #1B1B1B;
-  --md-sys-color-surface-container:         #1F1F1F;
-  --md-sys-color-surface-container-high:    #2B2B2B;
-  --md-sys-color-surface-container-highest: #353535;
-  --md-sys-color-surface-dim:               #121212;
-  --md-sys-color-surface-bright:            #393939;
-  --md-sys-color-outline:                   #919191;
-  --md-sys-color-outline-variant:           #474747;
-  --md-sys-color-inverse-surface:           #E3E3E3;
-  --md-sys-color-inverse-on-surface:        #303030;
-  --md-sys-color-inverse-primary:           var(--app-brand-primary);
-  --app-inverse-on-surface-variant:         #5E5E5E;
-  --app-inverse-outline-variant:            #ABABAB;
-  /* The brand block does not flip — only its edge appears, to separate
-     #1B1B1B from the #121212 page behind it. */
-  --app-brand-edge:                         #3A3A3A;
-}
-
 /* ==========================================================================
    FORGE EXTENSIONS — deliberately NOT named md.sys, because M3 does not
    define these. Namespaced so it stays obvious which tokens you own.
@@ -304,8 +260,8 @@
      value collided at display sizes. The compactness is recovered on the
      wdth axis instead — see the -width tokens below — which is closer to what
      Sora was doing anyway, and only Roboto Flex can do it. */
-  --app-track-tightest: -0.02em;
-  --app-track-tighter:  -0.005em;
+  --app-track-brand-tight: -0.02em;
+  --app-track-brand-snug:  -0.005em;
 
   /* The three Library category cards separated by hue when there were hues to
      separate by. On a monochrome palette the only axis left is value, so each
@@ -433,6 +389,7 @@
   --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(.3, 0, .8, .15);
   --md-sys-motion-duration-short2:  100ms;
   --md-sys-motion-duration-medium2: 300ms;
+  --md-sys-motion-duration-medium4: 400ms;
   --md-sys-motion-duration-long2:   500ms;
 }
 
@@ -504,18 +461,17 @@ input, textarea, [data-selectable] {
 }
 
 /* Any inner scroll region should carry momentum and stop at its own edges. */
-.scroll-x, .scroll-y {
+.scroll-x {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scrollbar-width: none;
 }
-.scroll-x::-webkit-scrollbar, .scroll-y::-webkit-scrollbar { display: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
 .scroll-x { overflow-x: auto; }
 /* A row that scrolls where it isn't obvious: a wide table. The thin bar stays. */
 .scroll-shown { scrollbar-width: thin; }
 .scroll-shown::-webkit-scrollbar { display: block; height: 6px; }
 .scroll-shown::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 3px; }
-.scroll-y { overflow-y: auto; }
 
 /* ==========================================================================
    LAYOUT UTILITIES — Forge-specific, no M3 equivalent. Kept from the original.
@@ -718,7 +674,6 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .card { background: var(--md-sys-color-surface-container-low); }
 }
-:root[data-theme="dark"] .card { background: var(--md-sys-color-surface-container-low); }
 .card-flat {
   border-radius: var(--md-sys-shape-corner-large-increased);
   border: 1px solid var(--md-sys-color-outline-variant);
@@ -838,7 +793,7 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
   background: var(--md-sys-color-inverse-surface);
   padding: 0 24px;
   font-family: var(--md-ref-typeface-brand); font-size: 16px; font-weight: 700;
-  letter-spacing: var(--app-track-tighter);
+  letter-spacing: var(--app-track-brand-snug);
   color: var(--md-sys-color-inverse-primary);
 }
 /* Its own state layer rather than relying on .pressable, which half the call
@@ -907,6 +862,35 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
 /* 40px to the eye, 44 to the thumb: the hit area reaches 2px past each edge,
    the way the chip's does. */
 .btn-sm::before { content: ''; position: absolute; inset: -2px 0; border-radius: inherit; }
+
+/* The primary button on the brand block: the block's ink as its fill, so it
+   reads on any academy's colors. Ten call sites spelled this out by hand.
+   Disabled is dimmed once, here — the plain button's disabled ring would
+   vanish into the block. */
+.btn-on-brand, .btn-on-brand:disabled {
+  border: 0;
+  background: var(--app-on-surface-brand);
+  color: var(--app-surface-brand);
+}
+.btn-on-brand:disabled { opacity: .5; }
+
+/* The brand block as a card: the session card, the finish screen, the saved
+   week. Layered like the buttons, so a utility can change its shadow or
+   corner where one needs to. */
+.brand-card {
+  border-radius: var(--md-sys-shape-corner-large-increased);
+  border: 1px solid var(--app-brand-edge);
+  background: var(--app-surface-brand);
+  color: var(--app-on-surface-brand);
+  box-shadow: var(--md-sys-elevation-level3);
+}
+
+/* The brand's accent with the brand's own color on it: the done tick, the
+   avatar on the band, the band's label. */
+.accent-badge {
+  background: var(--app-brand-accent);
+  color: var(--app-brand-primary);
+}
 }
 
 
@@ -1069,23 +1053,8 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
   cursor: default;
 }
 
-.progress {
-  height: 4px; border-radius: var(--md-sys-shape-corner-full); overflow: hidden;
-  background: var(--md-sys-color-surface-container-highest);
-}
-.progress > div {
-  height: 100%; border-radius: var(--md-sys-shape-corner-full);
-  background: var(--md-sys-color-primary);
-  transition: width var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate);
-}
-
-/* Screen-level landmarks. The Train header and hero were loose siblings held
-   apart by a margin, with a 15ch measure on the h1 that made it break narrower
-   than the cards beneath it. A measure is right for running prose; a two-word
-   headline above full-width content just looks misaligned. */
+/* A screen's top row: the mark on the left, anything else on the right. */
 .app-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.hero { margin-top: 36px; }
-.hero .h-hero { max-width: none; }
 
 /* .tag-gold was --gold-text on --gold-soft: 4.35:1, just under the floor.
    As a primary-container pair it is 7.21:1. Renamed to .tag-accent — this one
@@ -1105,8 +1074,8 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
 
 /* The modal bottom sheet is gone: a program is a page again, reached by a link
    and left by an explicit back control. Its classes — .sheet-dialog,
-   .sheet-inner, .sheet-handle/-head/-body/-actions, .icon-btn and the
-   phone-scroll[inert] guard — went with it rather than sitting here unused.
+   .sheet-inner, .sheet-handle/-head/-body/-actions and the phone-scroll[inert]
+   guard — went with it (.icon-btn stayed; it is with the buttons above) rather than sitting here unused.
    Recoverable from design/train-futbol-harness-m3.html if the decision reverses. */
 
 /* The confirmation sheet — <ConfirmSheet />. Not that sheet back: this one
@@ -1143,19 +1112,19 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
   border-radius: 28px 28px 0 0;
   background: var(--md-sys-color-surface-container-lowest);
   box-shadow: var(--md-sys-elevation-level3);
-  animation: noteUp var(--md-sys-motion-duration-medium4, 400ms) var(--md-sys-motion-easing-emphasized-decelerate) both;
+  animation: noteUp var(--md-sys-motion-duration-medium4) var(--md-sys-motion-easing-emphasized-decelerate) both;
 }
 @keyframes noteUp { from { transform: translateY(100%); } to { transform: none; } }
 @media (min-width: 640px) {
   .note-dialog { margin: auto; max-width: 34rem; padding: 24px; }
-  .note-panel { max-height: min(88dvh, 44rem); padding: 24px; border-radius: 28px; animation-name: sheetIn; animation-duration: var(--md-sys-motion-duration-medium2, 250ms); }
+  .note-panel { max-height: min(88dvh, 44rem); padding: 24px; border-radius: 28px; animation-name: sheetIn; animation-duration: var(--md-sys-motion-duration-medium2); }
 }
 @media (prefers-reduced-motion: reduce) { .note-panel { animation: none; } }
 
 /* Rises into place. Shared with the install sheet, whose class pointed at
    nothing until now. */
 @keyframes sheetIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-.sheet-in { animation: sheetIn var(--md-sys-motion-duration-medium2, 250ms) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.sheet-in { animation: sheetIn var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
 @media (prefers-reduced-motion: reduce) { .sheet-in { animation: none; } }
 
 
@@ -1188,7 +1157,6 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
 /* ==========================================================================
    MOTION
    ========================================================================== */
-@keyframes pageIn { from { opacity:0; transform: translate3d(0,10px,0);} to { opacity:1; transform:none; } }
 @keyframes rise   { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:none; } }
 @keyframes pop    { from { opacity:0; transform: scale(.97);} to { opacity:1; transform:none; } }
 
@@ -1227,7 +1195,6 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
   .celebrate-tick { animation: none; stroke-dasharray: none; }
 }
 .animate-pop  { animation: pop .35s var(--md-sys-motion-easing-emphasized-decelerate) both; }
-.animate-rise { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
 .stagger > * { animation: rise var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
 .stagger > *:nth-child(1){animation-delay:0ms}    .stagger > *:nth-child(2){animation-delay:45ms}
 .stagger > *:nth-child(3){animation-delay:90ms}   .stagger > *:nth-child(4){animation-delay:135ms}
@@ -1342,5 +1309,5 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
    bigger button for the one thing a screen is for.
    ========================================================================== */
 .h-sec { font-family: var(--md-ref-typeface-brand); font-size: 19px; font-weight: 800;
-  letter-spacing: var(--app-track-tighter); line-height: 1.2; color: var(--md-sys-color-on-surface); }
+  letter-spacing: var(--app-track-brand-snug); line-height: 1.2; color: var(--md-sys-color-on-surface); }
 .btn-big { min-height: 60px; font-size: 18px; font-weight: 800; }

@@ -16,7 +16,7 @@ export default async function HistoryPage() {
     <div>
       <BackLink href="/me" label="Me" />
       <h1 className="h-page">Your training</h1>
-      <p className="mt-3 text-[16px] font-semibold text-on-surface-variant">
+      <p className="mt-3 text-title-sm font-semibold text-on-surface-variant">
         {rows.length} session{rows.length === 1 ? '' : 's'} done
       </p>
       <div className="mt-7"><WorkoutList rows={rows} kind="history" /></div>

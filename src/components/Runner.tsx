@@ -225,15 +225,14 @@ export function Runner({
       <div className="animate-pop">
         {/* Ended early is still a session: the headline cheers either way, and
             the count underneath carries the difference. */}
-        <div className="celebrate mt-4 rounded-large-increased border border-brand-edge bg-surface-brand px-6 py-9 text-center shadow-level3">
-          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full"
-                style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+        <div className="celebrate mt-4 brand-card px-6 py-9 text-center">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full accent-badge">
             <Tick className="h-8 w-8" draw />
           </span>
-          <h1 className="site-wide mt-5 text-[32px] uppercase leading-none text-on-surface-brand">
+          <h1 className="site-wide mt-5 text-headline-lg uppercase leading-none text-on-surface-brand">
             {allDone ? 'Nice work!' : 'Good effort!'}
           </h1>
-          <p className="mt-3 text-[17px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-3 text-title font-semibold text-on-surface-brand-variant">
             {done.size} of {drills.length} drills · {played} min
           </p>
 
@@ -241,8 +240,8 @@ export function Runner({
               way or there. If it didn't save, the line below says that instead. */}
           {trainer && asksFeel && (save === 'saving' || save === 'saved') && (
             <div className="mt-5 flex items-center justify-center gap-2.5">
-              {face && <Avatar name={trainer.name} src={trainer.photo} className="h-9 w-9 text-[14px]" onBrand />}
-              <p className="text-[16px] font-bold text-on-surface-brand">
+              {face && <Avatar name={trainer.name} src={trainer.photo} className="h-9 w-9 text-body" onBrand />}
+              <p className="text-title-sm font-bold text-on-surface-brand">
                 {trainer.name ?? 'Your trainer'} will see this
               </p>
             </div>
@@ -250,7 +249,7 @@ export function Runner({
 
           {/* Said only when there's something to do about it. */}
           {(save === 'signin' || save === 'error') && (
-            <p role="status" className="mt-4 text-[14px] font-medium text-on-surface-brand-variant">
+            <p role="status" className="mt-4 text-body font-medium text-on-surface-brand-variant">
               {save === 'signin' ? (
                 <><Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> to keep this session.</>
               ) : (
@@ -270,7 +269,7 @@ export function Runner({
             <div className="mt-3 grid grid-cols-3 gap-2.5" role="group" aria-label={ask}>
               {([['easy', 'Easy'], ['right', 'Just right'], ['hard', 'Hard']] as const).map(([k, l]) => (
                 <button key={k} type="button" aria-pressed={feel === k}
-                        className={`pressable min-h-[60px] rounded-2xl border-2 text-[15px] font-bold
+                        className={`pressable min-h-[60px] rounded-large border-2 text-body-lg font-bold
                                     ${feel === k ? 'border-on-surface bg-on-surface text-surface' : 'border-outline text-on-surface'}`}
                         onClick={() => pickFeel(k)}>{l}</button>
               ))}
@@ -292,44 +291,43 @@ export function Runner({
       {/* The trainer once, here, with what they said about it; not on every drill. */}
       {face ? (
         <div className="mt-3 flex items-center gap-3">
-          <Avatar name={trainer!.name} src={trainer!.photo} className="h-10 w-10 text-[15px]" />
+          <Avatar name={trainer!.name} src={trainer!.photo} className="h-10 w-10 text-body-lg" />
           <p className="min-w-0 leading-snug">
-            <span className="block text-[16px] font-bold text-on-surface">
+            <span className="block text-title-sm font-bold text-on-surface">
               {note ? trainer!.name ?? 'Your trainer' : `From ${who}`}
             </span>
-            {note && <span className="block text-[16px] font-medium text-on-surface-variant">&ldquo;{note}&rdquo;</span>}
+            {note && <span className="block text-title-sm font-medium text-on-surface-variant">&ldquo;{note}&rdquo;</span>}
           </p>
         </div>
-      ) : note && <p className="mt-2 text-[16px] font-medium leading-snug text-on-surface-variant">{note}</p>}
+      ) : note && <p className="mt-2 text-title-sm font-medium leading-snug text-on-surface-variant">{note}</p>}
 
       {/* Speed works out "this week" on the phone; until it has, nothing. */}
       {checked && (review ? (
         // Done already: when, and the one thing to do about it.
-        <div className="mt-5 rounded-2xl border border-brand-edge bg-surface-brand px-5 py-5 text-on-surface-brand shadow-level2">
+        <div className="mt-5 brand-card px-5 py-5 shadow-level2">
           <div className="flex items-center gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full accent-badge">
               <Tick className="h-7 w-7" />
             </span>
-            <p className="font-brand text-[24px] font-extrabold leading-tight tracking-tighter">
+            <p className="font-brand text-display font-extrabold leading-tight tracking-brand-snug">
               Completed
-              <span className="block text-[16px] font-semibold tracking-normal text-on-surface-brand-variant">{DAYS[doneDay!]}</span>
+              <span className="block text-title-sm font-semibold tracking-normal text-on-surface-brand-variant">{DAYS[doneDay!]}</span>
             </p>
           </div>
           <button type="button" onClick={again}
-                  className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                  className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
             Do it again
           </button>
         </div>
       ) : (
         // How far through: one number and a bar. It stays in view while the
         // list scrolls under it, so "how much is left" is never a scroll away.
-        <div className="sticky top-[calc(env(safe-area-inset-top)+8px)] z-10 mt-5 rounded-2xl border border-brand-edge bg-surface-brand px-5 py-4 shadow-level2">
+        <div className="sticky top-[calc(env(safe-area-inset-top)+8px)] z-10 mt-5 brand-card px-5 py-4 shadow-level2">
           <div className="flex items-baseline justify-between text-on-surface-brand">
-            <span className="font-brand text-[22px] font-extrabold leading-none tracking-tighter">
+            <span className="font-brand text-display-sm font-extrabold leading-none tracking-brand-snug">
               {done.size} of {drills.length}
             </span>
-            <span className="text-[14px] font-bold text-on-surface-brand-variant">{allDone ? 'All done!' : 'done'}</span>
+            <span className="text-body font-bold text-on-surface-brand-variant">{allDone ? 'All done!' : 'done'}</span>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-brand-track">
             <div className="h-full rounded-full bg-brand-accent transition-all duration-500" style={{ width: `${pct}%` }} />
@@ -354,8 +352,8 @@ export function Runner({
             const opens = more && !dim;
             const body = (
               <>
-                <span className="block text-[17px] font-bold leading-snug text-on-surface">{d.name}</span>
-                <span className="mt-1 block text-[16px] font-semibold text-on-surface-variant">
+                <span className="block text-title font-bold leading-snug text-on-surface">{d.name}</span>
+                <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
                   {/* "rest 1 min", but just "walk back": a rest that's an
                       instruction rather than a time doesn't take "rest". */}
                   {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
@@ -363,7 +361,7 @@ export function Runner({
                   {d.effort && ` · ${EFFORT[d.effort].label}`}
                 </span>
                 {/* The one thing to think about at speed. */}
-                {d.cue && <span className="mt-1.5 block text-[15px] font-semibold leading-snug text-on-surface">&ldquo;{d.cue}&rdquo;</span>}
+                {d.cue && <span className="mt-1.5 block text-body-lg font-semibold leading-snug text-on-surface">&ldquo;{d.cue}&rdquo;</span>}
               </>
             );
             return (
@@ -394,7 +392,7 @@ export function Runner({
                 {/* A link that can't play here, and nothing else to show. */}
                 {away && !more && !dim && (
                   <div className="border-t border-outline-variant">
-                    <Watch href={d.video_url!} className="pressable flex min-h-12 w-full items-center gap-2 px-4 text-[15px] font-bold text-on-surface" />
+                    <Watch href={d.video_url!} className="pressable flex min-h-12 w-full items-center gap-2 px-4 text-body-lg font-bold text-on-surface" />
                   </div>
                 )}
 
@@ -408,7 +406,7 @@ export function Runner({
                       {steps && (
                         <ol className="space-y-2.5">
                           {d.how!.map((step, n) => (
-                            <li key={n} className="flex gap-2.5 text-[17px] leading-snug text-on-surface">
+                            <li key={n} className="flex gap-2.5 text-title leading-snug text-on-surface">
                               <span className="w-4 shrink-0 font-extrabold text-primary">{n + 1}</span>
                               <span>{step}</span>
                             </li>
@@ -416,7 +414,7 @@ export function Runner({
                         </ol>
                       )}
                       {d.effort && (
-                        <p className="mt-3 text-[15px] text-on-surface-variant">
+                        <p className="mt-3 text-body-lg text-on-surface-variant">
                           <span className="font-bold text-on-surface">{EFFORT[d.effort].label}:</span>{' '}
                           {EFFORT[d.effort].means}
                         </p>
@@ -439,7 +437,7 @@ export function Runner({
       )}
       {!review && !allDone && done.size > 0 && phase === 'running' && (
         <button onClick={() => setPhase('confirm-end')}
-                className="btn-ghost pressable mt-6 min-h-[52px] w-full text-[15px] font-bold">
+                className="btn-ghost pressable mt-6 min-h-[52px] w-full text-body-lg font-bold">
           Stop early
         </button>
       )}
@@ -488,7 +486,7 @@ function Circle({ on, here, locked, name, onTick }: {
 function Video({ id, upright, title, href }: { id: string; upright: boolean; title: string; href: string }) {
   return (
     <div className="mb-4">
-      <div className={`overflow-hidden rounded-xl bg-black ${upright ? 'mx-auto max-w-full' : 'w-full'}`}
+      <div className={`overflow-hidden rounded-medium bg-black ${upright ? 'mx-auto max-w-full' : 'w-full'}`}
            style={upright ? { aspectRatio: '9 / 16', height: 'min(64dvh, 520px)' } : { aspectRatio: '16 / 9' }}>
         <iframe src={`https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0`}
                 title={`${title}: video`} loading="lazy" className="h-full w-full"
@@ -496,7 +494,7 @@ function Video({ id, upright, title, href }: { id: string; upright: boolean; tit
                 allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
       </div>
       <a href={href} target="_blank" rel="noopener"
-         className="mt-2 block text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+         className="mt-2 block text-center text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
         Not playing? Open it on YouTube
       </a>
     </div>

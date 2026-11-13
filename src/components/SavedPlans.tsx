@@ -84,7 +84,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
                       iOS zooms the page on focus. */}
                   <input value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus
                     maxLength={60} aria-label={`New name for ${p.name}`} enterKeyHint="done"
-                    className="text-[16px]" />
+                    className="text-title-sm" />
                 </label>
                 <div className="mt-3 flex gap-2.5">
                   <button type="button" onClick={() => setRenaming(null)} className="btn-ghost flex-1">Cancel</button>
@@ -97,7 +97,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
               <div className="flex items-center gap-3">
                 <Link href={p.active ? '/plan' : `/plan?plan=${p.id}`} className="min-w-0 flex-1">
                   <div className="h-card truncate">{p.name}</div>
-                  <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
+                  <div className="mt-1 text-body-sm font-medium text-on-surface-variant">
                     {p.active ? 'Active' : `Saved ${savedOn(p.created_at)}`}
                   </div>
                 </Link>
@@ -135,7 +135,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
           </li>
         ))}
       </ul>
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
       <Link href="/plan?new=1" className="btn-ghost pressable mt-3 w-full">Build another week</Link>
 
       <ConfirmSheet

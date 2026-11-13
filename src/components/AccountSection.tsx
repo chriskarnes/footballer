@@ -68,9 +68,9 @@ export function AccountSection({ email, version, canBrand, role }: {
         )}
         {/* The whole row is the button, like the row above it. */}
         <SignOut className="pressable flex min-h-[56px] w-full items-center px-4 text-left
-                            text-[15px] font-bold text-on-surface" />
+                            text-body-lg font-bold text-on-surface" />
       </div>
-      <p className="mt-3 pl-1 text-[12px] text-on-surface-variant">{email && `${email} · `}v{version}</p>
+      <p className="mt-3 pl-1 text-caption text-on-surface-variant">{email && `${email} · `}v{version}</p>
     </section>
   );
 }
@@ -83,8 +83,8 @@ const Chevron = () => (
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex min-h-[56px] items-center justify-between gap-4 px-4">
-      <span className="shrink-0 text-[15px] font-bold text-on-surface">{label}</span>
-      <span className="flex min-w-0 items-center text-[13px] text-on-surface-variant">{children}</span>
+      <span className="shrink-0 text-body-lg font-bold text-on-surface">{label}</span>
+      <span className="flex min-w-0 items-center text-body-sm text-on-surface-variant">{children}</span>
     </div>
   );
 }

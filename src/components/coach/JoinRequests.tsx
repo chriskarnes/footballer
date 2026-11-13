@@ -27,10 +27,10 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
         {left.map((r) => (
           <li key={r.user_id} className="px-4 py-4">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="truncate text-[15px] font-bold text-on-surface">{r.name}</span>
-              <span className="shrink-0 text-[13px] text-on-surface-variant">{r.when}</span>
+              <span className="truncate text-body-lg font-bold text-on-surface">{r.name}</span>
+              <span className="shrink-0 text-body-sm text-on-surface-variant">{r.when}</span>
             </div>
-            {r.message && <p className="mt-1 text-[14px] leading-snug text-on-surface-variant">{r.message}</p>}
+            {r.message && <p className="mt-1 text-body leading-snug text-on-surface-variant">{r.message}</p>}
             <div className="mt-3 grid grid-cols-2 gap-2.5">
               <button type="button" disabled={busy} className="btn-primary btn-sm pressable" onClick={() => answer(r.user_id, true)}>Let in</button>
               <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => answer(r.user_id, false)}>Decline</button>
@@ -38,7 +38,7 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
           </li>
         ))}
       </ul>
-      {err && <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-body font-semibold text-on-surface">{err}</p>}
     </section>
   );
 }

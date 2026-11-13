@@ -68,7 +68,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
     <div>
       <p className="eyebrow mb-2.5">To</p>
       {fixed ? (
-        <p className="text-[15px] font-bold text-on-surface">{fixed.name}</p>
+        <p className="text-body-lg font-bold text-on-surface">{fixed.name}</p>
       ) : (
         <>
           <div className="segmented" role="radiogroup" aria-label="Send to">
@@ -80,7 +80,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
           </div>
           <div className="mt-3 min-h-[44px]">
             {mode === 'everyone' && (
-              <p className="pt-2.5 text-[14px] text-on-surface-variant">All {players.length} {players.length === 1 ? 'player' : 'players'} in the academy.</p>
+              <p className="pt-2.5 text-body text-on-surface-variant">All {players.length} {players.length === 1 ? 'player' : 'players'} in the academy.</p>
             )}
             {mode === 'groups' && (
               <div className="flex flex-wrap gap-2">
@@ -111,17 +111,17 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
         <div className="card-flat mt-3 divide-y divide-outline-variant overflow-hidden">
           {QUICK.map((q) => (
             <button key={q} type="button" onClick={() => setBody(q)}
-                    className="pressable block w-full px-4 py-2.5 text-left text-[14px] text-on-surface">{q}</button>
+                    className="pressable block w-full px-4 py-2.5 text-left text-body text-on-surface">{q}</button>
           ))}
         </div>
       )}
 
       <button type="button" disabled={pending || !body.trim() || !to.length} onClick={send}
-              className="btn-primary pressable mt-6 w-full disabled:opacity-50">
+              className="btn-primary pressable mt-6 w-full">
         {pending ? 'Sending…' : !to.length ? (mode === 'groups' ? 'Pick a group' : 'Pick a player') : `Send to ${who}`}
       </button>
-      <p className="mt-3 text-center text-[13px] text-on-surface-variant">Players see it in the app and can&rsquo;t reply.</p>
-      {err && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">Couldn&rsquo;t send: {err}</p>}
+      <p className="mt-3 text-center text-body-sm text-on-surface-variant">Players see it in the app and can&rsquo;t reply.</p>
+      {err && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">Couldn&rsquo;t send: {err}</p>}
     </div>
   );
 }

@@ -273,12 +273,12 @@ function Train({
         Build my session
       </button>
       {/* For a player who doesn't know what to pick, which at this age is most of them. */}
-      <button type="button" onClick={surpriseMe} className="btn-ghost pressable mt-3 min-h-[52px] w-full text-[15px] font-bold">
+      <button type="button" onClick={surpriseMe} className="btn-ghost pressable mt-3 min-h-[52px] w-full text-body-lg font-bold">
         Surprise me
       </button>
 
       {miss && (
-        <p role="status" className="hint-in mt-5 text-center text-[15px] font-semibold text-on-surface">
+        <p role="status" className="hint-in mt-5 text-center text-body-lg font-semibold text-on-surface">
           Nothing matched. Try a longer session.
         </p>
       )}
@@ -298,7 +298,7 @@ function Train({
             autoCapitalize="sentences"
             autoCorrect="off"
             // 16px, not 15: anything smaller makes iOS zoom the whole page on focus.
-            className="min-w-0 flex-1 bg-transparent py-2.5 text-[16px] font-medium
+            className="min-w-0 flex-1 bg-transparent py-2.5 text-title-sm font-medium
                        text-on-surface outline-none placeholder:text-on-surface-variant"
           />
           <button onClick={ask} disabled={busy || !text.trim()}
@@ -308,7 +308,7 @@ function Train({
           </button>
         </div>
         {reply && (
-          <p key={reply} className="hint-in mt-4 pl-1 text-[15px] font-medium text-on-surface">{reply}</p>
+          <p key={reply} className="hint-in mt-4 pl-1 text-body-lg font-medium text-on-surface">{reply}</p>
         )}
       </div>
     </div>

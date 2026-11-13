@@ -24,16 +24,16 @@ export default async function NotesPage() {
         <ul className="mt-6 space-y-2.5">
           {notes.map((n) => (
             <li key={n.id} className="card p-5">
-              <p className="flex items-center gap-2 text-[13.5px] font-bold text-on-surface-variant">
+              <p className="flex items-center gap-2 text-body font-bold text-on-surface-variant">
                 {!n.seen && <span className="h-2 w-2 rounded-full bg-on-surface" aria-label="New" />}
                 {n.author} · {ago(n.at)}
               </p>
-              <p className="mt-1.5 whitespace-pre-line text-[16px] leading-snug text-on-surface">{n.body}</p>
+              <p className="mt-1.5 whitespace-pre-line text-title-sm leading-snug text-on-surface">{n.body}</p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-[14px] text-on-surface-variant">No notes yet.</p>
+        <p className="mt-4 text-body text-on-surface-variant">No notes yet.</p>
       )}
       {!!unread.length && <MarkSeen ids={unread} />}
     </div>

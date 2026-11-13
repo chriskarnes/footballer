@@ -49,8 +49,8 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
                 <details key={p.id} className="card group overflow-hidden">
                   <summary className="pressable flex cursor-pointer list-none items-center gap-4 p-4">
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[16px] font-bold leading-snug text-on-surface">{p.name}</span>
-                      <span className="mt-0.5 block text-[14px] font-semibold text-on-surface-variant">{sessions.length} sessions</span>
+                      <span className="block text-title-sm font-bold leading-snug text-on-surface">{p.name}</span>
+                      <span className="mt-0.5 block text-body font-semibold text-on-surface-variant">{sessions.length} sessions</span>
                     </span>
                     <span className="transition-transform group-open:rotate-90"><Chevron /></span>
                   </summary>
@@ -59,8 +59,8 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
                       <li key={s.id}>
                         <Link href={`/train/session/${s.id}?from=library`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[15px] font-bold text-on-surface">{s.name}</span>
-                            <span className="block text-[13.5px] font-medium text-on-surface-variant">Week {s.week}</span>
+                            <span className="block text-body-lg font-bold text-on-surface">{s.name}</span>
+                            <span className="block text-body font-medium text-on-surface-variant">Week {s.week}</span>
                           </span>
                           <Chevron />
                         </Link>
@@ -82,8 +82,8 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
               <li key={d.id}>
                 <Link href={`/train/drill/${d.id}?from=library`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-bold text-on-surface">{d.name}</span>
-                    <span className="block truncate text-[13.5px] font-medium text-on-surface-variant">{d.amount ?? `${d.minutes} min`}</span>
+                    <span className="block text-body-lg font-bold text-on-surface">{d.name}</span>
+                    <span className="block truncate text-body font-medium text-on-surface-variant">{d.amount ?? `${d.minutes} min`}</span>
                   </span>
                   <Chevron />
                 </Link>

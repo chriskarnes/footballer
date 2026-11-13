@@ -66,7 +66,7 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
           <li key={w.id} className="card flex items-center gap-3 p-4">
             <div className="min-w-0 flex-1">
               <div className="h-card truncate">{w.title}</div>
-              <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">{facts}</div>
+              <div className="mt-1 text-body-sm font-medium text-on-surface-variant">{facts}</div>
             </div>
             {kind === 'saved' && (
               <button type="button" onClick={() => setConfirm(w.id)}
@@ -97,7 +97,7 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
         );
       })}
     </ul>
-    {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+    {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
     <ConfirmSheet open={!!asking} busy={busy} title={`Delete ${asking?.title ?? ''}?`}
                   body="It comes off your saved sessions. Anything you’ve done stays in your training."
                   confirmLabel="Delete" onConfirm={() => asking && remove(asking.id)} onCancel={() => setConfirm(null)} />

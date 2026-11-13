@@ -19,7 +19,7 @@ export async function Brand({ small }: { small?: boolean }) {
   const name = brand?.name ?? 'Train.futbol';
   if (small) return <Wordmark name={name} logo={brand?.logo} />;
   return (
-    <span className="inline-flex rounded-[20px] border border-brand-edge bg-surface-brand px-6 py-4 text-on-surface-brand shadow-level3">
+    <span className="inline-flex brand-card px-6 py-4">
       <Wordmark name={name} logo={brand?.logo} size="lg" onBrand />
     </span>
   );

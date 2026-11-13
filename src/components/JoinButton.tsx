@@ -9,12 +9,12 @@ export function JoinButton({ code, label, email, who }: { code: string; label: s
   return (
     <div className="card p-5">
       <div className="h-card">{label}</div>
-      <p className="mt-1 text-[13.5px] text-on-surface-variant">Signed in as {email}.</p>
+      <p className="mt-1 text-body text-on-surface-variant">Signed in as {email}.</p>
       <button type="button" disabled={pending} className="btn-primary pressable mt-4 w-full"
               onClick={() => start(async () => { const r = await joinAcademy(code, who); if (r && !r.ok) setErr(r.error); })}>
         {pending ? 'Joining…' : 'Join'}
       </button>
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

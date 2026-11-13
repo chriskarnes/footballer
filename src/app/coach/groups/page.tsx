@@ -46,14 +46,14 @@ export default async function GroupsPage() {
               <li key={g.id}>
                 <Link href={`/coach/groups/${g.id}`} className="card pressable block p-4">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="truncate text-[15px] font-bold text-on-surface">{g.name}</span>
-                    <span className="shrink-0 text-[13px] text-on-surface-variant">{members.length} {members.length === 1 ? 'player' : 'players'}</span>
+                    <span className="truncate text-body-lg font-bold text-on-surface">{g.name}</span>
+                    <span className="shrink-0 text-body-sm text-on-surface-variant">{members.length} {members.length === 1 ? 'player' : 'players'}</span>
                   </div>
-                  <p className="mt-1 text-[14px] text-on-surface-variant">
+                  <p className="mt-1 text-body text-on-surface-variant">
                     {[when, program ? (n ? `${program.name} · Week ${n} of ${program.weeks}` : `${program.name} · ${g.starts_on && g.starts_on > today ? 'not started' : 'finished'}`) : 'No program'].filter(Boolean).join(' · ')}
                   </p>
                   {!!members.length && (
-                    <p className="mt-2.5 flex items-center gap-2 text-[14px] font-semibold text-on-surface">
+                    <p className="mt-2.5 flex items-center gap-2 text-body font-semibold text-on-surface">
                       <StatusDot status={behind ? 'warn' : 'good'} />
                       {behind ? `${behind} behind this week` : 'All on track'}
                     </p>
@@ -70,17 +70,17 @@ export default async function GroupsPage() {
       )}
 
       {!!players.length && !!solo && !!active.length && (
-        <p className="mt-4 pl-1 text-[14px] text-on-surface-variant">
+        <p className="mt-4 pl-1 text-body text-on-surface-variant">
           {solo ? `${solo} ${solo === 1 ? 'player isn’t' : 'players aren’t'} in a group yet.` : ''}
         </p>
       )}
 
       {!!archived.length && (
         <details className="mt-8">
-          <summary className="cursor-pointer text-[14px] font-semibold text-on-surface-variant">Finished groups · {archived.length}</summary>
+          <summary className="cursor-pointer text-body font-semibold text-on-surface-variant">Finished groups · {archived.length}</summary>
           <ul className="card mt-3 divide-y divide-outline-variant">
             {archived.map((g) => (
-              <li key={g.id}><Link href={`/coach/groups/${g.id}`} className="block px-4 py-3 text-[14px] font-semibold text-on-surface">{g.name}</Link></li>
+              <li key={g.id}><Link href={`/coach/groups/${g.id}`} className="block px-4 py-3 text-body font-semibold text-on-surface">{g.name}</Link></li>
             ))}
           </ul>
         </details>

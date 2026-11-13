@@ -71,8 +71,8 @@ const minutes = (d: Extract<DayPlan, { type: 'session' }>) => Math.round(session
  */
 export function SpeedNow() {
   const s = useSpeed();
-  const big = 'btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand';
-  const info = 'mt-2 text-[16px] font-semibold text-on-surface-brand-variant';
+  const big = 'btn-primary btn-on-brand btn-big pressable mt-5 w-full';
+  const info = 'mt-2 text-title-sm font-semibold text-on-surface-brand-variant';
 
   // Until the stored start is read, the band holds its shape.
   if (!s.ready || !s.now) {
@@ -125,7 +125,7 @@ export function SpeedNow() {
   // Where they are in the year, in their words; the block and the week's
   // name are the planner's, in "For parents and coaches".
   const year = (
-    <p className="mt-4 text-[15px] font-semibold text-on-surface-brand-variant">
+    <p className="mt-4 text-body-lg font-semibold text-on-surface-brand-variant">
       {pos.phase.name} · week {pos.weekOfYear + 1} of {pos.totalWeeks}
     </p>
   );
@@ -184,13 +184,13 @@ export function SpeedWeek() {
     <section className="mt-5">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="h-sec">This week</h2>
-        <p className="text-[15px] font-bold text-on-surface-variant">{training.filter(isDone).length} of {training.length} done</p>
+        <p className="text-body-lg font-bold text-on-surface-variant">{training.filter(isDone).length} of {training.length} done</p>
       </div>
       <ul className="space-y-2.5">
         {days.map((d) => {
           // Today's row says so in a pill where the day's name would be.
           const day = d.weekday === pos.today
-            ? <span className="mr-1 inline-block rounded-full bg-on-surface px-2.5 align-middle text-[14px] font-bold leading-6 text-surface">Today</span>
+            ? <span className="mr-1 inline-block rounded-full bg-on-surface px-2.5 align-middle text-body font-bold leading-6 text-surface">Today</span>
             : FULL_DAY[d.weekday];
           if (d.type === 'off') {
             return (
@@ -198,7 +198,7 @@ export function SpeedWeek() {
                 <span className="flex w-[52px] shrink-0 items-center justify-center" aria-hidden="true">
                   <span className="h-1.5 w-1.5 rounded-full bg-outline" />
                 </span>
-                <span className="min-w-0 flex-1 pl-1.5 text-[15px] font-semibold text-on-surface-variant">{day} · {d.label}</span>
+                <span className="min-w-0 flex-1 pl-1.5 text-body-lg font-semibold text-on-surface-variant">{day} · {d.label}</span>
               </li>
             );
           }
@@ -210,10 +210,10 @@ export function SpeedWeek() {
               <Link href={href(d)} className="card pressable flex items-center gap-1.5 p-3">
                 <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center"><TickMark on={done} /></span>
                 <span className="min-w-0 flex-1 py-2 pl-1.5 pr-1">
-                  <span className="block text-[17px] font-bold leading-snug text-on-surface">
+                  <span className="block text-title font-bold leading-snug text-on-surface">
                     {d.type === 'test' ? 'Test day' : d.session.name}
                   </span>
-                  <span className="mt-1 block text-[16px] font-semibold text-on-surface-variant">
+                  <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
                     {day} · {d.type === 'test' ? 'replaces top speed' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
                     {missed ? ' · Missed' : ''}
                   </span>

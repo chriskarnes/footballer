@@ -32,8 +32,8 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
 
       <label className="mt-4 flex cursor-pointer items-start justify-between gap-4">
         <span>
-          <span className="block text-[14px] font-bold text-on-surface">Browse your library</span>
-          <span className="mt-0.5 block text-[13px] leading-snug text-on-surface-variant">
+          <span className="block text-body font-bold text-on-surface">Browse your library</span>
+          <span className="mt-0.5 block text-body-sm leading-snug text-on-surface-variant">
             {library ? 'Every program and drill, in their Library tab. They can run any of them.' : 'They see only what you set them.'}
           </span>
         </span>
@@ -42,11 +42,11 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
       </label>
 
       <div className="mt-5">
-        <div className="text-[14px] font-bold text-on-surface">Add a session when they have time</div>
+        <div className="text-body font-bold text-on-surface">Add a session when they have time</div>
         <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Extra sessions a week">
           {[0, 1, 2, 3].map((n) => <Chip key={n} on={extras === n} onClick={() => setExtras(n)}>{n ? `${n} a week` : 'Off'}</Chip>)}
         </div>
-        <p className="mt-2 text-[13px] leading-snug text-on-surface-variant">
+        <p className="mt-2 text-body-sm leading-snug text-on-surface-variant">
           {extras
             ? 'Built from their focus and session length, with drills they haven’t done this week. Only once today’s session is done, and never on a game day.'
             : 'Players stick to the week you set.'}
@@ -55,8 +55,8 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
 
       <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
         <span>
-          <span className="block text-[14px] font-bold text-on-surface">Do Speed &amp; Stamina</span>
-          <span className="mt-0.5 block text-[13px] leading-snug text-on-surface-variant">
+          <span className="block text-body font-bold text-on-surface">Do Speed &amp; Stamina</span>
+          <span className="mt-0.5 block text-body-sm leading-snug text-on-surface-variant">
             {speed
               ? 'A year of sprint, jump and strength sessions, in their Speed tab.'
               : 'No Speed tab. Anything they’ve done there is kept if you turn it back on.'}
@@ -71,7 +71,7 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
           {pending ? 'Saving…' : 'Save'}
         </button>
       )}
-      {err && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

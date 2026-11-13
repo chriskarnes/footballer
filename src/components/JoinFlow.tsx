@@ -39,12 +39,12 @@ export function JoinFlow({ code, role, email, initial }: {
             const on = who === c.who;
             return (
               <label key={c.who}
-                     className={`pressable relative cursor-pointer rounded-2xl border-2 p-3.5 transition-colors
+                     className={`pressable relative cursor-pointer rounded-large border-2 p-3.5 transition-colors
                        ${on ? 'border-primary bg-primary-container' : 'border-outline-variant'}`}>
                 <input type="radio" name="who" value={c.who} checked={on} onChange={() => setWho(c.who)} className="sr-only" />
                 <span className="flex items-center justify-between gap-2">
-                  <span className="text-[15px] font-bold leading-tight text-on-surface">{c.title}</span>
-                  <span aria-hidden className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 text-[11px] font-black
+                  <span className="text-body-lg font-bold leading-tight text-on-surface">{c.title}</span>
+                  <span aria-hidden className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 text-label-sm font-black
                     ${on ? 'border-primary bg-primary text-on-primary' : 'border-outline'}`}>{on && '✓'}</span>
                 </span>
               </label>

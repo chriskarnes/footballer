@@ -48,14 +48,14 @@ export function AvatarPicker({ name, email, updatedAt, note = 'Optional. Only yo
 
   return (
     <div className="mt-6 flex items-center gap-4">
-      <Avatar name={name} email={email} src={avatarSrc(at)} className="h-16 w-16 text-[22px]" />
+      <Avatar name={name} email={email} src={avatarSrc(at)} className="h-16 w-16 text-display-sm" />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => input.current?.click()}>
             {busy ? 'Saving…' : at ? 'Change photo' : 'Add a photo'}
           </button>
           {at && !busy && (
-            <button type="button" className="px-2 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4"
+            <button type="button" className="px-2 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4"
                     onClick={() => start(async () => {
                       setErr('');
                       const r = await removeAvatar();
@@ -65,7 +65,7 @@ export function AvatarPicker({ name, email, updatedAt, note = 'Optional. Only yo
             </button>
           )}
         </div>
-        <p className="mt-1.5 text-[12.5px] text-on-surface-variant" role={err ? 'alert' : undefined}>
+        <p className="mt-1.5 text-body-sm text-on-surface-variant" role={err ? 'alert' : undefined}>
           {err || note}
         </p>
         <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1}

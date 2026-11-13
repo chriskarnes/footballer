@@ -22,7 +22,7 @@ export async function BrandBand({ right, overlap = false, compact = false, name,
            style={{ backgroundImage: 'radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--app-brand-accent) 28%, transparent), transparent 70%)' }} />
       <header className="flex min-h-11 items-center justify-between gap-3">
         <Wordmark name={name ?? brand?.name ?? 'Train.futbol'} logo={name ? null : brand?.logo} onBrand />
-        {right && <span className="text-[12.5px] font-semibold text-on-surface-brand-variant">{right}</span>}
+        {right && <span className="text-body-sm font-semibold text-on-surface-brand-variant">{right}</span>}
       </header>
       <div className={compact ? 'mt-4' : 'mt-9'}>{children}</div>
     </section>

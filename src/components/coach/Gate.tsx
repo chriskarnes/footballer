@@ -24,7 +24,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
     <div className="pt-6">
       <p className="eyebrow mb-3">Trainer</p>
       <h1 className="h-page">{title}</h1>
-      <div className="mt-3 text-[14px] leading-relaxed text-on-surface-variant">{children}</div>
+      <div className="mt-3 text-body leading-relaxed text-on-surface-variant">{children}</div>
     </div>
   );
 }

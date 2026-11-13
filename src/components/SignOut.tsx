@@ -12,7 +12,7 @@ import { browserClient } from '@/lib/supabase/client';
  * client, and the server components have to be re-rendered for Me to notice.
  */
 export function SignOut({
-  className = 'pressable text-[13px] font-semibold text-on-surface-variant underline underline-offset-4', to = '/me',
+  className = 'pressable text-body-sm font-semibold text-on-surface-variant underline underline-offset-4', to = '/me',
 }: { className?: string; /** Where to go after: Me, or back to the page that asked. */ to?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);

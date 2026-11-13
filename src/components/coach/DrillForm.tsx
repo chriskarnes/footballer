@@ -51,7 +51,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
         <Field label="Minutes"><input name="minutes" type="number" inputMode="numeric" min={1} max={120} defaultValue={drill?.minutes ?? 5} /></Field>
       </div>
       <fieldset>
-        <legend className="mb-1.5 text-[14px] font-semibold text-on-surface-variant">Works on</legend>
+        <legend className="mb-1.5 text-body font-semibold text-on-surface-variant">Works on</legend>
         <div className="flex flex-wrap gap-2">
           {(Object.entries(FOCUS_LABELS) as [FocusArea, string][]).map(([k, l]) => (
             <span key={k} className={!tags.includes(k) && tags.length >= MAX_TAGS ? 'opacity-40' : ''}>
@@ -60,7 +60,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
           ))}
         </div>
         {tags.map((t) => <input key={t} type="hidden" name="focus" value={t} />)}
-        <p className="mt-1.5 text-[13px] text-on-surface-variant">
+        <p className="mt-1.5 text-body-sm text-on-surface-variant">
           {tags.length >= MAX_TAGS ? `That’s three. Main focus: ${FOCUS_LABELS[tags[0]]}, the first you picked.`
             : tags.length > 1 ? `Main focus: ${FOCUS_LABELS[tags[0]]}, the first you picked.`
             : 'Up to three. The first you pick is its main focus.'}
@@ -81,7 +81,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
       </Field>
       {yt && (
         <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="Video preview"
-             className="aspect-video w-full rounded-[16px] object-cover" />
+             className="aspect-video w-full rounded-large object-cover" />
       )}
       <Field label="How to do it" hint="A few short lines. Players see it under the drill.">
         <textarea name="how" rows={4} maxLength={1000} defaultValue={drill?.how ?? ''}
@@ -96,7 +96,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
       </div>
       {drill && (
         <>
-          <button type="button" className="w-full text-center text-[14px] font-semibold text-on-surface-variant underline underline-offset-4"
+          <button type="button" className="w-full text-center text-body font-semibold text-on-surface-variant underline underline-offset-4"
                   onClick={() => setConfirm(true)}>Delete this drill</button>
           <ConfirmSheet open={confirm} title="Delete this drill?" confirmLabel="Delete"
             body="It comes out of every session that uses it."
@@ -105,7 +105,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
               const r = await deleteDrill(drill.id);
               if (r.ok) window.location.href = back; else { setConfirm(false); setGone(r.error); }
             }} />
-          {gone && <p role="alert" className="text-center text-[14px] font-semibold text-on-surface">{gone}</p>}
+          {gone && <p role="alert" className="text-center text-body font-semibold text-on-surface">{gone}</p>}
         </>
       )}
     </form>

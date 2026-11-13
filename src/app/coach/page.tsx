@@ -90,14 +90,14 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           <span className="shrink-0"><TickMark on={false} here /></span>
           <div className="min-w-0 flex-1">
             <div className="h-card">Finish setting up {academy.name}</div>
-            <p className="mt-0.5 text-[14px] text-on-surface-variant">{steps.filter(Boolean).length} of 5 done</p>
+            <p className="mt-0.5 text-body text-on-surface-variant">{steps.filter(Boolean).length} of 5 done</p>
           </div>
           <Link href="/coach/setup" className="btn-primary btn-sm pressable shrink-0">Continue</Link>
         </section>
       )}
       {askName && <YourName />}
       {ready && (
-        <p role="status" className="card-flat mt-4 px-4 py-3 text-[14px] font-semibold text-on-surface lg:max-w-xl">
+        <p role="status" className="card-flat mt-4 px-4 py-3 text-body font-semibold text-on-surface lg:max-w-xl">
           {ready === 'link'
             ? `${academy.name} is set up. Send your invite link and players join from it.`
             : `${academy.name} is set up. Players can find you by name in Find your trainer, or join from your invite link.`}
@@ -119,7 +119,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         </nav>
       )}
 
-      {error && <p className="mt-4 text-[14px] text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
+      {error && <p className="mt-4 text-body text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
 
       {/* Phone: cards, worst first. */}
       <ul className="mt-6 space-y-2.5 lg:hidden">
@@ -128,11 +128,11 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           return (
             <li key={p.user_id} className="card flex items-center gap-3 py-4 pl-4 pr-3">
               <Link href={`/coach/players/${p.user_id}`} className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-bold text-on-surface">{p.name}</span>
+                <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
                 {!inGroup && !!p.groups.length && (
-                  <span className="block truncate text-[12px] font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
+                  <span className="block truncate text-caption font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
                 )}
-                <span className="mt-1 flex items-center gap-2 text-[14px] text-on-surface-variant">
+                <span className="mt-1 flex items-center gap-2 text-body text-on-surface-variant">
                   <StatusDot status={p.progress.status} />
                   <span className="truncate">
                     <span className="font-semibold text-on-surface">{p.progress.reason}</span>
@@ -152,8 +152,8 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       {/* Laptop: the roster as a table, still worst first. */}
       {!!players.length && (
         <div className="card mt-6 hidden overflow-hidden lg:block">
-          <table className="w-full text-left text-[14px]">
-            <thead className="border-b border-outline-variant text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">
+          <table className="w-full text-left text-body">
+            <thead className="border-b border-outline-variant eyebrow">
               <tr><Th>Player</Th><Th>Groups</Th><Th>This week</Th><Th>Status</Th><Th>Last trained</Th><Th><span className="sr-only">Actions</span></Th></tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
@@ -164,15 +164,15 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                     <td className="px-5 py-3.5 font-bold text-on-surface">
                       <Link href={`/coach/players/${p.user_id}`} className="after:absolute after:inset-0">{p.name}</Link>
                     </td>
-                    <td className="max-w-[14rem] truncate px-5 py-3.5 text-[14px] text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
+                    <td className="max-w-[14rem] truncate px-5 py-3.5 text-body text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
                     <td className="px-5 py-3.5"><WeekDots week={p.progress.week} /></td>
-                    <td className="px-5 py-3.5 text-[14px] text-on-surface-variant">
+                    <td className="px-5 py-3.5 text-body text-on-surface-variant">
                       <span className="flex items-center gap-2">
                         <StatusDot status={p.progress.status} />
                         <span><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-[14px] text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-body text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
                     <td className="relative z-10 px-5 py-3.5 text-right">
                       {p.progress.status !== 'good' && (
                         <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable">Nudge</NoteButton>
@@ -191,12 +191,12 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         <section className="mt-6 lg:max-w-xl">
           <div className="card p-5">
             <div className="h-card">Invite your players</div>
-            <p className="mt-1 text-[14px] leading-snug text-on-surface-variant">
+            <p className="mt-1 text-body leading-snug text-on-surface-variant">
               Text this link to a player or a parent. They sign in with their email and appear here.
             </p>
             {invite?.code
               ? <InviteLink path={`/join/${invite.code}`} role="player" canRotate={false} />
-              : <p className="mt-3 text-[14px]">No invite link yet.</p>}
+              : <p className="mt-3 text-body">No invite link yet.</p>}
           </div>
         </section>
       )}

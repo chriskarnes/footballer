@@ -16,7 +16,7 @@ export default async function RequestPage() {
     return (
       <div className="pt-10">
         <h1 className="h-page">Open your trainer&rsquo;s address</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">Asking to join happens on your trainer&rsquo;s own page.</p>
+        <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">Asking to join happens on your trainer&rsquo;s own page.</p>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export default async function RequestPage() {
       <BrandBand overlap>
         <BandTag>Ask to join</BandTag>
         <BandTitle>{v.academy.name}</BandTitle>
-        <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+        <p className="mt-4 text-title-sm leading-relaxed text-on-surface-brand-variant">
           Your trainer lets you in, then your sessions appear here. If they sent you a link, use that instead: it skips this step.
         </p>
       </BrandBand>
@@ -44,7 +44,7 @@ export default async function RequestPage() {
         ) : v.role ? (
           <div className="card p-5">
             <div className="h-card">You&rsquo;re already in</div>
-            <p className="mt-1 text-[13.5px] text-on-surface-variant">Signed in as {v.user.email}.</p>
+            <p className="mt-1 text-body text-on-surface-variant">Signed in as {v.user.email}.</p>
             <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>
@@ -53,7 +53,7 @@ export default async function RequestPage() {
           <AskToJoin academy={v.academy.name} email={v.user.email ?? ''} pending={pending} />
         )}
       </div>
-      <p className="mt-6 text-center text-[14px] text-on-surface-variant">
+      <p className="mt-6 text-center text-body text-on-surface-variant">
         <Link href="/" className="font-semibold text-on-surface underline underline-offset-4">Back to Train</Link>
       </p>
     </div>

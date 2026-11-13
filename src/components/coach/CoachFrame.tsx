@@ -40,20 +40,20 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
       {/* Desktop: the sidebar. */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-outline-variant bg-surface-container-low px-3 py-6 lg:flex">
         <div className="px-3">{brand}</div>
-        <p className="mt-1 px-3 text-[12px] font-semibold text-on-surface-variant">Trainer</p>
+        <p className="mt-1 px-3 text-caption font-semibold text-on-surface-variant">Trainer</p>
         <nav className="mt-8 flex flex-col gap-1" aria-label="Trainer area">
           {PLACES.map((p) => {
             const on = isOn(path, p.match);
             return (
               <Link key={p.href} href={p.href} aria-current={on ? 'page' : undefined}
-                    className={`flex min-h-11 items-center gap-3 rounded-full px-4 text-[14.5px] font-semibold transition-colors
+                    className={`flex min-h-11 items-center gap-3 rounded-full px-4 text-body-lg font-semibold transition-colors
                       ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}`}>
                 <Icon d={p.d} />{p.label}
               </Link>
             );
           })}
         </nav>
-        <Link href="/" className="mt-auto flex min-h-11 items-center gap-3 rounded-full px-4 text-[14px] font-semibold text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
+        <Link href="/" className="mt-auto flex min-h-11 items-center gap-3 rounded-full px-4 text-body font-semibold text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
           <Icon d="M15 18l-6-6 6-6" />Player view
         </Link>
       </aside>
@@ -62,7 +62,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
         {/* Phone: the wordmark, and the way back to training. */}
         <header className="safe-t safe-x mx-auto flex max-w-lg items-center justify-between px-5 lg:hidden">
           {brand}
-          <Link href="/" className="text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">Player view</Link>
+          <Link href="/" className="text-body font-semibold text-on-surface-variant underline underline-offset-4">Player view</Link>
         </header>
         <main className={`safe-x mx-auto w-full max-w-lg px-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-2
                           lg:px-10 lg:pb-16 lg:pt-10 ${wide ? 'lg:max-w-6xl' : 'lg:max-w-2xl'}`}>
@@ -78,7 +78,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
             return (
               <Link key={p.href} href={p.href} aria-current={on ? 'page' : undefined}
                     onClick={() => { if (!on) haptic('tap'); }}
-                    className={`pressable flex min-h-11 items-center gap-2 rounded-full px-3.5 text-[13px] font-bold tracking-tight transition-colors duration-300
+                    className={`pressable flex min-h-11 items-center gap-2 rounded-full px-3.5 text-body-sm font-bold tracking-tight transition-colors duration-300
                       ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant'}`}>
                 <Icon d={p.d} />
                 <span className={on ? 'inline' : 'sr-only'}>{p.label}</span>

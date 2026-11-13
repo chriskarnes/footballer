@@ -11,20 +11,20 @@ export function initial(name?: string | null, email?: string): string {
   return ((name ?? '').trim() || (email ?? '').trim() || '?').charAt(0).toUpperCase();
 }
 
-export function Avatar({ name, email, src, className = 'h-14 w-14 text-[19px]', onBrand = false }: {
+export function Avatar({ name, email, src, className = 'h-14 w-14 text-title-lg', onBrand = false }: {
   name?: string | null; email?: string; src?: string | null; className?: string;
   /** On a block in the academy's colours, where the usual pair can be the
    *  block's own colour: the accent pair instead, the way the ticks there are. */
   onBrand?: boolean;
 }) {
-  const tone = onBrand ? { background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' } : undefined;
+  const tone = onBrand ? 'accent-badge' : 'bg-secondary-container text-on-secondary-container';
   return src ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" style={tone} className={`shrink-0 rounded-full bg-secondary-container object-cover ${className}`} />
+    <img src={src} alt="" className={`shrink-0 rounded-full object-cover ${tone} ${className}`} />
   ) : (
-    <span aria-hidden="true" style={tone}
-          className={`flex shrink-0 items-center justify-center rounded-full bg-secondary-container
-                      font-brand font-extrabold tracking-tighter text-on-secondary-container ${className}`}>
+    <span aria-hidden="true"
+          className={`flex shrink-0 items-center justify-center rounded-full ${tone}
+                      font-brand font-extrabold tracking-brand-snug ${className}`}>
       {initial(name, email)}
     </span>
   );

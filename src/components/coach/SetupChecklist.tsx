@@ -33,7 +33,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
           <div className="mt-4"><AvatarPicker name={profile.name} email={email} updatedAt={profile.photoAt}
                                                     note="Optional. Your players see it next to your name." /></div>
           <SetupYou name={profile.name} timeZone={s.timeZone} fresh={!s.you} />
-          <Link href="/coach/brand" className="mt-3 inline-block text-[14px] font-semibold text-on-surface underline underline-offset-4">
+          <Link href="/coach/brand" className="mt-3 inline-block text-body font-semibold text-on-surface underline underline-offset-4">
             Your academy&rsquo;s colors and logo
           </Link>
         </>
@@ -45,7 +45,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
       done: drills >= 3 ? `${drills} drills` : null,
       body: (
         <>
-          <p className="mt-3 text-[14px] font-bold text-on-surface">{drills} of 3</p>
+          <p className="mt-3 text-body font-bold text-on-surface">{drills} of 3</p>
           <div className="mt-3 flex flex-wrap gap-2.5">
             <Link href="/coach/drills/new?back=/coach/setup" className="btn-primary pressable">Add a drill</Link>
             {drills > 0 && <Link href="/coach/drills" className="btn-ghost pressable min-h-[52px]">See your drills</Link>}
@@ -75,8 +75,8 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
         <>
           {invite
             ? <InviteLink path={`/join/${invite}`} role="player" canRotate={false} />
-            : <p className="mt-3 text-[14px] text-on-surface-variant">No invite link yet.</p>}
-          {!!players && <p className="mt-3 text-[14px] font-semibold text-on-surface">{players} {players === 1 ? 'player has' : 'players have'} joined.</p>}
+            : <p className="mt-3 text-body text-on-surface-variant">No invite link yet.</p>}
+          {!!players && <p className="mt-3 text-body font-semibold text-on-surface">{players} {players === 1 ? 'player has' : 'players have'} joined.</p>}
           {s.done
             ? <div className="mt-4"><ListedSwitch initial={s.listed} /></div>
             : <FinishSetup ready={done.slice(0, 4).every(Boolean)} />}
@@ -93,7 +93,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
           : 'Five steps to get your first session ready and your players in. Then give them your program from their page or a group.'}
       </PageHead>
       {!s.ready && (
-        <p role="status" className="card-flat mt-4 px-4 py-3 text-[14px] font-semibold text-on-surface">
+        <p role="status" className="card-flat mt-4 px-4 py-3 text-body font-semibold text-on-surface">
           Your progress here isn’t saved yet. It will be once this is switched on.
         </p>
       )}
@@ -109,12 +109,12 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
               <div className="flex items-start gap-3">
                 <span className="-ml-1 -mt-1 shrink-0">
                   {isDone ? <TickMark on /> : (
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full border-[2.5px] border-primary text-[17px] font-extrabold text-primary">{i + 1}</span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full border-[2.5px] border-primary text-title font-extrabold text-primary">{i + 1}</span>
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-[18px] font-extrabold leading-snug text-on-surface">{st.title}</h2>
-                  <p className="mt-0.5 text-[14.5px] leading-snug text-on-surface-variant">
+                  <h2 className="text-title font-extrabold leading-snug text-on-surface">{st.title}</h2>
+                  <p className="mt-0.5 text-body-lg leading-snug text-on-surface-variant">
                     {isDone && !open ? st.done : st.why}
                   </p>
                 </div>
@@ -123,7 +123,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
               {/* A done step can be opened again to change it. */}
               {isDone && !open && (
                 <details className="mt-1 pl-[52px]">
-                  <summary className="cursor-pointer text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">Change</summary>
+                  <summary className="cursor-pointer text-body font-semibold text-on-surface-variant underline underline-offset-4">Change</summary>
                   <div>{st.body}</div>
                 </details>
               )}

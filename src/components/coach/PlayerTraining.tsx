@@ -25,7 +25,7 @@ function useRun() {
   return { busy, start, err, setErr, run };
 }
 
-const Err = ({ err }: { err: string }) => err ? <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p> : null;
+const Err = ({ err }: { err: string }) => err ? <p role="alert" className="mt-2 text-body font-semibold text-on-surface">{err}</p> : null;
 
 /** This week exactly as the player sees it, extras included. */
 export function WeekList({ first, week }: { first: string; week: WeekItem[] }) {
@@ -34,17 +34,17 @@ export function WeekList({ first, week }: { first: string; week: WeekItem[] }) {
       {week.map((it) => (
         <li key={it.key} className="flex items-center justify-between gap-3 px-4 py-3">
           <span className="min-w-0">
-            <span className={`block truncate text-[14.5px] font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
-            <span className="block truncate text-[13px] text-on-surface-variant">
+            <span className={`block truncate text-body-lg font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
+            <span className="block truncate text-body-sm text-on-surface-variant">
               {DAYS[it.weekday]}{it.practice && ' (practice day)'} · {it.kind === 'addon' ? 'Extra' : it.kind === 'custom' ? 'Custom week' : [it.groups.join(' & ') || 'Own program', it.from].join(' · ')}
             </span>
           </span>
-          <span className="shrink-0 text-[13px] font-semibold text-on-surface-variant">{it.done ? 'Done' : `${it.minutes} min`}</span>
+          <span className="shrink-0 text-body-sm font-semibold text-on-surface-variant">{it.done ? 'Done' : `${it.minutes} min`}</span>
         </li>
       ))}
     </ul>
   ) : (
-    <p className="card-flat px-4 py-3 text-[14px] leading-relaxed text-on-surface-variant">
+    <p className="card-flat px-4 py-3 text-body leading-relaxed text-on-surface-variant">
       Nothing set this week. Put {first} in a group with a program, or give them their own below.
     </p>
   );
@@ -66,7 +66,7 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
   return (
     <div className="space-y-6">
       <section>
-        <div className="mb-2 text-[14px] font-bold text-on-surface">Groups <span className="font-medium text-on-surface-variant">· tap to add or take out</span></div>
+        <div className="mb-2 text-body font-bold text-on-surface">Groups <span className="font-medium text-on-surface-variant">· tap to add or take out</span></div>
         {groups.length ? (
           <div className="flex flex-wrap gap-2">
             {groups.map((g) => (
@@ -74,18 +74,18 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
                 g.member ? `${first} is out of ${g.name}.` : `${first} is in ${g.name}.`)}>{g.name}</Chip>
             ))}
           </div>
-        ) : <p className="text-[14px] text-on-surface-variant">No groups yet. <Link href="/coach/groups/new" className="font-semibold text-on-surface underline underline-offset-4">Make one</Link>.</p>}
+        ) : <p className="text-body text-on-surface-variant">No groups yet. <Link href="/coach/groups/new" className="font-semibold text-on-surface underline underline-offset-4">Make one</Link>.</p>}
       </section>
 
       <section>
-        <div className="mb-2 text-[14px] font-bold text-on-surface">Own program</div>
+        <div className="mb-2 text-body font-bold text-on-surface">Own program</div>
         {!!own.length && (
           <ul className="card mb-3 divide-y divide-outline-variant">
             {own.map((o) => (
               <li key={o.program_id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <span className="min-w-0">
-                  <span className="block truncate text-[14.5px] font-semibold text-on-surface">{o.label}</span>
-                  <span className="block text-[13px] text-on-surface-variant">Started {o.starts_on}</span>
+                  <span className="block truncate text-body-lg font-semibold text-on-surface">{o.label}</span>
+                  <span className="block text-body-sm text-on-surface-variant">Started {o.starts_on}</span>
                 </span>
                 <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => setStopping(o)}>Stop</button>
               </li>
@@ -103,7 +103,7 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
             <button type="button" disabled={busy || !program} className="btn-primary btn-sm pressable self-center"
                     onClick={() => run(() => assignProgram(userId, program), () => setProgram(''))}>Start</button>
           </div>
-        ) : !programs.length && <p className="text-[14px] text-on-surface-variant">Just for {first}, apart from any group. <Link href="/coach/programs/new" className="font-semibold text-on-surface underline underline-offset-4">Make a program</Link> first.</p>}
+        ) : !programs.length && <p className="text-body text-on-surface-variant">Just for {first}, apart from any group. <Link href="/coach/programs/new" className="font-semibold text-on-surface underline underline-offset-4">Make a program</Link> first.</p>}
       </section>
       <Err err={err} />
       <ConfirmSheet open={!!stopping} busy={busy} title={`Stop ${stopping?.label ?? ''}?`} confirmLabel="Stop program"
@@ -134,7 +134,7 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
       <div className="mb-3 flex items-baseline justify-between">
         <p className="eyebrow">Extras this week</p>
         {!adding && !!drills.length && (
-          <button type="button" className="text-[14px] font-semibold text-on-surface underline underline-offset-4" onClick={() => setAdding(true)}>+ Add a drill</button>
+          <button type="button" className="text-body font-semibold text-on-surface underline underline-offset-4" onClick={() => setAdding(true)}>+ Add a drill</button>
         )}
       </div>
       {!!addons.length && (
@@ -142,8 +142,8 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
           {addons.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="min-w-0">
-                <span className="block truncate text-[14.5px] font-semibold text-on-surface">{a.name}</span>
-                {a.note && <span className="block text-[13px] leading-snug text-on-surface-variant">{a.note}</span>}
+                <span className="block truncate text-body-lg font-semibold text-on-surface">{a.name}</span>
+                {a.note && <span className="block text-body-sm leading-snug text-on-surface-variant">{a.note}</span>}
               </span>
               <button type="button" disabled={busy} className="icon-btn" aria-label={`Remove ${a.name}`} onClick={() => run(() => removeAddon(a.id))}>×</button>
             </li>
@@ -155,18 +155,18 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
           {added.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="min-w-0">
-                <span className="block truncate text-[14.5px] font-semibold text-on-surface">{a.name}</span>
-                <span className="block text-[13px] text-on-surface-variant">Added by {first} · {DAYS[a.weekday]}</span>
+                <span className="block truncate text-body-lg font-semibold text-on-surface">{a.name}</span>
+                <span className="block text-body-sm text-on-surface-variant">Added by {first} · {DAYS[a.weekday]}</span>
               </span>
-              <span className="shrink-0 text-[13px] font-semibold text-on-surface-variant">{a.done ? 'Done' : 'Not yet'}</span>
+              <span className="shrink-0 text-body-sm font-semibold text-on-surface-variant">{a.done ? 'Done' : 'Not yet'}</span>
             </li>
           ))}
         </ul>
       )}
       {!addons.length && !added.length && !adding && !!drills.length && (
-        <p className="text-[14px] text-on-surface-variant">A drill on top of {first}&rsquo;s week, with a note if you like.</p>
+        <p className="text-body text-on-surface-variant">A drill on top of {first}&rsquo;s week, with a note if you like.</p>
       )}
-      {!drills.length && <p className="text-[14px] text-on-surface-variant">Add drills under Library to give {first} extras.</p>}
+      {!drills.length && <p className="text-body text-on-surface-variant">Add drills under Library to give {first} extras.</p>}
       {adding && (
         <div className="card space-y-4 p-4">
           <button type="button" disabled={busy} className="btn-ghost btn-sm pressable w-full"
@@ -178,7 +178,7 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
                   })}>
             {busy ? 'Thinking…' : `Suggest one for ${first}`}
           </button>
-          {why && <p className="text-[13px] font-semibold text-on-surface-variant">{why}</p>}
+          {why && <p className="text-body-sm font-semibold text-on-surface-variant">{why}</p>}
           <label className="text-field">
             <span>Drill</span>
             <select value={drill} onChange={(e) => setDrill(e.target.value)}>

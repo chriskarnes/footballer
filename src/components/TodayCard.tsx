@@ -33,11 +33,11 @@ export function TodayCard({
     <Link href={session ? `/session/${session.id}?from=train` : '/plan'}
           className="card pressable animate-pop mt-6 flex items-center gap-4 p-4">
       <div className="min-w-0 flex-1">
-        <p className="text-[13.5px] font-bold text-on-surface-variant">Today</p>
+        <p className="text-body font-bold text-on-surface-variant">Today</p>
         <div className="h-card mt-1.5">
           {session ? session.name : todayDone ? 'Done for today' : 'Rest day'}
         </div>
-        <div className="mt-1 text-[12.5px] font-medium text-on-surface-variant">
+        <div className="mt-1 text-body-sm font-medium text-on-surface-variant">
           {session
             ? `${Math.round(session.total_minutes)} min`
             : next?.s ? `Next: ${next.day}` : `${state.doneCount} of ${state.trainingCount} done this week`}

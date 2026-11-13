@@ -62,16 +62,16 @@ export function SavedWeek({
       )}
 
       {!plan.active && (
-        <div className="mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
-          <p className="text-[14px] font-medium text-on-surface-brand">
+        <div className="mt-7 brand-card p-6">
+          <p className="text-body font-medium text-on-surface-brand">
             This week isn&rsquo;t active. Make it active and it&rsquo;s the one Plan and Train
             show you each day.
           </p>
           <button onClick={() => setConfirming(true)}
-                  className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                  className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
             Make active
           </button>
-          {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface-brand">{err}</p>}
+          {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface-brand">{err}</p>}
         </div>
       )}
       <ConfirmSheet open={confirming} title={`Make ${plan.name} active?`}
@@ -108,8 +108,8 @@ function Today({
   const session = todo ? byKey.get(dayKey(todo))?.session : null;
 
   return (
-    <div className="animate-pop mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
-      <p className="text-[12.5px] font-semibold text-on-surface-brand-variant">
+    <div className="animate-pop mt-7 brand-card p-6">
+      <p className="text-body-sm font-semibold text-on-surface-brand-variant">
         Today · {FULL_DAY[state.today]}
       </p>
 
@@ -117,19 +117,19 @@ function Today({
         <>
           <SessionLine session={session} drills={drillsBySession[session.id]?.length ?? 0} />
           <Link href={`/session/${session.id}?from=plan`}
-                className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
             Start
           </Link>
         </>
       ) : (
-        <p className="mt-2 font-brand text-[26px] font-extrabold leading-tight tracking-tight text-on-surface-brand">
+        <p className="mt-2 font-brand text-headline font-extrabold leading-tight tracking-tight text-on-surface-brand">
           {todayDone ? 'Done for today' : 'Rest day'}
         </p>
       )}
 
       {/* What's after today, so a rest day still says when you're next on. */}
       {!session && (
-        <p className="mt-2 text-[13.5px] font-medium text-on-surface-brand-variant">
+        <p className="mt-2 text-body font-medium text-on-surface-brand-variant">
           {next?.session
             ? `Next up: ${WEEKDAYS[next.weekday]} — ${splitSessionName(next.session.name).title}`
             : state.doneCount === state.trainingCount && state.trainingCount
@@ -138,7 +138,7 @@ function Today({
         </p>
       )}
 
-      <div className="mt-6 flex items-baseline justify-between text-[12px] font-semibold text-on-surface-brand-variant">
+      <div className="mt-6 flex items-baseline justify-between text-caption font-semibold text-on-surface-brand-variant">
         <span>This week</span>
         <span>{state.doneCount} of {state.trainingCount} done</span>
       </div>
@@ -153,10 +153,10 @@ function Today({
 function SessionLine({ session, drills }: { session: SessionRow; drills: number }) {
   return (
     <>
-      <p className="mt-2 font-brand text-[24px] font-extrabold leading-tight tracking-tight text-on-surface-brand">
+      <p className="mt-2 font-brand text-display font-extrabold leading-tight tracking-tight text-on-surface-brand">
         {splitSessionName(session.name).title}
       </p>
-      <p className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
+      <p className="mt-1.5 text-body-sm font-semibold text-on-surface-brand-variant">
         {Math.round(session.total_minutes)} min · {drills} drill{drills === 1 ? '' : 's'}
       </p>
     </>

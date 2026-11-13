@@ -10,13 +10,14 @@ and which questions still need a human.
 
 | Layer | File | Status |
 |---|---|---|
-| Tokens | `tailwind.config.ts` *(or `@theme` in CSS if we're on Tailwind v4)* | not migrated |
-| Components | `src/app/globals.css` | not migrated |
-| Screens | `src/app/page.tsx`, `library/page.tsx`, `plan/page.tsx`, `me/page.tsx` | not migrated |
-| Coach | `src/components/Coach.tsx` | not migrated |
+| Tokens | `src/app/globals.css` (values), `tailwind.config.ts` (names, Tailwind v3) | migrated |
+| Components | `src/app/globals.css` | migrated |
+| Screens | the player app, the trainer area (`src/app/coach`), setup | migrated |
+| Coach | `src/components/Coach.tsx` | migrated |
 
-**Check the Tailwind major version first.** v3 puts tokens in `tailwind.config.ts`;
-v4 puts them in an `@theme` block in CSS. This changes where stage 1 lands.
+The code is now the source of truth. The harness is a snapshot from before the
+brand band and the trainer area; see **Since the migration** at the end for
+what it does not show.
 
 ---
 
@@ -236,3 +237,47 @@ Contrast was checked pair by pair in both schemes. Tightest is `outline` at
 4.27:1, which clears the 3:1 WCAG asks of a control boundary; every text pair
 is above 6:1. Worth re-running after any token edit — the failures we fixed
 (2.84:1 body text, 1.23:1 control borders) were invisible until measured.
+
+---
+
+## Since the migration
+
+What the app gained after this brief, none of which is in the harness.
+
+**Academy colors.** The palette is monochrome until an academy picks colors.
+`src/lib/brand-colors.ts` turns a main color and an accent into the `--app-brand-*`
+tokens and writes them after `globals.css` in the same selectors, light and
+dark. There is no manual theme switch: only `data-theme="light"` exists, on the
+marketing pages.
+
+**The brand band.** `BrandBand` puts the academy's colors edge to edge at the top
+of a player page, with the card half in the band and half out. Three shared
+classes draw the brand on any surface:
+
+| Class | What it is |
+|---|---|
+| `.brand-card` | the brand block as a card: session card, finish screen, saved week |
+| `.btn-on-brand` | the primary button on that block, dimmed once when disabled |
+| `.accent-badge` | the accent with the brand color on it: the done tick, the band label |
+
+**The trainer area.** `src/app/coach`, desktop-first: a sidebar, `PageHead` with a
+back link, tables with `.eyebrow` headers, `Empty` for empty states, `Toast` for
+saves. Same tokens and components as the player app; nothing of its own.
+
+**Type steps.** Every app font size is a named step in `tailwind.config.ts`
+(`text-label-sm` 11 through `text-headline-lg` 34); none are written in px.
+Half-pixel sizes were snapped to the nearest step. Uppercase labels are all
+`.eyebrow`. The marketing site (`src/components/site`, `src/app/site`) keeps its
+own display sizes.
+
+**Corners.** Only the M3 shape scale: `rounded-extra-small` to `rounded-extra-large`,
+and `rounded-full`. Tailwind's `rounded-md`/`-xl`/`-2xl` are not used.
+
+**Tracking.** The brand face's two letter-spacings are `tracking-brand-tight`
+(-0.02em) and `tracking-brand-snug` (-0.005em). They were called `tightest` and
+`tighter`, which read as tighter than Tailwind's own `tight`; they are looser.
+
+**Tap targets.** `.chip`, `.icon-btn` and `.btn-sm` look 36–40px and take taps
+at 44px through a `::before` that reaches past their edges. Text buttons do the
+same on touch screens.
+

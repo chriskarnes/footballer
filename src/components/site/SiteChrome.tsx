@@ -11,7 +11,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       {/* On the green: every page opens dark (see SiteHero). */}
       <div className="site-dark bg-site-ink">
         <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
-          <Link href="/" className="font-brand text-[20px] tracking-tighter text-white">
+          <Link href="/" className="font-brand text-[20px] tracking-brand-snug text-white">
             <span className="font-extrabold">Train</span><span className="font-medium text-site-lime">.futbol</span>
           </Link>
           <nav className="flex items-center gap-5 text-[14px] font-semibold text-white/85">
@@ -44,7 +44,7 @@ export function SectionHead({ eyebrow, title, children }: { eyebrow: string; tit
   return (
     <div className="max-w-[40rem]">
       <span className="marker mb-4">{eyebrow}</span>
-      <h2 className="font-brand text-[30px] font-extrabold leading-[1.06] tracking-tighter text-site-ink sm:text-[38px]">{title}</h2>
+      <h2 className="font-brand text-[30px] font-extrabold leading-[1.06] tracking-brand-snug text-site-ink sm:text-[38px]">{title}</h2>
       {children && <p className="mt-3 text-[16px] leading-relaxed text-on-surface-variant">{children}</p>}
     </div>
   );

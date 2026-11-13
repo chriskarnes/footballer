@@ -15,9 +15,9 @@ export function Wordmark({ name, logo, size = 'sm', onBrand = false }: {
   const quiet = onBrand ? 'text-on-surface-brand-variant' : 'text-on-surface-variant';
   const lg = size === 'lg';
   return (
-    <span className={`flex items-center font-brand ${lg ? 'gap-4 text-[34px] leading-none tracking-tightest' : 'gap-2.5 text-[19px] tracking-tighter'}`}>
+    <span className={`flex items-center font-brand ${lg ? 'gap-4 text-headline-lg leading-none tracking-brand-tight' : 'gap-2.5 text-title-lg tracking-brand-snug'}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {logo && <img src={logo} alt="" className={`${lg ? 'h-11 w-11 rounded-xl' : 'h-8 w-8 rounded-lg'} shrink-0 object-contain`} />}
+      {logo && <img src={logo} alt="" className={`${lg ? 'h-11 w-11 rounded-medium' : 'h-8 w-8 rounded-small'} shrink-0 object-contain`} />}
       <span className="min-w-0">
         <span className="font-extrabold">{head}</span>
         {tail && <span className={`font-medium ${quiet}`}>{tail}</span>}

@@ -72,8 +72,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
           <BandTitle>
             <span className="flex items-center gap-3">
               Week done!
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full accent-badge">
                 <Tick className="h-4 w-4" />
               </span>
             </span>
@@ -82,7 +81,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
           <BandTitle>{next ? next.title : 'Nothing yet'}</BandTitle>
         )}
         {(!weekDone || gameDay) && (
-          <p className="mt-2 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-2 text-title-sm font-semibold text-on-surface-brand-variant">
             {next ? `${next.minutes} min · ${next.drills} ${next.drills === 1 ? 'drill' : 'drills'}`
               : weekDone ? 'Game day. Rest up.' : 'Your trainer hasn’t set this week.'}
           </p>
@@ -94,7 +93,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
         )}
         {next && (
           <StartLink href={`/train/${next.kind}/${next.ref}`} seen={note?.id}
-                     className="btn-primary btn-big pressable mt-4 w-full bg-on-surface-brand text-surface-brand">
+                     className="btn-primary btn-on-brand btn-big pressable mt-4 w-full">
             Start
           </StartLink>
         )}
@@ -105,7 +104,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
         )}
         {!weekDone && <WeekStrip items={items} today={today} nextDay={next?.weekday ?? null} />}
         {meetLabel && (
-          <p className="mt-2 text-[15px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-2 text-body-lg font-semibold text-on-surface-brand-variant">
             Next with {trainer?.name ?? 'your trainer'}: {meetLabel}
           </p>
         )}
@@ -115,7 +114,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
         <>
           <div className="mb-3 mt-5 flex items-baseline justify-between gap-3">
             <h2 className="h-sec">Your week</h2>
-            {set.length > 0 && <p className="text-[15px] font-bold text-on-surface-variant">{done} of {set.length} done</p>}
+            {set.length > 0 && <p className="text-body-lg font-bold text-on-surface-variant">{done} of {set.length} done</p>}
           </div>
           {/* Built like a drill in the session: the same tick mark, the same
               type, and the whole card lit on hover and press. The tick here is
@@ -126,15 +125,15 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
                 <Link href={`/train/${it.kind}/${it.ref}`} className="card-hit flex min-w-0 flex-1 items-center gap-1.5 text-left">
                   <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center"><TickMark on={it.done} /></span>
                   <span className="min-w-0 flex-1 py-2 pl-1.5 pr-1">
-                    <span className="block text-[17px] font-bold leading-snug text-on-surface">{it.title}</span>
+                    <span className="block text-title font-bold leading-snug text-on-surface">{it.title}</span>
                     {/* How long, so a player can pick one that fits the time they have. */}
-                    <span className="mt-1 block text-[16px] font-semibold text-on-surface-variant">
+                    <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
                       {it.minutes} min{!it.done && it.weekday < today ? ' · Missed' : ''}
                     </span>
                   </span>
                 </Link>
                 {it.done
-                  ? <span className="shrink-0 pr-2 text-[13px] font-bold text-on-surface-variant">{DAYS[it.doneOn ?? it.weekday].slice(0, 3)}</span>
+                  ? <span className="shrink-0 pr-2 text-body-sm font-bold text-on-surface-variant">{DAYS[it.doneOn ?? it.weekday].slice(0, 3)}</span>
                   : <MoveDay itemKey={it.key} weekday={it.weekday} placed={it.placed ?? it.weekday} title={it.title} />}
               </li>
             ))}
@@ -172,11 +171,10 @@ function WeekStrip({ items, today, nextDay }: { items: MyWeek['items']; today: n
           <li key={i} aria-label={label} aria-current={isToday ? 'date' : undefined}
               className="flex w-10 flex-col items-center gap-1 rounded-full pb-1 pt-1"
               style={isToday ? { background: `color-mix(in srgb, ${ink} 18%, transparent)` } : undefined}>
-            <span className="text-[12.5px] font-extrabold" style={{ color: ink, opacity: isToday ? 1 : 0.7 }}>{d}</span>
+            <span className="text-body-sm font-extrabold" style={{ color: ink, opacity: isToday ? 1 : 0.7 }}>{d}</span>
             <span className="flex h-6 w-6 items-center justify-center">
               {!todo.length && doneHere ? (
-                <span className="flex h-6 w-6 items-center justify-center rounded-full"
-                      style={{ background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full accent-badge">
                   <Tick className="h-3 w-3" />
                 </span>
               ) : todo.length ? (
@@ -203,14 +201,14 @@ function TrainerSays({ href, body, name, photo, more }: {
 }) {
   const inner = (
     <>
-      {(name || photo) && <Avatar name={name} src={photo} className="h-9 w-9 text-[14px]" onBrand />}
+      {(name || photo) && <Avatar name={name} src={photo} className="h-9 w-9 text-body" onBrand />}
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-1 text-[16px] font-semibold leading-snug text-on-surface-brand">&ldquo;{body}&rdquo;</span>
-        {more > 0 && <span className="mt-0.5 block text-[14px] font-semibold text-on-surface-brand-variant">+{more} more</span>}
+        <span className="line-clamp-1 text-title-sm font-semibold leading-snug text-on-surface-brand">&ldquo;{body}&rdquo;</span>
+        {more > 0 && <span className="mt-0.5 block text-body font-semibold text-on-surface-brand-variant">+{more} more</span>}
       </span>
     </>
   );
   return href
-    ? <Link href={href} className="pressable mt-3 flex items-center gap-3 rounded-xl">{inner}</Link>
+    ? <Link href={href} className="pressable mt-3 flex items-center gap-3 rounded-medium">{inner}</Link>
     : <p className="mt-3 flex items-center gap-3">{inner}</p>;
 }

@@ -55,7 +55,7 @@ export function PlanWeek({
           return (
             <li key={key} className="flex items-center gap-3.5 px-4 py-2">
               <DayLabel weekday={d.weekday} today={isToday} muted />
-              <span className="text-[13.5px] text-on-surface-variant">Rest</span>
+              <span className="text-body text-on-surface-variant">Rest</span>
             </li>
           );
         }
@@ -76,7 +76,7 @@ export function PlanWeek({
                     third of the row, and "Weeks 1-4 (Day 3) First Touch On The
                     Ground" cut to "Weeks 1-4 (Day 3) First…" tells you nothing. */}
                 <span className="flex items-start gap-1.5">
-                  <span className="min-w-0 text-[14.5px] font-bold leading-snug text-on-surface">
+                  <span className="min-w-0 text-body-lg font-bold leading-snug text-on-surface">
                     {d.session ? splitSessionName(d.session.name).title : 'Nothing fits this day'}
                   </span>
                   {!!d.session && (
@@ -89,7 +89,7 @@ export function PlanWeek({
                     </svg>
                   )}
                 </span>
-                <span className="mt-0.5 block text-[12.5px] text-on-surface-variant">
+                <span className="mt-0.5 block text-body-sm text-on-surface-variant">
                   {d.session
                     ? `${Math.round(d.session.total_minutes)} min · ${drills.length} drill${
                         drills.length === 1 ? '' : 's'}${d.reason ? ` · ${d.reason}` : ''}`
@@ -108,7 +108,7 @@ export function PlanWeek({
                 </button>
               )}
               {d.session && !onSwap && isDone && (
-                <span className="flex shrink-0 items-center gap-1 pt-1 text-[12.5px] font-semibold text-on-surface-variant">
+                <span className="flex shrink-0 items-center gap-1 pt-1 text-body-sm font-semibold text-on-surface-variant">
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true"
                        stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 6 9 17l-5-5" />
@@ -130,16 +130,16 @@ export function PlanWeek({
               <ol className="mt-3.5 space-y-1.5 border-t border-outline-variant pt-3.5">
                 {drills.map((x, i) => (
                   <li key={x.id} className="flex items-baseline gap-2.5">
-                    <span className="w-4 shrink-0 font-brand text-[11px] font-bold text-on-surface-variant">
+                    <span className="w-4 shrink-0 font-brand text-label-sm font-bold text-on-surface-variant">
                       {i + 1}
                     </span>
-                    <span className="min-w-0 flex-1 text-[13px] font-medium text-on-surface">
+                    <span className="min-w-0 flex-1 text-body-sm font-medium text-on-surface">
                       {x.name}
-                      <span className="ml-1.5 text-[12px] text-on-surface-variant">
+                      <span className="ml-1.5 text-caption text-on-surface-variant">
                         {x.sets} × {x.reps_time}
                       </span>
                     </span>
-                    <span className="shrink-0 text-[12px] font-semibold text-on-surface-variant">
+                    <span className="shrink-0 text-caption font-semibold text-on-surface-variant">
                       {x.total_seconds < 60
                         ? `${x.total_seconds}s`
                         : `${Math.round(x.total_seconds / 60)}m`}
@@ -150,7 +150,7 @@ export function PlanWeek({
             )}
 
             {isOpen && !drills.length && (
-              <p className="mt-3.5 border-t border-outline-variant pt-3.5 text-[13px] text-on-surface-variant">
+              <p className="mt-3.5 border-t border-outline-variant pt-3.5 text-body-sm text-on-surface-variant">
                 This session&rsquo;s drills aren&rsquo;t in the library yet.
               </p>
             )}
@@ -164,11 +164,11 @@ export function PlanWeek({
 /** The weekday, with "Today" under it when it is. */
 function DayLabel({ weekday, today, muted }: { weekday: number; today: boolean; muted?: boolean }) {
   return (
-    <span className={`mt-0.5 w-10 shrink-0 font-brand text-[13px] font-bold
+    <span className={`mt-0.5 w-10 shrink-0 font-brand text-body-sm font-bold
                       ${muted && !today ? 'text-on-surface-variant' : 'text-on-surface'}`}>
       {WEEKDAYS[weekday]}
       {today && (
-        <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+        <span className="eyebrow mt-0.5 block">
           Today
         </span>
       )}

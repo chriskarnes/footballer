@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}><Flash /></Suspense>
       {text && (
         <p key={n} role="status"
-           className="sheet-in fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] mx-auto w-fit max-w-[90vw] rounded-full bg-inverse-surface px-5 py-3 text-[14px] font-semibold text-inverse-on-surface shadow-level3 lg:bottom-8">
+           className="sheet-in fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] mx-auto w-fit max-w-[90vw] rounded-full bg-inverse-surface px-5 py-3 text-body font-semibold text-inverse-on-surface shadow-level3 lg:bottom-8">
           {text}
         </p>
       )}

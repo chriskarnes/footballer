@@ -1,7 +1,7 @@
-/* Forge service worker.
+/* Train.futbol service worker.
  *
- * Deliberately small. The job is one thing: opening Forge on a phone with no signal
- * should show Forge, not the browser's dinosaur. That single behaviour is most of
+ * Deliberately small. The job is one thing: opening the app on a phone with no signal
+ * should show the app, not the browser's dinosaur. That single behaviour is most of
  * what makes a web app feel installed.
  *
  * Two strategies, and the split matters:
@@ -17,7 +17,8 @@
  * an honest error.
  */
 
-const VERSION = 'forge-v1';
+// A new name clears every older cache on activate, the forge-v1 ones included.
+const VERSION = 'train-v2';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 const OFFLINE_URL = '/offline';

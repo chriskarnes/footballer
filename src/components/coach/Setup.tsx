@@ -35,19 +35,19 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
       <label className="text-field">
         <span>Your name</span>
         <input value={n} onChange={(e) => setN(e.target.value)} required maxLength={60} autoComplete="name" />
-        <small className="mt-1.5 block text-[14px] text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</small>
+        <small className="mt-1.5 block text-body text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</small>
       </label>
       <label className="text-field">
         <span>Your time zone</span>
         <select value={tz} onChange={(e) => setTz(e.target.value)}>
           {zones.map((z) => <option key={z} value={z}>{z.replace(/_/g, ' ')}</option>)}
         </select>
-        <small className="mt-1.5 block text-[14px] text-on-surface-variant">Your players&rsquo; weeks start on Monday here.</small>
+        <small className="mt-1.5 block text-body text-on-surface-variant">Your players&rsquo; weeks start on Monday here.</small>
       </label>
       <button type="submit" disabled={busy} className="btn-primary pressable w-full">
         {busy ? 'Saving…' : 'Save'}
       </button>
-      {err && <p role="status" className="text-[14px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="status" className="text-body font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }
@@ -60,7 +60,7 @@ export function FinishSetup({ ready }: { ready: boolean }) {
   return (
     <div className="mt-4">
       <Listing on={listed} onChange={setListedOn} />
-      <button type="button" disabled={!ready || busy} className="btn-primary btn-big pressable mt-4 w-full disabled:opacity-40"
+      <button type="button" disabled={!ready || busy} className="btn-primary btn-big pressable mt-4 w-full"
               onClick={async () => {
                 setBusy(true); setErr('');
                 const r = await finishSetup(listed);
@@ -69,8 +69,8 @@ export function FinishSetup({ ready }: { ready: boolean }) {
               }}>
         {busy ? 'One moment…' : 'Finish setup'}
       </button>
-      {!ready && <p className="mt-2 text-[14px] text-on-surface-variant">Finish steps 1 to 4 first.</p>}
-      {err && <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
+      {!ready && <p className="mt-2 text-body text-on-surface-variant">Finish steps 1 to 4 first.</p>}
+      {err && <p role="alert" className="mt-2 text-body font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }
@@ -88,7 +88,7 @@ export function ListedSwitch({ initial }: { initial: boolean }) {
         setBusy(false);
         if (!r.ok) { setOn(!next); setErr(r.error); }
       }} />
-      {err && <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-body font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }
@@ -99,8 +99,8 @@ function Listing({ on, onChange, disabled }: { on: boolean; onChange: (on: boole
       <input type="checkbox" checked={on} disabled={disabled} onChange={(e) => onChange(e.target.checked)}
              className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--md-sys-color-primary)]" />
       <span>
-        <span className="block text-[14px] font-semibold text-on-surface">Show in Find your trainer</span>
-        <span className="block text-[14px] text-on-surface-variant">
+        <span className="block text-body font-semibold text-on-surface">Show in Find your trainer</span>
+        <span className="block text-body text-on-surface-variant">
           {on ? 'Players can find you by name, then ask to join.' : 'Only players with your invite link can join.'}
         </span>
       </span>

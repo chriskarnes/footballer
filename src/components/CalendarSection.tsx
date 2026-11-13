@@ -67,7 +67,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
         <h2 className="h-sec mb-3">Calendar</h2>
         <div className="card p-5">
           <div className="h-card">Put your training in your calendar</div>
-          <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+          <p className="mt-1 text-body leading-snug text-on-surface-variant">
             {speed ? 'Your plan and speed sessions appear' : 'Your sessions appear'} on the right days in Apple or Google Calendar, and
             tick off as you finish them.
           </p>
@@ -75,7 +75,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
                   onClick={async () => { const j = await call('POST', { time_zone: zone() }); if (j) setFeed(j); }}>
             {busy ? 'One moment…' : 'Add to my calendar'}
           </button>
-          {err && <p role="status" className="mt-2 text-[13px] font-semibold text-error">Couldn&rsquo;t turn it on: {err}</p>}
+          {err && <p role="status" className="mt-2 text-body-sm font-semibold text-error">Couldn&rsquo;t turn it on: {err}</p>}
         </div>
       </section>
     );
@@ -91,7 +91,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
       <h2 className="h-sec mb-3">Calendar</h2>
       <div className="card p-5">
         <div className="h-card">Subscribe</div>
-        <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+        <p className="mt-1 text-body leading-snug text-on-surface-variant">
           Add it once. Apple Calendar picks up changes within the hour; Google can take up to a day.
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2.5">
@@ -107,14 +107,14 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
         </button>
 
         {(plan || speed) && <>
-        <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Include</p>
+        <p className="mb-2.5 mt-6 text-body font-bold text-on-surface">Include</p>
         <div className="flex flex-wrap gap-2">
           {plan && <Chip on={feed.include_plan} onClick={() => update({ include_plan: !feed.include_plan })}>Weekly plan</Chip>}
           {speed && <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed &amp; Stamina</Chip>}
         </div>
         </>}
 
-        <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Show sessions</p>
+        <p className="mb-2.5 mt-6 text-body font-bold text-on-surface">Show sessions</p>
         <div className="segmented" role="radiogroup" aria-label="Show sessions">
           <button type="button" role="radio" aria-checked={!timed} onClick={() => update({ start_time: null })}
                   className={`segment pressable ${!timed ? 'segment-on' : ''}`}>
@@ -132,15 +132,15 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
                    onBlur={(e) => e.target.value && update({ start_time: e.target.value })} />
           </label>
         )}
-        <p className="mt-2 text-[12px] text-on-surface-variant">
+        <p className="mt-2 text-caption text-on-surface-variant">
           {timed
             ? 'Each session starts then and lasts as long as it takes. Two on one day run back to back.'
             : 'Each session sits at the top of its day, without blocking any time.'}
         </p>
 
-        {err && <p role="status" className="mt-3 text-[13px] font-semibold text-error">{err}</p>}
+        {err && <p role="status" className="mt-3 text-body-sm font-semibold text-error">{err}</p>}
 
-        <div className="mt-6 flex gap-5 border-t border-outline-variant pt-4 text-[13px] font-semibold text-on-surface-variant">
+        <div className="mt-6 flex gap-5 border-t border-outline-variant pt-4 text-body-sm font-semibold text-on-surface-variant">
           <button type="button" className="underline underline-offset-4" onClick={() => setConfirm('reset')}>Reset link</button>
           <button type="button" className="underline underline-offset-4" onClick={() => setConfirm('off')}>Turn off</button>
         </div>

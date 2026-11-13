@@ -33,7 +33,7 @@ export default async function JoinPage({ params, searchParams }: {
     return (
       <Shell eyebrow="Invite">
         <h1 className="h-page">This link doesn&rsquo;t work</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
+        <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">
           It may have been replaced with a new one. Ask your trainer to send it again.
         </p>
       </Shell>
@@ -62,7 +62,7 @@ export default async function JoinPage({ params, searchParams }: {
       <BrandBand overlap name={brand?.name ? undefined : name}>
         <BandTag>{role === 'trainer' ? 'Trainer invite' : 'You’re invited'}</BandTag>
         <BandTitle>Join {head}{tail && <span className="text-on-surface-brand-variant">{tail}</span>}</BandTitle>
-        <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+        <p className="mt-4 text-title-sm leading-relaxed text-on-surface-brand-variant">
           {role === 'trainer' ? 'See every player’s week, and send them notes.' : 'Your trainer’s sessions, done at home.'}
         </p>
       </BrandBand>
@@ -72,7 +72,7 @@ export default async function JoinPage({ params, searchParams }: {
         {v.user && already ? (
           <div className="card p-5">
             <div className="h-card">You&rsquo;re already in</div>
-            <p className="mt-1 text-[13.5px] text-on-surface-variant">Signed in as {v.user.email}.</p>
+            <p className="mt-1 text-body text-on-surface-variant">Signed in as {v.user.email}.</p>
             <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>

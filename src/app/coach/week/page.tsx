@@ -49,7 +49,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
       )}
 
       {!!unset && (
-        <p className="mt-4 text-[13px] text-on-surface-variant">
+        <p className="mt-4 text-body-sm text-on-surface-variant">
           <b className="font-semibold text-on-surface">{unset} {unset === 1 ? 'player hasn’t' : 'players haven’t'}</b> said their soccer days yet,
           so their sessions are spread through the week. They&rsquo;re asked on their home screen.
         </p>
@@ -59,10 +59,10 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           a laptop); narrower, it scrolls, with the bar showing so it's clear
           there's more. */}
       <div className="scroll-x scroll-shown -mx-5 mt-6 px-5 lg:mx-0 lg:px-0">
-        <table className="card w-full min-w-[680px] table-fixed border-separate border-spacing-0 overflow-hidden text-left text-[13px]">
+        <table className="card w-full min-w-[680px] table-fixed border-separate border-spacing-0 overflow-hidden text-left text-body-sm">
           <colgroup><col className="w-32 xl:w-44" />{DAYS.map((d) => <col key={d} />)}</colgroup>
           <thead>
-            <tr className="text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">
+            <tr className="eyebrow">
               <th scope="col" className="border-b border-outline-variant px-4 py-3">Player</th>
               {DAYS.map((d, i) => (
                 <th key={d} scope="col" className={`border-b border-outline-variant px-2 py-3 ${i === today ? 'text-on-surface' : ''}`}>
@@ -82,7 +82,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                     <Link href={`/coach/players/${p.user_id}`} className="flex items-center gap-2 font-bold text-on-surface hover:underline">
                       <StatusDot status={p.progress.status} /><span className="truncate">{p.name}</span>
                     </Link>
-                    <span className="mt-0.5 block text-[12px] text-on-surface-variant">
+                    <span className="mt-0.5 block text-caption text-on-surface-variant">
                       {p.week.filter((w) => w.done).length} of {p.week.length} done
                     </span>
                   </th>
@@ -91,12 +91,12 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                     const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'Trainer' : s.practice.includes(d) ? 'Practice' : meets.has(d) ? 'Trainer' : null;
                     return (
                       <td key={d} className={`border-b border-l border-outline-variant px-1.5 py-2 ${tag ? 'bg-surface-container' : ''} ${d === today ? 'bg-surface-container-low' : ''}`}>
-                        {tag && <span className="block px-1 text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{tag}</span>}
+                        {tag && <span className="eyebrow block px-1">{tag}</span>}
                         {items.map((it) => {
                           const missed = !it.done && d < today;
                           return (
                             <span key={it.key} title={`${it.title} · ${it.minutes} min${it.moved ? ' · moved by player' : ''}`}
-                                  className={`mt-1 block truncate rounded-md px-1.5 py-1 text-[12px] font-semibold
+                                  className={`mt-1 block truncate rounded-small px-1.5 py-1 text-caption font-semibold
                                     ${it.done ? 'bg-on-surface text-surface' : missed ? 'border border-dashed border-on-surface-variant text-on-surface-variant' : 'border border-outline text-on-surface'}`}>
                               {it.done && '✓ '}{it.title}{it.moved && ' ↷'}
                             </span>
@@ -112,10 +112,10 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         </table>
       </div>
 
-      <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-on-surface-variant">
-        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-sm bg-on-surface align-middle" />Done</span>
-        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-sm border border-outline align-middle" />To do</span>
-        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-sm border border-dashed border-on-surface-variant align-middle" />Missed</span>
+      <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-caption text-on-surface-variant">
+        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small bg-on-surface align-middle" />Done</span>
+        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-outline align-middle" />To do</span>
+        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-dashed border-on-surface-variant align-middle" />Missed</span>
         <span>↷ Moved by the player</span>
         <span>Shaded: practice, game or trainer day</span>
       </p>

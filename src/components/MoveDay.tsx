@@ -32,14 +32,14 @@ export function MoveDay({ itemKey, weekday, placed, title }: { itemKey: string; 
     <label className={`relative ${pending ? 'opacity-60' : ''}`}>
       <span className="sr-only">Day for {title}</span>
       <select value={day} onChange={(e) => change(Number(e.target.value))} disabled={pending}
-              className="h-9 appearance-none rounded-full border border-outline bg-transparent pl-3 pr-7 text-[12.5px] font-bold text-on-surface">
+              className="h-9 appearance-none rounded-full border border-outline bg-transparent pl-3 pr-7 text-body-sm font-bold text-on-surface">
         {DAYS.map((d, i) => <option key={d} value={i}>{d}{i === placed && day !== placed ? ' (usual)' : ''}</option>)}
       </select>
       <svg viewBox="0 0 12 8" className="pointer-events-none absolute right-3 top-1/2 h-2 w-2.5 -translate-y-1/2 text-on-surface-variant" aria-hidden="true">
         <path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </label>
-    {err && <span role="alert" className="mt-1 max-w-[14rem] text-right text-[12px] font-semibold text-on-surface">{err}</span>}
+    {err && <span role="alert" className="mt-1 max-w-[14rem] text-right text-caption font-semibold text-on-surface">{err}</span>}
     </span>
   );
 }

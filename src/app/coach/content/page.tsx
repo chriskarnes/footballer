@@ -36,8 +36,8 @@ export default async function ContentPage() {
                 <li key={p.id}>
                   <Link href={`/coach/programs/${p.id}`} className="flex items-center justify-between gap-4 px-4 py-4">
                     <span className="min-w-0">
-                      <span className="block truncate text-[15px] font-bold text-on-surface">{p.name}</span>
-                      <span className="mt-0.5 block text-[14px] text-on-surface-variant">
+                      <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
+                      <span className="mt-0.5 block text-body text-on-surface-variant">
                         {p.weeks} weeks · {sessions.length ? `${weeks} ${weeks === 1 ? 'week' : 'weeks'} built` : 'nothing built yet'}
                         {groups ? ` · ${groups} ${groups === 1 ? 'group' : 'groups'}` : ''}
                       </span>

@@ -42,7 +42,7 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
   });
 
   if (!library.length && !programs.some((p) => p.weeks.length)) {
-    return <p className="text-[14px] text-on-surface-variant">No sessions yet. <Link href="/coach/sessions/new" className="font-semibold text-on-surface underline underline-offset-4">Build one</Link>, then add drills to it.</p>;
+    return <p className="text-body text-on-surface-variant">No sessions yet. <Link href="/coach/sessions/new" className="font-semibold text-on-surface underline underline-offset-4">Build one</Link>, then add drills to it.</p>;
   }
 
   const chip = (id: string, name: string) => (
@@ -57,17 +57,17 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
       <div className="space-y-5">
         {!!library.length && (
           <div>
-            <p className="text-[14px] font-bold text-on-surface">Your sessions</p>
+            <p className="text-body font-bold text-on-surface">Your sessions</p>
             <div className="mt-2 flex flex-wrap gap-2">{library.map((s) => chip(lib(s.id), s.name))}</div>
           </div>
         )}
         {programs.filter((p) => p.weeks.length).map((p) => (
           <div key={p.id}>
-            <p className="text-[14px] font-bold text-on-surface">{p.name}</p>
+            <p className="text-body font-bold text-on-surface">{p.name}</p>
             <div className="mt-2 space-y-3">
               {p.weeks.map((w) => (
                 <div key={w.week} className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-3">
-                  <span className="w-16 shrink-0 text-[12px] font-semibold text-on-surface-variant">Week {w.week}</span>
+                  <span className="w-16 shrink-0 text-caption font-semibold text-on-surface-variant">Week {w.week}</span>
                   <div className="flex flex-wrap gap-2">
                     {w.sessions.map((s) => chip(s.id, s.name))}
                   </div>
@@ -77,7 +77,7 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
           </div>
         ))}
       </div>
-      {error && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{error}</p>}
       <div className="mt-5 flex flex-wrap gap-2.5">
         <button type="button" onClick={save} disabled={pending || (!changed && !fresh)} className="btn-primary btn-sm pressable">
           {pending ? 'Saving…' : fresh ? (on.size ? `Add to ${on.size} ${on.size === 1 ? 'session' : 'sessions'}` : 'Done') : 'Save sessions'}

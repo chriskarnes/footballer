@@ -20,7 +20,7 @@ export function PageHead({ title, eyebrow, action, back, children }: {
         <h1 className="h-page min-w-0">{title}</h1>
         {action && <div className="flex shrink-0 flex-wrap gap-2">{action}</div>}
       </div>
-      {children && <div className="mt-2 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">{children}</div>}
+      {children && <div className="mt-2 max-w-2xl text-body leading-relaxed text-on-surface-variant">{children}</div>}
     </header>
   );
 }

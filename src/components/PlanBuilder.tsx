@@ -202,13 +202,13 @@ function Builder({
         {/* The week's headline numbers and its actions, on one card — the
             same arrangement as a session on Train: one primary action, and the
             refinement beside it as a glyph. */}
-        <div className="mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
+        <div className="mt-7 brand-card p-6">
           <div className="flex items-end gap-6">
             <div>
-              <div className="font-brand text-[46px] font-extrabold leading-none tracking-tightest text-on-surface-brand">
+              <div className="font-brand text-[46px] font-extrabold leading-none tracking-brand-tight text-on-surface-brand">
                 {sessionsCount}
               </div>
-              <div className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
+              <div className="mt-1.5 text-body-sm font-semibold text-on-surface-brand-variant">
                 session{sessionsCount === 1 ? '' : 's'} a week
               </div>
             </div>
@@ -220,8 +220,7 @@ function Builder({
 
           <div className="mt-6 flex items-center gap-2">
             <button onClick={() => saveWeek(plan)} disabled={save === 'saving' || !sessionsCount}
-                    className="btn-primary pressable min-w-0 flex-1 whitespace-nowrap px-4
-                               bg-on-surface-brand text-surface-brand">
+                    className="btn-primary btn-on-brand pressable min-w-0 flex-1 whitespace-nowrap px-4">
               {save === 'saving' ? 'Saving…' : editing ? 'Save changes' : 'Save this week'}
             </button>
             <button onClick={() => show(buildPlan(sessions, plan.intake, Math.random()), 'replace')}
@@ -236,7 +235,7 @@ function Builder({
             </button>
           </div>
 
-          <p role="status" className="text-[13px] font-medium text-on-surface-brand-variant">
+          <p role="status" className="text-body-sm font-medium text-on-surface-brand-variant">
             {save === 'signin' && (
               <span className="mt-4 block">
                 <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> and
@@ -248,7 +247,7 @@ function Builder({
         </div>
 
         {!!plan.uncovered.length && (
-          <p className="mt-4 rounded-large border border-outline-variant bg-surface-container-low p-3.5 text-[13px]
+          <p className="mt-4 rounded-large border border-outline-variant bg-surface-container-low p-3.5 text-body-sm
                         leading-relaxed text-on-surface-variant">
             Nothing in the library covers{' '}
             <strong className="text-on-surface">
@@ -272,7 +271,7 @@ function Builder({
       <div className="mt-6">
       {/* ---- what we already knew ---- */}
       {prefill.sessionsSeen > 0 ? (
-        <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-high p-4 text-[14px]
+        <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-high p-4 text-body
                       leading-relaxed text-on-surface">
           Built from your last {prefill.sessionsSeen} session
           {prefill.sessionsSeen === 1 ? '' : 's'}
@@ -282,7 +281,7 @@ function Builder({
           Change anything that&rsquo;s wrong.
         </p>
       ) : (
-        <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-lowest p-4 text-[14px]
+        <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-lowest p-4 text-body
                       leading-relaxed text-on-surface-variant">
           <strong className="text-on-surface">Here&rsquo;s a starting week.</strong> Train a few
           sessions and this fills itself in from what you actually do — until then,
@@ -292,7 +291,7 @@ function Builder({
 
       {/* ---- the week ---- */}
       <h2 className="h-card">Your week</h2>
-      <p className="mt-1 text-[13.5px] text-on-surface-variant">Tap a day to change what it&rsquo;s for.</p>
+      <p className="mt-1 text-body text-on-surface-variant">Tap a day to change what it&rsquo;s for.</p>
       <div className="mt-3.5 grid grid-cols-7 gap-1.5">
         {WEEKDAYS.map((d, i) => {
           const a = intake.availability[i];
@@ -300,8 +299,8 @@ function Builder({
             <button key={d} type="button" onClick={() => cycleDay(i)}
               aria-label={`${d}: ${DAY_SPOKEN[a]}. Tap to change.`}
               className={`tile pressable py-2.5 text-center ${a === 'rest' ? '' : 'tile-on'}`}>
-              <span className="block font-brand text-[12px] font-bold tracking-tight">{d}</span>
-              <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-wide">
+              <span className="block font-brand text-caption font-bold tracking-tight">{d}</span>
+              <span className="eyebrow mt-0.5 block text-current">
                 {DAY_LABEL[a]}
               </span>
             </button>
@@ -312,7 +311,7 @@ function Builder({
       {/* ---- weaknesses ---- */}
       <div className="mt-9">
         <h2 className="h-card">What to fix</h2>
-        <p className="mt-1 text-[13.5px] text-on-surface-variant">
+        <p className="mt-1 text-body text-on-surface-variant">
           In order — the first one gets the most time. Up to four.
         </p>
         <div className="mt-3.5 flex flex-wrap gap-2">
@@ -323,7 +322,7 @@ function Builder({
                 aria-label={rank >= 0 ? `${FOCUS_LABELS[f]}, number ${rank + 1}` : FOCUS_LABELS[f]}
                 className={`chip ${rank >= 0 ? 'chip-on' : ''}`}>
                 {rank >= 0 && (
-                  <span aria-hidden="true" className="mr-1.5 font-brand text-[11px] font-bold text-primary">
+                  <span aria-hidden="true" className="mr-1.5 font-brand text-label-sm font-bold text-primary">
                     {rank + 1}
                   </span>
                 )}
@@ -342,13 +341,13 @@ function Builder({
             <button key={v} type="button" onClick={() => set({ seasonPhase: v, targetMinutes: undefined })}
               className={`tile pressable w-full p-3.5 text-left
                 ${intake.seasonPhase === v && !intake.targetMinutes ? 'tile-on' : ''}`}>
-              <span className="block text-[14.5px] font-bold text-on-surface">{title}</span>
-              <span className="mt-0.5 block text-[12.5px] text-on-surface-variant">{why}</span>
+              <span className="block text-body-lg font-bold text-on-surface">{title}</span>
+              <span className="mt-0.5 block text-body-sm text-on-surface-variant">{why}</span>
             </button>
           ))}
         </div>
         {!!intake.targetMinutes && (
-          <p className="mt-2.5 pl-1 text-[13px] text-on-surface-variant">
+          <p className="mt-2.5 pl-1 text-body-sm text-on-surface-variant">
             Using {intake.targetMinutes} min from your history instead.{' '}
             <button type="button" onClick={() => set({ targetMinutes: undefined })}
               className="font-semibold text-primary underline underline-offset-2">
@@ -378,7 +377,7 @@ function Builder({
           </Chip>
         </div>
         {intake.injured && (
-          <p className="mt-2.5 pl-1 text-[13px] text-on-surface-variant">
+          <p className="mt-2.5 pl-1 text-body-sm text-on-surface-variant">
             Physical sessions are left out while this is on. Ball work only.
           </p>
         )}
@@ -392,7 +391,7 @@ function Builder({
         Build my week
       </button>
       {trainingDays === 0 && (
-        <p className="mt-3 text-center text-[13px] text-on-surface-variant">
+        <p className="mt-3 text-center text-body-sm text-on-surface-variant">
           Every day is set to rest. Tap a day above to train on it.
         </p>
       )}
@@ -404,8 +403,8 @@ function Builder({
 function Metric({ v, unit }: { v: string; unit: string }) {
   return (
     <div>
-      <div className="font-brand text-[22px] font-bold leading-none tracking-tighter text-on-surface-brand">{v}</div>
-      <div className="mt-1 text-[11.5px] font-semibold text-on-surface-brand-variant">{unit}</div>
+      <div className="font-brand text-display-sm font-bold leading-none tracking-brand-snug text-on-surface-brand">{v}</div>
+      <div className="mt-1 text-caption font-semibold text-on-surface-brand-variant">{unit}</div>
     </div>
   );
 }

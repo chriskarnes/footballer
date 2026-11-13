@@ -8,7 +8,7 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
   return (
     <div className="safe-x flex min-h-dvh flex-col">
       <header className="mx-auto w-full max-w-3xl px-5 pt-6 sm:px-8">
-        <a href={root} className="font-brand text-[20px] tracking-tighter text-on-surface">
+        <a href={root} className="font-brand text-[20px] tracking-brand-snug text-on-surface">
           <span className="font-extrabold">Train</span><span className="font-medium text-on-surface-variant">.futbol</span>
         </a>
       </header>
@@ -18,7 +18,7 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
           <Pitch />
           <div className="mt-8">
             <p className="eyebrow mb-4">Nobody&rsquo;s training here yet</p>
-            <h1 className="break-words font-brand text-[34px] font-extrabold leading-[1.05] tracking-tightest text-on-surface sm:text-[52px]">
+            <h1 className="break-words font-brand text-[34px] font-extrabold leading-[1.05] tracking-brand-tight text-on-surface sm:text-[52px]">
               {slug}<span className="font-medium text-on-surface-variant">.{rootLabel}</span>
             </h1>
             <p className="mt-4 max-w-[30rem] text-[16px] leading-relaxed text-on-surface-variant sm:text-[17px]">

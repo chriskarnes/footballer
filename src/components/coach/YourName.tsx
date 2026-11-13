@@ -21,7 +21,7 @@ export function YourName() {
   return (
     <form className="card mt-5 p-5 lg:max-w-xl" onSubmit={(e) => { e.preventDefault(); save(); }}>
       <div className="h-card">What do your players call you?</div>
-      <p className="mt-0.5 text-[14px] text-on-surface-variant">It goes on the sessions and notes you send them.</p>
+      <p className="mt-0.5 text-body text-on-surface-variant">It goes on the sessions and notes you send them.</p>
       <div className="mt-4 flex gap-2">
         <label className="text-field min-w-0 flex-1">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={60}
@@ -31,7 +31,7 @@ export function YourName() {
           {busy ? 'Saving…' : 'Save'}
         </button>
       </div>
-      {err && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }

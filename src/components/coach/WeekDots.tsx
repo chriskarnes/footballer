@@ -35,7 +35,7 @@ export function WeekDots({ week, large }: { week: Progress['week']; large?: bool
         return (
           <span key={d.date} className="flex flex-col items-center gap-1.5">
             <span className={`${size} rounded-full border ${cls}`} />
-            {large && <span className={`text-[11px] ${d.today ? 'font-extrabold text-on-surface' : 'font-semibold text-on-surface-variant'}`}>{DAY[i]}</span>}
+            {large && <span className={`text-label-sm ${d.today ? 'font-extrabold text-on-surface' : 'font-semibold text-on-surface-variant'}`}>{DAY[i]}</span>}
           </span>
         );
       })}

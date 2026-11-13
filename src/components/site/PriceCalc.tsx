@@ -33,7 +33,7 @@ export function PriceCalc() {
       {/* The price, and the two ways to pay it. */}
       <div className="card overflow-hidden">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 p-6 sm:p-8">
-          <span className="font-brand text-[56px] font-extrabold leading-none tracking-tighter text-site-ink sm:text-[72px]">$5</span>
+          <span className="font-brand text-[56px] font-extrabold leading-none tracking-brand-snug text-site-ink sm:text-[72px]">$5</span>
           <span className="text-[16px] font-semibold text-on-surface-variant">per player, per month</span>
         </div>
         <dl className="grid border-t border-outline-variant sm:grid-cols-2 sm:divide-x sm:divide-outline-variant">

@@ -32,7 +32,7 @@ export async function LibraryLocked({ title }: { title: string }) {
         <BrandBand>
           <BandTag>{title}</BandTag>
           <BandTitle>Asked</BandTitle>
-          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
             {v.academy.name} will let you in. Then your sessions are here.
           </p>
         </BrandBand>
@@ -43,13 +43,13 @@ export async function LibraryLocked({ title }: { title: string }) {
         <BrandBand>
           <BandTag>{title}</BandTag>
           <BandTitle>{v.user ? 'Ask to join' : 'Sign in'}</BandTitle>
-          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
             {v.user ? `Your sessions from ${v.academy.name} appear here once you’re in.`
                     : `Your sessions from ${v.academy.name} are here once you sign in.`}
           </p>
         </BrandBand>
         {!v.user && <div className="mt-5"><SignIn next="/" /></div>}
-        <p className="mt-5 text-center text-[14px] text-on-surface-variant">
+        <p className="mt-5 text-center text-body text-on-surface-variant">
           {v.user ? 'Got a link from your trainer? Open it. ' : 'New here? '}
           <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">Ask to join</Link>
         </p>
@@ -63,7 +63,7 @@ export async function LibraryLocked({ title }: { title: string }) {
         <BrandBand>
           <BandTag>{title}</BandTag>
           <BandTitle>Player view</BandTitle>
-          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
             Your players see the sessions you set them here.
           </p>
         </BrandBand>
@@ -83,7 +83,7 @@ export async function LibraryLocked({ title }: { title: string }) {
       <BrandBand>
         <BandTag>{title}</BandTag>
         <BandTitle>Nothing yet</BandTitle>
-        <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+        <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
           Your trainer hasn&rsquo;t set a session.
         </p>
       </BrandBand>

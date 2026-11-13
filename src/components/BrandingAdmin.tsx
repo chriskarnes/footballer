@@ -109,31 +109,31 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
   return (
     <div className="pb-10">
       {/* ---------------------------------------------------------- PREVIEW */}
-      <section className="mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3"
+      <section className="mt-7 brand-card p-6"
                aria-label="Preview">
         {/* The top of Train, as players see it: the same wordmark and band text. */}
         <div className="text-on-surface-brand"><Wordmark name={shown} logo={logo} onBrand /></div>
         <div className="mt-5"><BandTag>Today</BandTag></div>
-        <div className="site-wide mt-3 text-[26px] uppercase leading-[.95] text-on-surface-brand">Touch and pass</div>
-        <p className="mt-3 text-[12.5px] font-semibold text-on-surface-brand-variant">Today&rsquo;s session · 45 min</p>
+        <div className="site-wide mt-3 text-headline uppercase leading-[.95] text-on-surface-brand">Touch and pass</div>
+        <p className="mt-3 text-body-sm font-semibold text-on-surface-brand-variant">Today&rsquo;s session · 45 min</p>
         <div className="mt-2 h-[6px] overflow-hidden rounded-full bg-brand-track">
           <div className="h-full w-[62%] rounded-full bg-brand-accent" />
         </div>
         <div className="mt-5 flex gap-2.5">
-          <span className="btn-primary btn-big flex-1 bg-on-surface-brand text-surface-brand">Start</span>
+          <span className="btn-primary btn-on-brand btn-big flex-1">Start</span>
         </div>
       </section>
       <div className="mt-4 flex flex-wrap items-center gap-2" aria-hidden="true">
         <span className="btn-primary btn-sm">Build session</span>
         <span className="chip chip-on">Dribbling</span>
         <span className="chip">Passing</span>
-        <span className="text-[13px] font-semibold text-primary underline underline-offset-4">A link</span>
+        <span className="text-body-sm font-semibold text-primary underline underline-offset-4">A link</span>
       </div>
 
       {/* ------------------------------------------------------------- NAME */}
       <section className="mt-9">
         <p className="eyebrow mb-0.5">Name</p>
-        <p className="mb-2.5 text-[12.5px] text-on-surface-variant">
+        <p className="mb-2.5 text-body-sm text-on-surface-variant">
           Replaces &ldquo;Train.futbol&rdquo; in the header and the browser tab. A dot splits it the
           same way: &ldquo;Riverside.fc&rdquo; sets the part after the dot lighter.
         </p>
@@ -146,7 +146,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
       {/* ---------------------------------------------------------- COLOURS */}
       <section className="mt-9">
         <p className="eyebrow mb-0.5">Colors</p>
-        <p className="mb-3 text-[12.5px] text-on-surface-variant">
+        <p className="mb-3 text-body-sm text-on-surface-variant">
           The main color fills buttons, the selected chip and the session card; the accent sits
           on it. Text colors are worked out for contrast, so every choice stays readable.
         </p>
@@ -175,7 +175,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
       {/* ------------------------------------------------------------- LOGO */}
       <section className="mt-9">
         <p className="eyebrow mb-0.5">Logo</p>
-        <p className="mb-3 text-[12.5px] text-on-surface-variant">
+        <p className="mb-3 text-body-sm text-on-surface-variant">
           A crest or badge, shown beside the name. Square works best. PNG or SVG with a
           transparent background, under 512 KB. Saves as soon as you pick it.
         </p>
@@ -183,7 +183,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-medium bg-surface-container">
             {logo
               ? <img src={logo} alt="Current logo" className="h-12 w-12 object-contain" />
-              : <span className="text-[11px] font-semibold text-on-surface-variant">None</span>}
+              : <span className="text-label-sm font-semibold text-on-surface-variant">None</span>}
           </div>
           <div className="flex flex-1 flex-wrap gap-2">
             <button type="button" onClick={() => file.current?.click()} disabled={logoBusy}
@@ -206,12 +206,12 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
           {saving ? 'Saving…' : dirty ? 'Save brand' : 'Saved'}
         </button>
         {status && (
-          <p role="status" className={`mt-3 text-[13px] font-semibold ${status.tone === 'err' ? 'text-error' : 'text-on-surface-variant'}`}>
+          <p role="status" className={`mt-3 text-body-sm font-semibold ${status.tone === 'err' ? 'text-error' : 'text-on-surface-variant'}`}>
             {status.tone === 'err' && 'Couldn’t save: '}{status.text}
           </p>
         )}
         <button type="button" onClick={() => setResetting(true)}
-                className="mt-6 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
+                className="mt-6 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
           Clear colors and logo
         </button>
       </div>
@@ -246,8 +246,8 @@ function Swatch({ on, onPick, name, note, primary, accent }: {
         )}
       </span>
       <span className="block px-3 pb-3 pt-2.5">
-        <span className="block text-[13.5px] font-bold text-on-surface">{name}</span>
-        <span className="mt-0.5 block text-[11.5px] leading-snug">{note}</span>
+        <span className="block text-body font-bold text-on-surface">{name}</span>
+        <span className="mt-0.5 block text-caption leading-snug">{note}</span>
       </span>
     </button>
   );
@@ -263,11 +263,11 @@ function ColourField({ label, value, onChange }: { label: string; value: string;
              aria-label={`${label} color`}
              className="h-10 w-10 shrink-0 cursor-pointer rounded-small border border-outline-variant bg-transparent p-0" />
       <span className="min-w-0">
-        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">{label}</span>
+        <span className="eyebrow block">{label}</span>
         <input type="text" value={text} maxLength={7} spellCheck={false}
                onChange={(e) => { const v = e.target.value.toUpperCase(); setText(v); if (isHex(v)) onChange(v); }}
                aria-label={`${label} hex`}
-               className="w-full rounded-sm bg-transparent font-mono text-[14px] font-semibold text-on-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
+               className="w-full rounded-extra-small bg-transparent font-mono text-body font-semibold text-on-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
       </span>
     </label>
   );

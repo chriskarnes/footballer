@@ -33,13 +33,13 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
       + `through your first drills, a session and a program, and your players' invite link.\n\n${url}\n`;
     return (
       <div className="mt-4 border-t border-outline-variant pt-4">
-        <p className="text-[13.5px] font-bold text-on-surface">
+        <p className="text-body font-bold text-on-surface">
           {done.claimed ? `Claimed. ${first} is the owner.` : `Approved. Send ${first} this link to claim it:`}
         </p>
         {!done.claimed && (
           <>
             <div className="mt-2.5 flex items-center gap-2">
-              <div className="card-flat min-w-0 flex-1 select-all truncate rounded-full px-4 py-2.5 text-[13px] font-semibold text-on-surface">
+              <div className="card-flat min-w-0 flex-1 select-all truncate rounded-full px-4 py-2.5 text-body-sm font-semibold text-on-surface">
                 {url.replace(/^https?:\/\//, '')}
               </div>
               <button type="button" className="btn-ghost btn-sm pressable shrink-0"
@@ -54,12 +54,12 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
                className="btn-primary btn-sm pressable mt-2.5 inline-flex">
               Email it to {first}
             </a>
-            <p className="mt-2 text-[12.5px] text-on-surface-variant">
+            <p className="mt-2 text-body-sm text-on-surface-variant">
               Only {email} can claim it, signed in with that address.
             </p>
           </>
         )}
-        {err && <p role="status" className="mt-2 text-[12.5px] font-semibold text-on-surface">{err}</p>}
+        {err && <p role="status" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
       </div>
     );
   }
@@ -87,7 +87,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
       <button type="submit" disabled={busy} className="btn-primary btn-sm pressable mt-3">
         {busy ? 'Approving…' : 'Approve'}
       </button>
-      {err && <p role="status" className="mt-2 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="status" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }

@@ -50,8 +50,8 @@ export default async function LibraryPage() {
             <section key={cat}>
               <div className={`relative mb-4 overflow-hidden rounded-large-increased bg-gradient-to-br
                                ${ART[cat]} p-6 shadow-level3`}>
-                <h2 className="font-brand text-[26px] font-extrabold leading-none
-                               tracking-tightest text-on-category">{KID[cat]}</h2>
+                <h2 className="font-brand text-headline font-extrabold leading-none
+                               tracking-brand-tight text-on-category">{KID[cat]}</h2>
               </div>
 
               {/* A program is a destination again, not a dialog. The sheet's job
@@ -66,10 +66,10 @@ export default async function LibraryPage() {
                     <Link key={p.id} href={`/library/${p.id}`}
                       className="card pressable flex min-h-[68px] items-center gap-4 p-4">
                       <div className="min-w-0 flex-1">
-                        <div className="text-[16px] font-bold leading-snug text-on-surface">{p.name}</div>
+                        <div className="text-title-sm font-bold leading-snug text-on-surface">{p.name}</div>
                         {/* No minute total. The number that helps is per drill, on
                             Train — "384m" against a program is not actionable. */}
-                        <div className="mt-0.5 text-[14px] font-semibold text-on-surface-variant">
+                        <div className="mt-0.5 text-body font-semibold text-on-surface-variant">
                           {n} sessions
                         </div>
                       </div>

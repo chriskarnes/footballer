@@ -13,10 +13,10 @@ export function RemovePlayer({ userId, name }: { userId: string; name: string })
   return (
     <div className="mt-9 border-t border-outline-variant pt-4">
       <button type="button" onClick={() => setOpen(true)}
-              className="text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">
+              className="text-body font-semibold text-on-surface-variant underline underline-offset-4">
         Remove {name} from the academy
       </button>
-      {err && <p role="status" className="mt-2 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="status" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
       <ConfirmSheet open={open} busy={busy} title={`Remove ${name}?`} confirmLabel="Remove"
         body={`${name} leaves your list and stops getting notes. Their own training history stays with their account.`}
         onCancel={() => setOpen(false)}

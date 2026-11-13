@@ -42,7 +42,7 @@ export function SpeedTestCard() {
       <BackLink href="/speed" label="Speed" />
       <h2 className="h-sec mb-3">Test day</h2>
       <h1 className="h-page">Your card</h1>
-      <p className="mt-3 text-[14.5px] leading-relaxed text-on-surface-variant">
+      <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
         Thursday of every fourth week. Same five tests, same order, same surface, after the
         normal warm-up. Height every time.
       </p>
@@ -53,9 +53,9 @@ export function SpeedTestCard() {
       </button>
 
       {ready && gain !== null && gain > 2.5 && (
-        <div className="hint-in mt-5 rounded-large-increased border border-brand-edge bg-surface-brand p-5">
-          <p className="text-[13px] font-bold text-on-surface-brand">Growth spurt: +{gain} cm since last test</p>
-          <p className="mt-1.5 text-[12.5px] leading-relaxed text-on-surface-brand-variant">
+        <div className="hint-in mt-5 brand-card p-5">
+          <p className="text-body-sm font-bold text-on-surface-brand">Growth spurt: +{gain} cm since last test</p>
+          <p className="mt-1.5 text-body-sm leading-relaxed text-on-surface-brand-variant">
             Cut sprint volume by a third, jumping back to Phase 1 level, double the mechanics
             drills for the next 2–3 blocks. Flat or slower times are expected and are not a problem.
           </p>
@@ -71,14 +71,14 @@ export function SpeedTestCard() {
               const latest = last?.values[t.id];
               const isPb = v !== undefined && latest === v;
               return (
-                <div key={t.id} className={`${isPb ? 'rounded-large-increased border border-brand-edge bg-surface-brand shadow-level3' : 'card-flat'} p-4`}>
-                  <div className={`text-[11.5px] font-semibold ${isPb ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{t.name}</div>
-                  <div className={`mt-1.5 font-brand text-[24px] font-extrabold leading-none tracking-tightest ${isPb ? 'text-on-surface-brand' : ''}`}>
+                <div key={t.id} className={`${isPb ? 'brand-card' : 'card-flat'} p-4`}>
+                  <div className={`text-caption font-semibold ${isPb ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{t.name}</div>
+                  <div className={`mt-1.5 font-brand text-display font-extrabold leading-none tracking-brand-tight ${isPb ? 'text-on-surface-brand' : ''}`}>
                     {v === undefined ? '—' : fmt(v, t.unit)}
-                    <span className={`ml-1 text-[12px] font-bold ${isPb ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{t.unit}</span>
+                    <span className={`ml-1 text-caption font-bold ${isPb ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{t.unit}</span>
                   </div>
                   {isPb && (
-                    <div className="mt-1.5 text-[11px] font-bold text-on-surface-brand-variant">
+                    <div className="mt-1.5 text-label-sm font-bold text-on-surface-brand-variant">
                       {entries.length === 1 ? 'baseline' : 'set last test'}
                     </div>
                   )}
@@ -93,7 +93,7 @@ export function SpeedTestCard() {
         <section className="mt-8">
           <h2 className="h-sec mb-3">Every test day</h2>
           <div className="card-flat overflow-x-auto">
-            <table className="w-full text-[12.5px]">
+            <table className="w-full text-body-sm">
               <thead>
                 <tr className="text-left text-on-surface-variant">
                   <th className="p-3 font-semibold">Test</th>
@@ -141,10 +141,10 @@ export function SpeedTestCard() {
         <ol className="card-flat divide-y divide-outline-variant">
           {TESTS.map((t, i) => (
             <li key={t.id} className="flex gap-4 p-4">
-              <span className="font-brand text-[13px] font-bold text-on-surface-variant">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-brand text-body-sm font-bold text-on-surface-variant">{String(i + 1).padStart(2, '0')}</span>
               <div className="min-w-0 flex-1">
                 <div className="h-card">{t.name}</div>
-                <div className="mt-1 text-[12.5px] leading-relaxed text-on-surface-variant">{t.how}</div>
+                <div className="mt-1 text-body-sm leading-relaxed text-on-surface-variant">{t.how}</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <span className="tag tag-accent">{t.measures}</span>
                   <span className="tag">good block: {t.goodProgress}</span>
@@ -153,7 +153,7 @@ export function SpeedTestCard() {
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-[13px] leading-relaxed text-on-surface-variant">
+        <p className="mt-3 text-body-sm leading-relaxed text-on-surface-variant">
           Add a 4-minute run (distance on a marked loop) in weeks 4 and 12 of Phases 1 and 2 only.
           Every test day ends with a game: numbers first, fun last.
         </p>
@@ -164,8 +164,8 @@ export function SpeedTestCard() {
         <div className="card-flat divide-y divide-outline-variant">
           {PROGRESSION.map((p) => (
             <div key={p.result} className="p-4">
-              <div className="text-[13.5px] font-bold">{p.result}</div>
-              <div className="mt-1 text-[12.5px] leading-relaxed text-on-surface-variant">{p.change}</div>
+              <div className="text-body font-bold">{p.result}</div>
+              <div className="mt-1 text-body-sm leading-relaxed text-on-surface-variant">{p.change}</div>
             </div>
           ))}
         </div>
@@ -209,7 +209,7 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
     <div className="animate-pop">
       <h2 className="h-sec mb-3">Test day</h2>
       <h1 className="h-page">Record the numbers</h1>
-      <p className="mt-3 text-[14.5px] leading-relaxed text-on-surface-variant">
+      <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
         Best attempt for each. Leave anything you skipped blank.
       </p>
 

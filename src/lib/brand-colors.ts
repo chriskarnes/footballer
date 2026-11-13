@@ -146,6 +146,5 @@ const decls = (t: Record<string, string>) => Object.entries(t).map(([k, v]) => `
 export function brandCss(primary: string, accent: string) {
   const { light, dark } = brandTokens(primary, accent);
   return `:root{${decls(light)}}`
-    + `@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${decls(dark)}}}`
-    + `:root[data-theme="dark"]{${decls(dark)}}`;
+    + `@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${decls(dark)}}}`;
 }

@@ -36,7 +36,7 @@ export function SessionCard({
   }
 
   if (!built.drills.length) {
-    return <div className="card p-6 text-[15px] text-on-surface-variant">
+    return <div className="card p-6 text-body-lg text-on-surface-variant">
       Nothing matched. Try a longer session.
     </div>;
   }
@@ -44,17 +44,17 @@ export function SessionCard({
   return (
     <div>
       {/* What it is in one line, and the one thing this screen is for. */}
-      <div className="rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
-        <p className="font-brand text-[22px] font-extrabold leading-tight tracking-tighter text-on-surface-brand">
+      <div className="brand-card p-6">
+        <p className="font-brand text-display-sm font-extrabold leading-tight tracking-brand-snug text-on-surface-brand">
           {mins} min · {built.drills.length} {built.drills.length === 1 ? 'drill' : 'drills'}{built.rounds > 1 ? ` × ${built.rounds}` : ''}
         </p>
         {!!built.totalTouches && (
-          <p className="mt-1 text-[15px] font-semibold text-on-surface-brand-variant">
+          <p className="mt-1 text-body-lg font-semibold text-on-surface-brand-variant">
             {formatTouches(built.totalTouches)} touches on the ball
           </p>
         )}
         <Link href={startHref}
-              className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+              className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
           Start
         </Link>
         <div className="mt-3 grid grid-cols-2 gap-2.5">
@@ -68,10 +68,10 @@ export function SessionCard({
           </button>
         </div>
         {saving === 'error' && (
-          <p role="alert" className="mt-3 text-[14px] font-medium text-on-surface-brand">Couldn&rsquo;t save it. Try again.</p>
+          <p role="alert" className="mt-3 text-body font-medium text-on-surface-brand">Couldn&rsquo;t save it. Try again.</p>
         )}
         {saving === 'signin' && (
-          <p role="status" className="mt-3 text-[14px] font-medium text-on-surface-brand-variant">
+          <p role="status" className="mt-3 text-body font-medium text-on-surface-brand-variant">
             <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> to save sessions.
           </p>
         )}
@@ -80,12 +80,12 @@ export function SessionCard({
       <ol className="stagger mt-6 space-y-2.5">
         {built.drills.map((d, i) => (
           <li key={d.id} className="card flex items-center gap-3 p-4">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high font-brand text-[14px] font-extrabold">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-container-high font-brand text-body font-extrabold">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-[16px] font-bold leading-snug text-on-surface">{d.name}</div>
-              <div className="mt-0.5 text-[14px] font-semibold text-on-surface-variant">
+              <div className="text-title-sm font-bold leading-snug text-on-surface">{d.name}</div>
+              <div className="mt-0.5 text-body font-semibold text-on-surface-variant">
                 {d.sets} × {d.reps_time}
               </div>
             </div>

@@ -106,7 +106,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
 
   return (
     <div>
-      <p className="text-[14px] font-medium text-on-surface-variant">Tap a day to change it.</p>
+      <p className="text-body font-medium text-on-surface-variant">Tap a day to change it.</p>
       <div className="mt-2.5 grid grid-cols-7 gap-1.5" role="group" aria-label="Soccer week">
         {DAYS.map((label, i) => {
           const k = week[i];
@@ -114,7 +114,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
           return (
             <button key={label} type="button" onClick={() => tap(i)} disabled={pending}
                     aria-label={`${FULL[i]}: ${NAME[k]}`}
-                    className={`pressable flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl text-[14px] font-bold transition-colors ${LOOK[k]}`}>
+                    className={`pressable flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-medium text-body font-bold transition-colors ${LOOK[k]}`}>
               {label}
               <span className="flex h-[18px] w-[18px] items-center justify-center">
                 <Mark className="h-[18px] w-[18px]" />
@@ -126,12 +126,12 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
       </div>
 
       {/* The four, in the order a tap goes through them. */}
-      <ol className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[14px] font-semibold text-on-surface-variant" aria-label="Each tap goes to the next">
+      <ol className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-body font-semibold text-on-surface-variant" aria-label="Each tap goes to the next">
         {KINDS.map((k) => {
           const Mark = MARK[k];
           return (
             <li key={k} className="flex items-center gap-1">
-              <span className={`flex h-5 w-5 items-center justify-center rounded-md ${LOOK[k]}`} aria-hidden="true">
+              <span className={`flex h-5 w-5 items-center justify-center rounded-small ${LOOK[k]}`} aria-hidden="true">
                 <Mark className="h-3.5 w-3.5" />
               </span>
               {NAME[k]}
@@ -140,7 +140,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
         })}
       </ol>
 
-      {error && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{error}</p>}
       {changed || asking ? (
         <div className="mt-4 flex items-center gap-2.5">
           <button type="button" onClick={save} disabled={pending} className="btn-primary btn-sm pressable">
@@ -152,7 +152,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
           )}
         </div>
       ) : !userId && (
-        <p className="mt-3 text-[15px] font-medium leading-snug text-on-surface">Your sessions go on the off days.</p>
+        <p className="mt-3 text-body-lg font-medium leading-snug text-on-surface">Your sessions go on the off days.</p>
       )}
     </div>
   );
@@ -164,7 +164,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
 export function SoccerDaysPanel({ days }: { days: TeamDays | null }) {
   return (
     <div className="card p-4">
-      {!days && <p className="mb-2 text-[16px] font-bold leading-snug text-on-surface">When do you have soccer?</p>}
+      {!days && <p className="mb-2 text-title-sm font-bold leading-snug text-on-surface">When do you have soccer?</p>}
       <SoccerDays days={days} />
     </div>
   );

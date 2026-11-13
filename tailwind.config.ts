@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Forge design system — Material Design 3.
+ * Train.futbol design system — Material Design 3.
  *
  * Nothing is a literal here. Every value resolves to a custom property defined
  * in src/app/globals.css, which is what lets a utility like
@@ -119,20 +119,30 @@ const config: Config = {
         medium2: 'var(--md-sys-motion-duration-medium2)',
         long2:   'var(--md-sys-motion-duration-long2)',
       },
+      fontSize: {
+        /* The app's type steps. Every size in the app is one of these; the
+           M3 roles above them (.h-page, .h-card, .eyebrow) use the same
+           tokens. Font size only: line height stays with the element. */
+        'label-sm':    'var(--md-sys-typescale-label-small-size)',   // 11
+        caption:       '12px',
+        'body-sm':     '13px',
+        body:          '14px',
+        'body-lg':     'var(--md-sys-typescale-body-large-size)',    // 15
+        'title-sm':    '16px',
+        title:         'var(--md-sys-typescale-title-medium-size)',  // 17
+        'title-lg':    '19px',
+        'display-sm':  '22px',
+        display:       '24px',
+        headline:      'var(--md-sys-typescale-headline-small-size)', // 27
+        'headline-lg': 'var(--md-sys-typescale-headline-large-size)', // 34
+      },
       letterSpacing: {
-        /* M3 typescale tracking, retuned for Roboto Flex — see globals.css. */
-        tightest: 'var(--app-track-tightest)',
-        tighter:  'var(--app-track-tighter)',
-      },
-      keyframes: {
-        rise: { '0%': { opacity: '0', transform: 'translateY(10px)' },
-                '100%': { opacity: '1', transform: 'none' } },
-        pop:  { '0%': { opacity: '0', transform: 'scale(.97)' },
-                '100%': { opacity: '1', transform: 'none' } },
-      },
-      animation: {
-        rise: 'rise .45s cubic-bezier(.16,1,.3,1) both',
-        pop:  'pop .35s cubic-bezier(.16,1,.3,1) both',
+        /* Brand-face tracking, retuned for Roboto Flex — see globals.css.
+           Named apart from Tailwind's own tight/tighter (-0.025/-0.05em):
+           these are looser than both, and were once called "tightest" and
+           "tighter", the wrong way round. */
+        'brand-tight': 'var(--app-track-brand-tight)',
+        'brand-snug':  'var(--app-track-brand-snug)',
       },
     },
   },

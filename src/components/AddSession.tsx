@@ -14,13 +14,13 @@ export function AddSession({ why, inBand = false }: { why: string | null; inBand
   return (
     <div className="mt-4">
       <button type="button" disabled={pending || !!why}
-              className={inBand ? 'btn-primary btn-big pressable w-full bg-on-surface-brand text-surface-brand disabled:opacity-50'
-                : 'btn-ghost pressable min-h-[52px] w-full text-[15px] font-bold disabled:opacity-50'}
+              className={inBand ? 'btn-primary btn-on-brand btn-big pressable w-full'
+                : 'btn-ghost pressable min-h-[52px] w-full text-body-lg font-bold disabled:opacity-50'}
               onClick={() => start(async () => { haptic('tap'); setErr(''); const r = await addMySession(); if (r && !r.ok) setErr(r.error); })}>
         {pending ? 'Building…' : inBand ? 'Bonus session' : '+ Add an extra session'}
       </button>
       {(err || why) && (
-        <p className={`mt-2 text-center text-[13.5px] font-medium ${inBand ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{err || why}</p>
+        <p className={`mt-2 text-center text-body font-medium ${inBand ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{err || why}</p>
       )}
     </div>
   );
