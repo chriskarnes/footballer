@@ -23,7 +23,7 @@ import { DrillForm } from './DrillForm';
  *   legacy   a program week before migration 0017: the session is the week's own.
  */
 export type SessionTarget =
-  | { kind: 'library'; id?: string; usedIn: string[] }
+  | { kind: 'library'; id?: string; usedIn: string[]; back?: string }
   | { kind: 'placed'; programId: string; week: number; placementId?: string; libraryId?: string | null; alsoIn: string[] }
   | { kind: 'legacy'; programId: string; week: number; id?: string };
 
@@ -151,7 +151,7 @@ export function SessionEditor({ target, session, drills: given }: {
                 </p>
               )}
               <button type="button" disabled={busy} className="btn-primary pressable w-full"
-                      onClick={() => run(() => saveLibrarySession({ libraryId: id, ...body, back: '/coach/sessions' }))}>
+                      onClick={() => run(() => saveLibrarySession({ libraryId: id, ...body, back: target.back ?? '/coach/sessions' }))}>
                 {busy ? 'Saving…' : 'Save session'}
               </button>
               {id && (usedIn.length

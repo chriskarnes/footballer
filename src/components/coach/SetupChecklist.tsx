@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { PageHead } from './PageHead';
 import { InviteLink } from './InviteLink';
-import { FinishSetup, SetupYou } from './Setup';
+import { FinishSetup, ListedSwitch, SetupYou } from './Setup';
 import { AvatarPicker } from '@/components/AvatarPicker';
 import { TickMark } from '@/components/TickMark';
 import type { AcademyContent } from '@/lib/academy-data';
@@ -47,7 +47,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
         <>
           <p className="mt-3 text-[14px] font-bold text-on-surface">{drills} of 3</p>
           <div className="mt-3 flex flex-wrap gap-2.5">
-            <Link href="/coach/drills/new" className="btn-primary pressable">Add a drill</Link>
+            <Link href="/coach/drills/new?back=/coach/setup" className="btn-primary pressable">Add a drill</Link>
             {drills > 0 && <Link href="/coach/drills" className="btn-ghost pressable min-h-[52px]">See your drills</Link>}
           </div>
         </>
@@ -57,7 +57,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
       title: 'A session',
       why: 'Your drills in order. It’s what a player opens and works through at home.',
       done: firstSession,
-      body: <Link href="/coach/sessions/new" className="btn-primary pressable mt-4">Build a session</Link>,
+      body: <Link href="/coach/sessions/new?back=/coach/setup" className="btn-primary pressable mt-4">Build a session</Link>,
     },
     {
       title: 'A program',
@@ -69,15 +69,17 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
     },
     {
       title: 'Your players',
-      why: 'Send this link to your players or their parents. They sign in and appear on your Players page.',
-      done: s.done ? 'Open, and in Find your trainer' : null,
+      why: 'Send this link to your players or their parents. They sign in and appear on your Players page. Then put each one in a group with your program, or give them the program, and their week starts.',
+      done: s.done ? (s.listed ? 'Finished · in Find your trainer' : 'Finished · invite link only') : null,
       body: (
         <>
           {invite
             ? <InviteLink path={`/join/${invite}`} role="player" canRotate={false} />
             : <p className="mt-3 text-[14px] text-on-surface-variant">No invite link yet.</p>}
           {!!players && <p className="mt-3 text-[14px] font-semibold text-on-surface">{players} {players === 1 ? 'player has' : 'players have'} joined.</p>}
-          <FinishSetup name={name} ready={done.slice(0, 4).every(Boolean)} />
+          {s.done
+            ? <div className="mt-4"><ListedSwitch initial={s.listed} /></div>
+            : <FinishSetup ready={done.slice(0, 4).every(Boolean)} />}
         </>
       ),
     },
@@ -86,7 +88,9 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
   return (
     <div className="animate-pop">
       <PageHead eyebrow={`${done.filter(Boolean).length} of 5 done`} title={`Set up ${name}`}>
-        Five steps, and your players have something to do before your next session.
+        {s.done
+          ? 'All done. Change anything here whenever you like.'
+          : 'Five steps to get your first session ready and your players in. Then give them your program from their page or a group.'}
       </PageHead>
       {!s.ready && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[14px] font-semibold text-on-surface">

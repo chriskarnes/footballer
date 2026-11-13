@@ -49,12 +49,31 @@ export async function saveName(name: string): Promise<Result> {
   return { ok: true };
 }
 
-/** The last step: the checklist goes, and the academy shows in Find your trainer. */
-export async function finishSetup(): Promise<Result> {
+/** Whether players can find the academy by name in Find your trainer. The owner's choice. */
+export async function setListed(listed: boolean): Promise<Result> {
+  const v = await getViewer();
+  if (!v.user || !v.academy || v.role !== 'owner') return { ok: false, error: 'Only the owner can change this.' };
+  const { error } = await v.db.from('academies').update({ listed }).eq('id', v.academy.id);
+  if (error) return { ok: false, error: plain(error) };
+  revalidatePath('/coach', 'layout');
+  return { ok: true };
+}
+
+/**
+ * The last step: the checklist goes, and, unless the owner would rather
+ * only their invite link brought players in, the academy shows in Find
+ * your trainer.
+ */
+export async function finishSetup(listed = true): Promise<Result> {
   const v = await getViewer();
   if (!v.user || !v.academy || v.role !== 'owner') return { ok: false, error: 'Only the owner sets this up.' };
   const { error } = await v.db.rpc('academy_setup_mark', { p_academy: v.academy.id, p_step: 'done' });
   if (error) return { ok: false, error: missing(error.message) ? notReady(error, '0020') : plain(error) };
+  // Marking it done lists it; an owner who said no is taken back out.
+  if (!listed) {
+    const r = await v.db.from('academies').update({ listed: false }).eq('id', v.academy.id);
+    if (r.error) return { ok: false, error: plain(r.error) };
+  }
   revalidatePath('/coach');
-  redirect('/coach?ready=1');
+  redirect(`/coach?ready=${listed ? 'listed' : 'link'}`);
 }

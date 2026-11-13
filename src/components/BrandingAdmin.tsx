@@ -267,7 +267,7 @@ function ColourField({ label, value, onChange }: { label: string; value: string;
         <input type="text" value={text} maxLength={7} spellCheck={false}
                onChange={(e) => { const v = e.target.value.toUpperCase(); setText(v); if (isHex(v)) onChange(v); }}
                aria-label={`${label} hex`}
-               className="w-full bg-transparent font-mono text-[14px] font-semibold text-on-surface outline-none" />
+               className="w-full rounded-sm bg-transparent font-mono text-[14px] font-semibold text-on-surface outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" />
       </span>
     </label>
   );

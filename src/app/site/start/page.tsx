@@ -3,12 +3,13 @@ import { Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'Get started · Train.futbol',
-  description: 'Private soccer trainers: tell us how you train, and we’ll set up your page and first sessions with you.',
+  description: 'Private soccer trainers: tell us how you train, and we’ll set up your page. Add your drills and send your players the link.',
 };
 
 /**
- * Asked, not signed up: trainers are set up by hand for now, so every page
- * opens with sessions in it. The form is the start of that conversation.
+ * Asked, not signed up: each request is approved by hand, then the trainer
+ * gets a claim link and a short setup checklist (coach/setup). The steps
+ * here describe that, not a call we don't make.
  */
 export default async function StartPage({ searchParams }: { searchParams: Promise<{ slug?: string }> }) {
   const { slug } = await searchParams;
@@ -22,11 +23,11 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
             Tell us how you <Lime>train.</Lime>
           </h1>
           <p className="mt-6 max-w-[30rem] text-[17px] leading-relaxed text-site-mint">
-            We set up every page with its trainer, so your sessions are in it before your players open it. Here&rsquo;s how it goes:
+            We look over every request ourselves, then you have your own page within a day or two. Here&rsquo;s how it goes:
           </p>
           <ol className="mt-6 max-w-[30rem] space-y-4 text-[15px] leading-relaxed text-site-mint">
-            <li><b className="text-white">A short call.</b> What you teach, who you train, and how often you see them.</li>
-            <li><b className="text-white">Your first sessions.</b> We build three or four together from drills you already use. Use your YouTube videos, or film new ones on your phone.</li>
+            <li><b className="text-white">Your page.</b> We email you a link to it. Open it and it&rsquo;s yours.</li>
+            <li><b className="text-white">Five quick steps.</b> Your name, a few drills you already use, a session, and a program. Use your YouTube videos, or film new ones on your phone.</li>
             <li><b className="text-white">Your link.</b> Send it to your players. They have drills to do before your next session.</li>
           </ol>
         </div>

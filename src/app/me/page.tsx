@@ -150,7 +150,15 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   // Trainers aren't asked these: their name is asked on the trainer side.
   const staff = role === 'owner' || role === 'trainer';
   if (!profile?.display_name && !workouts.length && !staff) {
-    return <ProfileSetup email={user.email} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent'} />;
+    return (
+      <div>
+        <BrandBand>
+          <BandTag>Welcome</BandTag>
+          <BandTitle>{signedUpBy === 'parent' ? 'Set your player up' : 'Let’s set you up'}</BandTitle>
+        </BrandBand>
+        <ProfileSetup email={user.email} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent'} heading={false} />
+      </div>
+    );
   }
 
   const finished = finishedRows(workouts);

@@ -21,7 +21,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
       <div className="card p-6 sm:p-8" role="status">
         <h2 className="h-card text-on-surface">Thanks. We&rsquo;ll be in touch.</h2>
         <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
-          Expect an email within a day. We&rsquo;ll set up your page together and add your first sessions before you send it to anyone.
+          Expect an email within a day or two with the link to your page. A short checklist there gets your first sessions in before you send it to anyone.
         </p>
       </div>
     );

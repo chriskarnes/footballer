@@ -7,6 +7,8 @@ import { BuildDefaults } from '@/components/coach/BuildDefaults';
 import { PlayerOptions } from '@/components/coach/PlayerOptions';
 import { loadDefaults } from '@/lib/academy-data';
 import { usage } from '@/lib/ai';
+import { readSetup } from '@/lib/setup';
+import { ListedSwitch } from '@/components/coach/Setup';
 
 export const metadata = { title: 'Academy', robots: { index: false } };
 
@@ -22,11 +24,12 @@ export default async function TeamPage() {
   if ('page' in gate) return gate.page;
   const { db, academy, role, canBrand } = gate.viewer;
 
-  const [{ data: staff }, { data: invites }, defaults, ai] = await Promise.all([
+  const [{ data: staff }, { data: invites }, defaults, ai, setup] = await Promise.all([
     db.rpc('academy_staff', { p_academy: academy.id }),
     db.from('academy_invites').select('code, role').eq('academy_id', academy.id),
     loadDefaults(db, academy.id),
     usage(db, academy.id, academy.timeZone),
+    readSetup(db, academy.id),
   ]);
   const code = (r: string) => (invites ?? []).find((i: { role: string }) => i.role === r)?.code as string | undefined;
   const owner = role === 'owner';
@@ -78,6 +81,22 @@ export default async function TeamPage() {
           <PlayerOptions library={defaults.playerLibrary} extras={defaults.playerExtras} speed={defaults.playerSpeed} />
         </div>
       </section>
+
+      {owner && setup.ready && (
+        <section className="mt-9">
+          <p className="eyebrow mb-3">Finding you</p>
+          <div className="card p-5">
+            {setup.done
+              ? <ListedSwitch initial={setup.listed} />
+              : <p className="text-[14px] text-on-surface-variant">Players can find you by name once you finish setup.</p>}
+          </div>
+          {/* The checklist, any time: the way back to it once it's off the dashboard. */}
+          <Link href="/coach/setup" className="card pressable mt-3 flex min-h-[56px] items-center justify-between px-4">
+            <span className="text-[14px] font-semibold text-on-surface">Setup checklist</span>
+            <span className="text-[14px] text-on-surface-variant">{setup.done ? 'Done ›' : 'Continue ›'}</span>
+          </Link>
+        </section>
+      )}
 
       {canBrand && (
         <Link href="/coach/brand" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">

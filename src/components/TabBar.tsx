@@ -60,8 +60,9 @@ function Bar({ academyId, library = true, plan = true, speed = true, from }: Pro
   const mine = TABS.filter((t) => (t.href !== '/library' || library) && (t.href !== '/plan' || plan) && (t.href !== '/speed' || speed));
   const tabs = role === 'owner' || role === 'trainer' ? [COACH, ...mine] : mine;
   // An invite, or a trainer claiming their academy, is one decision; the
-  // app's tabs are for after it.
-  if (path.startsWith('/join') || path.startsWith('/claim') || path === '/request') return null;
+  // app's tabs are for after it. Asking to join isn't: it's a wait, and the
+  // tabs are the way on from it.
+  if (path.startsWith('/join') || path.startsWith('/claim')) return null;
   return (
     // safe-b keeps the bar clear of the iPhone home indicator; without it the pill
     // sits underneath the gesture area and taps land on the wrong thing.

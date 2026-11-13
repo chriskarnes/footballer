@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Brand } from '@/components/Brand';
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { SignIn } from '@/components/SignIn';
 import { AskToJoin } from '@/components/AskToJoin';
 import { getViewer } from '@/lib/viewer';
@@ -30,15 +30,15 @@ export default async function RequestPage() {
 
   return (
     <div className="animate-pop">
-      <header className="app-bar"><Brand small /></header>
-      <div className="mt-10">
-        <p className="eyebrow mb-3">Ask to join</p>
-        <h1 className="h-page">{v.academy.name}</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant">
+      {/* The academy's colours, like the invite page: this is the other way in. */}
+      <BrandBand overlap>
+        <BandTag>Ask to join</BandTag>
+        <BandTitle>{v.academy.name}</BandTitle>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
           Your trainer lets you in, then your sessions appear here. If they sent you a link, use that instead: it skips this step.
         </p>
-      </div>
-      <div className="mt-7">
+      </BrandBand>
+      <div className="relative -mt-12">
         {!v.user ? (
           <SignIn next="/request" title="First, sign in" button="Email me a link" />
         ) : v.role ? (
@@ -53,6 +53,9 @@ export default async function RequestPage() {
           <AskToJoin academy={v.academy.name} email={v.user.email ?? ''} pending={pending} />
         )}
       </div>
+      <p className="mt-6 text-center text-[14px] text-on-surface-variant">
+        <Link href="/" className="font-semibold text-on-surface underline underline-offset-4">Back to Train</Link>
+      </p>
     </div>
   );
 }

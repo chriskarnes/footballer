@@ -74,19 +74,14 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
             if (r.ok) setDone({ slug: r.slug, code: r.code, claimed: false }); else setErr(r.error);
           }}>
       <div className="grid gap-2.5 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-[12.5px] font-bold text-on-surface-variant">Address</span>
-          <span className="mt-1 flex items-center rounded-xl border border-outline px-3">
-            <input value={address} onChange={(e) => setAddress(e.target.value.toLowerCase())} required
-                   className="min-h-11 min-w-0 flex-1 bg-transparent text-[14px] font-semibold text-on-surface outline-none"
-                   placeholder="mikes-academy" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
-            <span className="text-[13px] text-on-surface-variant">.train.futbol</span>
-          </span>
+        <label className="text-field">
+          <span>Address (.train.futbol)</span>
+          <input value={address} onChange={(e) => setAddress(e.target.value.toLowerCase())} required
+                 placeholder="mikes-academy" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
         </label>
-        <label className="block">
-          <span className="text-[12.5px] font-bold text-on-surface-variant">Academy name</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={40}
-                 className="mt-1 min-h-11 w-full rounded-xl border border-outline bg-transparent px-3 text-[14px] font-semibold text-on-surface outline-none" />
+        <label className="text-field">
+          <span>Academy name</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
         </label>
       </div>
       <button type="submit" disabled={busy} className="btn-primary btn-sm pressable mt-3">

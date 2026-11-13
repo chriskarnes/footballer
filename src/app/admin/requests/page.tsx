@@ -45,7 +45,7 @@ export default async function RequestsPage() {
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-on-surface-variant">
               {[r.slug && `${r.slug}.train.futbol`, r.city, r.players && `${r.players} players`,
-                r.trainers && `${r.trainers} coaches`, r.content].filter(Boolean).join(' · ')}
+                r.trainers && (r.trainers === 'Just me' ? 'trainer on their own' : `${r.trainers} trainers`), r.content].filter(Boolean).join(' · ')}
             </p>
             {r.message && <p className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-on-surface">{r.message}</p>}
             {r.status !== 'declined' && (

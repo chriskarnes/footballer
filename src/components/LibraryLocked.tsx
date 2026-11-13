@@ -23,6 +23,21 @@ import { SpeedInvite } from './SpeedInvite';
 export async function LibraryLocked({ title }: { title: string }) {
   const v = await getViewer().catch(() => null);
   if (v?.academy && (!v.user || !v.role)) {
+    // Asked already: they're waiting on the trainer, not being told to ask.
+    const asked = v.user
+      ? !!(await v.db.from('join_requests').select('user_id').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle()).data
+      : false;
+    if (asked) return (
+      <div className="animate-pop">
+        <BrandBand>
+          <BandTag>{title}</BandTag>
+          <BandTitle>Asked</BandTitle>
+          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+            {v.academy.name} will let you in. Then your sessions are here.
+          </p>
+        </BrandBand>
+      </div>
+    );
     return (
       <div className="animate-pop">
         <BrandBand>

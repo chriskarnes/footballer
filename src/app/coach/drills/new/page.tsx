@@ -9,9 +9,10 @@ export default async function NewDrillPage({ searchParams }: { searchParams: Pro
   if ('page' in gate) return gate.page;
   const { back } = await searchParams;
   const to = back?.startsWith('/coach') ? back : '/coach/drills';
+  const label = to === '/coach/drills' ? 'Drills' : to === '/coach/setup' ? 'Setup' : 'Back';
   return (
     <div className="animate-pop">
-      <PageHead back={{ href: to, label: to === '/coach/drills' ? 'Drills' : 'Back' }} title="New drill" />
+      <PageHead back={{ href: to, label }} title="New drill" />
       <div className="mt-6" />
       <DrillForm back={to} />
     </div>

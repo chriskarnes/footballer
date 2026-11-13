@@ -36,7 +36,7 @@ export type ProfileValues = {
   club?: string | null;
 };
 
-export function ProfileSetup({ email, initial, photo, next = '/', parent = false }: {
+export function ProfileSetup({ email, initial, photo, next = '/', parent = false, heading = true }: {
   email?: string; initial?: ProfileValues;
   /** The optional photo picker, on the profile screen; not part of first-time setup. */
   photo?: React.ReactNode;
@@ -44,6 +44,8 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   next?: string;
   /** Joined as a parent: the questions are about their player. */
   parent?: boolean;
+  /** False where the page's brand band already says what this is (first-time setup on Me). */
+  heading?: boolean;
 }) {
   const q = parent
     ? { name: 'What’s your player’s name?', age: 'How old are they?', where: 'Where do they play?',
@@ -115,7 +117,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
 
   return (
     <div className="animate-pop">
-      <h1 className="h-page">{returning ? (parent ? 'Player profile' : 'My profile') : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>
+      {heading && <h1 className="h-page">{returning ? (parent ? 'Player profile' : 'My profile') : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>}
       {photo}
 
       {/* Name is required now the profile is about someone else, but a first

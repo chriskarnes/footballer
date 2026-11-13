@@ -6,6 +6,7 @@ import { CopyWeek } from '@/components/coach/CopyWeek';
 import { loadContent } from '@/lib/academy-data';
 import { sessionsForWeek } from '@/lib/academy-week';
 import { PageHead } from '@/components/coach/PageHead';
+import { inSetup } from '@/lib/setup';
 
 export const metadata = { title: 'Program', robots: { index: false } };
 
@@ -18,8 +19,9 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const gate = await staffOnly(`/coach/programs/${id}`);
   if ('page' in gate) return gate.page;
-  const { db, academy } = gate.viewer;
-  const c = await loadContent(db, academy.id);
+  const { db, academy, role } = gate.viewer;
+  // Mid-setup, the program step ends here: the way back is to the checklist.
+  const [c, setup] = await Promise.all([loadContent(db, academy.id), inSetup(db, academy.id, role)]);
   const p = c.programs.find((x) => x.id === id);
   if (!p) notFound();
 
@@ -30,7 +32,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="animate-pop">
-      <PageHead back={{ href: '/coach/content', label: 'Programs' }} eyebrow={`${p.weeks} weeks`} title={p.name}>
+      <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/content', label: 'Programs' }} eyebrow={`${p.weeks} weeks`} title={p.name}>
         {p.description}
       </PageHead>
       <p className="mt-3 text-[14px] text-on-surface-variant">

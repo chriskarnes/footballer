@@ -5,6 +5,8 @@ import { SignIn } from '@/components/SignIn';
 import { Brand } from '@/components/Brand';
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { ClaimButton } from '@/components/ClaimButton';
+import { SignOut } from '@/components/SignOut';
+import { readSetup } from '@/lib/setup';
 import { getViewer } from '@/lib/viewer';
 import { academyOrigin } from '@/lib/tenant';
 
@@ -41,7 +43,8 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
     const here = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('x-forwarded-host') ?? h.get('host')}`;
     redirect(`${academyOrigin(claim.slug, here)}/claim/${code}`);
   }
-  if (v.user && v.role === 'owner') redirect('/coach/setup');
+  // Already theirs: the checklist while it's unfinished, the dashboard after.
+  if (v.user && v.role === 'owner') redirect((await readSetup(v.db, v.academy!.id)).done ? '/coach' : '/coach/setup');
 
   return (
     <div className="animate-pop pb-10">
@@ -63,7 +66,12 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
                 If that&rsquo;s you, sign in with the email you asked with.
               </p>
               {v.user
-                ? <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">Open the app</Link>
+                ? <>
+                    <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">Open the app</Link>
+                    {/* Signed in as someone else: the way to switch. */}
+                    <p className="mt-4 text-[14px] text-on-surface-variant">Signed in as {v.user.email}. Not the address you asked with?</p>
+                    <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-2 min-h-12 w-full text-[15px] font-bold" />
+                  </>
                 : <div className="mt-4"><SignIn next="/coach" /></div>}
             </>
           ) : v.user ? (

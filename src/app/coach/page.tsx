@@ -44,6 +44,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   // A trainer invited in has no name yet; the owner gives theirs in setup.
   const askName = !steps && !me?.display_name;
   all.sort(byAttention);
+  const waiting = ((asking ?? []) as Omit<JoinRequest, 'when'>[]).filter((r) => !all.some((p) => p.user_id === r.user_id));
   // A group narrows the list (and the headline) to its players.
   const groups = content.groups.filter((g) => !g.archived);
   const inGroup = groups.find((g) => g.id === group);
@@ -97,12 +98,17 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       {askName && <YourName />}
       {ready && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[14px] font-semibold text-on-surface lg:max-w-xl">
-          {academy.name} is open. Players can find you by name in Find your trainer.
+          {ready === 'link'
+            ? `${academy.name} is set up. Send your invite link and players join from it.`
+            : `${academy.name} is set up. Players can find you by name in Find your trainer, or join from your invite link.`}
+          {' '}When they join, put them in a group with your program.
         </p>
       )}
 
 
-      {!!asking?.length && <JoinRequests requests={(asking as Omit<JoinRequest, 'when'>[]).map((r) => ({ ...r, when: ago(r.created_at) }))} />}
+      {/* Anyone who has since joined by link isn't asking any more (0022 clears
+          these; this covers a database that hasn't run it). */}
+      {!!waiting.length && <JoinRequests requests={waiting.map((r) => ({ ...r, when: ago(r.created_at) }))} />}
 
       {!!groups.length && (
         <nav className="scroll-x -mx-5 mt-6 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">

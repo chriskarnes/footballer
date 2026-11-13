@@ -155,7 +155,7 @@ export async function saveSession(input: { id?: string; programId: string; week:
 }
 
 /** Where saving a session may send you back to: our own pages only. */
-const BACK = /^\/coach\/(sessions|programs\/[\w-]+)(#[\w-]+)?$/;
+const BACK = /^\/coach\/(sessions|setup|programs\/[\w-]+)(#[\w-]+)?$/;
 
 /**
  * Save a session in the library (0017).

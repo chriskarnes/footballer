@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { finishSetup, saveYou } from '@/app/coach/setup/actions';
+import { finishSetup, saveYou, setListed } from '@/app/coach/setup/actions';
 
 /**
  * Setup step one, inline: the owner's name as players see it, and the
@@ -31,19 +31,18 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
             setBusy(false);
             if (!r.ok) setErr(r.error);
           }}>
-      <label className="block">
-        <span className="text-[14px] font-bold text-on-surface">Your name</span>
-        <span className="mt-0.5 block text-[14px] text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</span>
-        <input value={n} onChange={(e) => setN(e.target.value)} required maxLength={60} autoComplete="name"
-               className="mt-2 min-h-12 w-full rounded-xl border border-outline bg-transparent px-3.5 text-[16px] font-semibold text-on-surface outline-none focus:border-on-surface" />
+      {/* The app's text field, with its focus ring, like every other form. */}
+      <label className="text-field">
+        <span>Your name</span>
+        <input value={n} onChange={(e) => setN(e.target.value)} required maxLength={60} autoComplete="name" />
+        <small className="mt-1.5 block text-[14px] text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</small>
       </label>
-      <label className="block">
-        <span className="text-[14px] font-bold text-on-surface">Your time zone</span>
-        <span className="mt-0.5 block text-[14px] text-on-surface-variant">Your players&rsquo; weeks start on Monday here.</span>
-        <select value={tz} onChange={(e) => setTz(e.target.value)}
-                className="mt-2 min-h-12 w-full rounded-xl border border-outline bg-transparent px-3 text-[15px] font-semibold text-on-surface outline-none focus:border-on-surface">
+      <label className="text-field">
+        <span>Your time zone</span>
+        <select value={tz} onChange={(e) => setTz(e.target.value)}>
           {zones.map((z) => <option key={z} value={z}>{z.replace(/_/g, ' ')}</option>)}
         </select>
+        <small className="mt-1.5 block text-[14px] text-on-surface-variant">Your players&rsquo; weeks start on Monday here.</small>
       </label>
       <button type="submit" disabled={busy} className="btn-primary pressable w-full">
         {busy ? 'Saving…' : 'Save'}
@@ -53,25 +52,58 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
   );
 }
 
-/** The last step's button: lists the academy and puts the checklist away. */
-export function FinishSetup({ name, ready }: { name: string; ready: boolean }) {
+/** The last step's button: puts the checklist away and, if they want, lists the academy. */
+export function FinishSetup({ ready }: { ready: boolean }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [listed, setListedOn] = useState(true);
   return (
     <div className="mt-4">
-      <button type="button" disabled={!ready || busy} className="btn-primary btn-big pressable w-full disabled:opacity-40"
+      <Listing on={listed} onChange={setListedOn} />
+      <button type="button" disabled={!ready || busy} className="btn-primary btn-big pressable mt-4 w-full disabled:opacity-40"
               onClick={async () => {
                 setBusy(true); setErr('');
-                const r = await finishSetup();
+                const r = await finishSetup(listed);
                 setBusy(false);
                 if (r && !r.ok) setErr(r.error);
               }}>
-        {busy ? 'One moment…' : `Open ${name}`}
+        {busy ? 'One moment…' : 'Finish setup'}
       </button>
-      <p className="mt-2 text-[14px] text-on-surface-variant">
-        {ready ? 'Players can then find you by name in Find your trainer.' : 'Finish steps 1 to 4 first.'}
-      </p>
-      {err && <p role="status" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
+      {!ready && <p className="mt-2 text-[14px] text-on-surface-variant">Finish steps 1 to 4 first.</p>}
+      {err && <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
     </div>
+  );
+}
+
+/** Whether the academy is in Find your trainer, once setup is done: saves on tap. */
+export function ListedSwitch({ initial }: { initial: boolean }) {
+  const [on, setOn] = useState(initial);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <div>
+      <Listing on={on} disabled={busy} onChange={async (next) => {
+        setOn(next); setBusy(true); setErr('');
+        const r = await setListed(next);
+        setBusy(false);
+        if (!r.ok) { setOn(!next); setErr(r.error); }
+      }} />
+      {err && <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
+    </div>
+  );
+}
+
+function Listing({ on, onChange, disabled }: { on: boolean; onChange: (on: boolean) => void; disabled?: boolean }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3">
+      <input type="checkbox" checked={on} disabled={disabled} onChange={(e) => onChange(e.target.checked)}
+             className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--md-sys-color-primary)]" />
+      <span>
+        <span className="block text-[14px] font-semibold text-on-surface">Show in Find your trainer</span>
+        <span className="block text-[14px] text-on-surface-variant">
+          {on ? 'Players can find you by name, then ask to join.' : 'Only players with your invite link can join.'}
+        </span>
+      </span>
+    </label>
   );
 }

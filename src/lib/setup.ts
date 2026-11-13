@@ -6,6 +6,8 @@ export type Setup = {
   you: boolean;
   done: boolean;
   timeZone: string;
+  /** Shown in Find your trainer. Finishing setup turns it on, unless the owner chose not to. */
+  listed: boolean;
 };
 
 /**
@@ -14,9 +16,17 @@ export type Setup = {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function readSetup(db: any, academyId: string): Promise<Setup> {
-  const { data, error } = await db.from('academies').select('setup, time_zone').eq('id', academyId).maybeSingle();
+  const { data, error } = await db.from('academies').select('setup, time_zone, listed').eq('id', academyId).maybeSingle();
   const marks = (data?.setup ?? {}) as Record<string, string>;
-  return { ready: !error, you: !!marks.you, done: !!marks.done, timeZone: data?.time_zone ?? 'America/New_York' };
+  return { ready: !error, you: !!marks.you, done: !!marks.done, timeZone: data?.time_zone ?? 'America/New_York', listed: data?.listed !== false };
+}
+
+/** An owner part-way through setup: the editors lead back to the checklist. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function inSetup(db: any, academyId: string, role: string | null): Promise<boolean> {
+  if (role !== 'owner') return false;
+  const s = await readSetup(db, academyId);
+  return s.ready && !s.done;
 }
 
 /**
