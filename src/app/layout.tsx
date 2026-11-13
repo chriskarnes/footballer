@@ -10,6 +10,7 @@ import { AreaFrame } from '@/components/AreaFrame';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { PendingSaves } from '@/components/PendingSaves';
 import { getAcademy } from '@/lib/branding-server';
+import { appOf } from '@/lib/app-identity';
 import { libraryFor } from '@/lib/library-gate';
 import { ROOT_DOMAIN } from '@/lib/tenant';
 import { brandCss } from '@/lib/brand-colors';
@@ -19,8 +20,17 @@ import { Unclaimed } from '@/components/site/Unclaimed';
 import { Brand } from '@/components/Brand';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const name = (await getAcademy()).academy?.branding.name ?? 'Train.futbol';
-  return { ...metadata, title: name, applicationName: name,
+  // The marketing pages name themselves.
+  if ((await headers()).get('x-site')) return metadata;
+  // The academy's own icon (brand/icon), versioned so a new upload is a new URL.
+  const { name, own, v } = appOf((await getAcademy()).academy);
+  const icons = own ? {
+    icon: [{ url: `/brand/icon?size=32&v=${v}`, type: 'image/png', sizes: '32x32' },
+           { url: `/brand/icon?size=192&v=${v}`, type: 'image/png', sizes: '192x192' }],
+    apple: [{ url: `/brand/icon?size=180&v=${v}`, sizes: '180x180' }],
+  } : metadata.icons;
+  // "Week · Forge Training": a tab, a bookmark or the app switcher says whose.
+  return { ...metadata, title: { default: name, template: `%s · ${name}` }, applicationName: name, icons,
            appleWebApp: { ...metadata.appleWebApp, title: name } };
 }
 
@@ -53,23 +63,30 @@ const metadata = {
   other: { 'apple-mobile-web-app-capable': 'yes' },
 } satisfies Metadata;
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  // Deliberately no maximumScale / userScalable:false. Blocking pinch zoom fails
-  // WCAG 1.4.4, and iOS ignores it regardless. Double-tap zoom is handled instead
-  // by `touch-action: manipulation` in globals.css, which is the accessible fix.
-  viewportFit: 'cover',                  // let content reach under the notch
-  interactiveWidget: 'resizes-content',  // keyboard pushes the layout, not covers it
-  // Two entries, not one: the status bar has to follow the scheme now that there
-  // is a dark one. A single light value would leave a white bar above a dark app.
-  // These are md-sys-color-surface in each scheme — the literal is unavoidable,
-  // since a meta tag cannot read a custom property.
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
-    { media: '(prefers-color-scheme: dark)', color: '#121212' },
-  ],
-};
+/**
+ * themeColor is the browser's bar above the page (Safari, Android). It's the
+ * brand band's colour, since the band is what sits at the top: a white bar
+ * over a black or royal-blue band read as a gap. The marketing pages keep
+ * the page colour. A meta tag can't read a custom property, so the value is
+ * the academy's own hex (#1B1B1B is the unbranded band, --app-brand-primary).
+ */
+export async function generateViewport(): Promise<Viewport> {
+  const site = !!(await headers()).get('x-site');
+  const band = site ? null : (await getAcademy()).academy?.branding.primary ?? '#1B1B1B';
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    // Deliberately no maximumScale / userScalable:false. Blocking pinch zoom fails
+    // WCAG 1.4.4, and iOS ignores it regardless. Double-tap zoom is handled instead
+    // by `touch-action: manipulation` in globals.css, which is the accessible fix.
+    viewportFit: 'cover',                  // let content reach under the notch
+    interactiveWidget: 'resizes-content',  // keyboard pushes the layout, not covers it
+    themeColor: band ?? [
+      { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+      { media: '(prefers-color-scheme: dark)', color: '#121212' },
+    ],
+  };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // The marketing pages (see proxy.ts): their own header and footer, wider,
@@ -116,7 +133,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             at equal specificity. Values are validated #RRGGBB, never raw input. */}
         {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
         {/* The player app, or the trainer area's own frame under /coach. */}
-        <AreaFrame brand={<Brand small />} academyId={academy?.id ?? null}
+        <AreaFrame brand={<Brand small />} app={appOf(academy)} academyId={academy?.id ?? null}
                    library={lib.drills || lib.own} plan={lib.drills} speed={speed}>{children}</AreaFrame>
         <ServiceWorker />
         <PendingSaves />

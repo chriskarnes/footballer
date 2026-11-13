@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SignIn } from '@/components/SignIn';
 import { Brand } from '@/components/Brand';
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { JoinFlow } from '@/components/JoinFlow';
 import { isWho } from '@/lib/who';
 import { getBranding } from '@/lib/branding-server';
@@ -58,30 +59,13 @@ export default async function JoinPage({ params, searchParams }: {
     <div className="animate-pop pb-10">
       {/* The academy's own colours, edge to edge, the way the marketing
           pages open: this is the step between the two. */}
-      <section className="relative isolate -mx-5 px-5 pb-20 pt-6 text-on-surface-brand">
-        <div aria-hidden className="grain absolute bottom-0 left-[calc(50%_-_50dvw)] right-[calc(50%_-_50dvw)] -top-24 -z-10 overflow-hidden bg-surface-brand"
-             style={{ backgroundImage: 'radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--app-brand-accent) 26%, transparent), transparent 70%)' }} />
-        <header className="flex items-center gap-3">
-          {brand?.logo && <img src={brand.logo} alt="" className="h-10 w-10 rounded-xl object-contain" />}
-          <span className="font-brand text-[19px] tracking-tighter">
-            <span className="font-extrabold">{head}</span>
-            {tail && <span className="font-medium text-on-surface-brand-variant">{tail}</span>}
-          </span>
-        </header>
-
-        <div className="mt-12">
-          <span className="inline-block rounded-md px-2.5 pb-1 pt-1.5 font-brand text-[11.5px] font-extrabold uppercase tracking-[.14em]"
-                style={{ fontStretch: '140%', background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
-            {role === 'trainer' ? 'Trainer invite' : 'You’re invited'}
-          </span>
-          <h1 className="site-wide mt-4 text-[38px] uppercase leading-[.95]">
-            Join {head}{tail && <span className="text-on-surface-brand-variant">{tail}</span>}
-          </h1>
-          <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
-            {role === 'trainer' ? 'See every player’s week, and send them notes.' : 'Your trainer’s sessions, done at home.'}
-          </p>
-        </div>
-      </section>
+      <BrandBand overlap name={brand?.name ? undefined : name}>
+        <BandTag>{role === 'trainer' ? 'Trainer invite' : 'You’re invited'}</BandTag>
+        <BandTitle>Join {head}{tail && <span className="text-on-surface-brand-variant">{tail}</span>}</BandTitle>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+          {role === 'trainer' ? 'See every player’s week, and send them notes.' : 'Your trainer’s sessions, done at home.'}
+        </p>
+      </BrandBand>
 
       {/* The card sits across the edge, half in the colour and half out. */}
       <div className="relative -mt-12">

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { haptic } from '@/lib/haptics';
 import { announceInstallable, INSTALL_ASK } from '@/lib/install';
 
@@ -42,7 +43,11 @@ const isIOS = () => {
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 };
 
-export function InstallNudge() {
+/** Pages that are one decision (an invite, asking to join, claiming): no prompt over them. */
+const QUIET = ['/join', '/claim', '/request'];
+
+export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: { name?: string; icon?: string }) {
+  const path = usePathname();
   const [platform, setPlatform] = useState<Platform>(null);
   const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
   const [open, setOpen] = useState(false);
@@ -94,21 +99,21 @@ export function InstallNudge() {
     setOpen(false);
   };
 
-  if (!open || !platform) return null;
+  if (!open || !platform || QUIET.some((p) => path === p || path.startsWith(`${p}/`))) return null;
 
   return (
     <div className="safe-x fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
       <div className="sheet-in card w-full max-w-lg p-5 shadow-level3" role="dialog"
-           aria-label="Add Train.futbol to your home screen">
+           aria-label={`Add ${name} to your home screen`}>
         <div className="flex items-start gap-3.5">
           {/* The actual icon the player is being offered, rather than a glyph
               that has to be kept in step with it by hand — this one was still
               drawing a gold italic F long after the brand changed. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon-192.png" alt="" width={44} height={44}
+          <img src={icon} alt="" width={44} height={44}
                className="h-11 w-11 shrink-0 rounded-[13px]" />
           <div className="min-w-0 flex-1">
-            <p className="h-card">Keep Train.futbol one tap away</p>
+            <p className="h-card">Keep {name} one tap away</p>
             <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
               {platform === 'ios'
                 ? 'Add it to your home screen and it opens full screen, with its own icon.'

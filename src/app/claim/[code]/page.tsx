@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SignIn } from '@/components/SignIn';
 import { Brand } from '@/components/Brand';
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { ClaimButton } from '@/components/ClaimButton';
 import { getViewer } from '@/lib/viewer';
 import { academyOrigin } from '@/lib/tenant';
@@ -44,25 +45,15 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
 
   return (
     <div className="animate-pop pb-10">
-      <section className="relative isolate -mx-5 px-5 pb-20 pt-6 text-on-surface-brand">
-        <div aria-hidden className="grain absolute bottom-0 left-[calc(50%_-_50dvw)] right-[calc(50%_-_50dvw)] -top-24 -z-10 overflow-hidden bg-surface-brand"
-             style={{ backgroundImage: 'radial-gradient(70% 60% at 100% 0%, color-mix(in srgb, var(--app-brand-accent) 26%, transparent), transparent 70%)' }} />
-        <header className="font-brand text-[19px] font-extrabold tracking-tighter">{claim.name}</header>
-        <div className="mt-12">
-          <span className="inline-block rounded-md px-2.5 pb-1 pt-1.5 font-brand text-[11.5px] font-extrabold uppercase tracking-[.14em]"
-                style={{ fontStretch: '140%', background: 'var(--app-brand-accent)', color: 'var(--app-brand-primary)' }}>
-            {claim.claimed ? 'Already claimed' : 'Your academy is ready'}
-          </span>
-          <h1 className="site-wide mt-4 text-[38px] uppercase leading-[.95]">
-            {claim.claimed ? claim.name : `Welcome, ${claim.trainer}`}
-          </h1>
-          <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
-            {claim.claimed
-              ? `${claim.name} already has its owner.`
-              : `${claim.name} lives at ${claim.slug}.train.futbol. Make it yours, then a short checklist gets your first sessions in before your players arrive.`}
-          </p>
-        </div>
-      </section>
+      <BrandBand overlap name={claim.name}>
+        <BandTag>{claim.claimed ? 'Already claimed' : 'Your academy is ready'}</BandTag>
+        <BandTitle>{claim.claimed ? claim.name : `Welcome, ${claim.trainer}`}</BandTitle>
+        <p className="mt-4 text-[15.5px] leading-relaxed text-on-surface-brand-variant">
+          {claim.claimed
+            ? `${claim.name} already has its owner.`
+            : `${claim.name} lives at ${claim.slug}.train.futbol. Make it yours, then a short checklist gets your first sessions in before your players arrive.`}
+        </p>
+      </BrandBand>
 
       <div className="relative -mt-12">
         <div className="card p-5">

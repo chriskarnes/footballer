@@ -1,4 +1,6 @@
 'use client';
+import { Wordmark } from './Wordmark';
+import { BandTag } from './BandText';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { brandCss, isHex } from '@/lib/brand-colors';
@@ -103,22 +105,17 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
   }
 
   const shown = name.trim() || 'Train.futbol';
-  const dot = shown.indexOf('.');
-  const [head, tail] = dot > 0 ? [shown.slice(0, dot), shown.slice(dot)] : [shown, ''];
 
   return (
     <div className="pb-10">
       {/* ---------------------------------------------------------- PREVIEW */}
       <section className="mt-7 rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3"
                aria-label="Preview">
-        <div className="flex items-center gap-3.5">
-          {logo && <img src={logo} alt="" className="h-12 w-12 object-contain" />}
-          <div className="min-w-0 font-brand text-[28px] leading-none tracking-tightest text-on-surface-brand">
-            <span className="font-extrabold">{head}</span>
-            {tail && <span className="font-medium text-on-surface-brand-variant">{tail}</span>}
-          </div>
-        </div>
-        <p className="mt-4 text-[12.5px] font-semibold text-on-surface-brand-variant">Today&rsquo;s session · 45 min</p>
+        {/* The top of Train, as players see it: the same wordmark and band text. */}
+        <div className="text-on-surface-brand"><Wordmark name={shown} logo={logo} onBrand /></div>
+        <div className="mt-5"><BandTag>Today</BandTag></div>
+        <div className="site-wide mt-3 text-[26px] uppercase leading-[.95] text-on-surface-brand">Touch and pass</div>
+        <p className="mt-3 text-[12.5px] font-semibold text-on-surface-brand-variant">Today&rsquo;s session · 45 min</p>
         <div className="mt-2 h-[6px] overflow-hidden rounded-full bg-brand-track">
           <div className="h-full w-[62%] rounded-full bg-brand-accent" />
         </div>

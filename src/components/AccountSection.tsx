@@ -57,7 +57,7 @@ export function AccountSection({ email, version, canBrand, role }: {
           </Link>
         )}
         {canBrand && (
-          <Link href="/admin" className="pressable block">
+          <Link href="/coach/brand" className="pressable block">
             <Row label="Brand settings">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
                    fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">

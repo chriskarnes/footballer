@@ -91,6 +91,10 @@ export function brandTokens(primary: string, accent: string) {
 
     '--md-sys-color-primary': ink,
     '--md-sys-color-on-primary': onColor(ink),
+    // The selection ring on chips and tiles, and the filled segment. The kit
+    // colour itself, unless it's too light to see on white: a ring needs 3:1.
+    '--md-sys-color-secondary-container': ensure(P, PAGE_LIGHT, 3),
+    '--md-sys-color-on-secondary-container': onColor(ensure(P, PAGE_LIGHT, 3)),
     '--md-sys-color-primary-container': mix(P, WHITE, 0.86),
     '--md-sys-color-on-primary-container': ensure(mix(P, '#000000', 0.5), mix(P, WHITE, 0.86), 7),
 

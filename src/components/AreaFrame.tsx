@@ -15,8 +15,10 @@ const inCoach = (path: string) => path === '/coach' || path.startsWith('/coach/'
  * column and tab bar, and "Player view" left Train inside the sidebar.
  * usePathname changes on every navigation, so the frame follows.
  */
-export function AreaFrame({ brand, academyId, library, plan, speed, children }: {
+export function AreaFrame({ brand, app, academyId, library, plan, speed, children }: {
   brand: React.ReactNode;
+  /** The app's name and icon as installed, for the add-to-home-screen prompt. */
+  app: { name: string; icon: string };
   academyId: string | null;
   library: boolean; plan: boolean; speed: boolean;
   children: React.ReactNode;
@@ -26,7 +28,7 @@ export function AreaFrame({ brand, academyId, library, plan, speed, children }: 
     <div className="pad-nav">
       <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">{children}</main>
       <TabBar academyId={academyId} library={library} plan={plan} speed={speed} />
-      <InstallNudge />
+      <InstallNudge name={app.name} icon={app.icon} />
     </div>
   );
 }

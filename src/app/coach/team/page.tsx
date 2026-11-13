@@ -80,7 +80,7 @@ export default async function TeamPage() {
       </section>
 
       {canBrand && (
-        <Link href="/admin" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">
+        <Link href="/coach/brand" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">
           <span className="text-[14px] font-semibold text-on-surface">Brand settings</span>
           <span className="text-[13px] text-on-surface-variant">Name, colours, logo ›</span>
         </Link>

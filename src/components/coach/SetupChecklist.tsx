@@ -33,7 +33,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
           <div className="mt-4"><AvatarPicker name={profile.name} email={email} updatedAt={profile.photoAt}
                                                     note="Optional. Your players see it next to your name." /></div>
           <SetupYou name={profile.name} timeZone={s.timeZone} fresh={!s.you} />
-          <Link href="/admin" className="mt-3 inline-block text-[14px] font-semibold text-on-surface underline underline-offset-4">
+          <Link href="/coach/brand" className="mt-3 inline-block text-[14px] font-semibold text-on-surface underline underline-offset-4">
             Your academy&rsquo;s colours and logo
           </Link>
         </>
