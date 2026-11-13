@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { pendingPlan, pendingWorkout } from '@/lib/pending';
+import { pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
 import { browserClient } from '@/lib/supabase/client';
 
 /**
@@ -17,19 +17,22 @@ import { browserClient } from '@/lib/supabase/client';
 export function PendingSaves() {
   const router = useRouter();
   useEffect(() => {
-    if (!pendingWorkout.peek() && !pendingPlan.peek()) return;
     let live = true;
     // getSession reads the stored session without a request, so a signed-out
     // visitor with something waiting doesn't fire a 401 on every page load.
-    (async () => {
+    const run = async () => {
+      if (!pendingWorkout.peek() && !pendingPlan.peek() && !pendingFinish.peek()) return;
       try {
         const { data } = await browserClient().auth.getSession();
         if (!data.session) return;
       } catch { return; }   // Supabase not configured
-      const saved = await Promise.all([pendingWorkout.flush(), pendingPlan.flush()]);
+      const saved = await Promise.all([pendingWorkout.flush(), pendingPlan.flush(), pendingFinish.flush()]);
       if (saved.some(Boolean) && live) router.refresh();
-    })();
-    return () => { live = false; };
+    };
+    run();
+    // A session finished on a field with no signal goes as soon as there is one.
+    window.addEventListener('online', run);
+    return () => { live = false; window.removeEventListener('online', run); };
   }, [router]);
   return null;
 }

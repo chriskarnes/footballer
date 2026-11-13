@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { claimAcademy } from '@/app/claim/actions';
 import { SignOut } from './SignOut';
+import { NO_SIGNAL, unlessNext } from '@/lib/plain-error';
 
 /**
  * The one tap that makes a signed-in trainer the owner. Signed in with a
@@ -16,9 +17,11 @@ export function ClaimButton({ code, name, email, hint }: { code: string; name: s
       <button type="button" disabled={busy} className="btn-primary btn-big pressable w-full"
               onClick={async () => {
                 setBusy(true); setErr('');
-                const r = await claimAcademy(code);
-                setBusy(false);
-                if (r && !r.ok) setErr(r.error);
+                try {
+                  const r = await claimAcademy(code);
+                  if (r && !r.ok) setErr(r.error);
+                } catch (e) { unlessNext(e); setErr(NO_SIGNAL); }
+                finally { setBusy(false); }
               }}>
         {busy ? 'One moment…' : `Make ${name} mine`}
       </button>

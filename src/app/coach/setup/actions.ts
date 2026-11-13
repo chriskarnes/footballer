@@ -76,7 +76,7 @@ export async function finishSetup(listed = true): Promise<Result> {
   // The first four steps, checked here too: the disabled button is only the page's say.
   const [setup, content] = await Promise.all([readSetup(v.db, v.academy.id), loadContent(v.db, v.academy.id)]);
   if (setupSteps(setup, content).slice(0, 4).some((x) => !x)) {
-    return { ok: false, error: 'Finish the steps above first.' };
+    return { ok: false, error: 'Finish steps 1 to 4 first.' };
   }
   // Done and listed (or not) in one statement (0023), so a failed second
   // write can't leave an academy listed that its owner kept to the link.

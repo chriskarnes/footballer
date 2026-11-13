@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { addMySession } from '@/app/train/actions';
 import { haptic } from '@/lib/haptics';
+import { NO_SIGNAL } from '@/lib/plain-error';
 
 /**
  * One more session, when their trainer allows it: a single button. When it
@@ -16,11 +17,15 @@ export function AddSession({ why, inBand = false }: { why: string | null; inBand
       <button type="button" disabled={pending || !!why}
               className={inBand ? 'btn-primary btn-on-brand btn-big pressable w-full'
                 : 'btn-ghost pressable min-h-13 w-full text-body-lg font-bold disabled:opacity-50'}
-              onClick={() => start(async () => { haptic('tap'); setErr(''); const r = await addMySession(); if (r && !r.ok) setErr(r.error); })}>
+              onClick={() => start(async () => {
+                haptic('tap'); setErr('');
+                try { const r = await addMySession(); if (r && !r.ok) setErr(r.error); }
+                catch { setErr(NO_SIGNAL); }
+              })}>
         {pending ? 'Building…' : inBand ? 'Extra session' : '+ Extra session'}
       </button>
       {(err || why) && (
-        <p className={`mt-2 text-center text-body font-medium ${inBand ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{err || why}</p>
+        <p role={err ? 'alert' : undefined} className={`mt-2 text-center text-body font-medium ${inBand ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{err || why}</p>
       )}
     </div>
   );

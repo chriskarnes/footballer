@@ -1,5 +1,5 @@
 /**
- * Work done signed out, waiting for an account.
+ * Work done signed out, or with no signal, waiting to be sent.
  *
  * Train and Plan need no sign-in, so a first session — or a first week — is
  * usually made signed out. Rather than claim it was saved, or tell the player
@@ -20,7 +20,7 @@ const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** The body the endpoint's POST takes. */
 export type Payload = Record<string, unknown>;
 
-function slot(key: string, endpoint: string) {
+function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') {
   function clear(): void {
     try { localStorage.removeItem(key); } catch { /* nothing to clear */ }
   }
@@ -46,7 +46,7 @@ function slot(key: string, endpoint: string) {
     if (!payload) return false;
     try {
       const res = await fetch(endpoint, {
-        method: 'POST', headers: { 'content-type': 'application/json' },
+        method, headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!res.ok) return false;
@@ -75,5 +75,8 @@ function slot(key: string, endpoint: string) {
 
 /** A session finished in the runner. */
 export const pendingWorkout = slot('forge.pendingWorkout', '/api/workouts');
+/** A planned session (one already in the week) finished with no signal: the
+ *  PATCH that marks it done, sent when the phone is back online. */
+export const pendingFinish = slot('forge.pendingFinish', '/api/workouts', 'PATCH');
 /** A week built on Plan. Sent as a new plan that becomes the active one. */
 export const pendingPlan = slot('forge.pendingPlan', '/api/plans');

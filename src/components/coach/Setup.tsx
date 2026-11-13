@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { finishSetup, saveYou, setListed } from '@/app/coach/setup/actions';
+import { NO_SIGNAL, unlessNext } from '@/lib/plain-error';
+import { useToast } from './Toast';
 
 /**
  * Setup step one, inline: the owner's name as players see it, and the
@@ -12,6 +14,7 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
   const [tz, setTz] = useState(timeZone);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const toast = useToast();
   // The full list after mount: the server's and the browser's can differ,
   // and a <select> that differs breaks hydration.
   const [zones, setZones] = useState<string[]>([timeZone]);
@@ -27,15 +30,17 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
           onSubmit={async (e) => {
             e.preventDefault();
             setBusy(true); setErr('');
-            const r = await saveYou(n, tz);
-            setBusy(false);
-            if (!r.ok) setErr(r.error);
+            try {
+              const r = await saveYou(n, tz);
+              if (!r.ok) setErr(r.error); else toast('Saved.');
+            } catch (e) { unlessNext(e); setErr(NO_SIGNAL); }
+            finally { setBusy(false); }
           }}>
       {/* The app's text field, with its focus ring, like every other form. */}
       <label className="text-field">
         <span>Your name</span>
         <input value={n} onChange={(e) => setN(e.target.value)} required maxLength={60} autoComplete="name" />
-        <small className="mt-1.5 block text-body text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</small>
+        <small className="mt-1.5 block text-body text-on-surface-variant">Players see the first word, so write &ldquo;Mike&rdquo;, not &ldquo;Coach Mike&rdquo;: &ldquo;Mike is getting your training ready.&rdquo;</small>
       </label>
       <label className="text-field">
         <span>Your time zone</span>
@@ -63,9 +68,11 @@ export function FinishSetup({ ready }: { ready: boolean }) {
       <button type="button" disabled={!ready || busy} className="btn-primary btn-big pressable mt-4 w-full"
               onClick={async () => {
                 setBusy(true); setErr('');
-                const r = await finishSetup(listed);
-                setBusy(false);
-                if (r && !r.ok) setErr(r.error);
+                try {
+                  const r = await finishSetup(listed);
+                  if (r && !r.ok) setErr(r.error);
+                } catch (e) { unlessNext(e); setErr(NO_SIGNAL); }
+                finally { setBusy(false); }
               }}>
         {busy ? 'One moment…' : 'Finish setup'}
       </button>
@@ -80,13 +87,17 @@ export function ListedSwitch({ initial }: { initial: boolean }) {
   const [on, setOn] = useState(initial);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
   return (
     <div>
       <Listing on={on} disabled={busy} onChange={async (next) => {
         setOn(next); setBusy(true); setErr('');
-        const r = await setListed(next);
-        setBusy(false);
-        if (!r.ok) { setOn(!next); setErr(r.error); }
+        try {
+          const r = await setListed(next);
+          if (!r.ok) { setOn(!next); setErr(r.error); }
+          else toast(next ? 'Listed in Find your trainer.' : 'Taken out of Find your trainer.');
+        } catch { setOn(!next); setErr(NO_SIGNAL); }
+        finally { setBusy(false); }
       }} />
       {err && <p role="alert" className="mt-2 text-body font-semibold text-on-surface">{err}</p>}
     </div>

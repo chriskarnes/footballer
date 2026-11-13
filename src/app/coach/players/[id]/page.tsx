@@ -15,6 +15,8 @@ import { teamDays } from '@/lib/academy-week';
 import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { nudgeDraft } from '@/lib/nudge';
 import { PageHead } from '@/components/coach/PageHead';
+import { TESTS } from '@/lib/speed';
+import { shortDate } from '@/lib/dates';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
@@ -35,14 +37,17 @@ export default async function PlayerPage({ params }: {
   const { db, academy } = gate.viewer;
 
   const content = await loadContent(db, academy.id);
-  const [{ players, error }, { data: notes }, { data: runsRaw }] = await Promise.all([
+  const [{ players, error }, { data: notes }, { data: runsRaw }, { data: speedRaw }] = await Promise.all([
     loadPlayers(db, academy, { player: id, days: 120, content }),
     db.from('note_recipients')
       .select('seen_at, notes!inner(id, body, kind, author_name, created_at, academy_id)')
       .eq('user_id', id).eq('notes.academy_id', academy.id),
     // This fortnight's finished trainer sessions, with how they felt.
     db.rpc('academy_completions', { p_academy: academy.id, p_since: new Date(Date.now() - 15 * 86400000).toISOString() }),
+    // Their Speed test days, from their account (0024). Before that, nothing.
+    db.rpc('academy_player_speed_tests', { p_academy: academy.id, p_player: id }).then((r) => r, () => ({ data: null })),
   ]);
+  const tests = (Array.isArray(speedRaw) ? speedRaw : []) as { date: string; values: Record<string, number> }[];
   const runs: Record<string, { feel: 'easy' | 'right' | 'hard' | null }> = {};
   for (const r of ((runsRaw ?? []) as { user_id: string; source: string; source_ref: string | null; feel?: 'easy' | 'right' | 'hard' | null }[]))
     if (r.user_id === id && r.source === 'academy' && r.source_ref) runs[r.source_ref] = { feel: r.feel ?? runs[r.source_ref]?.feel ?? null };
@@ -163,6 +168,34 @@ export default async function PlayerPage({ params }: {
           <SoccerDays days={soccer ? teamDays(soccer) : null} userId={p.user_id} />
         </div>
       </section>
+
+      {!!tests.length && (() => {
+        const last = [...tests].sort((a, b) => a.date.localeCompare(b.date)).at(-1)!;
+        return (
+          <section className="card mt-3 p-5">
+            <div className="h-card">Speed tests</div>
+            <p className="mt-1 text-body text-on-surface-variant">
+              {tests.length} test {tests.length === 1 ? 'day' : 'days'} · last on {shortDate(last.date)}
+            </p>
+            <dl className="mt-3 divide-y divide-outline-variant">
+              {TESTS.map((t) => {
+                const vals = tests.map((e) => e.values?.[t.id]).filter((v): v is number => typeof v === 'number');
+                if (!vals.length) return null;
+                const best = t.lowerIsBetter ? Math.min(...vals) : Math.max(...vals);
+                return (
+                  <div key={t.id} className="flex items-baseline justify-between gap-4 py-2">
+                    <dt className="text-body text-on-surface">{t.name}</dt>
+                    <dd className="text-body font-semibold text-on-surface">
+                      {typeof last.values?.[t.id] === 'number' ? `${last.values[t.id]} ${t.unit}` : '—'}
+                      <span className="ml-2 font-normal text-on-surface-variant">best {best} {t.unit}</span>
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </section>
+        );
+      })()}
 
       <section className="mt-9">
         <p className="eyebrow mb-3">Recent sessions</p>

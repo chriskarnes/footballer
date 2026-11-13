@@ -2,6 +2,7 @@
 import { useActionState, useState } from 'react';
 import { requestAcademy } from '@/app/site/actions';
 import { ROOT_DOMAIN } from '@/lib/tenant';
+import { keepOnError } from '@/components/coach/Field';
 
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
 
@@ -28,7 +29,7 @@ export function StartForm({ slug: claimed = '' }: { slug?: string }) {
   }
 
   return (
-    <form action={action} className="card space-y-5 p-6 sm:p-8">
+    <form onSubmit={keepOnError(action)} className="card space-y-5 p-6 sm:p-8">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Your name"><input name="name" required autoComplete="name" /></Field>
         <Field label="Email"><input name="email" type="email" required autoComplete="email" /></Field>

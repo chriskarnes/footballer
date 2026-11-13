@@ -39,12 +39,20 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   photo?: React.ReactNode;
   /** Where a first-time setup lands: the week it builds, when this academy has one. */
   next?: string;
-  /** Joined as a parent: the questions are about their player. */
-  parent?: boolean;
+  /** Joined as a parent: the questions are about their player. Null when
+   *  nobody said (let in from a join request): then, once the name is known,
+   *  the questions use it, which reads right to a player and a parent both,
+   *  and a parent is never asked how old they are. */
+  parent?: boolean | null;
   /** False where the page's brand band already says what this is (first-time setup on Me). */
   heading?: boolean;
 }) {
-  const q = parent
+  const named = parent === null && !!initial?.display_name?.trim();
+  const who = initial?.display_name?.trim().split(/\s+/)[0] ?? '';
+  const q = named
+    ? { name: 'Player’s name', age: `How old is ${who}?`, where: `Where does ${who} play?`,
+        foot: `Which foot is ${who}’s best?`, team: `${who}’s team (you can skip this)`, club: `${who}’s team, if they’re in one` }
+    : parent
     ? { name: 'What’s your player’s name?', age: 'How old are they?', where: 'Where do they play?',
         foot: 'Which foot is their best?', team: 'Their team (you can skip this)', club: 'Their team, if they’re in one' }
     : { name: 'What’s your name?', age: 'How old are you?', where: 'Where do you play?',
@@ -62,7 +70,9 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   // Someone who has answered before is correcting, not starting. Same four
   // questions either way — only the framing around them changes, because
   // "Let's set you up" over your own filled-in answers reads as a reset.
-  const returning = !!initial?.display_name;
+  // Age, not name: a player let in from a join request already has the name
+  // they asked with, and is still starting, not correcting.
+  const returning = !!initial?.age_band;
 
   // The four that count are the four that change a drill. Region and club are
   // deliberately not in this number — showing "4 of 6" would make skippable
@@ -151,7 +161,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           ))}
         </div>
         {/* At the question, not in the footer — this is where it becomes relevant. */}
-        {!parent && <p className="mt-3 pl-0.5 text-body font-medium leading-snug text-on-surface-variant">
+        {!parent && !named && <p className="mt-3 pl-0.5 text-body font-medium leading-snug text-on-surface-variant">
           Under 13? Get a parent to do this with you.
         </p>}
       </div>

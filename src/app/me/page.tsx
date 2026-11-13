@@ -168,7 +168,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <BandTag>Welcome</BandTag>
           <BandTitle>{signedUpBy === 'parent' ? 'Set your player up' : 'Let’s set you up'}</BandTitle>
         </BrandBand>
-        <ProfileSetup email={user.email} initial={profile ?? undefined} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent'} heading={false} />
+        <ProfileSetup email={user.email} initial={profile ?? undefined} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} heading={false} />
       </div>
     );
   }
@@ -205,7 +205,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       {/* Kept from Train for later. Starting one and finishing it moves it
           down into history; removing it is for the ones you won't. */}
       {!!saved.length && (
-        <section className="mt-10">
+        <section id="saved" className="mt-10 scroll-mt-6">
           <h2 className="h-sec mb-3">Saved for later</h2>
           <WorkoutList rows={saved} kind="saved" />
         </section>

@@ -4,7 +4,7 @@ import { saveDrill, deleteDrill } from '@/app/coach/content-actions';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 import { Chip } from '@/components/Chip';
 import { youtubeId } from '@/lib/video';
-import { Field, FormError } from './Field';
+import { Field, FormError, keepOnError } from './Field';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { useRouter } from 'next/navigation';
 import { useToast } from './Toast';
@@ -45,7 +45,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
   const yt = youtubeId(video);
 
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={keepOnError(action)} className="space-y-5">
       <input type="hidden" name="id" value={drill?.id ?? ''} />
       <input type="hidden" name="back" value={back} />
       <Field label="Name"><input name="name" required maxLength={80} defaultValue={drill?.name} placeholder="e.g. Wall passes" /></Field>

@@ -44,7 +44,7 @@ export default async function ProfilePage() {
   return (
     <div>
       <BackLink href="/me" label="Me" />
-      <ProfileSetup email={user.email} initial={initial} parent={by?.signed_up_by === 'parent'}
+      <ProfileSetup email={user.email} initial={initial} parent={by?.signed_up_by === 'parent' ? true : by?.signed_up_by === 'player' ? false : null}
         photo={<AvatarPicker name={initial.display_name} email={user.email} updatedAt={avatarAt?.avatar_updated_at ?? null} />} />
     </div>
   );

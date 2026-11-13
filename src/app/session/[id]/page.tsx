@@ -59,7 +59,7 @@ export default async function SessionPage({
                        note={rounds > 1 ? `Do the list ${rounds} times.` : null}
                        workoutId={again ? undefined : w.id}
                        sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
-                       back={{ href: '/me', label: 'Your training' }} />;
+                       back={again ? { href: '/me', label: 'Your training' } : { href: '/me#saved', label: 'Saved for later' }} />;
       }
     } catch { /* fall through to library lookup */ }
   }

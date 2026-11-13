@@ -22,3 +22,14 @@ export function notReady(raw: unknown, migration: string): string {
   console.error(`needs migration ${migration}:`, raw);
   return NOT_READY;
 }
+
+/** What a tap says when the request never reached us: a thrown fetch, no signal. */
+export const NO_SIGNAL = 'Couldn’t reach us. Check your signal and try again.';
+
+/**
+ * For a catch around a server action: a redirect or notFound from the action
+ * is Next's to handle, not a failure, so it goes back up.
+ */
+export function unlessNext(e: unknown): void {
+  if (e && typeof e === 'object' && 'digest' in e && /^NEXT_/.test(String((e as { digest: unknown }).digest))) throw e;
+}

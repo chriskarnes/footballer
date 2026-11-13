@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { moveItem } from '@/app/schedule-actions';
+import { NO_SIGNAL } from '@/lib/plain-error';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -20,7 +21,8 @@ export function MoveDay({ itemKey, weekday, placed, title }: { itemKey: string; 
     const was = day;
     setDay(to); setErr('');
     start(async () => {
-      const r = await moveItem({ key: itemKey, weekday: to, placed });
+      const r = await moveItem({ key: itemKey, weekday: to, placed })
+        .catch(() => ({ ok: false as const, error: NO_SIGNAL }));
       // A failed move snaps back, and says so under the picker.
       if (!r.ok) { setDay(was); setErr(r.error); return; }
       router.refresh();

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Exercise } from '@/lib/types';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
-import { pendingWorkout } from '@/lib/pending';
+import { pendingFinish, pendingWorkout } from '@/lib/pending';
 import { EFFORT } from '@/lib/speed-guide';
 import { isYoutubeShort, youtubeId } from '@/lib/video';
 import { Avatar } from './Avatar';
@@ -14,7 +14,7 @@ import { Tick, TickMark } from './TickMark';
 type Phase = 'running' | 'confirm-end' | 'finished';
 /** What became of the finished session. `signin` means it's waiting in this
  *  browser for an account — see pending.ts. */
-type Save = 'saving' | 'saved' | 'signin' | 'error';
+type Save = 'saving' | 'saved' | 'signin' | 'queued' | 'error';
 type Trainer = { name: string | null; photo: string | null };
 type Feel = 'easy' | 'right' | 'hard';
 
@@ -62,7 +62,7 @@ function glide(el: () => Element | null | undefined, block: ScrollLogicalPositio
 
 export function Runner({
   title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
-  completedDay = null, completedAt, trainer,
+  completedDay = null, completedAt, trainer, spec,
 }: {
   title: string; drills: Exercise[];
   /** One line under the title, when there's something to say: the trainer's
@@ -92,6 +92,9 @@ export function Runner({
   /** The trainer, when the drills are theirs and a player is looking: their
    *  face once, under the title, and their name on the finish. */
   trainer?: Trainer;
+  /** What the session was built from (focus, length, rounds), for a session
+   *  built on Train. Saved with it, so Plan can learn what they actually train. */
+  spec?: Record<string, unknown>;
 }) {
   const [done, setDone] = useState<Set<string>>(new Set());
   const [phase, setPhase] = useState<Phase>('running');
@@ -117,6 +120,29 @@ export function Runner({
     () => (completedDay === null && showable(drills[0]) ? drills[0].id : null));
   const rows = useRef(new Map<string, HTMLLIElement>());
   const finishRef = useRef<HTMLButtonElement>(null);
+
+  // Ticks outlive a refresh, the phone dropping the app in a bag, or a trip
+  // to another tab and back: kept on the phone until Finish, for half a day.
+  const tickKey = `forge.ticks:${workoutId ?? sessionRef ?? title}:${drills.map((d) => d.id).join(',')}`;
+  useEffect(() => {
+    if (completedDay !== null || completedAt?.length) return;
+    try {
+      const raw = localStorage.getItem(tickKey);
+      if (!raw) return;
+      const { at, ids } = JSON.parse(raw) as { at: number; ids: string[] };
+      if (Date.now() - at > 12 * 3600_000) { localStorage.removeItem(tickKey); return; }
+      const keep = ids.filter((id) => drills.some((d) => d.id === id));
+      if (keep.length) setDone(new Set(keep));
+    } catch { /* nothing kept */ }
+    // Once, on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tickKey]);
+  const keepTicks = (next: Set<string>) => {
+    try {
+      if (next.size) localStorage.setItem(tickKey, JSON.stringify({ at: Date.now(), ids: [...next] }));
+      else localStorage.removeItem(tickKey);
+    } catch { /* storage blocked: they live in memory only */ }
+  };
 
   const doneKey = completedAt?.join() ?? '';
   useEffect(() => {
@@ -146,6 +172,7 @@ export function Runner({
     const ticking = !next.has(id);
     if (ticking) { next.add(id); haptic('select'); } else { next.delete(id); haptic('tap'); }
     setDone(next);
+    keepTicks(next);
     // Unticking the last drill takes back an "end early" that was about to
     // become "end with nothing done".
     if (phase === 'confirm-end') setPhase('running');
@@ -173,10 +200,11 @@ export function Runner({
     const completed_at = new Date().toISOString();
     const doneIds = drills.filter((d) => done.has(d.id)).map((d) => d.id);
     const body = workoutId
-      ? { id: workoutId, doneIds, actual_minutes: minutes, actual_touches: doneTouches }
+      ? { id: workoutId, doneIds, actual_minutes: minutes, actual_touches: doneTouches, completed_at }
       : { title, source: source ?? (sessionRef ? 'library' : 'coach'), source_ref: sessionRef,
           exercise_ids: drills.map((d) => d.id), done_ids: doneIds,
           planned_minutes: Math.round(total / 60), planned_touches: totalTouches,
+          ...(spec ? { spec } : {}),
           actual_minutes: minutes, actual_touches: doneTouches,
           status: 'completed', completed_at };
     try {
@@ -195,7 +223,12 @@ export function Runner({
           if (j?.id) { setSavedId(j.id); if (feelRef.current) sendFeel(j.id, feelRef.current); }
         }
       }
-    } catch { setSave('error'); }
+    } catch {
+      // No signal (a field, a basement gym): keep it on the phone and send it
+      // when the signal's back, rather than ask them to remember to retry.
+      (workoutId ? pendingFinish : pendingWorkout).stash(body);
+      setSave('queued');
+    }
   }
 
   const pickFeel = (k: Feel) => {
@@ -212,6 +245,7 @@ export function Runner({
     // afterthought.
     haptic('success');
     window.scrollTo({ top: 0 });
+    keepTicks(new Set());
     send(minutes);
   }
 
@@ -238,7 +272,7 @@ export function Runner({
 
           {/* A trainer's session goes to the trainer: say so, while it's on its
               way or there. If it didn't save, the line below says that instead. */}
-          {trainer && asksFeel && (save === 'saving' || save === 'saved') && (
+          {trainer && asksFeel && (save === 'saving' || save === 'saved' || save === 'queued') && (
             <div className="mt-5 flex items-center justify-center gap-2.5">
               {face && <Avatar name={trainer.name} src={trainer.photo} className="h-9 w-9 text-body" onBrand />}
               <p className="text-title-sm font-bold text-on-surface-brand">
@@ -248,9 +282,11 @@ export function Runner({
           )}
 
           {/* Said only when there's something to do about it. */}
-          {(save === 'signin' || save === 'error') && (
+          {(save === 'signin' || save === 'error' || save === 'queued') && (
             <p role="status" className="mt-4 text-body font-medium text-on-surface-brand-variant">
-              {save === 'signin' ? (
+              {save === 'queued' ? (
+                <>No signal. It&rsquo;s kept on this phone and saves when you&rsquo;re back online.</>
+              ) : save === 'signin' ? (
                 <><Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> to keep this session.</>
               ) : (
                 <>Couldn&rsquo;t save.{' '}

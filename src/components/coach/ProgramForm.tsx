@@ -4,7 +4,7 @@ import { saveProgram, deleteProgram } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { useRouter } from 'next/navigation';
 import { useToast } from './Toast';
-import { Field, FormError } from './Field';
+import { Field, FormError, keepOnError } from './Field';
 
 /** A program's name, length and what it's for. Sessions are added week by week after. */
 /** `solo` is how many players have this program on their own, outside a group. */
@@ -16,7 +16,7 @@ export function ProgramForm({ program, solo = 0 }: { program?: { id: string; nam
   const toast = useToast();
   const [gone, setGone] = useState('');
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={keepOnError(action)} className="space-y-5">
       <input type="hidden" name="id" value={program?.id ?? ''} />
       <Field label="Name"><input name="name" required maxLength={60} defaultValue={program?.name} placeholder="e.g. Ball Mastery Foundations" /></Field>
       <Field label="How many weeks?" hint="How long a group usually runs. Weeks you don’t build repeat the one before.">

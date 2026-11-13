@@ -29,7 +29,9 @@ export async function POST(req: Request) {
   };
   // A trainer's session keeps which drills were ticked on the row itself
   // (0012): progression reads it. Without the column yet, save without it.
-  const ticked = (body.source === 'academy' || body.source === 'addon') && Array.isArray(body.done_ids)
+  // Speed keeps them too: its drills aren't library rows either, and History
+  // needs them to tell a session stopped early from one done in full.
+  const ticked = (body.source === 'academy' || body.source === 'addon' || body.source === 'speed') && Array.isArray(body.done_ids)
     ? body.done_ids.filter((x: unknown) => typeof x === 'string').slice(0, 40) : null;
   let { data, error } = await db.from('workouts').insert(ticked ? { ...row, done_ids: ticked } : row).select('id').single();
   if (error && ticked && /done_ids/.test(error.message)) ({ data, error } = await db.from('workouts').insert(row).select('id').single());
@@ -68,10 +70,13 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: true });
   }
   const { id, doneIds, actual_minutes, actual_touches } = body;
+  // A finish sent later (no signal at the time) keeps the time it was played.
+  const at = typeof body.completed_at === 'string' && !Number.isNaN(Date.parse(body.completed_at))
+    && Date.parse(body.completed_at) <= Date.now() + 60_000 ? body.completed_at : new Date().toISOString();
   const { error } = await db.from('workouts')
     .update({
       status: 'completed',
-      completed_at: new Date().toISOString(),
+      completed_at: at,
       actual_minutes: actual_minutes ?? null,
       actual_touches: actual_touches ?? null,
     })

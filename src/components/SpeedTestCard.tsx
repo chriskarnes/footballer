@@ -20,7 +20,7 @@ const fmt = (v: number, unit: string) => unit === 's' ? v.toFixed(2) : String(Ma
 
 /**
  * The athlete's card. Reads top to bottom: personal bests, then every test day
- * as a column. Numbers are typed in on test day and stay in this browser.
+ * as a column. Numbers are typed in on test day, kept on the phone and, signed in, on the account (see speed-card.ts).
  *
  * A PB is circled — well, filled — because a teenager will train for a circle.
  */

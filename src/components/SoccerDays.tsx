@@ -3,6 +3,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
 import { saveSoccerDays } from '@/app/schedule-actions';
+import { NO_SIGNAL } from '@/lib/plain-error';
 import type { TeamDays } from '@/lib/academy-week';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -101,7 +102,8 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
 
   const save = () => start(async () => {
     setError(null);
-    const r = await saveSoccerDays({ ...fromWeek(week), userId });
+    const r = await saveSoccerDays({ ...fromWeek(week), userId })
+      .catch(() => ({ ok: false as const, error: NO_SIGNAL }));
     if (!r.ok) { setError(r.error); return; }
     setSaved(week);
     toast('Saved.');

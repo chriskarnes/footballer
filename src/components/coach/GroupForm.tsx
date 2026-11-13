@@ -3,7 +3,7 @@ import { useActionState } from 'react';
 import { saveGroup } from '@/app/coach/content-actions';
 import { WEEKDAYS } from '@/lib/types';
 import type { GroupRow } from '@/lib/academy-week';
-import { Field, FormError } from './Field';
+import { Field, FormError, keepOnError } from './Field';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -16,7 +16,7 @@ export function GroupForm({ group, programs, today }: {
 }) {
   const [state, action, pending] = useActionState(saveGroup, null);
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={keepOnError(action)} className="space-y-5">
       <input type="hidden" name="id" value={group?.id ?? ''} />
       <Field label="Name" hint="What you’d call it out loud.">
         <input name="name" required maxLength={40} defaultValue={group?.name} placeholder="e.g. U12 Tuesday, Advanced" />
