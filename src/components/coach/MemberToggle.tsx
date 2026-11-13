@@ -11,16 +11,16 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
 }) {
   const [on, setOn] = useState(initial);
   const [busy, start] = useTransition();
-  const [err, setErr] = useState(false);
+  const [err, setErr] = useState('');
   const router = useRouter();
   const toast = useToast();
   const first = name.split(' ')[0];
   return (
     <button type="button" role="switch" aria-checked={on} disabled={busy}
             onClick={() => start(async () => {
-              const next = !on; setOn(next); setErr(false);
+              const next = !on; setOn(next); setErr('');
               const r = await setMembership(groupId, userId, next).catch(offline);
-              if (!r.ok) { setOn(!next); setErr(true); }
+              if (!r.ok) { setOn(!next); setErr(r.error); }
               // The list of who's in it, above, is the server's: bring it up to date.
               else { toast(next ? `${first} is in the group.` : `${first} is out of the group.`); router.refresh(); }
             })}
@@ -30,7 +30,7 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-body-lg font-semibold text-on-surface">{name}</span>
-        {(detail || err) && <span role={err ? 'alert' : undefined} className={`block truncate text-body-sm ${err ? 'font-semibold text-on-surface' : 'text-on-surface-variant'}`}>{err ? 'Couldn’t save. Try again.' : detail}</span>}
+        {(detail || err) && <span role={err ? 'alert' : undefined} className={`block text-body-sm ${err ? '' : 'truncate'} ${err ? 'font-semibold text-on-surface' : 'text-on-surface-variant'}`}>{err || detail}</span>}
       </span>
     </button>
   );

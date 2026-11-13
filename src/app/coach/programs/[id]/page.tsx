@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { staffOnly } from '@/components/coach/Gate';
 import { ProgramForm } from '@/components/coach/ProgramForm';
 import { CopyWeek } from '@/components/coach/CopyWeek';
+import { Disclose } from '@/components/coach/Disclose';
 import { loadContent } from '@/lib/academy-data';
 import { programWeek, sessionsForWeek } from '@/lib/academy-week';
 import { localDate } from '@/lib/progress';
@@ -104,10 +105,10 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
         })}
       </ol>
 
-      <details className="mt-9">
-        <summary className="cursor-pointer text-body font-semibold text-on-surface">Name, length and description</summary>
-        <div className="mt-5"><ProgramForm program={p} solo={players} /></div>
-      </details>
+      {/* The same opener as a group's settings. */}
+      <div className="mt-9">
+        <Disclose label="Name, length and description"><ProgramForm program={p} solo={players} /></Disclose>
+      </div>
     </div>
   );
 }

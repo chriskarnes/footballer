@@ -91,11 +91,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
     focus,
     // Sent only when changed; back to the academy's setting when it matches it.
     ...(progress !== savedProgress ? { progress: progress === defaults.progress ? null : progress } : {}),
-  }));
+  }), undefined, 'Saved.', undefined, 'settings');
 
   const resetToDefaults = () => run(() => savePlan(userId, { sessions: null, minutes: null, focus: savedFocus, progress: null }), () => {
     setSessions(defaults.sessions); setMinutes(defaults.minutes); setProgress(defaults.progress);
-  });
+  }, 'Saved.', undefined, 'settings');
 
   const choose = (m: 'program' | 'custom') => {
     if (m === mode) return;
@@ -183,6 +183,8 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                 {pending ? 'Saving…' : 'Save'}
               </button>
             )}
+            {/* Here, by Save: below the two weeks it was out of sight. */}
+            {err && errAt === 'settings' && <p role="alert" className="mt-2.5 text-body font-semibold text-on-surface">{err}</p>}
           </section>
 
           {customWeek({ title: 'This week', rows: thisWeek, which: 'this' })}
@@ -266,7 +268,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
             <p className="mt-1 text-body text-on-surface-variant">
               {which === 'this' ? `Not built yet, so ${first} is on their program this week.` : 'Not built yet.'} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
             </p>
-            <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which), undefined, 'Saved.', undefined, `week:${which}`)}
+            <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which), undefined, 'Week built.', undefined, `week:${which}`)}
                     className="btn-ghost pressable mt-4 w-full">
               {pending ? 'Building…' : dirty ? 'Save first' : `Build ${title.toLowerCase()}`}
             </button>

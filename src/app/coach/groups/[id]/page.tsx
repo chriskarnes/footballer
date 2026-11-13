@@ -44,6 +44,8 @@ export default async function GroupPage({ params }: {
 
   const meta = [when, program
     ? n ? `${program.name} · Week ${n} of ${program.weeks}`
+        // A finished group already says Finished, up front.
+        : g.archived ? program.name
         : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${shortDate(g.starts_on)}` : 'finished'}`
     : null].filter(Boolean).join(' · ');
 
@@ -119,7 +121,7 @@ export default async function GroupPage({ params }: {
             </div>
             </Disclose>
           </div>
-        ) : <p className="pl-1 text-body text-on-surface-variant">No players in the academy yet. Invite them from Academy.</p>}
+        ) : <p className="pl-1 text-body text-on-surface-variant">No players in the academy yet. <Link href="/coach/team" className="font-semibold text-on-surface underline underline-offset-4">Invite them from Academy</Link>.</p>}
       </section>
 
       <section className="mt-8">

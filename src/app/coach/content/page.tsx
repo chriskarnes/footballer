@@ -16,7 +16,12 @@ export default async function ContentPage() {
   const gate = await staffOnly('/coach/content');
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
-  const c = await loadContent(db, academy.id);
+  const [c, { data: members }] = await Promise.all([
+    loadContent(db, academy.id),
+    db.from('academy_members').select('user_id').eq('academy_id', academy.id).eq('role', 'player'),
+  ]);
+  // Current players only: someone removed from the academy no longer has it.
+  const current = new Set(((members ?? []) as { user_id: string }[]).map((m) => m.user_id));
 
   return (
     <div className="animate-pop">
@@ -32,6 +37,8 @@ export default async function ContentPage() {
               const sessions = c.sessions.filter((s) => s.program_id === p.id);
               const weeks = new Set(sessions.map((s) => s.week)).size;
               const groups = c.groups.filter((g) => g.program_id === p.id && !g.archived).length;
+              // Players given it on their own, as the program's page counts them.
+              const solo = c.playerPrograms.filter((x) => x.program_id === p.id && (!members || current.has(x.user_id))).length;
               return (
                 <li key={p.id}>
                   <Link href={`/coach/programs/${p.id}`} className="flex items-center justify-between gap-4 px-4 py-4">
@@ -40,6 +47,7 @@ export default async function ContentPage() {
                       <span className="mt-0.5 block text-body text-on-surface-variant">
                         {p.weeks} {p.weeks === 1 ? 'week' : 'weeks'} · {sessions.length ? `${weeks} ${weeks === 1 ? 'week' : 'weeks'} built` : 'nothing built yet'}
                         {groups ? ` · ${groups} ${groups === 1 ? 'group' : 'groups'}` : ''}
+                        {solo ? ` · ${solo} ${solo === 1 ? 'player' : 'players'} on their own` : ''}
                       </span>
                     </span>
                     <span aria-hidden="true" className="text-on-surface-variant">›</span>
