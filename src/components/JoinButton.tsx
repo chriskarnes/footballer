@@ -14,7 +14,7 @@ export function JoinButton({ code, label, email, who }: { code: string; label: s
               onClick={() => start(async () => { const r = await joinAcademy(code, who); if (r && !r.ok) setErr(r.error); })}>
         {pending ? 'Joining…' : 'Join'}
       </button>
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">Couldn&rsquo;t join: {err}</p>}
+      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

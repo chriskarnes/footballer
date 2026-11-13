@@ -9,6 +9,7 @@ import { allowed, DENIED, fingerprint, logCall } from '@/lib/ai';
 import { proposeWeek } from '@/lib/ai-week';
 import { loadPlayers } from '@/lib/coach-data';
 import { FOCUS_LABELS } from '@/lib/types';
+import { plain, notReady, Said } from '@/lib/plain-error';
 
 /**
  * A player's targets and focus, and the weeks built from them (0010). A
@@ -17,15 +18,15 @@ import { FOCUS_LABELS } from '@/lib/types';
  */
 async function staff() {
   const v = await getViewer();
-  if (!v.academy || !v.user || !v.staff) throw new Error('Only trainers can do that.');
+  if (!v.academy || !v.user || !v.staff) throw new Said('Only trainers can do that.');
   return v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> };
 }
 
 type Result = { ok: true; by?: 'ai' | 'rules'; why?: string } | { ok: false; error: string };
-const fail = (e: unknown): Result => ({ ok: false, error: e instanceof Error ? e.message : String(e) });
+const fail = (e: unknown): Result => ({ ok: false, error: plain(e) });
 const done = () => revalidatePath('/', 'layout');
 const missing = (m: string) => /player_plans|player_week_sessions|academy_plan_defaults|schema cache/.test(m)
-  ? 'Run migration 0010 in Supabase first.' : m;
+  ? notReady(m, '0010') : plain(m);
 
 const clamp = (n: unknown, lo: number, hi: number) => {
   const x = Math.round(Number(n));
@@ -46,7 +47,7 @@ export async function savePlan(userId: string, plan: { sessions: number | null; 
     // Null follows the academy; left out, it stays as it was.
     if (plan.progress !== undefined) row.progress = plan.progress;
     const { error } = await v.db.from('player_plans').upsert(row);
-    if (error && /progress/.test(error.message)) return { ok: false, error: 'Run migration 0013 in Supabase first.' };
+    if (error && /progress/.test(error.message)) return { ok: false, error: notReady(error, '0013') };
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
@@ -62,7 +63,7 @@ export async function setMode(userId: string, mode: 'program' | 'custom'): Promi
     const { error } = await v.db.from('player_plans').upsert({
       academy_id: v.academy.id, user_id: userId, mode, autopilot: false, updated_at: new Date().toISOString(),
     });
-    if (error) return { ok: false, error: /mode/.test(error.message) ? 'Run migration 0014 in Supabase first.' : missing(error.message) };
+    if (error) return { ok: false, error: /mode/.test(error.message) ? notReady(error, '0014') : missing(error.message) };
     if (mode === 'program') {
       const from = mondayOf(localDate(new Date(), v.academy.timeZone));
       const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
@@ -88,10 +89,10 @@ export async function savePlayerOptions(library: boolean, extras: number, speed:
     // Before 0019 there's no Speed setting, and Speed is on: fine, unless
     // they're turning it off.
     if (error && /player_speed/.test(error.message)) {
-      if (!speed) return { ok: false, error: 'Run migration 0019 in Supabase first.' };
+      if (!speed) return { ok: false, error: notReady(error, '0019') };
       ({ error } = await v.db.from('academy_plan_defaults').upsert(row));
     }
-    if (error && /player_/.test(error.message)) return { ok: false, error: 'Run migration 0015 in Supabase first.' };
+    if (error && /player_/.test(error.message)) return { ok: false, error: notReady(error, '0015') };
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
@@ -105,7 +106,7 @@ export async function saveDefaults(sessions: number, minutes: number, progress: 
       academy_id: v.academy.id, sessions: clamp(sessions, 1, 7), minutes: clamp(minutes, MIN_MINUTES, MAX_MINUTES), progress: !!progress,
       updated_at: new Date().toISOString(),
     });
-    if (error && /progress/.test(error.message)) return { ok: false, error: 'Run migration 0013 in Supabase first.' };
+    if (error && /progress/.test(error.message)) return { ok: false, error: notReady(error, '0013') };
     if (error) return { ok: false, error: missing(error.message) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }

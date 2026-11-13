@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
+import { plain } from '@/lib/plain-error';
 
 /** Save a built session to history. This is what makes "order it again" possible. */
 export async function POST(req: Request) {
@@ -63,7 +64,7 @@ export async function PATCH(req: Request) {
   if (body.feel !== undefined && body.id) {
     if (!['easy', 'right', 'hard'].includes(body.feel)) return NextResponse.json({ error: 'feel is easy, right or hard' }, { status: 400 });
     const { error } = await db.from('workouts').update({ feel: body.feel }).eq('id', body.id).eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
     return NextResponse.json({ ok: true });
   }
   const { id, doneIds, actual_minutes, actual_touches } = body;
@@ -75,7 +76,7 @@ export async function PATCH(req: Request) {
       actual_touches: actual_touches ?? null,
     })
     .eq('id', id).eq('user_id', user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
 
   if (Array.isArray(doneIds) && doneIds.length) {
     await db.from('workout_items')
@@ -96,6 +97,6 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
   const { error } = await db.from('workouts').delete()
     .eq('id', id).eq('user_id', user.id).neq('status', 'completed');
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

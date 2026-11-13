@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
+import { plain } from '@/lib/plain-error';
 
 const AGE_BANDS = ['u10', '10_12', '13_15', '16_18', '18_plus'];
 const FEET = ['left', 'right', 'both'];
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
   // PGRST204 is PostgREST for "no such column", which here means exactly one
   // thing: the migration has not been run yet. Any other failure is real.
   const missingColumn = error.code === 'PGRST204' || /column .* does not exist/i.test(error.message);
-  if (!missingColumn) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!missingColumn) return NextResponse.json({ error: plain(error) }, { status: 400 });
 
   const legacy = Object.fromEntries(
     Object.entries(full).filter(([k]) => !NEW_COLUMNS.includes(k as typeof NEW_COLUMNS[number]))

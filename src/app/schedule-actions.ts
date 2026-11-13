@@ -3,11 +3,12 @@ import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { localDate, mondayOf } from '@/lib/progress';
 import type { TeamDays } from '@/lib/academy-week';
+import { plain } from '@/lib/plain-error';
 
 type Result = { ok: true } | { ok: false; error: string };
 const days = (xs: unknown[]) => [...new Set(xs.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
-const NOT_YET = 'Soccer days aren’t switched on yet (migration 0008).';
-const NOT_YET_0021 = 'Trainer days and more than one game aren’t switched on yet (migration 0021).';
+const NOT_YET = 'Soccer days aren’t switched on yet. Try again later.';
+const NOT_YET_0021 = 'Trainer days and more than one game aren’t switched on yet. Try again later.';
 
 /**
  * A player's soccer days: with their trainer, team practice, and games. A
@@ -32,7 +33,7 @@ export async function saveSoccerDays(input: TeamDays & { userId?: string }): Pro
     if (games.length > 1 || trainer.length) return { ok: false, error: NOT_YET_0021 };
     ({ error } = await v.db.from('player_schedules').upsert(row));
   }
-  if (error) return { ok: false, error: /player_schedules/.test(error.message) ? NOT_YET : error.message };
+  if (error) return { ok: false, error: /player_schedules/.test(error.message) ? NOT_YET : plain(error) };
   revalidatePath('/', 'layout');
   return { ok: true };
 }
@@ -51,7 +52,7 @@ export async function moveItem(input: { key: string; weekday: number; placed: nu
   const { error } = weekday === input.placed
     ? await v.db.from('session_moves').delete().match(row)
     : await v.db.from('session_moves').upsert({ ...row, weekday });
-  if (error) return { ok: false, error: /session_moves/.test(error.message) ? NOT_YET : error.message };
+  if (error) return { ok: false, error: /session_moves/.test(error.message) ? NOT_YET : plain(error) };
   revalidatePath('/', 'layout');
   return { ok: true };
 }

@@ -21,38 +21,38 @@ export default async function SessionPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
-  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   const { id } = await params;
   const { from } = await searchParams;
+
+  // "Do it again" from your history. It comes before the library gate: a
+  // trainer's session or a speed session is yours to repeat whether or not
+  // this academy shows the library.
+  if (from === 'history') {
+    const again = await fromHistory(id);
+    if (again) redirect(again);
+  }
+
+  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   const exercises = await getExercises();
 
   if (from === 'history') {
-    let speedRef: string | null = null;
     try {
       const db = await serverClient();
       const { data: w } = await db.from('workouts').select('*').eq('id', id).single();
       if (w) {
-        // A speed session's drills live in lib/speed.ts, not the library, so
-        // its runner is the one that can rebuild them. redirect() throws, and
-        // the catch below would swallow it, so it happens after the try.
-        if (w.source === 'speed' && w.source_ref) {
-          speedRef = w.source_ref;
-        } else {
-          const byId = new Map(exercises.map((e) => [e.id, e]));
-          const drills = (w.exercise_ids as string[]).map((id) => byId.get(id)).filter(Boolean) as Exercise[];
-          // A saved session is finished by marking that row complete. A finished
-          // one is done again as a new session — passing its id made the runner
-          // PATCH the old row, so doing a session twice overwrote the first time.
-          const again = w.status === 'completed';
-          return <Runner title={w.title}
-                         drills={drills}
-                         workoutId={again ? undefined : w.id}
-                         sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
-                         back={{ href: '/me', label: 'Your training' }} />;
-        }
+        const byId = new Map(exercises.map((e) => [e.id, e]));
+        const drills = (w.exercise_ids as string[]).map((id) => byId.get(id)).filter(Boolean) as Exercise[];
+        // A saved session is finished by marking that row complete. A finished
+        // one is done again as a new session — passing its id made the runner
+        // PATCH the old row, so doing a session twice overwrote the first time.
+        const again = w.status === 'completed';
+        return <Runner title={w.title}
+                       drills={drills}
+                       workoutId={again ? undefined : w.id}
+                       sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
+                       back={{ href: '/me', label: 'Your training' }} />;
       }
     } catch { /* fall through to library lookup */ }
-    if (speedRef) redirect(`/speed/session/${speedRef}?from=history`);
   }
 
   const [sessions, programs] = await Promise.all([getSessions(), getPrograms()]);
@@ -79,4 +79,28 @@ export default async function SessionPage({
 
   return <Runner title={s.name} drills={drills}
                  sessionRef={s.id} back={back} />;
+}
+
+/**
+ * Where a past workout is run again, when its own runner isn't this page:
+ * a speed session's drills live in lib/speed.ts, and a trainer's session,
+ * week-built session, drill or "just for you" drill has its runner under
+ * /train. The workout row only keeps the id (source_ref), so which of the
+ * trainer's tables it came from is found by looking.
+ */
+async function fromHistory(id: string): Promise<string | null> {
+  try {
+    const db = await serverClient();
+    const { data: w } = await db.from('workouts').select('source, source_ref').eq('id', id).maybeSingle();
+    const ref = w?.source_ref as string | null | undefined;
+    if (!w || !ref) return null;
+    if (w.source === 'speed') return `/speed/session/${ref}?from=history`;
+    if (w.source === 'addon') return `/train/addon/${ref}?from=history`;
+    if (w.source !== 'academy') return null;
+    for (const [table, kind] of [['academy_sessions', 'session'], ['player_week_sessions', 'custom'], ['drills', 'drill']] as const) {
+      const { data } = await db.from(table).select('id').eq('id', ref).maybeSingle();
+      if (data) return `/train/${kind}/${ref}?from=history`;
+    }
+  } catch { /* the library lookup below decides */ }
+  return null;
 }

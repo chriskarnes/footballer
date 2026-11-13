@@ -58,7 +58,18 @@ async function readAvatarAt(db: any, id: string): Promise<string | null> {
   return data?.avatar_updated_at ?? null;
 }
 
-export default async function MePage() {
+/** 'parent' when a parent joined for their player (0009); the setup questions then ask about the player. */
+async function readSignedUpBy(db: any, id: string): Promise<string | null> {
+  const { data } = await db.from('profiles').select('signed_up_by').eq('id', id).maybeSingle();
+  return data?.signed_up_by ?? null;
+}
+
+export default async function MePage({ searchParams }: { searchParams: Promise<{ auth?: string; next?: string }> }) {
+  const sp = await searchParams;
+  // Back from a sign-in link that didn't work (see auth/callback).
+  const linkFailed = sp.auth === 'error';
+  const next = sp.next && /^\/(?!\/)/.test(sp.next) && !sp.next.includes('\\') ? sp.next : '/me';
+  let signedUpBy: string | null = null;
   let user = null as null | { id: string; email?: string };
   let workouts: WorkoutRaw[] = [];
   let profile: ProfileValues | null = null;
@@ -80,7 +91,7 @@ export default async function MePage() {
       const { data } = await db.auth.getUser();
       user = data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null;
       if (user) {
-        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk, st, lib] = await Promise.all([
+        const [rows, prof, { data: planRows }, viewer, cal, photoAt, wk, st, lib, by] = await Promise.all([
           readWorkouts(db),
           readProfile(db, user.id),
           db.from('plans').select('id,name,active,created_at').eq('user_id', user.id)
@@ -92,7 +103,9 @@ export default async function MePage() {
           getMyWeek().catch(() => null),
           getPlayerState().catch((): PlayerState => ({ kind: 'none' })),
           libraryAllowed().catch(() => false),
+          readSignedUpBy(db, user.id).catch(() => null),
         ]);
+        signedUpBy = by;
         library = lib;
         myWeek = wk;
         state = st;
@@ -117,7 +130,15 @@ export default async function MePage() {
             Save your sessions and see your week.
           </p>
         </BrandBand>
-        <div className="mt-5"><SignIn /></div>
+        {linkFailed && (
+          <div className="card mt-5 p-5" role="alert">
+            <div className="h-card">That link didn’t work</div>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-on-surface-variant">
+              Sign-in links work once, for an hour, in the browser you asked from. Send yourself a new one.
+            </p>
+          </div>
+        )}
+        <div className="mt-5"><SignIn next={next} /></div>
       </div>
     );
   }
@@ -126,8 +147,10 @@ export default async function MePage() {
   // account, and the four questions are worth more than an empty history list.
   // Having trained already outranks an unfinished profile — someone mid-session
   // should not be sent back to a form.
-  if (!profile?.display_name && !workouts.length) {
-    return <ProfileSetup email={user.email} />;
+  // Trainers aren't asked these: their name is asked on the trainer side.
+  const staff = role === 'owner' || role === 'trainer';
+  if (!profile?.display_name && !workouts.length && !staff) {
+    return <ProfileSetup email={user.email} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent'} />;
   }
 
   const finished = finishedRows(workouts);

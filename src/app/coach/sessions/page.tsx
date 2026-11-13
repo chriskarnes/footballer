@@ -34,7 +34,7 @@ export default async function SessionsPage() {
       <section className="mt-6">
         {!c.libraryReady ? (
           <p className="card-flat px-4 py-3 text-[13.5px] text-on-surface-variant">
-            Sessions need the latest database update (migration 0017). Until then, build them inside a program.
+            Sessions on their own aren’t switched on yet. Until then, build them inside a program.
           </p>
         ) : rows.length ? (
           <>

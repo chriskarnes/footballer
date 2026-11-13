@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { serverClient } from '@/lib/supabase/server';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '@/lib/avatar';
+import { plain } from '@/lib/plain-error';
 
 type Result = { ok: true; updatedAt: string | null } | { ok: false; error: string };
 
@@ -14,7 +15,7 @@ async function write(patch: { avatar_type: string | null; avatar_data: string | 
   const { error } = await db.from('profiles').upsert({ id: user.id, ...patch, avatar_updated_at: updatedAt });
   if (error) {
     const missing = error.code === 'PGRST204' || /column .* does not exist/i.test(error.message);
-    return { ok: false, error: missing ? 'Photos aren’t switched on yet (database update 0016).' : error.message };
+    return { ok: false, error: missing ? 'Photos aren’t switched on yet. Try again later.' : plain(error) };
   }
   revalidatePath('/me', 'layout');
   return { ok: true, updatedAt };

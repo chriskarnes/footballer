@@ -1,4 +1,7 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { getViewer } from '@/lib/viewer';
+import { SignIn } from './SignIn';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { NoteBanner } from './NoteBanner';
 import { TrainerWeek } from './TrainerWeek';
@@ -13,8 +16,46 @@ import { SpeedInvite } from './SpeedInvite';
  * that's the page, and its band has the way on once the week is done; without
  * one, a placeholder. Speed & Stamina is the platform's own and works
  * everywhere, so it's the way forward from there, when their trainer offers it.
+ *
+ * Someone signed out, or signed in but not in this academy, has no trainer
+ * yet: they're told how in, not that a trainer hasn't set anything.
  */
 export async function LibraryLocked({ title }: { title: string }) {
+  const v = await getViewer().catch(() => null);
+  if (v?.academy && (!v.user || !v.role)) {
+    return (
+      <div className="animate-pop">
+        <BrandBand>
+          <BandTag>{title}</BandTag>
+          <BandTitle>{v.user ? 'Ask to join' : 'Sign in'}</BandTitle>
+          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+            {v.user ? `Your sessions from ${v.academy.name} appear here once you’re in.`
+                    : `Your sessions from ${v.academy.name} are here once you sign in.`}
+          </p>
+        </BrandBand>
+        {!v.user && <div className="mt-5"><SignIn next="/" /></div>}
+        <p className="mt-5 text-center text-[14px] text-on-surface-variant">
+          {v.user ? 'Got a link from your trainer? Open it. ' : 'New here? '}
+          <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">Ask to join</Link>
+        </p>
+      </div>
+    );
+  }
+  // A trainer looking at the player side, with nothing set for themselves.
+  if (v?.staff) {
+    return (
+      <div className="animate-pop">
+        <BrandBand>
+          <BandTag>{title}</BandTag>
+          <BandTitle>Player view</BandTitle>
+          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+            Your players see the sessions you set them here.
+          </p>
+        </BrandBand>
+        <Link href="/coach" className="btn-primary pressable mt-6 w-full">Back to Coach</Link>
+      </div>
+    );
+  }
   // A player with nothing set this week hears from their trainer, not Speed.
   const state = await getPlayerState().catch(() => ({ kind: 'none' }) as const);
   if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;

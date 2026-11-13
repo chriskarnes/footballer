@@ -90,7 +90,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
       </PageHead>
       {!s.ready && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
-          Run migration 0020 in Supabase to save your progress here.
+          Your progress here isn’t saved yet. It will be once this is switched on.
         </p>
       )}
 

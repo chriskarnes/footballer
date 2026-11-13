@@ -30,9 +30,9 @@ const FROM: Record<string, string> = { train: '/', plan: '/plan', history: '/me'
  * the ones it builds, and a session from Plan, Me's history or the Library.
  */
 function tabFor(path: string, from: string | null): string | null {
-  if (path === '/' || path.startsWith('/train/') || path === '/session/custom') return '/';
-  const session = path.startsWith('/session/') || path.startsWith('/speed/session/');
+  const session = path.startsWith('/session/') || path.startsWith('/speed/session/') || path.startsWith('/train/');
   if (session && from && FROM[from]) return FROM[from];
+  if (path === '/' || path.startsWith('/train/') || path === '/session/custom') return '/';
   if (path.startsWith('/session/')) return '/library';
   return [COACH, ...TABS].find((t) => t.href !== '/' && path.startsWith(t.href))?.href ?? null;
 }

@@ -1,6 +1,7 @@
 'use server';
 import { redirect } from 'next/navigation';
 import { serverClient } from '@/lib/supabase/server';
+import { plain } from '@/lib/plain-error';
 
 /**
  * Makes the signed-in account the academy's owner, if it's the email the
@@ -18,7 +19,7 @@ export async function claimAcademy(code: string): Promise<{ ok: false; error: st
         : /not signed in/.test(m) ? 'Sign in first.'
         : /claim not found/.test(m) ? 'This link doesn’t work any more.'
         : /Could not find the function|function .* does not exist/i.test(m) ? 'This isn’t switched on yet. Reply to the email and we’ll sort it out.'
-        : m,
+        : plain(error, 'Couldn’t claim it just now. Try again.'),
     };
   }
   redirect('/coach/setup');

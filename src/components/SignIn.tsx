@@ -37,9 +37,16 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
         email: email.trim(),
         options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
-      if (error) setErr(error.message); else setSent(true);
-    } catch {
-      setErr('Sign-in isn’t set up yet. Add the Supabase keys to .env.local.');
+      if (error) {
+        console.error(error);
+        // Supabase allows one link a minute per address; anything else is ours.
+        setErr(error.status === 429 || /rate|seconds/i.test(error.message)
+          ? 'A link was just sent. Wait a minute, then try again.'
+          : 'Couldn’t send the link. Check the address and try again.');
+      } else setSent(true);
+    } catch (e) {
+      console.error(e);
+      setErr('Couldn’t send the link. Try again in a moment.');
     } finally {
       setBusy(false);
     }

@@ -32,15 +32,21 @@ function asExercise(d: DrillRow, sessionId: string, i: number, step = 0): Exerci
  * the trainer's name and face at the top, with their note on the session; a
  * trainer previewing sees neither.
  */
-export default async function TrainerSessionPage({ params }: { params: Promise<{ kind: string; id: string }> }) {
+export default async function TrainerSessionPage({ params, searchParams }: {
+  params: Promise<{ kind: string; id: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { kind, id } = await params;
+  // "Do it again" from your history: back to the history, and run as new
+  // rather than opening as this week's finished one.
+  const history = (await searchParams).from === 'history';
   const v = await getViewer();
   if (!v.academy || !v.user || !/^[0-9a-f-]{36}$/.test(id)) notFound();
-  const back = { href: '/', label: 'Train' };
+  const back = history ? { href: '/me', label: 'Your training' } : { href: '/', label: 'Train' };
   const player = v.role === 'player';
   const [week, trainer] = player ? await Promise.all([getMyWeek().catch(() => null), getTrainer()]) : [null, undefined];
   const item = week?.items.find((i) => i.kind === kind && i.ref === id);
-  const completedDay = item?.done ? item.doneOn ?? item.weekday : null;
+  const completedDay = item?.done && !history ? item.doneOn ?? item.weekday : null;
   // What the trainer said about this session, said once at the top of it.
   const mine = { trainer, completedDay, note: item?.note ?? null };
 
@@ -73,7 +79,7 @@ export default async function TrainerSessionPage({ params }: { params: Promise<{
     const { data: d } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
     if (!d) notFound();
     return <Runner title={d.name} drills={[asExercise(d as DrillRow, d.id, 0)]}
-                   sessionRef={d.id} source="academy" back={{ href: '/library', label: 'Library' }} trainer={trainer} />;
+                   sessionRef={d.id} source="academy" back={history ? back : { href: '/library', label: 'Library' }} trainer={trainer} />;
   }
 
   if (kind === 'addon') {

@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
+import { plain, notReady } from '@/lib/plain-error';
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -25,11 +26,26 @@ export async function saveYou(name: string, timeZone: string): Promise<Result> {
     v.db.from('academies').update({ time_zone: timeZone, updated_at: new Date().toISOString(), updated_by: v.user.id })
       .eq('id', v.academy.id),
   ]);
-  if (p.error) return { ok: false, error: p.error.message };
-  if (a.error) return { ok: false, error: a.error.message };
+  if (p.error) return { ok: false, error: plain(p.error) };
+  if (a.error) return { ok: false, error: plain(a.error) };
   const { error } = await v.db.rpc('academy_setup_mark', { p_academy: v.academy.id, p_step: 'you' });
-  if (error) return { ok: false, error: missing(error.message) ? 'Run migration 0020 in Supabase first.' : error.message };
+  if (error) return { ok: false, error: missing(error.message) ? notReady(error, '0020') : plain(error) };
   revalidatePath('/coach/setup');
+  return { ok: true };
+}
+
+/**
+ * A trainer's name as their players see it, for anyone on the staff: an
+ * invited trainer is asked on the dashboard, since setup is the owner's.
+ */
+export async function saveName(name: string): Promise<Result> {
+  const v = await getViewer();
+  if (!v.user || !v.academy || !v.staff) return { ok: false, error: 'Sign in as a trainer first.' };
+  const n = name.trim().replace(/\s+/g, ' ');
+  if (!n || n.length > 60) return { ok: false, error: 'Write your name, as your players say it.' };
+  const { error } = await v.db.from('profiles').upsert({ id: v.user.id, display_name: n });
+  if (error) return { ok: false, error: plain(error) };
+  revalidatePath('/coach');
   return { ok: true };
 }
 
@@ -38,7 +54,7 @@ export async function finishSetup(): Promise<Result> {
   const v = await getViewer();
   if (!v.user || !v.academy || v.role !== 'owner') return { ok: false, error: 'Only the owner sets this up.' };
   const { error } = await v.db.rpc('academy_setup_mark', { p_academy: v.academy.id, p_step: 'done' });
-  if (error) return { ok: false, error: missing(error.message) ? 'Run migration 0020 in Supabase first.' : error.message };
+  if (error) return { ok: false, error: missing(error.message) ? notReady(error, '0020') : plain(error) };
   revalidatePath('/coach');
   redirect('/coach?ready=1');
 }

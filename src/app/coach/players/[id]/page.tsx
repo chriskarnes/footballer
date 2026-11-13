@@ -57,7 +57,7 @@ export default async function PlayerPage({ params, searchParams }: {
 
   return (
     <NoteProvider only players={[{ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, pr) }]}>
-    <div className="animate-pop lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-x-10">
+    <div className="animate-pop xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)] xl:gap-x-10">
      <div className="min-w-0">
       <BackLink href="/coach" label="Players" />
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -126,12 +126,12 @@ export default async function PlayerPage({ params, searchParams }: {
         );
       })()}
 
-      <div className="hidden lg:block"><RemovePlayer userId={p.user_id} name={p.first} /></div>
+      <div className="hidden xl:block"><RemovePlayer userId={p.user_id} name={p.first} /></div>
      </div>
 
      {/* On a laptop, how they're doing sits beside what they're set. */}
-     <aside className="min-w-0 lg:pt-[68px]">
-      <section className="card mt-9 p-5 lg:mt-0">
+     <aside className="min-w-0 xl:pt-[68px]">
+      <section className="card mt-9 p-5 xl:mt-0">
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-[13px] text-on-surface-variant">
@@ -202,7 +202,7 @@ export default async function PlayerPage({ params, searchParams }: {
         ) : <p className="pl-1 text-[13.5px] text-on-surface-variant">No notes yet.</p>}
       </section>
 
-      <div className="lg:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>
+      <div className="xl:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>
      </aside>
     </div>
     </NoteProvider>

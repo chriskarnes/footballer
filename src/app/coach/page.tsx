@@ -13,6 +13,7 @@ import { nudgeDraft } from '@/lib/nudge';
 import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { TickMark } from '@/components/TickMark';
 import { readSetup, setupSteps } from '@/lib/setup';
+import { YourName } from '@/components/coach/YourName';
 
 export const metadata = { title: 'Coach', robots: { index: false } };
 
@@ -26,19 +27,22 @@ export const metadata = { title: 'Coach', robots: { index: false } };
 export default async function CoachPage({ searchParams }: { searchParams: Promise<{ sent?: string; group?: string; ready?: string }> }) {
   const gate = await staffOnly('/coach');
   if ('page' in gate) return gate.page;
-  const { db, academy, role } = gate.viewer;
+  const { db, academy, role, user } = gate.viewer;
   const { sent, group, ready } = await searchParams;
   const [content, setup] = await Promise.all([loadContent(db, academy.id), readSetup(db, academy.id)]);
   // A new academy's owner is led back to the checklist until it's done.
   const steps = role === 'owner' && setup.ready && !setup.done ? setupSteps(setup, content) : null;
 
-  const [{ players: all, error }, { data: invite }, { data: asking }] = await Promise.all([
+  const [{ players: all, error }, { data: invite }, { data: asking }, { data: me }] = await Promise.all([
     loadPlayers(db, academy, { content }),
     db.from('academy_invites').select('code').eq('academy_id', academy.id).eq('role', 'player').maybeSingle(),
     // Before 0006 runs the table isn't there; that's an error, read as none.
     db.from('join_requests').select('user_id, name, message, created_at').eq('academy_id', academy.id)
       .order('created_at', { ascending: true }),
+    user ? db.from('profiles').select('display_name').eq('id', user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  // A trainer invited in has no name yet; the owner gives theirs in setup.
+  const askName = !steps && !me?.display_name;
   all.sort(byAttention);
   // A group narrows the list (and the headline) to its players.
   const groups = content.groups.filter((g) => !g.archived);
@@ -90,6 +94,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           <Link href="/coach/setup" className="btn-primary btn-sm pressable shrink-0">Continue</Link>
         </section>
       )}
+      {askName && <YourName />}
       {ready && (
         <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
           {academy.name} is open. Players can find you by name in Find your trainer.
@@ -113,7 +118,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         </nav>
       )}
 
-      {error && <p className="mt-4 text-[13px] text-on-surface-variant">Couldn&rsquo;t load players: {error}</p>}
+      {error && <p className="mt-4 text-[13px] text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
 
       {/* Phone: cards, worst first. */}
       <ul className="mt-6 space-y-2.5 lg:hidden">

@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
+import { plain } from '@/lib/plain-error';
 
 /**
  * The trainer area's writes. Each goes through a database function that
@@ -24,7 +25,7 @@ export async function sendNote(input: { body: string; to: string[] | null; kind:
   const { error } = await v.db.rpc('send_note', {
     p_academy: v.academy.id, p_body: body, p_to: input.to?.length ? input.to : null, p_kind: input.kind,
   });
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false as const, error: plain(error) };
 
   revalidatePath('/coach', 'layout');
   // Sent from the dialog: the page it's over stays where it is.
@@ -38,7 +39,7 @@ export async function rotateInvite(role: 'player' | 'trainer') {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
   const { data, error } = await v.db.rpc('rotate_invite', { p_academy: v.academy.id, p_role: role });
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false as const, error: plain(error) };
   revalidatePath('/coach', 'layout');
   return { ok: true as const, code: data as string };
 }
@@ -49,7 +50,7 @@ export async function removeMember(userId: string) {
   // RLS decides: staff remove players, only the owner removes a trainer.
   const { error, count } = await v.db.from('academy_members')
     .delete({ count: 'exact' }).eq('academy_id', v.academy.id).eq('user_id', userId);
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false as const, error: plain(error) };
   if (!count) return { ok: false as const, error: 'You can’t remove that person.' };
   revalidatePath('/coach', 'layout');
   return { ok: true as const };
@@ -60,7 +61,7 @@ export async function answerJoinRequest(userId: string, approve: boolean) {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
   const { error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve });
-  if (error) return { ok: false as const, error: error.message };
+  if (error) return { ok: false as const, error: plain(error) };
   revalidatePath('/coach', 'layout');
   return { ok: true as const };
 }

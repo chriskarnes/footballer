@@ -9,10 +9,10 @@ import { Chip, CheckIcon } from './Chip';
  * nothing are below a line and marked optional.
  *
  * Copy is addressed to the player, because the player is who answers it. The
- * account model is parent-signs-up / child-uses, which leaves a real gap at
- * the handoff — a parent who never passed the phone over will read "How old
- * are you" and answer about themselves. The fix belongs at the end of signup,
- * not here; see the open questions in the migration brief.
+ * account model is parent-signs-up / child-uses, which leaves a gap at the
+ * handoff: a parent who never passed the phone over would read "How old are
+ * you" and answer about themselves. So someone who joined as a parent
+ * (profiles.signed_up_by) is asked about "your player" instead.
  */
 
 const AGE_BANDS: [string, string][] = [
@@ -36,11 +36,20 @@ export type ProfileValues = {
   club?: string | null;
 };
 
-export function ProfileSetup({ email, initial, photo }: {
+export function ProfileSetup({ email, initial, photo, next = '/', parent = false }: {
   email?: string; initial?: ProfileValues;
   /** The optional photo picker, on the profile screen; not part of first-time setup. */
   photo?: React.ReactNode;
+  /** Where a first-time setup lands: the week it builds, when this academy has one. */
+  next?: string;
+  /** Joined as a parent: the questions are about their player. */
+  parent?: boolean;
 }) {
+  const q = parent
+    ? { name: 'What’s your player’s name?', age: 'How old are they?', where: 'Where do they play?',
+        foot: 'Which foot is their best?', team: 'Their team (you can skip this)', club: 'Their team, if they’re in one' }
+    : { name: 'What’s your name?', age: 'How old are you?', where: 'Where do you play?',
+        foot: 'Which foot is your best?', team: 'Your team (you can skip this)', club: 'Your team, if you’re in one' };
   const router = useRouter();
   const [name, setName] = useState(initial?.display_name ?? '');
   const [ageBand, setAgeBand] = useState(initial?.age_band ?? '');
@@ -93,9 +102,10 @@ export function ProfileSetup({ email, initial, photo }: {
         }),
       });
       if (!r.ok) throw new Error(String(r.status));
-      // First time through, the whole point of answering is the week it builds,
-      // so go there. Someone correcting one answer is not asking to be moved.
-      router.push(returning ? '/me' : '/plan');
+      // First time through, go where the answers are used: the week, when
+      // this academy has one, otherwise Train. Someone correcting one answer
+      // is not asking to be moved.
+      router.push(returning ? '/me' : next);
       router.refresh();
     } catch {
       setError('Couldn’t save. Try again.');
@@ -105,18 +115,18 @@ export function ProfileSetup({ email, initial, photo }: {
 
   return (
     <div className="animate-pop">
-      <h1 className="h-page">{returning ? 'My profile' : 'Let’s set you up'}</h1>
+      <h1 className="h-page">{returning ? (parent ? 'Player profile' : 'My profile') : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>
       {photo}
 
       {/* Name is required now the profile is about someone else, but a first
           name or nickname is all the app ever needs. A full legal name adds
           nothing to a drill plan and a great deal to the blast radius. */}
       <div className="mt-9">
-        <p className="h-sec mb-3">What’s your name?</p>
+        <p className="h-sec mb-3">{q.name}</p>
         <label className="text-field">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                  placeholder="e.g. Sam" autoComplete="off"
-                 aria-label="What should I call you" />
+                 aria-label={q.name} />
         </label>
       </div>
 
@@ -135,20 +145,20 @@ export function ProfileSetup({ email, initial, photo }: {
       </div>
 
       <div className="mt-9">
-        <p className="h-sec mb-3">How old are you?</p>
+        <p className="h-sec mb-3">{q.age}</p>
         <div className="flex flex-wrap gap-2">
           {AGE_BANDS.map(([v, l]) => (
             <Chip key={v} on={ageBand === v} onClick={() => setAgeBand(v)}>{l}</Chip>
           ))}
         </div>
         {/* At the question, not in the footer — this is where it becomes relevant. */}
-        <p className="mt-3 pl-0.5 text-[14px] font-medium leading-snug text-on-surface-variant">
+        {!parent && <p className="mt-3 pl-0.5 text-[14px] font-medium leading-snug text-on-surface-variant">
           Under 13? Get a parent to do this with you.
-        </p>
+        </p>}
       </div>
 
       <div className="mt-8">
-        <p className="h-sec mb-3">Where do you play?</p>
+        <p className="h-sec mb-3">{q.where}</p>
         <div className="flex flex-wrap gap-2">
           {POSITIONS.map((p) => (
             <Chip key={p} on={positions.includes(p)} onClick={() => togglePosition(p)}>{p}</Chip>
@@ -157,7 +167,7 @@ export function ProfileSetup({ email, initial, photo }: {
       </div>
 
       <div className="mt-8">
-        <p className="h-sec mb-3">Which foot is your best?</p>
+        <p className="h-sec mb-3">{q.foot}</p>
         {/* Same component as the Train mode switch, different semantics: nothing
             is revealed by choosing, so this is a radiogroup, not a tablist.
             Arrow keys move the choice, which is what the role promises. */}
@@ -183,11 +193,11 @@ export function ProfileSetup({ email, initial, photo }: {
           most needed to be a free choice were the two nobody was offered.
           Region rather than town, never device location, both skippable. */}
       <div className="mt-10 border-t border-outline-variant pt-5">
-        <p className="h-sec mb-3">Your team (you can skip this)</p>
+        <p className="h-sec mb-3">{q.team}</p>
         <label className="text-field">
           <span>Club</span>
           <input type="text" value={club} onChange={(e) => setClub(e.target.value)}
-                 placeholder="Your team, if you’re in one" autoComplete="off" />
+                 placeholder={q.club} autoComplete="off" />
         </label>
         <label className="text-field mt-4">
           <span>Location</span>

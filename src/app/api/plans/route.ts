@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
+import { plain } from '@/lib/plain-error';
 
 /**
  * Saved weeks. A player can keep several — an off-season week and an in-season
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
   const { data: plan, error } = await db.from('plans')
     .insert({ user_id: user.id, name: (name || 'My weekly schedule').slice(0, 60), active: !!follow, intake })
     .select('id').single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
 
   // Checked: a plan whose days silently failed to write is an empty week that
   // still reports success. Roll the header back so the player is asked again.
@@ -79,7 +80,7 @@ export async function PUT(req: Request) {
 
   const { data: plan, error } = await db.from('plans')
     .update({ intake }).eq('id', id).eq('user_id', user.id).select('id').maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   if (!plan) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
   // Insert the new days before deleting the old, so a failed write leaves the
@@ -103,13 +104,13 @@ export async function PATCH(req: Request) {
     const clean = name.trim().slice(0, 60);
     if (!clean) return NextResponse.json({ error: 'name can’t be empty' }, { status: 400 });
     const { error } = await db.from('plans').update({ name: clean }).eq('id', id).eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   }
 
   if (follow === true) {
     await db.from('plans').update({ active: false }).eq('user_id', user.id).eq('active', true);
     const { error } = await db.from('plans').update({ active: true }).eq('id', id).eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   }
   return NextResponse.json({ ok: true });
 }
@@ -121,6 +122,6 @@ export async function DELETE(req: Request) {
   const id = new URL(req.url).searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
   const { error } = await db.from('plans').delete().eq('id', id).eq('user_id', user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

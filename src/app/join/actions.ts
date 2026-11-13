@@ -10,10 +10,17 @@ import { serverClient } from '@/lib/supabase/server';
 export async function joinAcademy(code: string, who?: 'player' | 'parent') {
   const db = await serverClient();
   const { data, error } = await db.rpc('join_academy', { p_code: code });
-  if (error) return { ok: false as const, error: error.message };
-  if (who === 'player' || who === 'parent') {
-    const { data: { user } } = await db.auth.getUser();
-    if (user) await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
+  if (error) {
+    console.error('join_academy', error);
+    return { ok: false as const, error: /not found|invalid/i.test(error.message)
+      ? 'This invite link has changed. Ask your trainer for the current one.'
+      : 'Couldn’t join just now. Try again.' };
   }
-  redirect((data as { role: string }).role === 'player' ? '/?joined=1' : '/coach');
+  const { data: { user } } = await db.auth.getUser();
+  if (user && (who === 'player' || who === 'parent')) await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
+  if ((data as { role: string }).role !== 'player') redirect('/coach');
+  // A new player is asked their name (and the rest) first, on Me; their
+  // trainer sees that name, not an email address.
+  const { data: me } = user ? await db.from('profiles').select('display_name').eq('id', user.id).maybeSingle() : { data: null };
+  redirect(me?.display_name ? '/?joined=1' : '/me');
 }

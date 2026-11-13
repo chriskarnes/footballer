@@ -5,6 +5,7 @@ import { readMyWeek } from '@/lib/player-week';
 import { loadContent, targetFor } from '@/lib/academy-data';
 import { addDays, localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import { buildPlayerWeek } from '@/lib/week-builder';
+import { plain, notReady } from '@/lib/plain-error';
 
 const isRedirect = (e: unknown) => typeof e === 'object' && e !== null && 'digest' in e && String((e as { digest: unknown }).digest).startsWith('NEXT_REDIRECT');
 
@@ -50,10 +51,10 @@ export async function addMySession(): Promise<{ ok: false; error: string }> {
       p_academy: v.academy.id, p_week_of: monday, p_name: s.name, p_drill_ids: s.drill_ids,
       p_steps: s.drill_ids.map((d) => level.get(d) ?? 0), p_weekday: weekdayOf(today),
     });
-    if (error) return { ok: false, error: /limit/.test(error.message) ? 'That’s all your extras this week.' : /function|schema/.test(error.message) ? 'Your trainer’s app needs an update (migration 0015).' : error.message };
+    if (error) return { ok: false, error: /limit/.test(error.message) ? 'That’s all your extras this week.' : /function|schema/.test(error.message) ? notReady(error, '0015') : plain(error) };
     redirect(`/train/custom/${id}`);
   } catch (e) {
     if (isRedirect(e)) throw e;
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, error: plain(e) };
   }
 }

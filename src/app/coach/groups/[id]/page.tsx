@@ -132,7 +132,7 @@ export default async function GroupPage({ params, searchParams }: {
         <Disclose label="Group settings">
           <div className="card p-5">
             <GroupForm group={g} programs={c.programs} today={today} />
-            <ArchiveGroup id={g.id} archived={!!g.archived} />
+            <ArchiveGroup id={g.id} name={g.name} archived={!!g.archived} />
           </div>
         </Disclose>
       </section>

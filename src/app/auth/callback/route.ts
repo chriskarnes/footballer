@@ -13,5 +13,7 @@ export async function GET(request: Request) {
     const { error } = await db.auth.exchangeCodeForSession(code);
     if (!error) return NextResponse.redirect(`${origin}${next}`);
   }
-  return NextResponse.redirect(`${origin}/?auth=error`);
+  // An expired or already-used link (or one opened in another browser):
+  // Me says so and offers a fresh one, which lands where this one would have.
+  return NextResponse.redirect(`${origin}/me?auth=error&next=${encodeURIComponent(next)}`);
 }

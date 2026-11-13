@@ -45,10 +45,10 @@ export function CalendarSection({ initial, speed = true }: {
         body: body ? JSON.stringify(body) : undefined,
       });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error || 'Something went wrong');
+      if (!r.ok) throw new Error(j.error || 'Couldn’t save that. Try again.');
       return j;
     } catch (e: any) {
-      setErr(e.message); return null;
+      setErr(e instanceof Error && !(e instanceof TypeError) && e.message ? e.message : 'Couldn’t save that. Try again.'); return null;
     } finally { setBusy(false); }
   }
 
@@ -134,7 +134,7 @@ export function CalendarSection({ initial, speed = true }: {
             : 'Each session sits at the top of its day, without blocking any time.'}
         </p>
 
-        {err && <p role="status" className="mt-3 text-[13px] font-semibold text-error">Couldn&rsquo;t save: {err}</p>}
+        {err && <p role="status" className="mt-3 text-[13px] font-semibold text-error">{err}</p>}
 
         <div className="mt-6 flex gap-5 border-t border-outline-variant pt-4 text-[13px] font-semibold text-on-surface-variant">
           <button type="button" className="underline underline-offset-4" onClick={() => setConfirm('reset')}>Reset link</button>

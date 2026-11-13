@@ -5,6 +5,7 @@ import { getViewer } from '@/lib/viewer';
 import { mondayOf, localDate } from '@/lib/progress';
 import { FOCUS_LABELS } from '@/lib/types';
 import type { DrillRow } from '@/lib/academy-week';
+import { plain, Said } from '@/lib/plain-error';
 
 /**
  * Writes for the trainer's own content (drills, programs, sessions), groups,
@@ -14,12 +15,12 @@ import type { DrillRow } from '@/lib/academy-week';
  */
 async function staff() {
   const v = await getViewer();
-  if (!v.academy || !v.user || !v.staff) throw new Error('Only trainers can do that.');
+  if (!v.academy || !v.user || !v.staff) throw new Said('Only trainers can do that.');
   return v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> };
 }
 
 type Result = { ok: true; id?: string; drill?: DrillRow } | { ok: false; error: string };
-const fail = (e: unknown): Result => ({ ok: false, error: e instanceof Error ? e.message : String(e) });
+const fail = (e: unknown): Result => ({ ok: false, error: plain(e) });
 const str = (f: FormData, k: string, max: number) => String(f.get(k) ?? '').trim().slice(0, max);
 const done = () => revalidatePath('/', 'layout');
 
@@ -71,7 +72,7 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
       const { focus_areas: _tags, harder_id: _h, ...plain } = row;
       ({ data, error } = await write(plain));
     }
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done();
     const back = str(f, 'back', 200);
     // A new drill from the Drills page goes to its own page, which offers to
@@ -90,7 +91,7 @@ export async function deleteDrill(id: string): Promise<Result> {
   try {
     const v = await staff();
     const { error } = await v.db.from('drills').delete().eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -111,7 +112,7 @@ export async function saveProgram(_: unknown, f: FormData): Promise<Result> {
       ? v.db.from('academy_programs').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
       : v.db.from('academy_programs').insert(row).select('id').single();
     const { data, error } = await q;
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done();
     redirect(`/coach/programs/${data.id}`);
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
@@ -121,7 +122,7 @@ export async function deleteProgram(id: string): Promise<Result> {
   try {
     const v = await staff();
     const { error } = await v.db.from('academy_programs').delete().eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -142,7 +143,7 @@ export async function saveSession(input: { id?: string; programId: string; week:
         .eq('program_id', input.programId).eq('week', input.week);
       ({ error } = await v.db.from('academy_sessions').insert({ ...row, position: count ?? 0 }));
     }
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done();
     redirect(`/coach/programs/${input.programId}#week-${input.week}`);
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
@@ -175,15 +176,15 @@ export async function saveLibrarySession(input: {
     if (input.libraryId && !input.relink) {
       const { error } = await v.db.from('library_sessions').update({ name, drill_ids })
         .eq('id', input.libraryId).eq('academy_id', v.academy.id);
-      if (error) return { ok: false, error: error.message };
+      if (error) return { ok: false, error: plain(error) };
     } else {
       const { data, error } = await v.db.from('library_sessions')
         .insert({ academy_id: v.academy.id, name, drill_ids }).select('id').single();
-      if (error) return { ok: false, error: error.message };
+      if (error) return { ok: false, error: plain(error) };
       if (input.relink) {
         const { error: e } = await v.db.from('academy_sessions').update({ library_id: data.id, name, drill_ids })
           .eq('id', input.relink).eq('academy_id', v.academy.id);
-        if (e) return { ok: false, error: e.message };
+        if (e) return { ok: false, error: plain(e) };
       } else if (input.place) {
         const r = await place(v, { id: data.id, name, drill_ids }, input.place.programId, input.place.week);
         if (r) return { ok: false, error: r };
@@ -202,7 +203,7 @@ async function place(v: any, s: { id: string; name: string; drill_ids: string[] 
     academy_id: v.academy.id, program_id: programId, week, position: count ?? 0,
     name: s.name, drill_ids: s.drill_ids, library_id: s.id,
   });
-  return error ? error.message : null;
+  return error ? plain(error) : null;
 }
 
 /** Put a session from the library into a program week. */
@@ -227,7 +228,7 @@ export async function deleteLibrarySession(id: string): Promise<Result> {
       .eq('library_id', id).eq('academy_id', v.academy.id);
     if (count) return { ok: false, error: 'It’s still in a program. Take it out of the program first.' };
     const { error } = await v.db.from('library_sessions').delete().eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -236,7 +237,7 @@ export async function deleteSession(id: string): Promise<Result> {
   try {
     const v = await staff();
     const { error } = await v.db.from('academy_sessions').delete().eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -254,7 +255,7 @@ export async function copyWeek(programId: string, from: number, to: number): Pro
     const { error } = await v.db.from('academy_sessions').insert(
       (data as unknown as { name: string; position: number; drill_ids: string[]; library_id?: string | null }[])
         .map((s) => ({ ...s, academy_id: v.academy.id, program_id: programId, week: to })));
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -280,7 +281,7 @@ export async function saveGroup(_: unknown, f: FormData): Promise<Result> {
       ? v.db.from('groups').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
       : v.db.from('groups').insert(row).select('id').single();
     const { data, error } = await q;
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done();
     redirect(`/coach/groups/${data.id}${id ? '?saved=1' : ''}`);
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
@@ -290,7 +291,7 @@ export async function archiveGroup(id: string, archived: boolean): Promise<Resul
   try {
     const v = await staff();
     const { error } = await v.db.from('groups').update({ archived }).eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -302,7 +303,7 @@ export async function setMembership(groupId: string, userId: string, member: boo
     const { error } = member
       ? await v.db.from('group_members').upsert({ group_id: groupId, user_id: userId, academy_id: v.academy.id }, { onConflict: 'group_id,user_id', ignoreDuplicates: true })
       : await v.db.from('group_members').delete().eq('group_id', groupId).eq('user_id', userId).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -314,7 +315,7 @@ export async function assignProgram(userId: string, programId: string, startsOn?
     const start = startsOn && /^\d{4}-\d\d-\d\d$/.test(startsOn) ? startsOn : localDate(new Date(), v.academy.timeZone);
     const { error } = await v.db.from('player_programs')
       .upsert({ academy_id: v.academy.id, user_id: userId, program_id: programId, starts_on: start }, { onConflict: 'user_id,program_id' });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -324,7 +325,7 @@ export async function unassignProgram(userId: string, programId: string): Promis
     const v = await staff();
     const { error } = await v.db.from('player_programs').delete()
       .eq('user_id', userId).eq('program_id', programId).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -338,7 +339,7 @@ export async function addAddon(userId: string, drillId: string, note: string): P
       academy_id: v.academy.id, user_id: userId, drill_id: drillId,
       note: note.trim().slice(0, 200) || null, week_of, created_by: v.user.id,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -347,7 +348,7 @@ export async function removeAddon(id: string): Promise<Result> {
   try {
     const v = await staff();
     const { error } = await v.db.from('addons').delete().eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -368,7 +369,7 @@ export async function setDrillSessions(drillId: string, sessionIds: string[]): P
     const q = (cols: string) => v.db.from('academy_sessions').select(cols).eq('academy_id', v.academy.id);
     let { data: sessions, error } = await q('id, drill_ids, library_id');
     if (error) ({ data: sessions, error } = await q('id, drill_ids'));
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: plain(error) };
     // A library session changes once, and everywhere it's used follows.
     const changed = new Set<string>();
     for (const s of (sessions ?? []) as unknown as { id: string; drill_ids: string[]; library_id?: string | null }[]) {
@@ -381,7 +382,7 @@ export async function setDrillSessions(drillId: string, sessionIds: string[]): P
       const { error: e } = s.library_id
         ? await v.db.from('library_sessions').update({ drill_ids }).eq('id', s.library_id).eq('academy_id', v.academy.id)
         : await v.db.from('academy_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
-      if (e) return { ok: false, error: e.message };
+      if (e) return { ok: false, error: plain(e) };
       if (s.library_id) changed.add(s.library_id);
     }
     done();

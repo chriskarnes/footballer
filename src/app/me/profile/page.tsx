@@ -37,10 +37,14 @@ export default async function ProfilePage() {
   const { data: avatarAt } = await db.from('profiles').select('avatar_updated_at').eq('id', user.id).maybeSingle() as
     { data: { avatar_updated_at: string | null } | null };
 
+  // Joined as a parent (0009): the questions are about their player.
+  const { data: by } = await db.from('profiles').select('signed_up_by').eq('id', user.id).maybeSingle() as
+    { data: { signed_up_by: string | null } | null };
+
   return (
     <div>
       <BackLink href="/me" label="Me" />
-      <ProfileSetup email={user.email} initial={initial}
+      <ProfileSetup email={user.email} initial={initial} parent={by?.signed_up_by === 'parent'}
         photo={<AvatarPicker name={initial.display_name} email={user.email} updatedAt={avatarAt?.avatar_updated_at ?? null} />} />
     </div>
   );

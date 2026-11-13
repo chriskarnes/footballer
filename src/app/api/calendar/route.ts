@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomBytes } from 'node:crypto';
 import { serverClient } from '@/lib/supabase/server';
 import { validZone } from '@/lib/calendar-feed';
+import { plain } from '@/lib/plain-error';
 
 /**
  * The signed-in player's calendar feed settings.
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
         .eq('user_id', user.id).select().single()
     : await db.from('calendar_feeds').upsert({ user_id: user.id, token: newToken(), time_zone: zone })
         .select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json(data);
 }
 
@@ -51,7 +52,7 @@ export async function PATCH(req: Request) {
   if (typeof body.time_zone === 'string' && validZone(body.time_zone)) patch.time_zone = body.time_zone;
 
   const { data, error } = await db.from('calendar_feeds').update(patch).eq('user_id', user.id).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json(data);
 }
 
@@ -59,6 +60,6 @@ export async function DELETE() {
   const { db, user } = await me();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
   const { error } = await db.from('calendar_feeds').delete().eq('user_id', user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

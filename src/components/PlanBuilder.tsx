@@ -181,13 +181,14 @@ function Builder({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? `save failed (${res.status})`);
+        throw new Error(body.error ?? 'Couldn’t save your week. Try again.');
       }
       // To the saved week, which is where a week is trained from.
       router.push(editing ? `/plan?plan=${editing.id}` : '/plan');
     } catch (e) {
       setSave('error');
-      setError(e instanceof Error ? e.message : 'Could not save');
+      // A dropped connection throws its own words ("Failed to fetch"); say ours.
+      setError(e instanceof TypeError || !(e instanceof Error) ? 'Couldn’t reach the server. Check your connection and try again.' : e.message);
     }
   }
 
@@ -242,7 +243,7 @@ function Builder({
                 this week is saved as your active plan.
               </span>
             )}
-            {save === 'error' && <span className="mt-4 block">Couldn&rsquo;t save: {error}</span>}
+            {save === 'error' && <span className="mt-4 block">{error}</span>}
           </p>
         </div>
 

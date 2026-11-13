@@ -698,6 +698,13 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   background: var(--md-sys-color-surface-container-lowest);
   box-shadow: var(--md-sys-elevation-level1);
 }
+/* In dark, the lowest container is darker than the page (#0C0C0C on #121212)
+   and a shadow doesn't show on black, so a card disappeared. It sits a step
+   above the page instead, the way M3 lifts surfaces in dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .card { background: var(--md-sys-color-surface-container-low); }
+}
+:root[data-theme="dark"] .card { background: var(--md-sys-color-surface-container-low); }
 .card-flat {
   border-radius: var(--md-sys-shape-corner-large-increased);
   border: 1px solid var(--md-sys-color-outline-variant);
