@@ -6,8 +6,7 @@ import '@fontsource-variable/roboto-flex/wdth.css';
 import '@fontsource-variable/noto-sans';
 import './globals.css';
 import { speedAllowed } from '@/lib/speed-gate';
-import { TabBar } from '@/components/TabBar';
-import { InstallNudge } from '@/components/InstallNudge';
+import { AreaFrame } from '@/components/AreaFrame';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { PendingSaves } from '@/components/PendingSaves';
 import { getAcademy } from '@/lib/branding-server';
@@ -17,7 +16,6 @@ import { brandCss } from '@/lib/brand-colors';
 import { headers } from 'next/headers';
 import { SiteChrome } from '@/components/site/SiteChrome';
 import { Unclaimed } from '@/components/site/Unclaimed';
-import { CoachFrame } from '@/components/coach/CoachFrame';
 import { Brand } from '@/components/Brand';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -103,34 +101,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </html>
     );
   }
-  // The trainer area (see proxy.ts): its own frame, wider on desktop, and
-  // none of the player tabs.
-  if ((await headers()).get('x-area') === 'coach') {
-    return (
-      <html lang="en">
-        <body className="min-h-dvh antialiased">
-          {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
-          <CoachFrame brand={<Brand small />}>{children}</CoachFrame>
-          <ServiceWorker />
-          <PendingSaves />
-        </body>
-      </html>
-    );
-  }
+  // The player tabs' settings, read on the trainer area too: this layout is
+  // kept across client-side navigations, so a trainer who goes to Player
+  // view gets the tab bar drawn from these.
   const [lib, speed] = await Promise.all([
     libraryFor().catch(() => ({ drills: true, own: false })),
     speedAllowed().catch(() => true),
   ]);
   return (
     <html lang="en">
-      <body className="pad-nav min-h-dvh antialiased">
+      <body className="min-h-dvh antialiased">
         {/* The admin's colours, as overrides of the brand tokens in
             globals.css. In the body so it lands after the stylesheet and wins
             at equal specificity. Values are validated #RRGGBB, never raw input. */}
         {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
-        <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">{children}</main>
-        <TabBar academyId={academy?.id ?? null} library={lib.drills || lib.own} plan={lib.drills} speed={speed} />
-        <InstallNudge />
+        {/* The player app, or the trainer area's own frame under /coach. */}
+        <AreaFrame brand={<Brand small />} academyId={academy?.id ?? null}
+                   library={lib.drills || lib.own} plan={lib.drills} speed={speed}>{children}</AreaFrame>
         <ServiceWorker />
         <PendingSaves />
       </body>

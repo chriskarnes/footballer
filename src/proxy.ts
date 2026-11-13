@@ -18,13 +18,8 @@ const PAGES = ['/trainers', '/players', '/start'];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  // The trainer area has its own shell (sidebar on desktop, its own tab bar on
-  // phones); the layout reads this to pick it. Any host: it lives on subdomains.
-  if (pathname === '/coach' || pathname.startsWith('/coach/')) {
-    const headers = new Headers(req.headers);
-    headers.set('x-area', 'coach');
-    return NextResponse.next({ request: { headers } });
-  }
+  // The trainer area's frame isn't picked here: a header only reaches the
+  // layout on a full page load. See components/AreaFrame.
 
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   if (slugFromHost(host)) return NextResponse.next();
@@ -50,5 +45,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/coaches', '/coach/:path*', '/trainers/:path*', '/players/:path*', '/start/:path*', '/site/:path*'],
+  matcher: ['/', '/coaches', '/trainers/:path*', '/players/:path*', '/start/:path*', '/site/:path*'],
 };
