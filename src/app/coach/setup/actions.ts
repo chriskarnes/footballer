@@ -2,6 +2,8 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath, updateTag } from 'next/cache';
 import { academyTag } from '@/lib/branding-server';
+import { readSetup, setupSteps } from '@/lib/setup';
+import { loadContent } from '@/lib/academy-data';
 import { getViewer } from '@/lib/viewer';
 import { plain, notReady } from '@/lib/plain-error';
 
@@ -71,6 +73,11 @@ export async function setListed(listed: boolean): Promise<Result> {
 export async function finishSetup(listed = true): Promise<Result> {
   const v = await getViewer();
   if (!v.user || !v.academy || v.role !== 'owner') return { ok: false, error: 'Only the owner sets this up.' };
+  // The first four steps, checked here too: the disabled button is only the page's say.
+  const [setup, content] = await Promise.all([readSetup(v.db, v.academy.id), loadContent(v.db, v.academy.id)]);
+  if (setupSteps(setup, content).slice(0, 4).some((x) => !x)) {
+    return { ok: false, error: 'Finish the steps above first.' };
+  }
   // Done and listed (or not) in one statement (0023), so a failed second
   // write can't leave an academy listed that its owner kept to the link.
   const { error } = await v.db.rpc('academy_setup_finish', { p_academy: v.academy.id, p_listed: listed });

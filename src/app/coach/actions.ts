@@ -57,7 +57,8 @@ export async function answerJoinRequest(userId: string, approve: boolean) {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
   const { error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve });
-  if (error) return { ok: false as const, error: plain(error) };
+  // Another trainer answered it first: nothing left to do, and nothing wrong.
+  if (error && !/no such request/i.test(error.message)) return { ok: false as const, error: plain(error) };
   revalidatePath('/coach', 'layout');
   return { ok: true as const };
 }

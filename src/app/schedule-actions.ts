@@ -23,7 +23,10 @@ const NOT_YET_0021 = 'Trainer days and more than one game aren’t switched on y
 export async function saveSoccerDays(input: TeamDays & { userId?: string }): Promise<Result> {
   const v = await getViewer();
   if (!v.user) return { ok: false, error: 'Sign in first.' };
-  const target = input.userId && v.staff ? input.userId : v.user.id;
+  // Someone else's days only from the trainer area; anyone else asking for
+  // that is told no, rather than having it saved to their own week.
+  if (input.userId && input.userId !== v.user.id && !v.staff) return { ok: false, error: 'Only trainers can do that.' };
+  const target = input.userId ?? v.user.id;
   const games = days(input.games);
   const trainer = days(input.trainer).filter((d) => !games.includes(d));
   const practice = days(input.practice).filter((d) => !games.includes(d) && !trainer.includes(d));

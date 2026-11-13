@@ -2,6 +2,7 @@
 import { revalidatePath, updateTag } from 'next/cache';
 import { academyTag } from '@/lib/branding-server';
 import { getViewer } from '@/lib/viewer';
+import { plain } from '@/lib/plain-error';
 import { isHex } from '@/lib/brand-colors';
 import { LOGO_MAX_BYTES, LOGO_TYPES, PALETTES } from '@/lib/branding';
 
@@ -35,7 +36,8 @@ async function write(auth: Auth, patch: Record<string, unknown>): Promise<Result
   const { error } = await auth.db.from('academies')
     .update({ ...patch, updated_at: new Date().toISOString(), updated_by: auth.user.id })
     .eq('id', auth.academy.id);
-  if (error) return { ok: false, error: error.message };
+  // The database's own words go to the log; the owner gets a sentence.
+  if (error) return { ok: false, error: plain(error) };
   published(auth.academy.slug);
   return { ok: true };
 }

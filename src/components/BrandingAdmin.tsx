@@ -207,7 +207,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
         </button>
         {status && (
           <p role="status" className={`mt-3 text-body-sm font-semibold ${status.tone === 'err' ? 'text-error' : 'text-on-surface-variant'}`}>
-            {status.tone === 'err' && 'Couldn’t save: '}{status.text}
+            {status.text}
           </p>
         )}
         <button type="button" onClick={() => setResetting(true)}

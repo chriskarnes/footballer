@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Chip, CheckIcon } from './Chip';
-import { positionName } from '@/lib/positions';
+import { POSITIONS, positionName } from '@/lib/positions';
 
 /**
  * The Me empty state: four questions, each of which changes what the player
@@ -21,10 +21,6 @@ const AGE_BANDS: [string, string][] = [
   ['16_18', '16–18'], ['18_plus', '18+'],
 ];
 
-const POSITIONS = [
-  'Goalkeeper', 'Center back', 'Full back', 'Defensive mid',
-  'Center mid', 'Attacking mid', 'Winger', 'Striker',
-];
 
 const FEET: [string, string][] = [['left', 'Left'], ['right', 'Right'], ['both', 'Both']];
 
@@ -127,7 +123,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
       <div className="mt-9">
         <p className="h-sec mb-3">{q.name}</p>
         <label className="text-field">
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={60}
                  placeholder="e.g. Sam" autoComplete="off"
                  aria-label={q.name} />
         </label>
@@ -199,12 +195,12 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
         <p className="h-sec mb-3">{q.team}</p>
         <label className="text-field">
           <span>Club</span>
-          <input type="text" value={club} onChange={(e) => setClub(e.target.value)}
+          <input type="text" value={club} onChange={(e) => setClub(e.target.value)} maxLength={80}
                  placeholder={q.club} autoComplete="off" />
         </label>
         <label className="text-field mt-4">
           <span>Location</span>
-          <input type="text" value={region} onChange={(e) => setRegion(e.target.value)}
+          <input type="text" value={region} onChange={(e) => setRegion(e.target.value)} maxLength={80}
                  placeholder="e.g. Pennsylvania" autoComplete="off" />
         </label>
       </div>

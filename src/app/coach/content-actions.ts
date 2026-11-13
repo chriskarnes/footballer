@@ -20,6 +20,26 @@ async function staff() {
 }
 
 type Result = { ok: true; id?: string; drill?: DrillRow } | { ok: false; error: string };
+
+type Staff = Awaited<ReturnType<typeof staff>>;
+/**
+ * Ids that came from the browser and are written into another row: each must
+ * be this academy's own. RLS checks the row being written belongs here, not
+ * what it points at, so a program or drill from another academy could be
+ * linked in.
+ */
+async function ownProgram(v: Staff, id: string) {
+  const { data, error } = await v.db.from('academy_programs').select('id').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Said('That program isn’t in your academy any more.');
+}
+async function ownDrills(v: Staff, ids: string[]) {
+  const unique = [...new Set(ids)];
+  if (!unique.length) return;
+  const { data, error } = await v.db.from('drills').select('id').eq('academy_id', v.academy.id).in('id', unique);
+  if (error) throw error;
+  if ((data ?? []).length !== unique.length) throw new Said('One of those drills isn’t in your academy any more. Reload and try again.');
+}
 const fail = (e: unknown): Result => ({ ok: false, error: plain(e) });
 const str = (f: FormData, k: string, max: number) => String(f.get(k) ?? '').trim().slice(0, max);
 const done = () => revalidatePath('/', 'layout');
@@ -60,6 +80,7 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
     if (f.get('has_harder')) {
       const h = str(f, 'harder_id', 40);
       row.harder_id = h && h !== id ? h : null;
+      if (row.harder_id) await ownDrills(v, [row.harder_id]);
     }
     if (!row.name) return { ok: false, error: 'Give the drill a name.' };
     if (str(f, 'video_url', 300) && !row.video_url) return { ok: false, error: 'That video link doesn’t look right.' };
@@ -144,6 +165,8 @@ export async function saveSession(input: { id?: string; programId: string; week:
     const name = input.name.trim().slice(0, 60);
     if (!name) return { ok: false, error: 'Give the session a name.' };
     if (!input.drillIds.length) return { ok: false, error: 'Add at least one drill.' };
+    await ownProgram(v, input.programId);
+    await ownDrills(v, input.drillIds.slice(0, 30));
     const row = { academy_id: v.academy.id, program_id: input.programId, week: input.week, name, drill_ids: input.drillIds.slice(0, 30) };
     let error;
     if (input.id) {
@@ -182,6 +205,7 @@ export async function saveLibrarySession(input: {
     if (!name) return { ok: false, error: 'Give the session a name.' };
     if (!input.drillIds.length) return { ok: false, error: 'Add at least one drill.' };
     const drill_ids = input.drillIds.slice(0, 30);
+    await ownDrills(v, drill_ids);
 
     if (input.libraryId && !input.relink) {
       const { error } = await v.db.from('library_sessions').update({ name, drill_ids })
@@ -207,8 +231,9 @@ export async function saveLibrarySession(input: {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function place(v: any, s: { id: string; name: string; drill_ids: string[] }, programId: string, week: number): Promise<string | null> {
+  await ownProgram(v, programId);
   const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
-    .eq('program_id', programId).eq('week', week);
+    .eq('academy_id', v.academy.id).eq('program_id', programId).eq('week', week);
   const { error } = await v.db.from('academy_sessions').insert({
     academy_id: v.academy.id, program_id: programId, week, position: count ?? 0,
     name: s.name, drill_ids: s.drill_ids, library_id: s.id,
@@ -234,8 +259,10 @@ export async function placeSession(libraryId: string, programId: string, week: n
 export async function deleteLibrarySession(id: string): Promise<Result> {
   try {
     const v = await staff();
-    const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
+    const { count, error: ce } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
       .eq('library_id', id).eq('academy_id', v.academy.id);
+    // Unchecked is not "in no program": deleting would cut its placed copies loose.
+    if (ce) return { ok: false, error: plain(ce) };
     if (count) return { ok: false, error: 'It’s still in a program. Take it out of the program first.' };
     const { error } = await v.db.from('library_sessions').delete().eq('id', id).eq('academy_id', v.academy.id);
     if (error) return { ok: false, error: plain(error) };
@@ -286,6 +313,7 @@ export async function saveGroup(_: unknown, f: FormData): Promise<Result> {
       starts_on: /^\d{4}-\d\d-\d\d$/.test(str(f, 'starts_on', 10)) ? str(f, 'starts_on', 10) : null,
     };
     if (!row.name) return { ok: false, error: 'Give the group a name.' };
+    if (row.program_id) await ownProgram(v, row.program_id);
     if (row.program_id && !row.starts_on) row.starts_on = localDate(new Date(), v.academy.timeZone);
     const q = id
       ? v.db.from('groups').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
@@ -323,6 +351,7 @@ export async function assignProgram(userId: string, programId: string, startsOn?
   try {
     const v = await staff();
     const start = startsOn && /^\d{4}-\d\d-\d\d$/.test(startsOn) ? startsOn : localDate(new Date(), v.academy.timeZone);
+    await ownProgram(v, programId);
     const { error } = await v.db.from('player_programs')
       .upsert({ academy_id: v.academy.id, user_id: userId, program_id: programId, starts_on: start }, { onConflict: 'user_id,program_id' });
     if (error) return { ok: false, error: plain(error) };
@@ -345,6 +374,7 @@ export async function addAddon(userId: string, drillId: string, note: string): P
   try {
     const v = await staff();
     const week_of = mondayOf(localDate(new Date(), v.academy.timeZone));
+    await ownDrills(v, [drillId]);
     const { error } = await v.db.from('addons').insert({
       academy_id: v.academy.id, user_id: userId, drill_id: drillId,
       note: note.trim().slice(0, 200) || null, week_of, created_by: v.user.id,

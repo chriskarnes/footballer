@@ -185,7 +185,11 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     }
     if (error) return { ok: false, error: missing(error.message) };
     // Building a week means custom weeks, if they weren't already (before 0014, no mode).
-    if (t.mode !== 'auto') await v.db.from('player_plans').upsert({ academy_id: v.academy.id, user_id: userId, mode: 'custom' });
+    if (t.mode !== 'auto') {
+      const m = await v.db.from('player_plans').upsert({ academy_id: v.academy.id, user_id: userId, mode: 'custom' });
+      // Without the switch the built week sits under the program's, unseen.
+      if (m.error && !/mode/.test(m.error.message)) { done(); return { ok: false, error: plain(m.error, 'The week is built, but couldn’t be switched on. Try Rebuild.') }; }
+    }
     done();
     // Too few drills to fill the time: say so, rather than quietly building short sessions.
     const full = rows.filter((r) => !r.light);

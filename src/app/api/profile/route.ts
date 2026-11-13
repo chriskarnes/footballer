@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
 import { plain } from '@/lib/plain-error';
+import { POSITIONS, positionName } from '@/lib/positions';
 
 const AGE_BANDS = ['u10', '10_12', '13_15', '16_18', '18_plus'];
 const FEET = ['left', 'right', 'both'];
@@ -24,10 +25,16 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
   const body = await req.json();
-  const name = typeof body.display_name === 'string' ? body.display_name.trim() : '';
+  // Capped like the trainer's own name (60), and positions only from the list
+  // the form offers (old names read as today's), each once.
+  const text = (v: unknown, max: number) => typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, max) : '';
+  const name = text(body.display_name, 60);
   const foot = body.dominant_foot;
   const ageBand = body.age_band;
-  const positions = Array.isArray(body.positions) ? body.positions.filter((p: unknown) => typeof p === 'string') : [];
+  const positions: string[] = Array.isArray(body.positions)
+    ? [...new Set((body.positions as unknown[]).filter((p): p is string => typeof p === 'string').map(positionName))]
+        .filter((p) => POSITIONS.includes(p))
+    : [];
 
   // The four required answers are validated; the two optional ones are text the
   // player typed about themselves and are stored as given.
@@ -45,8 +52,8 @@ export async function POST(req: Request) {
     position: positions[0],
     age_band: ageBand,
     positions,
-    region: typeof body.region === 'string' && body.region.trim() ? body.region.trim() : null,
-    club: typeof body.club === 'string' && body.club.trim() ? body.club.trim() : null,
+    region: text(body.region, 80) || null,
+    club: text(body.club, 80) || null,
   };
 
   const { error } = await db.from('profiles').upsert(full);
@@ -61,7 +68,7 @@ export async function POST(req: Request) {
     Object.entries(full).filter(([k]) => !NEW_COLUMNS.includes(k as typeof NEW_COLUMNS[number]))
   );
   const { error: legacyError } = await db.from('profiles').upsert(legacy);
-  if (legacyError) return NextResponse.json({ error: legacyError.message }, { status: 400 });
+  if (legacyError) return NextResponse.json({ error: plain(legacyError) }, { status: 400 });
 
   return NextResponse.json({ ok: true, stored: 'partial', missing: NEW_COLUMNS });
 }
