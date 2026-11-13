@@ -88,7 +88,7 @@ export async function suggestAddon(userId: string): Promise<Suggestion> {
     ok: true, drillId: pick.id, by: 'rules',
     why: behind ? 'Short, to get them going again' : 'Something they haven’t done lately',
     note: behind
-      ? `${p.first}, just this one today. ${pick.minutes} minutes and you're back on track.`
-      : `${p.first}, here's one extra for you this week. Nice work so far.`,
+      ? `${p.first}, just this one today. ${pick.minutes} minutes and you’re back on track.`
+      : `${p.first}, here’s one extra for you this week. Nice work so far.`,
   };
 }

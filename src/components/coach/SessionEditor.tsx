@@ -58,7 +58,7 @@ export function SessionEditor({ target, session, drills: given }: {
       <section>
         <div className="mb-2 flex items-baseline justify-between">
           <p className="eyebrow">In this session</p>
-          <span className="text-[14px] text-on-surface-variant">{ids.length} drills · {minutes} min</span>
+          <span className="text-[14px] text-on-surface-variant">{ids.length} {ids.length === 1 ? 'drill' : 'drills'} · {minutes} min</span>
         </div>
         {ids.length ? (
           <ol className="card divide-y divide-outline-variant">

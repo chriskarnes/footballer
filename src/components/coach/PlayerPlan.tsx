@@ -222,7 +222,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
               const total = s.drill_ids.reduce((a, id) => a + (byId.get(id)?.minutes ?? 0), 0);
               const day = s.weekday;
               const note = busy.games.includes(day) ? 'Game day' : busy.trainer.includes(day) ? 'Trainer day'
-                : busy.practice.includes(day) || busy.meets.includes(day) ? 'Practice day' : null;
+                : busy.practice.includes(day) ? 'Practice day' : busy.meets.includes(day) ? 'Trainer day' : null;
               const ran = runs[s.id];
               return (
                 <li key={s.id} className="rounded-2xl border border-outline-variant p-3.5">

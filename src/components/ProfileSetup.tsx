@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Chip, CheckIcon } from './Chip';
+import { positionName } from '@/lib/positions';
 
 /**
  * The Me empty state: four questions, each of which changes what the player
@@ -21,8 +22,8 @@ const AGE_BANDS: [string, string][] = [
 ];
 
 const POSITIONS = [
-  'GK', 'Centre-back', 'Full-back', 'Defensive mid',
-  'Centre mid', 'Attacking mid', 'Winger', 'Striker',
+  'Goalkeeper', 'Center back', 'Full back', 'Defensive mid',
+  'Center mid', 'Attacking mid', 'Winger', 'Striker',
 ];
 
 const FEET: [string, string][] = [['left', 'Left'], ['right', 'Right'], ['both', 'Both']];
@@ -55,7 +56,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   const router = useRouter();
   const [name, setName] = useState(initial?.display_name ?? '');
   const [ageBand, setAgeBand] = useState(initial?.age_band ?? '');
-  const [positions, setPositions] = useState<string[]>(initial?.positions ?? []);
+  const [positions, setPositions] = useState<string[]>((initial?.positions ?? []).map(positionName));
   const [foot, setFoot] = useState(initial?.dominant_foot ?? '');
   const [region, setRegion] = useState(initial?.region ?? '');
   const [club, setClub] = useState(initial?.club ?? '');

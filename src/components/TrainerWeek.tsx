@@ -114,7 +114,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
       {items.length > 0 && (
         <>
           <div className="mb-3 mt-5 flex items-baseline justify-between gap-3">
-            <h2 className="h-sec">My week</h2>
+            <h2 className="h-sec">Your week</h2>
             {set.length > 0 && <p className="text-[15px] font-bold text-on-surface-variant">{done} of {set.length} done</p>}
           </div>
           {/* Built like a drill in the session: the same tick mark, the same

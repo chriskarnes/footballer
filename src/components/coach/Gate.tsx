@@ -22,7 +22,7 @@ export async function staffOnly(next: string) {
 function Note({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="pt-6">
-      <p className="eyebrow mb-3">Coach</p>
+      <p className="eyebrow mb-3">Trainer</p>
       <h1 className="h-page">{title}</h1>
       <div className="mt-3 text-[14px] leading-relaxed text-on-surface-variant">{children}</div>
     </div>

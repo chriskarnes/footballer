@@ -367,10 +367,28 @@ function isRedirect(e: unknown) {
  * it at the end if they don't have it, unticked ones lose it. Sessions it was
  * already in keep it where it was.
  */
-export async function setDrillSessions(drillId: string, sessionIds: string[]): Promise<Result> {
+export async function setDrillSessions(drillId: string, sessionIds: string[], libraryIds?: string[]): Promise<Result> {
   try {
     const v = await staff();
     const want = new Set(sessionIds);
+    // Library sessions, when the page offered them: each change follows into
+    // every program week it's in (the 0017 trigger), so their placed copies
+    // below are left alone.
+    const libraryChosen = libraryIds !== undefined;
+    if (libraryChosen) {
+      const wantLib = new Set(libraryIds);
+      const { data: lib, error: le } = await v.db.from('library_sessions').select('id, drill_ids').eq('academy_id', v.academy.id);
+      if (le) return { ok: false, error: plain(le) };
+      for (const s of (lib ?? []) as { id: string; drill_ids: string[] }[]) {
+        const has = s.drill_ids.includes(drillId);
+        if (has === wantLib.has(s.id)) continue;
+        if (!has && s.drill_ids.length >= 30) return { ok: false, error: 'One of those sessions is full (30 drills).' };
+        const drill_ids = has ? s.drill_ids.filter((d) => d !== drillId) : [...s.drill_ids, drillId];
+        if (!drill_ids.length) return { ok: false, error: 'A session needs at least one drill: that would empty one.' };
+        const { error: e } = await v.db.from('library_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
+        if (e) return { ok: false, error: plain(e) };
+      }
+    }
     const q = (cols: string) => v.db.from('academy_sessions').select(cols).eq('academy_id', v.academy.id);
     let { data: sessions, error } = await q('id, drill_ids, library_id');
     if (error) ({ data: sessions, error } = await q('id, drill_ids'));
@@ -378,6 +396,7 @@ export async function setDrillSessions(drillId: string, sessionIds: string[]): P
     // A library session changes once, and everywhere it's used follows.
     const changed = new Set<string>();
     for (const s of (sessions ?? []) as unknown as { id: string; drill_ids: string[]; library_id?: string | null }[]) {
+      if (libraryChosen && s.library_id) continue;
       const has = s.drill_ids.includes(drillId);
       if (has === want.has(s.id)) continue;
       if (s.library_id && changed.has(s.library_id)) continue;

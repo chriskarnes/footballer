@@ -279,7 +279,7 @@ export function Runner({
         )}
 
         <Link href={doneHref ?? back?.href ?? '/'} className="btn-primary btn-big pressable mt-7 w-full">
-          Session complete
+          {!doneHref && back?.label ? `Back to ${back.label}` : 'Done'}
         </Link>
       </div>
     );

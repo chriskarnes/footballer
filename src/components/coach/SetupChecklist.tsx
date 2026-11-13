@@ -34,7 +34,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
                                                     note="Optional. Your players see it next to your name." /></div>
           <SetupYou name={profile.name} timeZone={s.timeZone} fresh={!s.you} />
           <Link href="/coach/brand" className="mt-3 inline-block text-[14px] font-semibold text-on-surface underline underline-offset-4">
-            Your academy&rsquo;s colours and logo
+            Your academy&rsquo;s colors and logo
           </Link>
         </>
       ),

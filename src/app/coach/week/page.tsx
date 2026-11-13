@@ -8,7 +8,7 @@ import { teamDays } from '@/lib/academy-week';
 import { loadPlayers } from '@/lib/coach-data';
 import { byAttention, localDate, weekdayOf } from '@/lib/progress';
 
-export const metadata = { title: 'Week', robots: { index: false } };
+export const metadata = { title: 'This week', robots: { index: false } };
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -88,7 +88,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                   </th>
                   {DAYS.map((_, d) => {
                     const items = p.week.filter((w) => w.weekday === d);
-                    const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'Trainer' : s.practice.includes(d) ? 'Club' : meets.has(d) ? 'Group' : null;
+                    const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'Trainer' : s.practice.includes(d) ? 'Practice' : meets.has(d) ? 'Trainer' : null;
                     return (
                       <td key={d} className={`border-b border-l border-outline-variant px-1.5 py-2 ${tag ? 'bg-surface-container' : ''} ${d === today ? 'bg-surface-container-low' : ''}`}>
                         {tag && <span className="block px-1 text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{tag}</span>}
@@ -117,7 +117,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-sm border border-outline align-middle" />To do</span>
         <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-sm border border-dashed border-on-surface-variant align-middle" />Missed</span>
         <span>↷ Moved by the player</span>
-        <span>Shaded: club, game or group day</span>
+        <span>Shaded: practice, game or trainer day</span>
       </p>
     </div>
   );

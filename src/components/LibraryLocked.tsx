@@ -67,7 +67,7 @@ export async function LibraryLocked({ title }: { title: string }) {
             Your players see the sessions you set them here.
           </p>
         </BrandBand>
-        <Link href="/coach" className="btn-primary pressable mt-6 w-full">Back to Coach</Link>
+        <Link href="/coach" className="btn-primary pressable mt-6 w-full">Back to your players</Link>
       </div>
     );
   }

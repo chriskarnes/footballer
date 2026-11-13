@@ -7,12 +7,22 @@ import { CheckIcon } from '@/components/Chip';
 
 export type ProgramWeeks = { id: string; name: string; weeks: { week: number; sessions: { id: string; name: string; has: boolean }[] }[] };
 
+type Pick = { id: string; name: string; has: boolean };
+
 /**
- * The sessions this drill is in, as checkboxes under each program and week.
- * Tick to add it (at the end of the session), untick to take it out.
+ * The sessions this drill is in: the library's (which follow into every
+ * program week they're in), then any program session of its own. Tick to
+ * add it (at the end of the session), untick to take it out.
  */
-export function DrillSessions({ drillId, programs, fresh }: { drillId: string; programs: ProgramWeeks[]; fresh?: boolean }) {
-  const initial = programs.flatMap((p) => p.weeks.flatMap((w) => w.sessions.filter((s) => s.has).map((s) => s.id)));
+export function DrillSessions({ drillId, library = [], programs, fresh }: {
+  drillId: string; library?: Pick[]; programs: ProgramWeeks[]; fresh?: boolean;
+}) {
+  // Library ids are kept apart from program-session ids by a prefix.
+  const lib = (id: string) => `lib:${id}`;
+  const initial = [
+    ...library.filter((s) => s.has).map((s) => lib(s.id)),
+    ...programs.flatMap((p) => p.weeks.flatMap((w) => w.sessions.filter((s) => s.has).map((s) => s.id))),
+  ];
   const [on, setOn] = useState<Set<string>>(new Set(initial));
   const [saved, setSaved] = useState(new Set(initial));
   const [error, setError] = useState<string | null>(null);
@@ -23,19 +33,34 @@ export function DrillSessions({ drillId, programs, fresh }: { drillId: string; p
   const flip = (id: string) => setOn((xs) => { const n = new Set(xs); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const save = () => start(async () => {
     setError(null);
-    const r = await setDrillSessions(drillId, [...on]);
+    const ids = [...on];
+    const r = await setDrillSessions(drillId, ids.filter((x) => !x.startsWith('lib:')),
+      ids.filter((x) => x.startsWith('lib:')).map((x) => x.slice(4)));
     if (!r.ok) { setError(r.error); return; }
     setSaved(new Set(on));
     if (fresh) router.push('/coach/drills'); else router.refresh();
   });
 
-  if (!programs.some((p) => p.weeks.length)) {
-    return <p className="text-[14px] text-on-surface-variant">No sessions yet. Build one in a program, then add drills to it.</p>;
+  if (!library.length && !programs.some((p) => p.weeks.length)) {
+    return <p className="text-[14px] text-on-surface-variant">No sessions yet. <Link href="/coach/sessions/new" className="font-semibold text-on-surface underline underline-offset-4">Build one</Link>, then add drills to it.</p>;
   }
+
+  const chip = (id: string, name: string) => (
+    <button key={id} type="button" onClick={() => flip(id)} aria-pressed={on.has(id)}
+            className={`chip ${on.has(id) ? 'chip-on' : ''}`}>
+      {on.has(id) && <CheckIcon />}{name}
+    </button>
+  );
 
   return (
     <div>
       <div className="space-y-5">
+        {!!library.length && (
+          <div>
+            <p className="text-[14px] font-bold text-on-surface">Your sessions</p>
+            <div className="mt-2 flex flex-wrap gap-2">{library.map((s) => chip(lib(s.id), s.name))}</div>
+          </div>
+        )}
         {programs.filter((p) => p.weeks.length).map((p) => (
           <div key={p.id}>
             <p className="text-[14px] font-bold text-on-surface">{p.name}</p>
@@ -44,12 +69,7 @@ export function DrillSessions({ drillId, programs, fresh }: { drillId: string; p
                 <div key={w.week} className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-3">
                   <span className="w-16 shrink-0 text-[12px] font-semibold text-on-surface-variant">Week {w.week}</span>
                   <div className="flex flex-wrap gap-2">
-                    {w.sessions.map((s) => (
-                      <button key={s.id} type="button" onClick={() => flip(s.id)} aria-pressed={on.has(s.id)}
-                              className={`chip ${on.has(s.id) ? 'chip-on' : ''}`}>
-                        {on.has(s.id) && <CheckIcon />}{s.name}
-                      </button>
-                    ))}
+                    {w.sessions.map((s) => chip(s.id, s.name))}
                   </div>
                 </div>
               ))}

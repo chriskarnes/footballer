@@ -145,12 +145,12 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
 
       {/* ---------------------------------------------------------- COLOURS */}
       <section className="mt-9">
-        <p className="eyebrow mb-0.5">Colours</p>
+        <p className="eyebrow mb-0.5">Colors</p>
         <p className="mb-3 text-[12.5px] text-on-surface-variant">
-          The kit colour fills buttons, the selected chip and the session card; the trim is the
-          accent on it. Text colours are worked out for contrast, so every kit stays readable.
+          The main color fills buttons, the selected chip and the session card; the accent sits
+          on it. Text colors are worked out for contrast, so every choice stays readable.
         </p>
-        <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Colour palette">
+        <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Color palette">
           <Swatch on={choice === 'none'} onPick={() => setChoice('none')}
                   name="Unbranded" note="Black and white" primary="#1B1B1B" accent="#FFFFFF" />
           {PALETTES.map((p) => (
@@ -159,15 +159,15 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
           ))}
           {/* Tenth, so the grid closes evenly; it wears whatever was last typed. */}
           <Swatch on={choice === 'custom'} onPick={() => setChoice('custom')}
-                  name="Custom" note="Your club’s exact colours"
+                  name="Custom" note="Your club’s exact colors"
                   primary={isHex(custom.primary) ? custom.primary : '#777777'}
                   accent={isHex(custom.accent) ? custom.accent : '#FFFFFF'} />
         </div>
 
         {choice === 'custom' && (
           <div className="mt-3 grid grid-cols-2 gap-2.5">
-            <ColourField label="Kit" value={custom.primary} onChange={(v) => setCustom({ ...custom, primary: v })} />
-            <ColourField label="Trim" value={custom.accent} onChange={(v) => setCustom({ ...custom, accent: v })} />
+            <ColourField label="Main" value={custom.primary} onChange={(v) => setCustom({ ...custom, primary: v })} />
+            <ColourField label="Accent" value={custom.accent} onChange={(v) => setCustom({ ...custom, accent: v })} />
           </div>
         )}
       </section>
@@ -212,11 +212,11 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
         )}
         <button type="button" onClick={() => setResetting(true)}
                 className="mt-6 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">
-          Clear colours and logo
+          Clear colors and logo
         </button>
       </div>
 
-      <ConfirmSheet open={resetting} title="Clear colours and logo?"
+      <ConfirmSheet open={resetting} title="Clear colors and logo?"
         body="Your players go back to the black-and-white app. The academy keeps its name."
         confirmLabel="Reset" onConfirm={reset} onCancel={() => setResetting(false)} />
     </div>
@@ -260,7 +260,7 @@ function ColourField({ label, value, onChange }: { label: string; value: string;
   return (
     <label className="card-flat flex items-center gap-3 p-3">
       <input type="color" value={isHex(value) ? value : '#000000'} onChange={(e) => onChange(e.target.value.toUpperCase())}
-             aria-label={`${label} colour`}
+             aria-label={`${label} color`}
              className="h-10 w-10 shrink-0 cursor-pointer rounded-small border border-outline-variant bg-transparent p-0" />
       <span className="min-w-0">
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">{label}</span>

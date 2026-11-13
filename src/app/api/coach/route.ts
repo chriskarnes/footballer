@@ -61,7 +61,7 @@ export async function POST(req: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({
       spec: {},
-      reply: 'Free-text is off until an API key is set — use the buttons below and I\'ll build it.',
+      reply: 'Free-text is off until an API key is set — use the buttons below and I’ll build it.',
     });
   }
 

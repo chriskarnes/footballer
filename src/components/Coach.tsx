@@ -18,7 +18,7 @@ const SURPRISE_MINUTES = 20;
 
 const MINUTES = [10, 15, 20, 30, 45];
 const PLACES: [SessionSpec['place'], string][] = [
-  ['any', 'Anywhere'], ['home', 'Home'], ['pitch', 'Pitch'], ['gym', 'Gym'],
+  ['any', 'Anywhere'], ['home', 'Home'], ['pitch', 'Field'], ['gym', 'Gym'],
 ];
 
 /**
@@ -181,7 +181,7 @@ function Train({
       setText('');
     } catch {
       // Say so: the chips above need no network.
-      setReply('Couldn’t reach the coach. Pick from the buttons above instead.');
+      setReply('Couldn’t build that one just now. Pick from the buttons above instead.');
     } finally { setBusy(false); }
   }
 
@@ -285,7 +285,7 @@ function Train({
 
       {/* ---- or say it ---- */}
       <div className="mt-10">
-        <h2 className="h-sec">Or ask the coach</h2>
+        <h2 className="h-sec">Or describe it</h2>
         <div className="mt-3 flex items-center gap-2 rounded-full border border-outline bg-surface-container-lowest
                         p-1.5 pl-5 transition-colors focus-within:border-primary">
           <input

@@ -24,7 +24,7 @@ const CYCLE: Availability[] = ['rest', 'technical', 'physical', 'both'];
 /** All four letters wide on purpose: a seven-column grid on a 375px screen has
  *  about 45px per day, and "Physical" overflowed its chip. */
 const DAY_LABEL: Record<Availability, string> = {
-  rest: 'Rest', technical: 'Ball', physical: 'Phys', both: 'Both',
+  rest: 'Rest', technical: 'Ball', physical: 'Fit', both: 'Both',
 };
 /** Spelled out for screen readers, which have no width problem. */
 const DAY_SPOKEN: Record<Availability, string> = {

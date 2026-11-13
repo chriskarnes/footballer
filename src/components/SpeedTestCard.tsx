@@ -8,6 +8,10 @@ import { bests, heightGain, useSpeedCard, type TestEntry } from '@/lib/speed-car
 import { position } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 
+/** 2026-11-13 → Nov 13. */
+const dayName = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
 type Screen = 'card' | 'entry';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -52,7 +56,7 @@ export function SpeedTestCard() {
         <div className="hint-in mt-5 rounded-large-increased border border-brand-edge bg-surface-brand p-5">
           <p className="text-[13px] font-bold text-on-surface-brand">Growth spurt: +{gain} cm since last test</p>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-on-surface-brand-variant">
-            Cut sprint volume by a third, plyometrics back to Phase 1 level, double the mechanics
+            Cut sprint volume by a third, jumping back to Phase 1 level, double the mechanics
             drills for the next 2–3 blocks. Flat or slower times are expected and are not a problem.
           </p>
         </div>
@@ -125,7 +129,7 @@ export function SpeedTestCard() {
           )}
           {/* The app's confirmation rather than the browser's, which on a
               phone is a system alert that looks like nothing else here. */}
-          <ConfirmSheet open={removing && !!last} title={`Delete the ${last?.date ?? ''} test day?`}
+          <ConfirmSheet open={removing && !!last} title={`Delete the ${last ? dayName(last.date) : ''} test day?`}
             body="Its numbers come off your card and your bests are worked out again without them."
             confirmLabel="Delete" onCancel={() => setRemoving(false)}
             onConfirm={() => { if (last) remove(last.date); setRemoving(false); }} />
@@ -133,7 +137,7 @@ export function SpeedTestCard() {
       )}
 
       <section className="mt-8">
-        <h2 className="h-sec mb-3">The battery</h2>
+        <h2 className="h-sec mb-3">The tests</h2>
         <ol className="card-flat divide-y divide-outline-variant">
           {TESTS.map((t, i) => (
             <li key={t.id} className="flex gap-4 p-4">

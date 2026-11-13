@@ -214,7 +214,7 @@ export function SpeedWeek() {
                     {d.type === 'test' ? 'Test day' : d.session.name}
                   </span>
                   <span className="mt-1 block text-[16px] font-semibold text-on-surface-variant">
-                    {day} · {d.type === 'test' ? 'replaces Speed B' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
+                    {day} · {d.type === 'test' ? 'replaces top speed' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
                     {missed ? ' · Missed' : ''}
                   </span>
                 </span>

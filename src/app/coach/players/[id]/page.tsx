@@ -1,3 +1,4 @@
+import { positionName } from '@/lib/positions';
 import { notFound } from 'next/navigation';
 import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
@@ -52,7 +53,7 @@ export default async function PlayerPage({ params }: {
   const max = Math.max(1, ...pr.weeks.map((w) => Math.max(w.done, w.planned)));
   const sentNotes = ((notes ?? []) as unknown as { seen_at: string | null; notes: { id: string; body: string; kind: string; author_name: string; created_at: string } }[])
     .sort((a, b) => b.notes.created_at.localeCompare(a.notes.created_at));
-  const about = [p.positions?.join(', '), p.age_band && (AGE[p.age_band] ?? p.age_band)].filter(Boolean).join(' · ');
+  const about = [p.positions?.map(positionName).join(', '), p.age_band && (AGE[p.age_band] ?? p.age_band)].filter(Boolean).join(' · ');
 
   return (
     <NoteProvider only players={[{ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, pr) }]}>

@@ -17,14 +17,14 @@ export default async function BrandPage() {
     if ('page' in gate) return gate.page;
     return (
       <div className="lg:max-w-2xl">
-        <PageHead back={{ href: '/coach/team', label: 'Academy' }} title="Owner only">Only {v.academy?.name}&rsquo;s owner can change its name, colours and logo.</PageHead>
+        <PageHead back={{ href: '/coach/team', label: 'Academy' }} title="Owner only">Only {v.academy?.name}&rsquo;s owner can change its name, colors and logo.</PageHead>
       </div>
     );
   }
   return (
     <div className="lg:max-w-2xl">
       <PageHead back={{ href: '/coach/team', label: 'Academy' }} eyebrow={v.academy.name} title="Brand settings">
-        Pick a kit, add your crest, and every player sees it on their next load.
+        Pick your colors, add your crest, and every player sees it on their next load.
       </PageHead>
       <BrandingAdmin initial={v.academy.branding} />
     </div>

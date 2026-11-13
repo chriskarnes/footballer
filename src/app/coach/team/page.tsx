@@ -101,7 +101,7 @@ export default async function TeamPage() {
       {canBrand && (
         <Link href="/coach/brand" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">
           <span className="text-[14px] font-semibold text-on-surface">Brand settings</span>
-          <span className="text-[14px] text-on-surface-variant">Name, colours, logo ›</span>
+          <span className="text-[14px] text-on-surface-variant">Name, colors, logo ›</span>
         </Link>
       )}
     </div>

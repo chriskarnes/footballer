@@ -15,7 +15,7 @@ import { TickMark } from '@/components/TickMark';
 import { readSetup, setupSteps } from '@/lib/setup';
 import { YourName } from '@/components/coach/YourName';
 
-export const metadata = { title: 'Coach', robots: { index: false } };
+export const metadata = { title: 'Players', robots: { index: false } };
 
 /**
  * The trainer's front page: who needs a word from them this week.

@@ -102,17 +102,17 @@ export const BLOCK_WEEKS = [
 ] as const;
 
 export const WEEK_TEMPLATE = [
-  { day: 'Mon', kind: 'speedA' as const, label: 'Speed A · acceleration', minutes: 60 },
+  { day: 'Mon', kind: 'speedA' as const, label: 'Acceleration · first steps', minutes: 60 },
   { day: 'Tue', kind: 'stamina' as const, label: 'Stamina · runs', minutes: 45 },
   { day: 'Wed', kind: null, label: 'Off, or light ball skills', minutes: 0 },
-  { day: 'Thu', kind: 'speedB' as const, label: 'Speed B · velocity or agility', minutes: 60 },
-  { day: 'Fri', kind: 'strength' as const, label: 'Strength + plyo', minutes: 40 },
+  { day: 'Thu', kind: 'speedB' as const, label: 'Top speed · or agility', minutes: 60 },
+  { day: 'Fri', kind: 'strength' as const, label: 'Strength + jumps', minutes: 40 },
   { day: 'Sat', kind: 'games' as const, label: 'Match, or small-sided games', minutes: 60 },
   { day: 'Sun', kind: null, label: 'Off', minutes: 0 },
 ];
 
 export const KIND_LABELS: Record<SpeedSessionKind, string> = {
-  speedA: 'Speed A', speedB: 'Speed B', stamina: 'Stamina', games: 'Games', strength: 'Strength + plyo',
+  speedA: 'Acceleration', speedB: 'Top speed', stamina: 'Stamina', games: 'Games', strength: 'Strength + jumps',
 };
 
 /* ---- warm-up: every session ------------------------------------------------ */
@@ -160,7 +160,7 @@ const FOUNDATION: BlockSessions[] = [
     games: { name: '4v4, 30 × 20 m', where: 'outdoor', sprintMetres: 0, drills: [
       d('4v4 small-sided game', '4', '4 min', '2 min', 1440, 'conditioning', 'No walking, ever', { equipment: [...ball, ...cones], touches: 200, intensity: 'high' }),
     ] },
-    strength: { name: 'Bodyweight and low plyo', where: 'indoor', sprintMetres: 0, drills: [
+    strength: { name: 'Bodyweight and small jumps', where: 'indoor', sprintMetres: 0, drills: [
       d('Box squat, split squat, single-leg glute bridge', '3', '10 each', '60 s', 540, 'strength', 'Knee over the toe, chest tall'),
       d('Push-up and plank variations', '3', '10 / 30 s', '45 s', 360, 'core', 'Ribs down, straight line'),
       d('Pogo hops', '3', '20', '45 s', 180, 'power', 'Stiff ankles, quiet feet'),
@@ -185,7 +185,7 @@ const FOUNDATION: BlockSessions[] = [
     games: { name: '4v4, 30 × 20 m', where: 'outdoor', sprintMetres: 0, drills: [
       d('4v4 small-sided game', '5', '4 min', '2 min', 1800, 'conditioning', 'No walking, ever', { equipment: [...ball, ...cones], touches: 250, intensity: 'high' }),
     ] },
-    strength: { name: 'Bodyweight and low plyo', where: 'indoor', sprintMetres: 0, drills: [
+    strength: { name: 'Bodyweight and small jumps', where: 'indoor', sprintMetres: 0, drills: [
       d('Box squat, split squat, single-leg glute bridge', '3', '12 each', '60 s', 600, 'strength', 'Knee over the toe, chest tall'),
       d('Push-up and plank variations', '3', '12 / 40 s', '45 s', 400, 'core', 'Ribs down, straight line'),
       d('Pogo hops', '3', '20', '45 s', 180, 'power', 'Stiff ankles, quiet feet'),
@@ -210,7 +210,7 @@ const FOUNDATION: BlockSessions[] = [
     games: { name: '4v4, 30 × 20 m', where: 'outdoor', sprintMetres: 0, drills: [
       d('4v4 small-sided game', '5', '4 min', '2 min', 1800, 'conditioning', 'No walking, ever', { equipment: [...ball, ...cones], touches: 250, intensity: 'high' }),
     ] },
-    strength: { name: 'Bodyweight and low plyo', where: 'indoor', sprintMetres: 0, drills: [
+    strength: { name: 'Bodyweight and small jumps', where: 'indoor', sprintMetres: 0, drills: [
       d('Box squat, split squat, single-leg glute bridge', '3', '12 each', '60 s', 600, 'strength', 'Knee over the toe, chest tall'),
       d('Push-up and plank variations', '3', '12 / 45 s', '45 s', 420, 'core', 'Ribs down, straight line'),
       d('Pogo hops', '3', '20', '45 s', 180, 'power', 'Stiff ankles, quiet feet'),
@@ -319,7 +319,7 @@ const POWER: BlockSessions[] = [
     strength: { name: 'Power', where: 'indoor', sprintMetres: 0, drills: [
       d('Jump squat', '3', '8', '60 s', 360, 'power', 'Land soft, reset, go again'),
       d('Single-leg squat to bench', '3', '6 each', '60 s', 420, 'strength', 'Knee over the second toe', { equipment: ['bench'] }),
-      d('Push-up to plyo push-up', '3', '8', '60 s', 360, 'strength', 'Hands leave the floor, land quiet'),
+      d('Push-up to clap push-up', '3', '8', '60 s', 360, 'strength', 'Hands leave the floor, land quiet'),
       d('Nordic curl eccentric', '3', '6', '90 s', 450, 'strength', 'Fight it all the way down', { equipment: ['partner'] }),
       d('Copenhagen side plank', '3', '20 s each side', '45 s', 300, 'core', 'Squeeze the top leg into the bench', { equipment: ['bench'] }),
       d('Hurdle hops, 30–40 cm', '4', '5', '60 s', 300, 'power', 'Land where you took off', { equipment: hurdles }),
@@ -344,7 +344,7 @@ const POWER: BlockSessions[] = [
     strength: { name: 'Power', where: 'indoor', sprintMetres: 0, drills: [
       d('Jump squat', '3', '8', '60 s', 360, 'power', 'Land soft, reset, go again'),
       d('Single-leg squat to bench', '3', '6 each', '60 s', 420, 'strength', 'Knee over the second toe', { equipment: ['bench'] }),
-      d('Push-up to plyo push-up', '3', '8', '60 s', 360, 'strength', 'Hands leave the floor, land quiet'),
+      d('Push-up to clap push-up', '3', '8', '60 s', 360, 'strength', 'Hands leave the floor, land quiet'),
       d('Nordic curl eccentric', '3', '6', '90 s', 450, 'strength', 'Fight it all the way down', { equipment: ['partner'] }),
       d('Copenhagen side plank', '3', '20 s each side', '45 s', 300, 'core', 'Squeeze the top leg into the bench', { equipment: ['bench'] }),
       d('Single-leg hop and stick', '3', '5 each', '60 s', 360, 'power', 'Stick it, hold 2 seconds'),
@@ -532,7 +532,7 @@ export const HEIGHT_TEST = { id: 'height', name: 'Standing height', unit: 'cm',
 /** What a result changes in the next block. Shown on the test screen. */
 export const PROGRESSION = [
   { result: 'Sprint times improved', change: 'Add 5 m to the main sprint distance, or one rep — not both.' },
-  { result: 'Sprint times flat (within 0.02 s)', change: 'Same distances; swap the Speed B drill set for the next block’s.' },
+  { result: 'Sprint times flat (within 0.02 s)', change: 'Same distances; swap the top-speed drill set for the next block’s.' },
   { result: 'Sprint times slower', change: 'Cut sprint volume by 25%, keep intensity, check sleep and growth. Re-test in 2 weeks.' },
   { result: 'Flying 20 m improved', change: 'Move wicket and stick spacing up 10 cm.' },
   { result: '5-10-5 improved', change: 'Progress from pre-planned to reactive cuts.' },

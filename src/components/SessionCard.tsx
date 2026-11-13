@@ -46,7 +46,7 @@ export function SessionCard({
       {/* What it is in one line, and the one thing this screen is for. */}
       <div className="rounded-large-increased border border-brand-edge bg-surface-brand p-6 shadow-level3">
         <p className="font-brand text-[22px] font-extrabold leading-tight tracking-tighter text-on-surface-brand">
-          {mins} min · {built.drills.length} drills{built.rounds > 1 ? ` × ${built.rounds}` : ''}
+          {mins} min · {built.drills.length} {built.drills.length === 1 ? 'drill' : 'drills'}{built.rounds > 1 ? ` × ${built.rounds}` : ''}
         </p>
         {!!built.totalTouches && (
           <p className="mt-1 text-[15px] font-semibold text-on-surface-brand-variant">

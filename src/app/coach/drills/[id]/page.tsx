@@ -24,8 +24,13 @@ export default async function DrillPage({ params, searchParams }: {
   const drill = c.drills.find((d) => d.id === id) as DrillRow | undefined;
   if (!drill) notFound();
 
+  // Library sessions first: a change there follows the session into every
+  // program week it's in. Then any program session that stands alone (built
+  // before the library, or inside a program).
+  const library = c.library.map((s) => ({ id: s.id, name: s.name, has: s.drill_ids.includes(drill.id) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
   const programs: ProgramWeeks[] = c.programs.map((p) => {
-    const mine = c.sessions.filter((s) => s.program_id === p.id);
+    const mine = c.sessions.filter((s) => s.program_id === p.id && !s.library_id);
     const weeks = [...new Set(mine.map((s) => s.week))].sort((a, b) => a - b);
     return {
       id: p.id, name: p.name,
@@ -43,7 +48,7 @@ export default async function DrillPage({ params, searchParams }: {
         {fresh ? 'Tick any it belongs in. It goes at the end of each; you can reorder in the session.'
           : 'Tick to add it to a session, untick to take it out.'}
       </p>
-      <DrillSessions drillId={drill.id} programs={programs} fresh={fresh} />
+      <DrillSessions drillId={drill.id} library={library} programs={programs} fresh={fresh} />
     </section>
   );
 

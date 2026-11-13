@@ -52,7 +52,7 @@ export async function saveBranding(input: {
   // scheme, keep the name and logo.
   const colours = input.primary !== null || input.accent !== null;
   if (colours && (!isHex(input.primary) || !isHex(input.accent))) {
-    return { ok: false, error: 'Colours must be #RRGGBB.' };
+    return { ok: false, error: 'Colors must be #RRGGBB.' };
   }
   const paletteId = PALETTES.some((p) => p.id === input.paletteId) ? input.paletteId : null;
 

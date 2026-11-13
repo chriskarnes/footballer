@@ -13,10 +13,10 @@ export function ProgramForm({ program }: { program?: { id: string; name: string;
     <form action={action} className="space-y-5">
       <input type="hidden" name="id" value={program?.id ?? ''} />
       <Field label="Name"><input name="name" required maxLength={60} defaultValue={program?.name} placeholder="e.g. Ball Mastery Foundations" /></Field>
-      <Field label="How many weeks?" hint="How long a group usually runs. Weeks you don't build repeat the one before.">
+      <Field label="How many weeks?" hint="How long a group usually runs. Weeks you don’t build repeat the one before.">
         <input name="weeks" type="number" inputMode="numeric" min={1} max={52} defaultValue={program?.weeks ?? 8} />
       </Field>
-      <Field label="What it's for" hint="Optional. Players see this.">
+      <Field label="What it’s for" hint="Optional. Players see this.">
         <textarea name="description" rows={3} maxLength={500} defaultValue={program?.description ?? ''}
                   placeholder="Close control in tight spaces, both feet." />
       </Field>

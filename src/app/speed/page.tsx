@@ -49,7 +49,7 @@ export default async function SpeedPage() {
         <details className="group mt-9">
           <summary className="card pressable flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4
                               [&::-webkit-details-marker]:hidden">
-            <span className="text-[16px] font-bold text-on-surface">For parents and coaches</span>
+            <span className="text-[16px] font-bold text-on-surface">For parents and trainers</span>
             <Chevron className="h-5 w-5 shrink-0 text-on-surface-variant transition-transform group-open:rotate-90" />
           </summary>
 

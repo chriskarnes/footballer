@@ -18,7 +18,7 @@ export function GroupForm({ group, programs, today }: {
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="id" value={group?.id ?? ''} />
-      <Field label="Name" hint="What you'd call it out loud.">
+      <Field label="Name" hint="What you’d call it out loud.">
         <input name="name" required maxLength={40} defaultValue={group?.name} placeholder="e.g. U12 Tuesday, Advanced" />
       </Field>
       <div className="grid grid-cols-2 gap-3">
