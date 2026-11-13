@@ -21,6 +21,8 @@ import { announceInstallable, INSTALL_ASK } from '@/lib/install';
  */
 
 const VISITS = 'forge.visits';
+/** Set in sessionStorage once this tab's visit is counted. */
+const COUNTED = 'forge.visit-counted';
 const DISMISSED = 'forge.installNudge.dismissed';
 const SHOW_AFTER_VISITS = 3;
 
@@ -79,9 +81,15 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
     let t: ReturnType<typeof setTimeout> | undefined;
     // Opened on a join or claim page, or over setup, it isn't a visit to
     // the app yet: not counted, and nothing opens by itself.
-    if (!localStorage.getItem(DISMISSED) && !quietPath(window.location.pathname)) {
-      const visits = Number(localStorage.getItem(VISITS) ?? 0) + 1;
-      localStorage.setItem(VISITS, String(visits));
+    // A visit is a tab, not a reload or a page: counted once per tab.
+    if (!localStorage.getItem(DISMISSED) && !quietPath(window.location.pathname) && !quietPage()) {
+      let visits = Number(localStorage.getItem(VISITS) ?? 0);
+      try {
+        if (!sessionStorage.getItem(COUNTED)) {
+          sessionStorage.setItem(COUNTED, '1');
+          localStorage.setItem(VISITS, String(++visits));
+        }
+      } catch { /* storage off: never counts, never opens by itself */ }
       // Let the page settle before anything slides over it.
       t = setTimeout(() => {
         if (visits >= SHOW_AFTER_VISITS && !quietPath(window.location.pathname) && !quietPage()) setOpen(true);

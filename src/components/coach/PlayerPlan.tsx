@@ -110,11 +110,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
 
   return (
     <div className="space-y-3">
-      <div role="radiogroup" aria-label={`How ${first}’s week is set`} className="grid grid-cols-2 gap-2.5">
+      <div role="group" aria-label={`How ${first}’s week is set`} className="grid grid-cols-2 gap-2.5">
         {OPTIONS.map((o) => {
           const on = o.key === 'custom' ? mode !== 'program' : mode === 'program';
           return (
-            <button key={o.key} type="button" role="radio" aria-checked={on} disabled={pending} onClick={() => choose(o.key)}
+            <button key={o.key} type="button" aria-pressed={on} disabled={pending} onClick={() => choose(o.key)}
                     className={`pressable rounded-large border p-3.5 text-left transition-colors
                       ${on ? 'border-on-surface bg-surface-container-high' : 'border-outline-variant'}`}>
               <span className="block text-body-lg font-bold text-on-surface">{o.title}</span>

@@ -73,9 +73,9 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
         <p className="text-body-lg font-bold text-on-surface">{fixed.name}</p>
       ) : (
         <>
-          <div className="segmented" role="radiogroup" aria-label="Send to">
+          <div className="segmented" role="group" aria-label="Send to">
             {MODES.map((m) => (
-              <button key={m.key} type="button" role="radio" aria-checked={mode === m.key}
+              <button key={m.key} type="button" aria-pressed={mode === m.key}
                       onClick={() => setMode(m.key)}
                       className={`segment pressable ${mode === m.key ? 'segment-on' : ''}`}>{m.label}</button>
             ))}

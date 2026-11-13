@@ -19,9 +19,10 @@ export function ClaimButton({ code, name, email, hint }: { code: string; name: s
                 setBusy(true); setErr('');
                 try {
                   const r = await claimAcademy(code);
-                  if (r && !r.ok) setErr(r.error);
-                } catch (e) { unlessNext(e); setErr(NO_SIGNAL); }
-                finally { setBusy(false); }
+                  // Success moves to the trainer area: the button stays busy
+                  // until it does, so a second tap can't go in.
+                  if (r && !r.ok) { setErr(r.error); setBusy(false); }
+                } catch (e) { unlessNext(e); setErr(NO_SIGNAL); setBusy(false); }
               }}>
         {busy ? 'One moment…' : `Make ${name} mine`}
       </button>

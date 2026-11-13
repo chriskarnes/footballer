@@ -70,9 +70,10 @@ export function FinishSetup({ ready }: { ready: boolean }) {
                 setBusy(true); setErr('');
                 try {
                   const r = await finishSetup(listed);
-                  if (r && !r.ok) setErr(r.error);
-                } catch (e) { unlessNext(e); setErr(NO_SIGNAL); }
-                finally { setBusy(false); }
+                  // Success moves on to the trainer area: the button stays busy
+                  // until it does, so a second tap can't go in.
+                  if (r && !r.ok) { setErr(r.error); setBusy(false); }
+                } catch (e) { unlessNext(e); setErr(NO_SIGNAL); setBusy(false); }
               }}>
         {busy ? 'One moment…' : 'Finish setup'}
       </button>
