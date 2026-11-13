@@ -15,12 +15,28 @@
  *
  * API calls are not cached at all. A stale session or a stale history is worse than
  * an honest error.
+ *
+ * Pages go in their own cache, capped, and only good answers: an error page
+ * cached would be served offline as if it were the page. Signed-in pages are
+ * personal, so the app empties this cache whenever the account on the phone
+ * changes (SignOut, PendingSaves): a sibling on the family phone, offline,
+ * never gets another child's Me. React's data requests (RSC) aren't kept:
+ * each one is a new URL, and they're no use offline without the page.
  */
 
 // A new name clears every older cache on activate, the forge-v1 ones included.
-const VERSION = 'train-v2';
+const VERSION = 'train-v3';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
+const PAGES = `${VERSION}-pages`;
+const MAX_PAGES = 40;
+
+/** Keep the newest MAX_PAGES: Cache keys come back oldest first. */
+async function trim() {
+  const c = await caches.open(PAGES);
+  const keys = await c.keys();
+  await Promise.all(keys.slice(0, Math.max(0, keys.length - MAX_PAGES)).map((k) => c.delete(k)));
+}
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', (event) => {
@@ -55,8 +71,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then((hit) =>
         hit || fetch(request).then((res) => {
-          const copy = res.clone();
-          caches.open(ASSETS).then((c) => c.put(request, copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(ASSETS).then((c) => c.put(request, copy));
+          }
           return res;
         })
       )
@@ -64,12 +82,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // React's data requests: live or nothing.
+  if (request.headers.get('RSC') || url.searchParams.has('_rsc')) return;
+
   // Pages and everything else: fresh if we can get it, cached if we can't.
   event.respondWith(
     fetch(request)
       .then((res) => {
-        const copy = res.clone();
-        caches.open(ASSETS).then((c) => c.put(request, copy));
+        if (res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(PAGES).then((c) => c.put(request, copy)).then(trim);
+        }
         return res;
       })
       .catch(() =>

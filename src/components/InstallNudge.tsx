@@ -45,12 +45,18 @@ const isIOS = () => {
 
 /** Pages that are one decision (an invite, asking to join, claiming): no prompt over them. */
 const QUIET = ['/join', '/claim', '/request'];
+const quietPath = (p: string) => QUIET.some((q) => p === q || p.startsWith(`${q}/`));
+/** A page that's mid-setup marks itself (ProfileSetup does): nothing slides over a form being filled in. */
+const quietPage = () => !!document.querySelector('[data-install-quiet]');
 
 export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: { name?: string; icon?: string }) {
   const path = usePathname();
   const [platform, setPlatform] = useState<Platform>(null);
   const [prompt, setPrompt] = useState<InstallPromptEvent | null>(null);
   const [open, setOpen] = useState(false);
+  // Re-checked on every page: a marked page hides it, as a quiet path does.
+  const [hushed, setHushed] = useState(false);
+  useEffect(() => { setHushed(quietPage()); }, [path]);
 
   useEffect(() => {
     if (isStandalone()) return;                      // already installed
@@ -71,11 +77,15 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
     window.addEventListener(INSTALL_ASK, onAsk);
 
     let t: ReturnType<typeof setTimeout> | undefined;
-    if (!localStorage.getItem(DISMISSED)) {          // asked once, that's enough
+    // Opened on a join or claim page, or over setup, it isn't a visit to
+    // the app yet: not counted, and nothing opens by itself.
+    if (!localStorage.getItem(DISMISSED) && !quietPath(window.location.pathname)) {
       const visits = Number(localStorage.getItem(VISITS) ?? 0) + 1;
       localStorage.setItem(VISITS, String(visits));
       // Let the page settle before anything slides over it.
-      t = setTimeout(() => { if (visits >= SHOW_AFTER_VISITS) setOpen(true); }, 1800);
+      t = setTimeout(() => {
+        if (visits >= SHOW_AFTER_VISITS && !quietPath(window.location.pathname) && !quietPage()) setOpen(true);
+      }, 1800);
     }
     return () => {
       window.removeEventListener('beforeinstallprompt', onPrompt);
@@ -103,7 +113,7 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
     setOpen(false);
   };
 
-  if (!open || !platform || QUIET.some((p) => path === p || path.startsWith(`${p}/`))) return null;
+  if (!open || !platform || hushed || quietPath(path)) return null;
 
   return (
     <div className="safe-x fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">

@@ -123,7 +123,8 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   }
 
   return (
-    <div className="animate-pop">
+    // First-time setup asks the install prompt to keep out of the way.
+    <div className="animate-pop" data-install-quiet={returning ? undefined : ''}>
       {heading && <h1 className="h-page">{returning ? (parent ? 'Player profile' : 'My profile') : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>}
       {photo}
 

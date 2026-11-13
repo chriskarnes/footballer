@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '@/lib/supabase/client';
+import { notePageCacheUser } from '@/lib/page-cache';
 
 /**
  * The way out. The app has had a sign-in since the beginning and no sign-out,
@@ -21,6 +22,7 @@ export function SignOut({
     setBusy(true);
     try {
       await browserClient().auth.signOut();
+      await notePageCacheUser(null);
       router.replace(to);
       router.refresh();
     } finally {

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
 import { browserClient } from '@/lib/supabase/client';
+import { notePageCacheUser } from '@/lib/page-cache';
 
 /**
  * Saves what was made signed out — a finished session, a built week — once
@@ -21,11 +22,15 @@ export function PendingSaves() {
     // getSession reads the stored session without a request, so a signed-out
     // visitor with something waiting doesn't fire a 401 on every page load.
     const run = async () => {
-      if (!pendingWorkout.peek() && !pendingPlan.peek() && !pendingFinish.peek()) return;
+      let signedIn = false;
       try {
         const { data } = await browserClient().auth.getSession();
-        if (!data.session) return;
+        signedIn = !!data.session;
+        // A different account on this phone than the cached pages were for.
+        await notePageCacheUser(data.session?.user.id ?? null);
       } catch { return; }   // Supabase not configured
+      if (!signedIn) return;
+      if (!pendingWorkout.peek() && !pendingPlan.peek() && !pendingFinish.peek()) return;
       const saved = await Promise.all([pendingWorkout.flush(), pendingPlan.flush(), pendingFinish.flush()]);
       if (saved.some(Boolean) && live) router.refresh();
     };

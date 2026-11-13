@@ -12,6 +12,7 @@ import { Waiting } from '@/components/Waiting';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/viewer';
 import { readProfileMissing } from '@/lib/profile-check';
+import type { Exercise } from '@/lib/types';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
 export default async function TrainNowPage() {
@@ -25,7 +26,12 @@ export default async function TrainNowPage() {
   if (state.kind === 'new' && await unanswered()) redirect('/me');
   if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;
-  const exercises = await getExercises();
+  // Only what the session builder reads goes to the phone: this is the front
+  // door, often on mobile data, and the whole rows were most of the page.
+  const exercises = (await getExercises()).map(({
+    session_id: _s, exercise_order: _o, rest: _r, work_seconds: _w, total_minutes: _t,
+    duration_confidence: _d, category: _c, ...keep
+  }) => keep) as unknown as Exercise[];
   return (
     <div className="animate-pop">
       {/* Landmarks, not loose divs held apart by a margin. */}
