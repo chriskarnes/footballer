@@ -91,6 +91,8 @@ function Train({
   // Set when a build came back empty. The player stays on the inputs, told why,
   // rather than being taken to a result step with nothing on it.
   const [miss, setMiss] = useState(false);
+  // On the result step: a swap or a mix that had nothing else to give.
+  const [stuck, setStuck] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   // Whether this visit pushed the result step. If it did, Back is the back
@@ -152,6 +154,7 @@ function Train({
   }
 
   function change() {
+    setStuck(null);
     if (pushed.current) { pushed.current = false; window.history.back(); }
     else window.history.replaceState(null, '', window.location.pathname);
     window.scrollTo({ top: 0 });
@@ -227,9 +230,18 @@ function Train({
         </section>
         <div className="mt-7">
           <SessionCard built={built} startHref={startHref}
-            onSwap={(i) => show(swapDrill(exercises, built, i), anyFocus, 'replace')}
-            onShuffle={() => show(build(), anyFocus, 'replace')} />
+            onSwap={(i) => {
+              const next = swapDrill(exercises, built, i);
+              if (next === built) { setStuck('Nothing else fits that spot. Try Mix it up.'); return; }
+              setStuck(null); show(next, anyFocus, 'replace');
+            }}
+            onShuffle={() => {
+              const next = build();
+              if (!next?.drills.length) { setStuck('Nothing else matches. Go back and change your choices.'); return; }
+              setStuck(null); show(next, anyFocus, 'replace');
+            }} />
         </div>
+        {stuck && <p role="status" className="hint-in mt-4 text-center text-body-lg font-semibold text-on-surface">{stuck}</p>}
       </div>
     );
   }

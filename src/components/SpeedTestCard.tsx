@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
-import { BackLink } from './BackLink';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { BackButton, BackLink } from './BackLink';
 import { ConfirmSheet } from './ConfirmSheet';
 import { haptic } from '@/lib/haptics';
 import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS } from '@/lib/speed';
@@ -25,12 +26,21 @@ const fmt = (v: number, unit: string) => unit === 's' ? v.toFixed(2) : String(Ma
  */
 export function SpeedTestCard() {
   const { entries, ready, add, remove } = useSpeedCard();
-  const [screen, setScreen] = useState<Screen>('card');
+  // The step is in the URL, so the back gesture goes from the numbers to the
+  // card rather than out of test day.
+  const router = useRouter();
+  const screen: Screen = useSearchParams().get('step') === 'entry' ? 'entry' : 'card';
+  const pushed = useRef(false);
+  const setScreen = (to: Screen) => {
+    if (to === 'entry') { pushed.current = true; router.push('/speed/test?step=entry', { scroll: false }); }
+    else if (pushed.current) { pushed.current = false; router.back(); }
+    else router.replace('/speed/test', { scroll: false });
+  };
   const [removing, setRemoving] = useState(false);
 
   if (screen === 'entry') {
-    return <Entry onDone={(e) => { add(e); haptic('success'); setScreen('card'); }}
-                  onCancel={() => setScreen('card')} />;
+    return <Entry onDone={(e) => { add(e); clearDraft(); haptic('success'); setScreen('card'); }}
+                  onCancel={() => { clearDraft(); setScreen('card'); }} />;
   }
 
   const pb = bests(entries);
@@ -40,7 +50,7 @@ export function SpeedTestCard() {
   return (
     <div className="animate-pop">
       <BackLink href="/speed" label="Speed" />
-      <h2 className="h-sec mb-3">Test day</h2>
+      <p className="eyebrow mb-2">Test day</p>
       <h1 className="h-page">Your card</h1>
       <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
         Thursday of every fourth week. Same five tests, same order, same surface, after the
@@ -174,6 +184,15 @@ export function SpeedTestCard() {
   );
 }
 
+/** What's typed on the entry screen, kept for this tab until saved or
+ *  cancelled, so leaving it by accident doesn't lose the numbers. */
+const DRAFT = 'forge.speed.draft';
+type Draft = { date: string; phase: (typeof PHASES)[number]["id"]; block: 1 | 2 | 3; vals: Record<string, string>; height: string; note: string };
+function readDraft(): Draft | null {
+  try { const raw = sessionStorage.getItem(DRAFT); return raw ? JSON.parse(raw) as Draft : null; } catch { return null; }
+}
+function clearDraft() { try { sessionStorage.removeItem(DRAFT); } catch { /* private mode */ } }
+
 function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel: () => void }) {
   // Which block this test closes, from the year if one has been started —
   // the athlete shouldn't have to know they're in Build, block 2.
@@ -189,6 +208,17 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
   const [vals, setVals] = useState<Record<string, string>>({});
   const [height, setHeight] = useState('');
   const [note, setNote] = useState('');
+  // Back to a draft, after mount (the server has no sessionStorage).
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    const d = readDraft();
+    if (d) { setSeeded(true); setDate(d.date); setPhase(d.phase); setBlock(d.block); setVals(d.vals); setHeight(d.height); setNote(d.note); }
+    setRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    try { sessionStorage.setItem(DRAFT, JSON.stringify({ date, phase, block, vals, height, note })); } catch { /* private mode */ }
+  }, [restored, date, phase, block, vals, height, note]);
 
   const num = (s: string) => { const n = parseFloat(s.replace(',', '.')); return Number.isFinite(n) && n > 0 ? n : undefined; };
   const any = TESTS.some((t) => num(vals[t.id] ?? '') !== undefined) || num(height) !== undefined;
@@ -207,7 +237,8 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
 
   return (
     <div className="animate-pop">
-      <h2 className="h-sec mb-3">Test day</h2>
+      <BackButton onClick={onCancel} label="Your card" destination="your card" />
+      <p className="eyebrow mb-2">Test day</p>
       <h1 className="h-page">Record the numbers</h1>
       <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
         Best attempt for each. Leave anything you skipped blank.

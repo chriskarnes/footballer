@@ -1,6 +1,7 @@
 'use server';
 import { drillTags } from '@/lib/academy-week';
 import { allowed, client, logCall, MODEL } from '@/lib/ai';
+import { plain } from '@/lib/plain-error';
 import { getViewer } from '@/lib/viewer';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
@@ -28,6 +29,13 @@ const SYSTEM = 'You help a youth soccer trainer personalise at-home training. Ch
  * Gemini when there's a key; a plain rule when there isn't, or it fails.
  */
 export async function suggestAddon(userId: string): Promise<Suggestion> {
+  // Any failure reading the academy or the player comes back as a sentence
+  // on the form, not the error page.
+  try { return await suggest(userId); }
+  catch (e) { return { ok: false, error: plain(e, 'Couldn’t suggest one just now. Pick a drill instead.') }; }
+}
+
+async function suggest(userId: string): Promise<Suggestion> {
   const v = await getViewer();
   if (!v.academy || !v.staff) return { ok: false, error: 'Only trainers can do that.' };
   const content = await loadContent(v.db, v.academy.id);

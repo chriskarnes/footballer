@@ -9,6 +9,7 @@ import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
+import { LoadFailed } from '@/components/coach/LoadFailed';
 import { meetingLabel, programWeek, sessionsForWeek } from '@/lib/academy-week';
 import { detailOf, localDate, byAttention } from '@/lib/progress';
 import { PageHead } from '@/components/coach/PageHead';
@@ -26,9 +27,10 @@ export default async function GroupPage({ params }: {
   const gate = await staffOnly(`/coach/groups/${id}`);
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
-  const [c, { players }] = await Promise.all([loadContent(db, academy.id), loadPlayers(db, academy)]);
+  const [c, { players, error }] = await Promise.all([loadContent(db, academy.id), loadPlayers(db, academy)]);
   const g = c.groups.find((x) => x.id === id);
   if (!g) notFound();
+  if (error) return <LoadFailed title={g.name} path={`/coach/groups/${id}`} back={{ href: '/coach/groups', label: 'Groups' }} />;
 
   const today = localDate(new Date(), academy.timeZone);
   const program = c.programs.find((p) => p.id === g.program_id);
@@ -44,7 +46,9 @@ export default async function GroupPage({ params }: {
         : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${g.starts_on}` : 'finished'}`
     : null].filter(Boolean).join(' · ');
 
-  const noteGroups = c.groups.filter((x) => !x.archived).map((x) => ({
+  // This group stays on the list even when finished: Send a note here is to it,
+  // and without it the note fell back to Everyone.
+  const noteGroups = c.groups.filter((x) => !x.archived || x.id === g.id).map((x) => ({
     id: x.id, name: x.name,
     members: c.memberships.filter((m) => m.group_id === x.id && players.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
   }));

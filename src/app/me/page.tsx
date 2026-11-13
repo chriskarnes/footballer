@@ -135,10 +135,11 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
     return (
       <div>
         <BrandBand>
-          <BandTag>Me</BandTag>
+          {/* A failed link from the trainer area lands here too: say so in its words. */}
+          <BandTag>{next.startsWith('/coach') ? 'Trainer' : 'Me'}</BandTag>
           <BandTitle>Sign in</BandTitle>
           <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
-            Save your sessions and see your week.
+            {next.startsWith('/coach') ? 'Sign in with your trainer account.' : 'Save your sessions and see your week.'}
           </p>
         </BrandBand>
         {linkFailed && (

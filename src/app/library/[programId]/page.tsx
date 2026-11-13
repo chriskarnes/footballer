@@ -25,7 +25,7 @@ import { BlockSection, BlockStrip, SessionList, type Block, type CardSession } f
  */
 export default async function ProgramPage({ params }: { params: Promise<{ programId: string }> }) {
   const { programId } = await params;
-  if (!(await libraryAllowed())) return <LibraryLocked title="Library" />;
+  if (!(await libraryAllowed())) return <LibraryLocked title="Library" next="/library" />;
   const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);
   const program = programs.find((p) => p.id === programId);
   if (!program) notFound();

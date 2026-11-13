@@ -31,7 +31,7 @@ export default async function PlanPage({
   searchParams,
 }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const q = await searchParams;
-  if (!(await libraryAllowed())) return <LibraryLocked title="Plan" />;
+  if (!(await libraryAllowed())) return <LibraryLocked title="Plan" next="/plan" />;
   const one = (k: string) => (typeof q[k] === 'string' ? (q[k] as string) : undefined);
   const edit = one('edit'), view = one('plan'), fresh = !!one('new'), building = !!one('a');
 
@@ -48,6 +48,7 @@ export default async function PlanPage({
   }
 
   let signedIn = false;
+  let hasPlans = false;
   let history: HistoryRow[] = [];
   let profile: ProfileRow | null = null;
   let shown: PlanRow | null = null;
@@ -66,14 +67,16 @@ export default async function PlanPage({
         // Eight days back covers "this week" in any timezone; the browser
         // narrows it to its own Monday.
         const since = new Date(Date.now() - 8 * 86400000).toISOString();
-        const [{ data: rows }, { data: prof }, { data: done }] = await Promise.all([
+        const [{ data: rows }, { data: prof }, { data: done }, { count: planCount }] = await Promise.all([
           db.from('workouts').select('created_at,planned_minutes,actual_minutes,spec,status')
             .order('created_at', { ascending: false }).limit(50),
           db.from('profiles').select('level,equipment,home_only,season_phase,weaknesses')
             .eq('id', uid).maybeSingle(),
           db.from('workouts').select('source_ref,completed_at')
             .eq('status', 'completed').eq('source', 'library').gte('completed_at', since),
+          db.from('plans').select('id', { count: 'exact', head: true }).eq('user_id', uid),
         ]);
+        hasPlans = (planCount ?? 0) > 0;
         history = rows ?? [];
         profile = prof ?? null;
         completions = done ?? [];
@@ -98,7 +101,8 @@ export default async function PlanPage({
   // Plan opens like the other tabs: the band, with this week's name on it.
   // The way to every saved week sits in its corner, since the list of plans
   // lives on Me.
-  const toPlans = signedIn ? (
+  // Only with a plan saved: Me lists them, and with none the link landed on nothing.
+  const toPlans = hasPlans ? (
     <Link href="/me#plans" className="underline underline-offset-4">Your plans</Link>
   ) : undefined;
 

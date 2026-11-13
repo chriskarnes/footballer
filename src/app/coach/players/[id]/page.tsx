@@ -4,6 +4,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { RemovePlayer } from '@/components/coach/RemovePlayer';
 import { loadPlayers } from '@/lib/coach-data';
+import { LoadFailed } from '@/components/coach/LoadFailed';
 import { addDays, localDate, mondayOf, sinceLabel } from '@/lib/progress';
 import { loadContent, targetFor } from '@/lib/academy-data';
 import { PlayerPlan } from '@/components/coach/PlayerPlan';
@@ -34,7 +35,7 @@ export default async function PlayerPage({ params }: {
   const { db, academy } = gate.viewer;
 
   const content = await loadContent(db, academy.id);
-  const [{ players }, { data: notes }, { data: runsRaw }] = await Promise.all([
+  const [{ players, error }, { data: notes }, { data: runsRaw }] = await Promise.all([
     loadPlayers(db, academy, { player: id, days: 120, content }),
     db.from('note_recipients')
       .select('seen_at, notes!inner(id, body, kind, author_name, created_at, academy_id)')
@@ -45,6 +46,7 @@ export default async function PlayerPage({ params }: {
   const runs: Record<string, { feel: 'easy' | 'right' | 'hard' | null }> = {};
   for (const r of ((runsRaw ?? []) as { user_id: string; source: string; source_ref: string | null; feel?: 'easy' | 'right' | 'hard' | null }[]))
     if (r.user_id === id && r.source === 'academy' && r.source_ref) runs[r.source_ref] = { feel: r.feel ?? runs[r.source_ref]?.feel ?? null };
+  if (error) return <LoadFailed title="Player" path={`/coach/players/${id}`} back={{ href: '/coach', label: 'Players' }} />;
   const p = players[0];
   if (!p) notFound();
   const pr = p.progress;

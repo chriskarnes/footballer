@@ -1,6 +1,7 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { joinAcademy } from '@/app/join/actions';
+import { SignOut } from './SignOut';
 
 /** The last step for someone already signed in: one card, one button. */
 export function JoinButton({ code, label, email, who }: { code: string; label: string; email: string; who?: 'player' | 'parent' }) {
@@ -9,7 +10,10 @@ export function JoinButton({ code, label, email, who }: { code: string; label: s
   return (
     <div className="card p-5">
       <div className="h-card">{label}</div>
-      <p className="mt-1 text-body text-on-surface-variant">Signed in as {email}.</p>
+      {/* A shared phone: whoever signed in last isn't always who's joining. */}
+      <p className="mt-1 text-body text-on-surface-variant">
+        Signed in as {email}. Not you? <SignOut to={`/join/${code}`} className="pressable font-semibold text-on-surface underline underline-offset-4" />
+      </p>
       <button type="button" disabled={pending} className="btn-primary pressable mt-4 w-full"
               onClick={() => start(async () => { const r = await joinAcademy(code, who); if (r && !r.ok) setErr(r.error); })}>
         {pending ? 'Joining…' : 'Join'}

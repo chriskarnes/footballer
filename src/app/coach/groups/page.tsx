@@ -5,6 +5,7 @@ import { StatusDot } from '@/components/coach/WeekDots';
 import { PageHead } from '@/components/coach/PageHead';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
+import { LoadFailed } from '@/components/coach/LoadFailed';
 import { meetingLabel, programWeek } from '@/lib/academy-week';
 import { localDate } from '@/lib/progress';
 import { Empty } from '@/components/coach/Empty';
@@ -19,7 +20,8 @@ export default async function GroupsPage() {
   const gate = await staffOnly('/coach/groups');
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
-  const [c, { players }] = await Promise.all([loadContent(db, academy.id), loadPlayers(db, academy)]);
+  const [c, { players, error }] = await Promise.all([loadContent(db, academy.id), loadPlayers(db, academy)]);
+  if (error) return <LoadFailed title="Groups" path="/coach/groups" />;
   const today = localDate(new Date(), academy.timeZone);
   const active = c.groups.filter((g) => !g.archived);
   const archived = c.groups.filter((g) => g.archived);

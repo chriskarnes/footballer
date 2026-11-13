@@ -6,6 +6,7 @@ import { StatusDot } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
 import { teamDays } from '@/lib/academy-week';
 import { loadPlayers } from '@/lib/coach-data';
+import { LoadFailed } from '@/components/coach/LoadFailed';
 import { byAttention, localDate, weekdayOf } from '@/lib/progress';
 
 export const metadata = { title: 'This week', robots: { index: false } };
@@ -24,7 +25,8 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
   const { db, academy } = gate.viewer;
   const { group } = await searchParams;
   const content = await loadContent(db, academy.id);
-  const { players: all } = await loadPlayers(db, academy, { content });
+  const { players: all, error } = await loadPlayers(db, academy, { content });
+  if (error) return <LoadFailed title="This week" path="/coach/week" />;
   all.sort(byAttention);
   const groups = content.groups.filter((g) => !g.archived);
   const inGroup = groups.find((g) => g.id === group);

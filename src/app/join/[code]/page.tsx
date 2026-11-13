@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { SignIn } from '@/components/SignIn';
+import { SignOut } from '@/components/SignOut';
 import { Brand } from '@/components/Brand';
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { JoinFlow } from '@/components/JoinFlow';
@@ -72,7 +72,9 @@ export default async function JoinPage({ params, searchParams }: {
         {v.user && already ? (
           <div className="card p-5">
             <div className="h-card">You&rsquo;re already in</div>
-            <p className="mt-1 text-body text-on-surface-variant">Signed in as {v.user.email}.</p>
+            <p className="mt-1 text-body text-on-surface-variant">
+              Signed in as {v.user.email}. Not you? <SignOut to={`/join/${code}`} className="pressable font-semibold text-on-surface underline underline-offset-4" />
+            </p>
             <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>

@@ -51,7 +51,8 @@ export default async function SpeedSessionPage({
       sessionRef={s.id}
       source="speed"
       back={back}
-      completedAt={completedAt}
+      // From history it's "do it again": open ready to start, not on Completed.
+      completedAt={from === 'history' ? [] : completedAt}
     />
   );
 }

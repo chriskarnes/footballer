@@ -30,7 +30,7 @@ export default async function LibraryPage() {
   if (!(await libraryAllowed())) {
     // Their academy's own library, when their trainer lets them browse it.
     const own = await AcademyLibrary({});
-    return own ? <div className="animate-pop">{own}</div> : <LibraryLocked title="Library" />;
+    return own ? <div className="animate-pop">{own}</div> : <LibraryLocked title="Library" next="/library" />;
   }
   const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);
   const categories = ['Technical', 'Physical', 'Finishing & Crossing'];

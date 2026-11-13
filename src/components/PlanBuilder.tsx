@@ -87,6 +87,7 @@ function Builder({
   const [intake, setIntake] = useState<PlanIntake>(editing?.intake ?? prefill.intake);
   const [save, setSave] = useState<'idle' | 'saving' | 'signin' | 'error'>('idle');
   const [error, setError] = useState('');
+  const [full, setFull] = useState(false);
   // Whether this visit pushed the result step — if so Back is the back
   // gesture; if the week arrived by URL, going back would leave the tab.
   const pushed = useRef(false);
@@ -111,6 +112,9 @@ function Builder({
 
   function toggleWeakness(f: FocusArea) {
     const cur = intake.weaknesses;
+    // A fifth pick used to vanish without a word.
+    if (!cur.includes(f) && cur.length >= 4) { setFull(true); return; }
+    setFull(false);
     // Order carries meaning — the first is weighted highest — so a new pick goes
     // on the end rather than wherever the label list happens to put it.
     set({
@@ -314,6 +318,7 @@ function Builder({
         <p className="mt-1 text-body text-on-surface-variant">
           In order — the first one gets the most time. Up to four.
         </p>
+        {full && <p role="status" className="hint-in mt-2 text-body font-semibold text-on-surface">That’s four. Tap one to take it off first.</p>}
         <div className="mt-3.5 flex flex-wrap gap-2">
           {(Object.keys(FOCUS_LABELS) as FocusArea[]).map((f) => {
             const rank = intake.weaknesses.indexOf(f);

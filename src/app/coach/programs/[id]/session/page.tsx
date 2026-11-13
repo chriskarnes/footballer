@@ -17,7 +17,9 @@ export default async function SessionEditPage({ params, searchParams }: {
 }) {
   const { id } = await params;
   const q = await searchParams;
-  const gate = await staffOnly(`/coach/programs/${id}`);
+  // Signing in comes back to this editor, with its week and session.
+  const back = new URLSearchParams(Object.entries(q).filter((e): e is [string, string] => typeof e[1] === 'string'));
+  const gate = await staffOnly(`/coach/programs/${id}/session${back.size ? `?${back}` : ''}`);
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
   const c = await loadContent(db, academy.id);

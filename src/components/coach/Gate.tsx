@@ -1,5 +1,6 @@
 import { SignIn } from '@/components/SignIn';
 import { getViewer } from '@/lib/viewer';
+import { SignOut } from '@/components/SignOut';
 
 /**
  * The trainer area's front door. Returns the viewer when they're staff here,
@@ -14,7 +15,11 @@ export async function staffOnly(next: string) {
     return { page: <Note title={`${v.academy.name} trainers`}>Sign in with your trainer account.<div className="mt-5"><SignIn next={next} /></div></Note> };
   }
   if (!v.staff) {
-    return { page: <Note title="Trainers only">This account isn&rsquo;t a trainer at {v.academy.name}. Ask the owner for the trainer invite link.</Note> };
+    return { page: <Note title="Trainers only">
+      This account ({v.user.email}) isn&rsquo;t a trainer at {v.academy.name}. Sign in with your trainer
+      account, or ask the owner for the trainer invite link.
+      <div className="mt-5"><SignOut to={next} className="btn-ghost pressable" /></div>
+    </Note> };
   }
   return { viewer: v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> } };
 }

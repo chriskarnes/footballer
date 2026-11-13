@@ -20,7 +20,8 @@ import { SpeedInvite } from './SpeedInvite';
  * Someone signed out, or signed in but not in this academy, has no trainer
  * yet: they're told how in, not that a trainer hasn't set anything.
  */
-export async function LibraryLocked({ title }: { title: string }) {
+/** `next` is where signing in returns: the tab this was shown on. */
+export async function LibraryLocked({ title, next = '/' }: { title: string; next?: string }) {
   const v = await getViewer().catch(() => null);
   if (v?.academy && (!v.user || !v.role)) {
     // Asked already: they're waiting on the trainer, not being told to ask.
@@ -48,7 +49,7 @@ export async function LibraryLocked({ title }: { title: string }) {
                     : `Your sessions from ${v.academy.name} are here once you sign in.`}
           </p>
         </BrandBand>
-        {!v.user && <div className="mt-5"><SignIn next="/" /></div>}
+        {!v.user && <div className="mt-5"><SignIn next={next} /></div>}
         <p className="mt-5 text-center text-body text-on-surface-variant">
           {v.user ? 'Got a link from your trainer? Open it. ' : 'New here? '}
           <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">Ask to join</Link>
