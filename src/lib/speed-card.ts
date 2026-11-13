@@ -13,7 +13,8 @@ import { browserClient } from './supabase/client';
  *
  * Sync: the first time a phone meets the account, the two are merged (a day
  * on either is kept). After that the account is the truth, so a day deleted
- * on one phone doesn't come back from another.
+ * on one phone doesn't come back from another, unless this phone has a
+ * change the account hasn't got yet (DIRTY): then the phone's is sent.
  */
 
 export interface TestEntry {
@@ -62,19 +63,29 @@ async function account() {
   } catch { return null; }
 }
 
-/** Saves the card to the account. Quietly: the phone's copy is already kept. */
-async function upload(entries: TestEntry[]) {
+/** Set while the phone has a change the account hasn't got yet (saved offline,
+ *  or the upload failed). While it's set, the phone's copy wins the next sync. */
+const DIRTY = 'forge.speed.card.dirty';
+const flag = (on: boolean) => { try { if (on) localStorage.setItem(DIRTY, '1'); else localStorage.removeItem(DIRTY); } catch { /* fine */ } };
+const isDirty = () => { try { return localStorage.getItem(DIRTY) === '1'; } catch { return false; } };
+
+/** Saves the card to the account; true when it got there. */
+async function upload(entries: TestEntry[]): Promise<boolean> {
   const me = await account();
-  if (!me) return;
-  try { await me.db.from('profiles').update({ speed_tests: entries }).eq('id', me.id); } catch { /* next time */ }
+  if (!me) return false;
+  try {
+    const { error } = await me.db.from('profiles').update({ speed_tests: entries }).eq('id', me.id);
+    if (error) return false;
+    flag(false);
+    return true;
+  } catch { return false; }
 }
 
 export function useSpeedCard() {
   const [entries, setEntries] = useState<TestEntry[]>([]);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const local = read();
-    setEntries(local); setReady(true);
+    setEntries(read()); setReady(true);
     let live = true;
     (async () => {
       const me = await account();
@@ -82,29 +93,33 @@ export function useSpeedCard() {
       const { data, error } = await me.db.from('profiles').select('speed_tests').eq('id', me.id).maybeSingle();
       if (error || !live) return;          // column not there yet (0024), or offline
       const remote = valid(data?.speed_tests) ? data.speed_tests : [];
-      let merged = remote;
-      // Merged once per phone. A phone that already synced with another
-      // account (a sibling on the family phone) takes this account's card
-      // as it is, rather than merging someone else's days into it.
+      // Read again now, not at mount: a day recorded while this was loading counts.
+      const local = read();
       let was: string | null = null;
       try { was = localStorage.getItem(SYNCED); } catch { /* fine */ }
-      if (was && was !== me.id) {
-        try { localStorage.setItem(SYNCED, me.id); } catch { /* fine */ }
+      let merged = remote;
+      if (was === me.id && isDirty()) {
+        // This phone changed it since the last sync (offline, say): the
+        // phone's copy is the newer one. Send it, don't overwrite it.
+        merged = local;
+        await upload(local);
       } else if (!was) {
         // First meeting: keep every day from both; the account's wins a clash.
+        // (Signing out clears the card and this mark, so a sibling's days on
+        // the family phone never get here: see page-cache.ts.)
         const days = new Map(local.map((e) => [e.date, e]));
         for (const e of remote) days.set(e.date, e);
         merged = [...days.values()].sort(byDate);
         if (merged.length !== remote.length) await upload(merged);
-        try { localStorage.setItem(SYNCED, me.id); } catch { /* fine */ }
       }
+      try { localStorage.setItem(SYNCED, me.id); } catch { /* fine */ }
       if (!live) return;
       setEntries(merged); write(merged);
     })();
     return () => { live = false; };
   }, []);
 
-  const save = (next: TestEntry[]) => { setEntries(next); write(next); upload(next); };
+  const save = (next: TestEntry[]) => { setEntries(next); write(next); flag(true); upload(next); };
   // One test day per date: recording the same day again replaces it, so the
   // date stays a key the table and Delete can rely on.
   const add = (e: TestEntry) => save([...entries.filter((x) => x.date !== e.date), e].sort(byDate));

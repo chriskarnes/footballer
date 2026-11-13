@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
+import { PENDING_SENT, pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
 import { browserClient } from '@/lib/supabase/client';
 import { notePageCacheUser } from '@/lib/page-cache';
 
@@ -22,17 +22,20 @@ export function PendingSaves() {
     // getSession reads the stored session without a request, so a signed-out
     // visitor with something waiting doesn't fire a 401 on every page load.
     const run = async () => {
-      let signedIn = false;
+      let uid: string | null = null;
       try {
         const { data } = await browserClient().auth.getSession();
-        signedIn = !!data.session;
+        uid = data.session?.user.id ?? null;
         // A different account on this phone than the cached pages were for.
-        await notePageCacheUser(data.session?.user.id ?? null);
+        await notePageCacheUser(uid);
       } catch { return; }   // Supabase not configured
-      if (!signedIn) return;
-      if (!pendingWorkout.peek() && !pendingPlan.peek() && !pendingFinish.peek()) return;
-      const saved = await Promise.all([pendingWorkout.flush(), pendingPlan.flush(), pendingFinish.flush()]);
-      if (saved.some(Boolean) && live) router.refresh();
+      if (!uid) return;
+      if (!pendingWorkout.peek(uid) && !pendingPlan.peek(uid) && !pendingFinish.peek(uid)) return;
+      const saved = await Promise.all([pendingWorkout.flush(uid), pendingPlan.flush(uid), pendingFinish.flush(uid)]);
+      if (saved.some(Boolean)) {
+        window.dispatchEvent(new Event(PENDING_SENT));
+        if (live) router.refresh();
+      }
     };
     run();
     // A session finished on a field with no signal goes as soon as there is one.

@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
 import { plain } from '@/lib/plain-error';
 
+const FEELS = ['easy', 'right', 'hard'];
+/** A finish time from the phone: kept when it's a real time, not in the future. */
+const playedAt = (v: unknown) =>
+  typeof v === 'string' && !Number.isNaN(Date.parse(v)) && Date.parse(v) <= Date.now() + 60_000 ? v : new Date().toISOString();
+
 /** Save a built session to history. This is what makes "order it again" possible. */
 export async function POST(req: Request) {
   const db = await serverClient();
@@ -23,9 +28,11 @@ export async function POST(req: Request) {
       // was actually done. completed_at comes from the client because a session
       // finished signed out is sent later, after sign-in — the time it was
       // sent is not the time it was played.
-      completed_at: body.status === 'completed' ? (body.completed_at ?? new Date().toISOString()) : null,
+      completed_at: body.status === 'completed' ? playedAt(body.completed_at) : null,
       actual_minutes: body.actual_minutes ?? null,
       actual_touches: body.actual_touches ?? null,
+      // Picked on the finish screen while it was waiting for a signal.
+      ...(FEELS.includes(body.feel) ? { feel: body.feel } : {}),
   };
   // A trainer's session keeps which drills were ticked on the row itself
   // (0012): progression reads it. Without the column yet, save without it.
@@ -48,7 +55,7 @@ export async function POST(req: Request) {
     await db.from('workout_items').insert(
       body.exercise_ids.map((id: string, i: number) => ({
         workout_id: data.id, exercise_id: id, position: i,
-        done: done.has(id), done_at: done.has(id) ? (body.completed_at ?? new Date().toISOString()) : null,
+        done: done.has(id), done_at: done.has(id) ? row.completed_at : null,
       }))
     );
   }
@@ -62,8 +69,9 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
   const body = await req.json();
-  // How it felt, after the fact: just that, on a finished session.
-  if (body.feel !== undefined && body.id) {
+  // How it felt, after the fact: just that, on a finished session. (A queued
+  // finish carries its feel too, with the rest: that's the branch below.)
+  if (body.feel !== undefined && body.id && body.actual_minutes === undefined) {
     if (!['easy', 'right', 'hard'].includes(body.feel)) return NextResponse.json({ error: 'feel is easy, right or hard' }, { status: 400 });
     const { error } = await db.from('workouts').update({ feel: body.feel }).eq('id', body.id).eq('user_id', user.id);
     if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
@@ -71,21 +79,21 @@ export async function PATCH(req: Request) {
   }
   const { id, doneIds, actual_minutes, actual_touches } = body;
   // A finish sent later (no signal at the time) keeps the time it was played.
-  const at = typeof body.completed_at === 'string' && !Number.isNaN(Date.parse(body.completed_at))
-    && Date.parse(body.completed_at) <= Date.now() + 60_000 ? body.completed_at : new Date().toISOString();
+  const at = playedAt(body.completed_at);
   const { error } = await db.from('workouts')
     .update({
       status: 'completed',
       completed_at: at,
       actual_minutes: actual_minutes ?? null,
       actual_touches: actual_touches ?? null,
+      ...(FEELS.includes(body.feel) ? { feel: body.feel } : {}),
     })
     .eq('id', id).eq('user_id', user.id);
   if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
 
   if (Array.isArray(doneIds) && doneIds.length) {
     await db.from('workout_items')
-      .update({ done: true, done_at: new Date().toISOString() })
+      .update({ done: true, done_at: at })
       .eq('workout_id', id).in('exercise_id', doneIds);
   }
   return NextResponse.json({ ok: true });

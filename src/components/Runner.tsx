@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { Exercise } from '@/lib/types';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
-import { pendingFinish, pendingWorkout } from '@/lib/pending';
+import { PENDING_SENT, pendingFinish, pendingWorkout } from '@/lib/pending';
+import { browserClient } from '@/lib/supabase/client';
 import { EFFORT } from '@/lib/speed-guide';
 import { isYoutubeShort, youtubeId } from '@/lib/video';
 import { Avatar } from './Avatar';
@@ -125,7 +126,9 @@ export function Runner({
   // to another tab and back: kept on the phone until Finish, for half a day.
   const tickKey = `forge.ticks:${workoutId ?? sessionRef ?? title}:${drills.map((d) => d.id).join(',')}`;
   useEffect(() => {
-    if (completedDay !== null || completedAt?.length) return;
+    // Done this week already: it opens as done, not half-ticked. A Speed
+    // session done last week (same id, next week of the block) still restores.
+    if (completedDay !== null || (completedAt?.length && firstThisWeek(completedAt) !== null)) return;
     try {
       const raw = localStorage.getItem(tickKey);
       if (!raw) return;
@@ -215,7 +218,10 @@ export function Runner({
       // This used to say "Saved to your history" whatever came back, and Train
       // needs no account — so most first sessions were reported saved and
       // weren't. A signed-out finish is kept in this browser until sign-in.
-      if (res.status === 401 && !workoutId) { pendingWorkout.stash(body); setSave('signin'); }
+      if (res.status === 401 && !workoutId) {
+        queued.current = { q: pendingWorkout, id: pendingWorkout.stash(feelRef.current ? { ...body, feel: feelRef.current } : body), body };
+        setSave('signin');
+      }
       else {
         setSave(res.ok ? 'saved' : 'error');
         if (res.ok && !workoutId) {
@@ -224,16 +230,32 @@ export function Runner({
         }
       }
     } catch {
-      // No signal (a field, a basement gym): keep it on the phone and send it
-      // when the signal's back, rather than ask them to remember to retry.
-      (workoutId ? pendingFinish : pendingWorkout).stash(body);
-      setSave('queued');
+      // No signal (a field, a basement gym): keep it on the phone, marked as
+      // this account's, and send it when the signal's back. Signed out, it
+      // waits for a sign-in instead, and says so.
+      let uid: string | null = null;
+      try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
+      if (!uid && workoutId) { setSave('error'); return; }
+      const q = workoutId ? pendingFinish : pendingWorkout;
+      queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
+      setSave(uid ? 'queued' : 'signin');
     }
   }
+
+  // A finish waiting on the phone: the feel rides with it, and the screen
+  // says "saved" once PendingSaves has sent it.
+  const queued = useRef<{ q: typeof pendingWorkout; id: string; body: Record<string, unknown> } | null>(null);
+  useEffect(() => {
+    if (save !== 'queued') return;
+    const sent = () => { if (queued.current && !queued.current.q.has(queued.current.id)) setSave('saved'); };
+    window.addEventListener(PENDING_SENT, sent);
+    return () => window.removeEventListener(PENDING_SENT, sent);
+  }, [save]);
 
   const pickFeel = (k: Feel) => {
     setFeel(k); feelRef.current = k; haptic('tap');
     if (savedId) sendFeel(savedId, k);
+    else if (queued.current) queued.current.q.update(queued.current.id, { ...queued.current.body, feel: k });
   };
 
   function finish() {
