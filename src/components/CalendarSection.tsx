@@ -75,7 +75,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
                   onClick={async () => { const j = await call('POST', { time_zone: zone() }); if (j) setFeed(j); }}>
             {busy ? 'One moment…' : 'Add to my calendar'}
           </button>
-          {err && <p role="status" className="mt-2 text-body-sm font-semibold text-error">Couldn&rsquo;t turn it on: {err}</p>}
+          {err && <p role="alert" className="mt-2 text-body-sm font-semibold text-on-surface">Couldn&rsquo;t turn it on: {err}</p>}
         </div>
       </section>
     );
@@ -138,7 +138,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
             : 'Each session sits at the top of its day, without blocking any time.'}
         </p>
 
-        {err && <p role="status" className="mt-3 text-body-sm font-semibold text-error">{err}</p>}
+        {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
 
         <div className="mt-6 flex gap-5 border-t border-outline-variant pt-4 text-body-sm font-semibold text-on-surface-variant">
           <button type="button" className="underline underline-offset-4" onClick={() => setConfirm('reset')}>Reset link</button>

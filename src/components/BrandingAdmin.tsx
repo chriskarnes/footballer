@@ -206,7 +206,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
           {saving ? 'Saving…' : dirty ? 'Save brand' : 'Saved'}
         </button>
         {status && (
-          <p role="status" className={`mt-3 text-body-sm font-semibold ${status.tone === 'err' ? 'text-error' : 'text-on-surface-variant'}`}>
+          <p role={status.tone === 'err' ? 'alert' : 'status'} className={`mt-3 text-body-sm font-semibold ${status.tone === 'err' ? 'text-on-surface' : 'text-on-surface-variant'}`}>
             {status.text}
           </p>
         )}

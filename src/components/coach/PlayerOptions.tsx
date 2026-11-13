@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
 import { savePlayerOptions } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
@@ -13,6 +14,7 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
   library: boolean; extras: number; speed: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
   const [library, setLibrary] = useState(savedLibrary);
@@ -23,7 +25,7 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
   const save = () => start(async () => {
     setErr('');
     const r = await savePlayerOptions(library, extras, speed);
-    if (!r.ok) setErr(r.error); else router.refresh();
+    if (!r.ok) setErr(r.error); else { toast('Saved.'); router.refresh(); }
   });
 
   return (

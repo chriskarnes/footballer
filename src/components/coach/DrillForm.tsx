@@ -6,6 +6,8 @@ import { Chip } from '@/components/Chip';
 import { youtubeId } from '@/lib/video';
 import { Field, FormError } from './Field';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { useRouter } from 'next/navigation';
+import { useToast } from './Toast';
 import { drillTags, type DrillRow } from '@/lib/academy-week';
 
 const MAX_TAGS = 3;
@@ -32,6 +34,9 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
   }, [state, onSaved]);
   const [video, setVideo] = useState(drill?.video_url ?? '');
   const [confirm, setConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
   const [gone, setGone] = useState('');
   // In the order picked: the first is the drill's main focus.
   const [tags, setTags] = useState<FocusArea[]>(drillTags(drill ?? { focus: null }).filter((t): t is FocusArea => t in FOCUS_LABELS));
@@ -91,19 +96,22 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
       <div className={onCancel ? 'grid grid-cols-2 gap-2.5' : ''}>
         {onCancel && <button type="button" onClick={onCancel} className="btn-ghost pressable">Cancel</button>}
         <button type="submit" disabled={pending} className="btn-primary pressable w-full">
-          {pending ? 'Saving…' : onSaved ? 'Save and add' : 'Save drill'}
+          {pending ? 'Saving…' : onSaved ? 'Create and add' : drill ? 'Save' : 'Create drill'}
         </button>
       </div>
       {drill && (
         <>
           <button type="button" className="w-full text-center text-body font-semibold text-on-surface-variant underline underline-offset-4"
                   onClick={() => setConfirm(true)}>Delete this drill</button>
-          <ConfirmSheet open={confirm} title="Delete this drill?" confirmLabel="Delete"
+          <ConfirmSheet open={confirm} busy={deleting} title="Delete this drill?" confirmLabel="Delete"
             body="It comes out of every session that uses it."
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
+              setDeleting(true);
               const r = await deleteDrill(drill.id);
-              if (r.ok) window.location.href = back; else { setConfirm(false); setGone(r.error); }
+              setDeleting(false); setConfirm(false);
+              // In the app, not a reload, so the toast survives the move.
+              if (r.ok) { toast('Drill deleted.'); router.push(back || '/coach/drills'); router.refresh(); } else setGone(r.error);
             }} />
           {gone && <p role="alert" className="text-center text-body font-semibold text-on-surface">{gone}</p>}
         </>

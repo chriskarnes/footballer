@@ -2,6 +2,8 @@
 import { useMemo, useState, useTransition } from 'react';
 import { saveSession, deleteSession, saveLibrarySession, deleteLibrarySession } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { useRouter } from 'next/navigation';
+import { useToast } from './Toast';
 import type { DrillRow } from '@/lib/academy-week';
 import { Field, FormError } from './Field';
 import { DrillForm } from './DrillForm';
@@ -133,7 +135,7 @@ export function SessionEditor({ target, session, drills: given }: {
             <>
               <button type="button" disabled={busy} className="btn-primary pressable w-full"
                       onClick={() => run(() => saveSession({ id, programId, week, ...body }))}>
-                {busy ? 'Saving…' : 'Save session'}
+                {busy ? 'Saving…' : id ? 'Save' : 'Create session'}
               </button>
               {id && <Remove label="Delete this session" title="Delete this session?" confirm="Delete"
                              body={`It comes out of week ${week}. The drills stay.`}
@@ -152,7 +154,7 @@ export function SessionEditor({ target, session, drills: given }: {
               )}
               <button type="button" disabled={busy} className="btn-primary pressable w-full"
                       onClick={() => run(() => saveLibrarySession({ libraryId: id, ...body, back: target.back ?? '/coach/sessions' }))}>
-                {busy ? 'Saving…' : 'Save session'}
+                {busy ? 'Saving…' : id ? 'Save' : 'Create session'}
               </button>
               {id && (usedIn.length
                 ? <p className="text-center text-body text-on-surface-variant">To delete it, take it out of those weeks first.</p>
@@ -177,7 +179,7 @@ export function SessionEditor({ target, session, drills: given }: {
                       !placementId ? { ...body, place: { programId, week }, back }
                         : libraryId ? { libraryId, ...body, back }
                         : { relink: placementId, ...body, back }))}>
-              {busy ? 'Saving…' : shared ? `Save everywhere it’s used` : 'Save session'}
+              {busy ? 'Saving…' : shared ? `Save everywhere it’s used` : placementId ? 'Save' : 'Create session'}
             </button>
             {shared && placementId && (
               <button type="button" disabled={busy} className="btn-ghost pressable w-full"
@@ -203,6 +205,8 @@ function Remove({ label, title, body, confirm, run, then }: {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const router = useRouter();
+  const toast = useToast();
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
@@ -213,7 +217,9 @@ function Remove({ label, title, body, confirm, run, then }: {
         onConfirm={async () => {
           setBusy(true);
           const r = await run();
-          if (r.ok) window.location.href = then; else { setBusy(false); setOpen(false); setErr(r.error ?? 'Couldn’t do that.'); }
+          setBusy(false); setOpen(false);
+          if (r.ok) { toast(confirm === 'Delete' ? 'Session deleted.' : 'Taken out.'); router.push(then); router.refresh(); }
+          else setErr(r.error ?? 'Couldn’t do that.');
         }} />
     </>
   );

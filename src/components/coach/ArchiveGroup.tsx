@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
 import { archiveGroup } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
@@ -14,12 +15,14 @@ export function ArchiveGroup({ id, name, archived }: { id: string; name: string;
   const [asking, setAsking] = useState(false);
   const [err, setErr] = useState('');
   const router = useRouter();
+  const toast = useToast();
 
   const go = () => start(async () => {
     setErr('');
     const r = await archiveGroup(id, !archived);
     if (!r.ok) { setErr(r.error); setAsking(false); return; }
     setAsking(false);
+    toast(archived ? 'Group back in use.' : 'Group finished.');
     router.push(archived ? `/coach/groups/${id}` : '/coach/groups');
     router.refresh();
   });

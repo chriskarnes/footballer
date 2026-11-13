@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
 import { saveDefaults } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
@@ -13,6 +14,7 @@ import type { Defaults } from '@/lib/academy-data';
  */
 export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used: number; limit: number; on: boolean } | null }) {
   const router = useRouter();
+  const toast = useToast();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
   const [sessions, setSessions] = useState(defaults.sessions);
@@ -23,7 +25,7 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
   const save = () => start(async () => {
     setErr('');
     const r = await saveDefaults(sessions, minutes, progress);
-    if (!r.ok) setErr(r.error); else router.refresh();
+    if (!r.ok) setErr(r.error); else { toast('Saved.'); router.refresh(); }
   });
 
   return (

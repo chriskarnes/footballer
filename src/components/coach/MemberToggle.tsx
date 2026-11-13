@@ -29,7 +29,7 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-body-lg font-semibold text-on-surface">{name}</span>
-        {(detail || err) && <span className="block truncate text-body-sm text-on-surface-variant">{err ? 'Couldn’t save. Try again.' : detail}</span>}
+        {(detail || err) && <span role={err ? 'alert' : undefined} className={`block truncate text-body-sm ${err ? 'font-semibold text-on-surface' : 'text-on-surface-variant'}`}>{err ? 'Couldn’t save. Try again.' : detail}</span>}
       </span>
     </button>
   );

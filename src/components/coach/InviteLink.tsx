@@ -47,7 +47,7 @@ export function InviteLink({ path, role, canRotate = true }: {
           Replace this link
         </button>
       )}
-      {err && <p role="status" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
       <ConfirmSheet open={confirm} busy={busy} title="Make a new link?" confirmLabel="New link"
         body={`The old ${role} link stops working. Anyone who already joined stays.`}
         onCancel={() => setConfirm(false)}

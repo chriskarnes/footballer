@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useToast } from '@/components/coach/Toast';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { setDrillSessions } from '@/app/coach/content-actions';
@@ -28,6 +29,7 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
+  const toast = useToast();
   const changed = on.size !== saved.size || [...on].some((id) => !saved.has(id));
 
   const flip = (id: string) => setOn((xs) => { const n = new Set(xs); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -39,6 +41,7 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
     // On failure the page is read again, so the ticks show what was saved.
     if (!r.ok) { setError(r.error); router.refresh(); return; }
     setSaved(new Set(on));
+    toast('Saved.');
     if (fresh) router.push('/coach/drills'); else router.refresh();
   });
 
@@ -81,7 +84,7 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
       {error && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{error}</p>}
       <div className="mt-5 flex flex-wrap gap-2.5">
         <button type="button" onClick={save} disabled={pending || (!changed && !fresh)} className="btn-primary btn-sm pressable">
-          {pending ? 'Saving…' : fresh ? (on.size ? `Add to ${on.size} ${on.size === 1 ? 'session' : 'sessions'}` : 'Done') : 'Save sessions'}
+          {pending ? 'Saving…' : fresh ? (on.size ? `Add to ${on.size} ${on.size === 1 ? 'session' : 'sessions'}` : 'Done') : 'Save'}
         </button>
         {fresh && <Link href="/coach/drills" className="btn-ghost btn-sm pressable">Skip</Link>}
       </div>

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
+import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
 import { saveSoccerDays } from '@/app/schedule-actions';
 import type { TeamDays } from '@/lib/academy-week';
@@ -83,6 +84,8 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
+  // Only the trainer area has a toast; for a player this does nothing.
+  const toast = useToast();
 
   // A fresh answer from the server (another device, the trainer) replaces both.
   const key = days ? `${days.trainer}|${days.practice}|${days.games}` : 'unset';
@@ -101,6 +104,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
     const r = await saveSoccerDays({ ...fromWeek(week), userId });
     if (!r.ok) { setError(r.error); return; }
     setSaved(week);
+    toast('Saved.');
     router.refresh();
   });
 

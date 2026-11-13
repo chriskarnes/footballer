@@ -1,5 +1,6 @@
 'use client';
 import { useState, useTransition } from 'react';
+import { useToast } from '@/components/coach/Toast';
 import { answerJoinRequest } from '@/app/coach/actions';
 
 export type JoinRequest = { user_id: string; name: string; message: string | null; created_at: string; when: string };
@@ -12,12 +13,13 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
   const [gone, setGone] = useState<string[]>([]);
   const [err, setErr] = useState('');
   const [busy, start] = useTransition();
+  const toast = useToast();
   const left = requests.filter((r) => !gone.includes(r.user_id));
   if (!left.length) return null;
 
   const answer = (id: string, yes: boolean) => start(async () => {
     const r = await answerJoinRequest(id, yes);
-    if (r.ok) setGone((g) => [...g, id]); else setErr(r.error);
+    if (r.ok) { setGone((g) => [...g, id]); toast(yes ? 'Let in.' : 'Turned away.'); } else setErr(r.error);
   });
 
   return (

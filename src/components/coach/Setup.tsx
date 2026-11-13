@@ -47,7 +47,7 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
       <button type="submit" disabled={busy} className="btn-primary pressable w-full">
         {busy ? 'Saving…' : 'Save'}
       </button>
-      {err && <p role="status" className="text-body font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="text-body font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }

@@ -28,7 +28,7 @@ export function ClaimButton({ code, name, email, hint }: { code: string; name: s
           <p><b>This link is for {hint}.</b> Sign out, then sign in with that address.</p>
           <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-3 min-h-12 w-full text-body-lg font-bold" />
         </div>
-      ) : err && <p role="status" className="mt-3 text-body font-semibold text-on-surface">{err}</p>}
+      ) : err && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

@@ -59,7 +59,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
             </p>
           </>
         )}
-        {err && <p role="status" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
+        {err && <p role="alert" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
       </div>
     );
   }
@@ -87,7 +87,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
       <button type="submit" disabled={busy} className="btn-primary btn-sm pressable mt-3">
         {busy ? 'Approving…' : 'Approve'}
       </button>
-      {err && <p role="status" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }
