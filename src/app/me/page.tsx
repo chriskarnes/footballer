@@ -1,4 +1,5 @@
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
+import { profileMissing } from '@/lib/profile-check';
 import Link from 'next/link';
 import { serverClient } from '@/lib/supabase/server';
 import { SignIn } from '@/components/SignIn';
@@ -58,10 +59,7 @@ async function readProfile(db: any, id: string): Promise<ProfileValues | null> {
  * and age and position still unasked. A null is unanswered; a missing column
  * (the fallback read above) isn't held against them.
  */
-function needsProfile(p: ProfileValues | null): boolean {
-  if (!p?.display_name) return true;
-  return p.age_band === null || p.positions === null || (Array.isArray(p.positions) && !p.positions.length);
-}
+const needsProfile = (p: ProfileValues | null) => profileMissing(p);
 
 /** When their photo last changed, or null: no photo, or the column isn't there yet (0016). */
 async function readAvatarAt(db: any, id: string): Promise<string | null> {
@@ -157,18 +155,18 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
   // Signed in, nothing done, nothing said about themselves: this is a new
   // account, and the four questions are worth more than an empty history list.
-  // Having trained already outranks an unfinished profile — someone mid-session
-  // should not be sent back to a form.
+  // Asked even if they've trained already (signed out, before joining):
+  // Train sends an unanswered player here, and Me has to be where it's asked.
   // Trainers aren't asked these: their name is asked on the trainer side.
   const staff = role === 'owner' || role === 'trainer';
-  if (needsProfile(profile) && !workouts.length && !staff) {
+  if (needsProfile(profile) && !staff) {
     return (
       <div>
         <BrandBand>
           <BandTag>Welcome</BandTag>
           <BandTitle>{signedUpBy === 'parent' ? 'Set your player up' : 'Let’s set you up'}</BandTitle>
         </BrandBand>
-        <ProfileSetup email={user.email} initial={profile ?? undefined} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} heading={false} />
+        <ProfileSetup email={user.email} initial={profile ?? undefined} next="/" parent={signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} heading={false} />
       </div>
     );
   }

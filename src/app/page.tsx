@@ -11,17 +11,19 @@ import { getMyWeek, getPlayerState } from '@/lib/player-week';
 import { Waiting } from '@/components/Waiting';
 import { redirect } from 'next/navigation';
 import { getViewer } from '@/lib/viewer';
+import { readProfileMissing } from '@/lib/profile-check';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
 export default async function TrainNowPage() {
-  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   // A player waiting on their trainer gets that, not the builder. Anyone
   // else (signed out, staff) is through this with no lookup.
   const state = await getPlayerState().catch(() => ({ kind: 'none' }) as const);
   // A new player who hasn't said who they are goes to Me first, the way
-  // joining with the link does. One let in from a join request arrives here
-  // with only the name they asked with.
+  // joining with the link does, in every academy: this comes before the
+  // library gate, which most academies stop at. One let in from a join
+  // request arrives here with only the name they asked with.
   if (state.kind === 'new' && await unanswered()) redirect('/me');
+  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;
   const exercises = await getExercises();
   return (
@@ -50,8 +52,7 @@ async function unanswered(): Promise<boolean> {
   try {
     const { db, user } = await getViewer();
     if (!user) return false;
-    const { data, error } = await db.from('profiles').select('display_name, age_band').eq('id', user.id).maybeSingle();
-    return !error && (!data?.display_name || !data?.age_band);
+    return await readProfileMissing(db, user.id);
   } catch { return false; }
 }
 

@@ -1,4 +1,5 @@
 'use server';
+import { readProfileMissing } from '@/lib/profile-check';
 import { redirect } from 'next/navigation';
 import { serverClient } from '@/lib/supabase/server';
 
@@ -26,6 +27,5 @@ export async function joinAcademy(code: string, who?: 'player' | 'parent') {
   // A new player is asked their name (and the rest) first, on Me; their
   // trainer sees that name, not an email address. A name alone isn't enough:
   // one let in from a join request has the name they asked with, and nothing else.
-  const { data: me } = user ? await db.from('profiles').select('display_name, age_band').eq('id', user.id).maybeSingle() : { data: null };
-  redirect(me?.display_name && me?.age_band ? '/?joined=1' : '/me');
+  redirect(user && !(await readProfileMissing(db, user.id)) ? '/?joined=1' : '/me');
 }
