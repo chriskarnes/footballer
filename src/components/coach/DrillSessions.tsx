@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import Link from 'next/link';
 import { useToast } from '@/components/coach/Toast';
 import { useState, useTransition } from 'react';
@@ -37,7 +38,7 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
     setError(null);
     const ids = [...on];
     const r = await setDrillSessions(drillId, ids.filter((x) => !x.startsWith('lib:')),
-      ids.filter((x) => x.startsWith('lib:')).map((x) => x.slice(4)));
+      ids.filter((x) => x.startsWith('lib:')).map((x) => x.slice(4))).catch(offline);
     // On failure the page is read again, so the ticks show what was saved.
     if (!r.ok) { setError(r.error); router.refresh(); return; }
     setSaved(new Set(on));

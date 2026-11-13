@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
@@ -19,7 +20,7 @@ export function CopyWeek({ programId, from, to, label }: { programId: string; fr
     <>
       <button type="button" disabled={busy} className="btn-ghost btn-sm pressable"
               onClick={() => start(async () => {
-                const r = await copyWeek(programId, from, to);
+                const r = await copyWeek(programId, from, to).catch(offline);
                 if (r.ok) { toast(label ? `Week ${to} is its own now. Change it below.` : `Copied to week ${to}.`); router.refresh(); }
                 else setErr(r.error);
               })}>

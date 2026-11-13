@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { setMembership } from '@/app/coach/content-actions';
@@ -18,7 +19,7 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
     <button type="button" role="switch" aria-checked={on} disabled={busy}
             onClick={() => start(async () => {
               const next = !on; setOn(next); setErr(false);
-              const r = await setMembership(groupId, userId, next);
+              const r = await setMembership(groupId, userId, next).catch(offline);
               if (!r.ok) { setOn(!next); setErr(true); }
               // The list of who's in it, above, is the server's: bring it up to date.
               else { toast(next ? `${first} is in the group.` : `${first} is out of the group.`); router.refresh(); }

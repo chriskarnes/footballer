@@ -1,4 +1,5 @@
 'use client';
+import { guarded, offline } from '@/lib/plain-error';
 import { useActionState, useState } from 'react';
 import { saveProgram, deleteProgram } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
@@ -9,7 +10,7 @@ import { Field, FormError, keepOnError } from './Field';
 /** A program's name, length and what it's for. Sessions are added week by week after. */
 /** `solo` is how many players have this program on their own, outside a group. */
 export function ProgramForm({ program, solo = 0 }: { program?: { id: string; name: string; description: string | null; weeks: number }; solo?: number }) {
-  const [state, action, pending] = useActionState(saveProgram, null);
+  const [state, action, pending] = useActionState(guarded(saveProgram), null);
   const [confirm, setConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
@@ -39,7 +40,7 @@ export function ProgramForm({ program, solo = 0 }: { program?: { id: string; nam
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
               setDeleting(true);
-              const r = await deleteProgram(program.id);
+              const r = await deleteProgram(program.id).catch(offline);
               setDeleting(false); setConfirm(false);
               if (r.ok) { toast('Program deleted.'); router.push('/coach/content'); router.refresh(); } else setGone(r.error);
             }} />

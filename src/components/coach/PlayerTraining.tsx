@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import Link from 'next/link';
 import { shortDate } from '@/lib/dates';
 import { useState, useTransition } from 'react';
@@ -22,7 +23,7 @@ function useRun() {
   // the error, which is drawn on the page behind it.
   const run = (f: () => Promise<{ ok: boolean; error?: string }>, after?: () => void, said = 'Saved.', close?: () => void) => start(async () => {
     setErr('');
-    const r = await f();
+    const r = await f().catch(offline);
     close?.();
     if (!r.ok) setErr(r.error ?? 'That didn’t work.'); else { after?.(); toast(said); router.refresh(); }
   });
@@ -178,7 +179,7 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
           <button type="button" disabled={busy} className="btn-ghost btn-sm pressable w-full"
                   onClick={() => start(async () => {
                     setErr(''); setSuggesting(true);
-                    const r = await suggestAddon(userId).finally(() => setSuggesting(false));
+                    const r = await suggestAddon(userId).catch(offline).finally(() => setSuggesting(false));
                     if (!r.ok) { setErr(r.error); return; }
                     setDrill(r.drillId); setNote(r.note); setWhy(`${r.by === 'ai' ? 'Suggested' : 'Picked'}: ${r.why}`);
                   })}>

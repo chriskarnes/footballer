@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,7 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
 
   const save = () => start(async () => {
     setErr('');
-    const r = await saveDefaults(sessions, minutes, progress);
+    const r = await saveDefaults(sessions, minutes, progress).catch(offline);
     if (!r.ok) setErr(r.error); else { toast('Saved.'); router.refresh(); }
   });
 

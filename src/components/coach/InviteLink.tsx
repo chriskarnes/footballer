@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useEffect, useState } from 'react';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { rotateInvite } from '@/app/coach/actions';
@@ -55,7 +56,7 @@ export function InviteLink({ path, role, canRotate = true }: {
         onCancel={() => setConfirm(false)}
         onConfirm={async () => {
           setBusy(true);
-          const r = await rotateInvite(role).catch(() => ({ ok: false as const, error: 'Couldn’t reach us. Check your signal and try again.' }));
+          const r = await rotateInvite(role).catch(offline);
           setBusy(false); setConfirm(false);
           if (r.ok) { setCurrent(`/join/${r.code}`); toast('New link made. The old one no longer works.'); } else setErr(r.error);
         }} />

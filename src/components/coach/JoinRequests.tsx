@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { answerJoinRequest } from '@/app/coach/actions';
@@ -18,7 +19,7 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
   if (!left.length) return null;
 
   const answer = (id: string, yes: boolean) => start(async () => {
-    const r = await answerJoinRequest(id, yes);
+    const r = await answerJoinRequest(id, yes).catch(offline);
     if (r.ok) { setGone((g) => [...g, id]); toast(r.already ? 'Someone already answered that one.' : yes ? 'Let in.' : 'Declined.'); }
     else setErr(r.error);
   });

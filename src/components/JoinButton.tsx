@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { joinAcademy } from '@/app/join/actions';
 import { SignOut } from './SignOut';
+import { offline } from '@/lib/plain-error';
 
 /** The last step for someone already signed in: one card, one button. */
 export function JoinButton({ code, label, email, who }: { code: string; label: string; email: string; who?: 'player' | 'parent' }) {
@@ -15,7 +16,7 @@ export function JoinButton({ code, label, email, who }: { code: string; label: s
         Signed in as {email}. Not you? <SignOut to={`/join/${code}`} className="pressable font-semibold text-on-surface underline underline-offset-4" />
       </p>
       <button type="button" disabled={pending} className="btn-primary pressable mt-4 w-full"
-              onClick={() => start(async () => { const r = await joinAcademy(code, who); if (r && !r.ok) setErr(r.error); })}>
+              onClick={() => start(async () => { const r = await joinAcademy(code, who).catch(offline); if (r && !r.ok) setErr(r.error); })}>
         {pending ? 'Joining…' : 'Join'}
       </button>
       {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}

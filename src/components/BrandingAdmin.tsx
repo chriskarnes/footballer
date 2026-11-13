@@ -7,6 +7,7 @@ import { brandCss, isHex } from '@/lib/brand-colors';
 import { LOGO_MAX_BYTES, LOGO_TYPES, PALETTES, type Branding } from '@/lib/branding';
 import { removeLogo, resetBranding, saveBranding, uploadLogo } from '@/app/admin/actions';
 import { ConfirmSheet } from './ConfirmSheet';
+import { offline } from '@/lib/plain-error';
 import { useToast } from './coach/Toast';
 
 /** 'none' is the monochrome app; 'custom' is two colours picked by hand. */
@@ -32,6 +33,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
   const [saving, startSave] = useTransition();
   const [logoBusy, startLogo] = useTransition();
   const [resetting, setResetting] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const file = useRef<HTMLInputElement>(null);
 
   const colours = useMemo(() => {
@@ -68,7 +70,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
       const r = await saveBranding({
         name, paletteId: choice === 'none' || choice === 'custom' ? null : choice,
         primary: colours?.primary ?? null, accent: colours?.accent ?? null,
-      });
+      }).catch(offline);
       // Success is the trainer area's toast, like every other save; a problem stays here, by the controls.
       if (r.ok) toast('Saved. Players see it on their next load.'); else setStatus({ tone: 'err', text: r.error });
       if (r.ok) router.refresh();
@@ -86,7 +88,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
     startLogo(async () => {
       const form = new FormData();
       form.set('logo', f);
-      const r = await uploadLogo(form);
+      const r = await uploadLogo(form).catch(offline);
       if (r.ok) { setLogo(preview); router.refresh(); }
       else { URL.revokeObjectURL(preview); setStatus({ tone: 'err', text: r.error }); }
     });
@@ -94,14 +96,16 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
 
   function dropLogo() {
     startLogo(async () => {
-      const r = await removeLogo();
+      const r = await removeLogo().catch(offline);
       if (r.ok) { setLogo(null); router.refresh(); } else setStatus({ tone: 'err', text: r.error });
     });
   }
 
   async function reset() {
-    const r = await resetBranding();
-    setResetting(false);
+    if (clearing) return;
+    setClearing(true);
+    const r = await resetBranding().catch(offline);
+    setClearing(false); setResetting(false);
     if (!r.ok) return setStatus({ tone: 'err', text: r.error });
     setChoice('none'); setLogo(null);
     toast('Back to black and white.');
@@ -221,7 +225,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
         </button>
       </div>
 
-      <ConfirmSheet open={resetting} title="Clear colors and logo?"
+      <ConfirmSheet open={resetting} busy={clearing} title="Clear colors and logo?"
         body="Your players go back to the black-and-white app. The academy keeps its name."
         confirmLabel="Clear" onConfirm={reset} onCancel={() => setResetting(false)} />
     </div>

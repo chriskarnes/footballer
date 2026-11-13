@@ -33,3 +33,20 @@ export const NO_SIGNAL = 'Couldn’t reach us. Check your signal and try again.'
 export function unlessNext(e: unknown): void {
   if (e && typeof e === 'object' && 'digest' in e && /^NEXT_/.test(String((e as { digest: unknown }).digest))) throw e;
 }
+
+/**
+ * `.catch(offline)` on a server action called from a tap: a thrown call (no
+ * signal, a deploy mid-flight) becomes an ordinary failed result, so the page
+ * says so instead of crashing. A redirect still goes through.
+ */
+export function offline(e: unknown): { ok: false; error: string } {
+  unlessNext(e);
+  return { ok: false, error: NO_SIGNAL };
+}
+
+/** The same for a form's action under useActionState: wrap it once, at module level. */
+export function guarded<R>(fn: (prev: unknown, f: FormData) => Promise<R>) {
+  return async (prev: unknown, f: FormData): Promise<R | { ok: false; error: string }> => {
+    try { return await fn(prev, f); } catch (e) { return offline(e); }
+  };
+}

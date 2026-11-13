@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveName } from '@/app/coach/setup/actions';
@@ -14,7 +15,7 @@ export function YourName() {
   const router = useRouter();
   const save = () => start(async () => {
     setErr('');
-    const r = await saveName(name);
+    const r = await saveName(name).catch(offline);
     if (!r.ok) return setErr(r.error);
     router.refresh();
   });

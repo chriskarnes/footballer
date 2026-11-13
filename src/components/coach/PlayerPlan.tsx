@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { buildWeekFor, saveBuiltSession, savePlan, setMode } from '@/app/coach/plan-actions';
@@ -77,7 +78,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
   // the error, which is drawn on the page behind it.
   const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void, said = 'Saved.', close?: () => void, at: string | null = null) => start(async () => {
     setErr('');
-    const r = await f();
+    const r = await f().catch(offline);
     close?.();
     if (!r.ok) fault(r.error ?? 'That didn’t work.', at);
     else { if ('why' in r) setWhy(r.why ?? ''); after?.(); toast(said); router.refresh(); }

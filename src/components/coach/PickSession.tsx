@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { placeSession } from '@/app/coach/content-actions';
 
@@ -23,7 +24,7 @@ export function PickSession({ programId, week, sessions }: { programId: string; 
             <button type="button" disabled={busy} className="btn-ghost btn-sm pressable shrink-0"
                     onClick={() => { setPicked(s.id); setErr(''); start(async () => {
                       // On success the action redirects back to the program.
-                      const r = await placeSession(s.id, programId, week);
+                      const r = await placeSession(s.id, programId, week).catch(offline);
                       if (r && !r.ok) setErr(r.error);
                     }); }}>
               {/* Twice in a week can be what the trainer wants; say it's a second copy. */}

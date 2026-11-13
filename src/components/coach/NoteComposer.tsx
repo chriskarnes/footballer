@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { Chip } from '@/components/Chip';
 import { sendNote } from '@/app/coach/actions';
@@ -53,7 +54,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
   function send() {
     setErr('');
     start(async () => {
-      const r = await sendNote({ body, to: !fixed && mode === 'everyone' ? null : to, kind });
+      const r = await sendNote({ body, to: !fixed && mode === 'everyone' ? null : to, kind }).catch(offline);
       if (r && !r.ok) setErr(r.error);
       else if (r?.ok) onSent?.(to.length, to);
     });

@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,7 @@ export function RemovePlayer({ userId, name }: { userId: string; name: string })
         onCancel={() => setOpen(false)}
         onConfirm={async () => {
           setBusy(true);
-          const r = await removeMember(userId);
+          const r = await removeMember(userId).catch(offline);
           setBusy(false); setOpen(false);
           if (r.ok) { toast(`${name} removed.`); router.push('/coach'); } else setErr(r.error);
         }} />

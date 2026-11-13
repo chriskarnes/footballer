@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
@@ -19,7 +20,7 @@ export function ArchiveGroup({ id, name, archived }: { id: string; name: string;
 
   const go = () => start(async () => {
     setErr('');
-    const r = await archiveGroup(id, !archived);
+    const r = await archiveGroup(id, !archived).catch(offline);
     if (!r.ok) { setErr(r.error); setAsking(false); return; }
     setAsking(false);
     toast(archived ? 'Group back in use.' : 'Group finished.');

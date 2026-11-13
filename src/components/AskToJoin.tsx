@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { askToJoin } from '@/app/request/actions';
 import { SignOut } from '@/components/SignOut';
+import { offline } from '@/lib/plain-error';
 
 /** Who you are, in words the trainer will recognise, and one button. */
 export function AskToJoin({ academy, email, pending: wasPending }: { academy: string; email: string; pending: boolean }) {
@@ -26,7 +27,7 @@ export function AskToJoin({ academy, email, pending: wasPending }: { academy: st
     <form className="card space-y-4 p-5" onSubmit={(e) => {
       e.preventDefault();
       start(async () => {
-        const r = await askToJoin(name, message);
+        const r = await askToJoin(name, message).catch(offline);
         if (r.ok) setSent(true); else setErr(r.error);
       });
     }}>

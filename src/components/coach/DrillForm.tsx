@@ -1,4 +1,5 @@
 'use client';
+import { guarded, offline } from '@/lib/plain-error';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { saveDrill, deleteDrill } from '@/app/coach/content-actions';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
@@ -24,7 +25,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
   /** Inline, inside another editor: hand the new drill back instead of leaving the page. */
   onSaved?: (d: DrillRow) => void; onCancel?: () => void;
 }) {
-  const [state, action, pending] = useActionState(saveDrill, null);
+  const [state, action, pending] = useActionState(guarded(saveDrill), null);
   const handed = useRef<string | null>(null);
   useEffect(() => {
     if (onSaved && state?.ok && state.drill && handed.current !== state.drill.id) {
@@ -108,7 +109,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
               setDeleting(true);
-              const r = await deleteDrill(drill.id);
+              const r = await deleteDrill(drill.id).catch(offline);
               setDeleting(false); setConfirm(false);
               // In the app, not a reload, so the toast survives the move.
               if (r.ok) { toast('Drill deleted.'); router.push(back || '/coach/drills'); router.refresh(); } else setGone(r.error);

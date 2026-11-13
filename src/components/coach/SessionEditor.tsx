@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useMemo, useState, useTransition } from 'react';
 import { saveSession, deleteSession, saveLibrarySession, deleteLibrarySession } from '@/app/coach/content-actions';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
@@ -125,7 +126,7 @@ export function SessionEditor({ target, session, drills: given }: {
       {(() => {
         const run = (fn: () => Promise<{ ok: boolean; error?: string } | void>) => start(async () => {
           setErr('');
-          const r = await fn();
+          const r = await fn().catch(offline);
           if (r && !r.ok) setErr(r.error ?? 'Couldn’t save.');
         });
         const body = { name, drillIds: ids };
@@ -216,7 +217,7 @@ function Remove({ label, title, body, confirm, run, then }: {
         onCancel={() => setOpen(false)}
         onConfirm={async () => {
           setBusy(true);
-          const r = await run();
+          const r = await run().catch(offline);
           setBusy(false); setOpen(false);
           if (r.ok) { toast(confirm === 'Delete' ? 'Session deleted.' : 'Taken out.'); router.push(then); router.refresh(); }
           else setErr(r.error ?? 'Couldn’t do that.');

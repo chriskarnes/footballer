@@ -1,4 +1,5 @@
 'use client';
+import { guarded } from '@/lib/plain-error';
 import { useActionState } from 'react';
 import { saveGroup } from '@/app/coach/content-actions';
 import { WEEKDAYS } from '@/lib/types';
@@ -14,7 +15,7 @@ const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
 export function GroupForm({ group, programs, today }: {
   group?: GroupRow; programs: { id: string; name: string; weeks: number }[]; today: string;
 }) {
-  const [state, action, pending] = useActionState(saveGroup, null);
+  const [state, action, pending] = useActionState(guarded(saveGroup), null);
   return (
     <form onSubmit={keepOnError(action)} className="space-y-5">
       <input type="hidden" name="id" value={group?.id ?? ''} />

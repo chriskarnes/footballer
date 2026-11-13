@@ -1,4 +1,5 @@
 'use client';
+import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
 import { useToast } from '@/components/coach/Toast';
 import { useRouter } from 'next/navigation';
@@ -24,7 +25,7 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
 
   const save = () => start(async () => {
     setErr('');
-    const r = await savePlayerOptions(library, extras, speed);
+    const r = await savePlayerOptions(library, extras, speed).catch(offline);
     if (!r.ok) setErr(r.error); else { toast('Saved.'); router.refresh(); }
   });
 
