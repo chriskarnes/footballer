@@ -55,9 +55,12 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         </p>
       )}
 
-      <div className="scroll-x -mx-5 mt-6 px-5 lg:mx-0 lg:px-0">
-        <table className="card w-full min-w-[760px] table-fixed border-separate border-spacing-0 overflow-hidden text-left text-[13px]">
-          <colgroup><col className="w-44" />{DAYS.map((d) => <col key={d} />)}</colgroup>
+      {/* Seven days fit from a 1024px screen up (the name column narrows on
+          a laptop); narrower, it scrolls, with the bar showing so it's clear
+          there's more. */}
+      <div className="scroll-x scroll-shown -mx-5 mt-6 px-5 lg:mx-0 lg:px-0">
+        <table className="card w-full min-w-[680px] table-fixed border-separate border-spacing-0 overflow-hidden text-left text-[13px]">
+          <colgroup><col className="w-32 xl:w-44" />{DAYS.map((d) => <col key={d} />)}</colgroup>
           <thead>
             <tr className="text-[12px] font-semibold uppercase tracking-wide text-on-surface-variant">
               <th scope="col" className="border-b border-outline-variant px-4 py-3">Player</th>

@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { SessionEditor } from '@/components/coach/SessionEditor';
 import { loadContent } from '@/lib/academy-data';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'New session', robots: { index: false } };
 
@@ -15,8 +15,8 @@ export default async function NewSessionPage() {
   if (!c.libraryReady) redirect('/coach/sessions');
   return (
     <div className="animate-pop">
-      <BackLink href="/coach/sessions" label="Sessions" />
-      <h1 className="h-page mb-6">New session</h1>
+      <PageHead back={{ href: '/coach/sessions', label: 'Sessions' }} title="New session" />
+      <div className="mt-6" />
       <SessionEditor drills={c.drills} target={{ kind: 'library', usedIn: [] }} />
     </div>
   );

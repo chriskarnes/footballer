@@ -31,7 +31,7 @@ export function YourName() {
           {busy ? 'Saving…' : 'Save'}
         </button>
       </div>
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }

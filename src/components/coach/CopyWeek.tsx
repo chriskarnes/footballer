@@ -17,7 +17,7 @@ export function CopyWeek({ programId, from, to }: { programId: string; from: num
               })}>
         {busy ? 'Copying…' : `Copy to week ${to}`}
       </button>
-      {err && <p role="alert" className="w-full text-[12.5px] font-semibold">{err}</p>}
+      {err && <p role="alert" className="w-full text-[13px] font-semibold">{err}</p>}
     </>
   );
 }

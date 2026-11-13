@@ -1,6 +1,6 @@
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { DrillForm } from '@/components/coach/DrillForm';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'New drill', robots: { index: false } };
 
@@ -11,8 +11,8 @@ export default async function NewDrillPage({ searchParams }: { searchParams: Pro
   const to = back?.startsWith('/coach') ? back : '/coach/drills';
   return (
     <div className="animate-pop">
-      <BackLink href={to} label={to === '/coach/drills' ? 'Drills' : 'Back'} />
-      <h1 className="h-page mb-6">New drill</h1>
+      <PageHead back={{ href: to, label: to === '/coach/drills' ? 'Drills' : 'Back' }} title="New drill" />
+      <div className="mt-6" />
       <DrillForm back={to} />
     </div>
   );

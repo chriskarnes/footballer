@@ -1,4 +1,3 @@
-import { BackLink } from '@/components/BackLink';
 import { BrandingAdmin } from '@/components/BrandingAdmin';
 import { PageHead } from '@/components/coach/PageHead';
 import { staffOnly } from '@/components/coach/Gate';
@@ -18,15 +17,13 @@ export default async function BrandPage() {
     if ('page' in gate) return gate.page;
     return (
       <div className="lg:max-w-2xl">
-        <BackLink href="/coach/team" label="Academy" />
-        <PageHead title="Owner only">Only {v.academy?.name}&rsquo;s owner can change its name, colours and logo.</PageHead>
+        <PageHead back={{ href: '/coach/team', label: 'Academy' }} title="Owner only">Only {v.academy?.name}&rsquo;s owner can change its name, colours and logo.</PageHead>
       </div>
     );
   }
   return (
     <div className="lg:max-w-2xl">
-      <BackLink href="/coach/team" label="Academy" />
-      <PageHead eyebrow={v.academy.name} title="Brand settings">
+      <PageHead back={{ href: '/coach/team', label: 'Academy' }} eyebrow={v.academy.name} title="Brand settings">
         Pick a kit, add your crest, and every player sees it on their next load.
       </PageHead>
       <BrandingAdmin initial={v.academy.branding} />

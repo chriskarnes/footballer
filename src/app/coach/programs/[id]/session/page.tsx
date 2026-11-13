@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { SessionEditor } from '@/components/coach/SessionEditor';
 import { PickSession } from '@/components/coach/PickSession';
 import { loadContent } from '@/lib/academy-data';
 import { placesOf } from '@/lib/session-library';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Session', robots: { index: false } };
 
@@ -30,9 +30,9 @@ export default async function SessionEditPage({ params, searchParams }: {
 
   return (
     <div className="animate-pop">
-      <BackLink href={`/coach/programs/${p.id}`} label={p.name} />
-      <p className="eyebrow mb-3">Week {week}</p>
-      <h1 className="h-page mb-6">{session ? session.name : 'Add a session'}</h1>
+      <PageHead back={{ href: `/coach/programs/${p.id}`, label: p.name }} eyebrow={`Week ${week}`}
+                title={session ? session.name : 'Add a session'} />
+      <div className="mt-6" />
 
       {!session && c.libraryReady && !!c.library.length && (
         <section className="mb-9">

@@ -42,9 +42,9 @@ export default async function TeamPage() {
             <li key={s.user_id} className="flex items-center justify-between gap-4 px-4 py-3.5">
               <span className="min-w-0">
                 <span className="block truncate text-[14px] font-semibold text-on-surface">{s.display_name || s.email}</span>
-                {s.display_name && <span className="mt-0.5 block truncate text-[12.5px] text-on-surface-variant">{s.email}</span>}
+                {s.display_name && <span className="mt-0.5 block truncate text-[13px] text-on-surface-variant">{s.email}</span>}
               </span>
-              <span className="shrink-0 text-[12.5px] font-semibold text-on-surface-variant">{s.role === 'owner' ? 'Owner' : 'Trainer'}</span>
+              <span className="shrink-0 text-[13px] font-semibold text-on-surface-variant">{s.role === 'owner' ? 'Owner' : 'Trainer'}</span>
             </li>
           ))}
         </ul>
@@ -57,15 +57,15 @@ export default async function TeamPage() {
             <div className="text-[14px] font-semibold text-on-surface">For players and parents</div>
             {code('player')
               ? <InviteLink path={`/join/${code('player')}`} role="player" />
-              : <p className="mt-2 text-[13px] text-on-surface-variant">No link yet.</p>}
+              : <p className="mt-2 text-[14px] text-on-surface-variant">No link yet.</p>}
           </div>
           {owner && (
             <div className="p-5">
               <div className="text-[14px] font-semibold text-on-surface">For trainers</div>
-              <p className="mt-0.5 text-[13px] text-on-surface-variant">Trainers see every player and every note.</p>
+              <p className="mt-0.5 text-[14px] text-on-surface-variant">Trainers see every player and every note.</p>
               {code('trainer')
                 ? <InviteLink path={`/join/${code('trainer')}`} role="trainer" />
-                : <p className="mt-2 text-[13px] text-on-surface-variant">No link yet.</p>}
+                : <p className="mt-2 text-[14px] text-on-surface-variant">No link yet.</p>}
             </div>
           )}
         </div>
@@ -82,7 +82,7 @@ export default async function TeamPage() {
       {canBrand && (
         <Link href="/coach/brand" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">
           <span className="text-[14px] font-semibold text-on-surface">Brand settings</span>
-          <span className="text-[13px] text-on-surface-variant">Name, colours, logo ›</span>
+          <span className="text-[14px] text-on-surface-variant">Name, colours, logo ›</span>
         </Link>
       )}
     </div>

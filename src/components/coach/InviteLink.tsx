@@ -32,7 +32,7 @@ export function InviteLink({ path, role, canRotate = true }: {
   return (
     <div className="mt-3">
       <div className="flex items-center gap-2">
-        <div className="card-flat min-w-0 flex-1 select-all truncate rounded-full px-4 py-2.5 text-[13.5px] font-semibold text-on-surface">{shown}</div>
+        <div className="card-flat min-w-0 flex-1 select-all truncate rounded-full px-4 py-2.5 text-[14px] font-semibold text-on-surface">{shown}</div>
         {canShare && (
           <button type="button" className="btn-primary btn-sm pressable shrink-0"
                   onClick={() => navigator.share({ url }).catch(() => {})}>Share</button>
@@ -42,12 +42,12 @@ export function InviteLink({ path, role, canRotate = true }: {
         </button>
       </div>
       {canRotate && (
-        <button type="button" className="mt-2.5 text-[12.5px] font-semibold text-on-surface-variant underline underline-offset-4"
+        <button type="button" className="mt-2.5 text-[13px] font-semibold text-on-surface-variant underline underline-offset-4"
                 onClick={() => setConfirm(true)}>
           Replace this link
         </button>
       )}
-      {err && <p role="status" className="mt-2 text-[12.5px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="status" className="mt-2 text-[13px] font-semibold text-on-surface">{err}</p>}
       <ConfirmSheet open={confirm} busy={busy} title="Make a new link?" confirmLabel="New link"
         body={`The old ${role} link stops working. Anyone who already joined stays.`}
         onCancel={() => setConfirm(false)}

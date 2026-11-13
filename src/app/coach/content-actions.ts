@@ -23,6 +23,11 @@ type Result = { ok: true; id?: string; drill?: DrillRow } | { ok: false; error: 
 const fail = (e: unknown): Result => ({ ok: false, error: plain(e) });
 const str = (f: FormData, k: string, max: number) => String(f.get(k) ?? '').trim().slice(0, max);
 const done = () => revalidatePath('/', 'layout');
+/** The page a save lands on, marked so it says "Saved." (coach/Toast). Before any #hash. */
+const withSaved = (url: string) => {
+  const [path, hash] = url.split('#');
+  return `${path}${path.includes('?') ? '&' : '?'}saved=1${hash ? `#${hash}` : ''}`;
+};
 
 /** YouTube and other links are kept as given, if they're https. */
 function videoUrl(raw: string): string | null {
@@ -77,8 +82,8 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
     const back = str(f, 'back', 200);
     // A new drill from the Drills page goes to its own page, which offers to
     // put it in sessions.
-    if (!id && back === '/coach/drills' && data?.id) redirect(`/coach/drills/${data.id}?new=1`);
-    if (back.startsWith('/coach')) redirect(back);
+    if (!id && back === '/coach/drills' && data?.id) redirect(withSaved(`/coach/drills/${data.id}?new=1`));
+    if (back.startsWith('/coach')) redirect(withSaved(back));
     // No back: saved from inside another editor, which takes the drill as is.
     return { ok: true, id: data?.id, drill: data?.id ? {
       id: data.id, name: row.name, amount: row.amount, minutes: row.minutes, focus: row.focus,
@@ -114,7 +119,7 @@ export async function saveProgram(_: unknown, f: FormData): Promise<Result> {
     const { data, error } = await q;
     if (error) return { ok: false, error: plain(error) };
     done();
-    redirect(`/coach/programs/${data.id}`);
+    redirect(withSaved(`/coach/programs/${data.id}`));
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
@@ -145,7 +150,7 @@ export async function saveSession(input: { id?: string; programId: string; week:
     }
     if (error) return { ok: false, error: plain(error) };
     done();
-    redirect(`/coach/programs/${input.programId}#week-${input.week}`);
+    redirect(withSaved(`/coach/programs/${input.programId}#week-${input.week}`));
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
@@ -191,7 +196,7 @@ export async function saveLibrarySession(input: {
       }
     }
     done();
-    redirect(BACK.test(input.back) ? input.back : '/coach/sessions');
+    redirect(withSaved(BACK.test(input.back) ? input.back : '/coach/sessions'));
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
@@ -216,7 +221,7 @@ export async function placeSession(libraryId: string, programId: string, week: n
     const r = await place(v, data, programId, week);
     if (r) return { ok: false, error: r };
     done();
-    redirect(`/coach/programs/${programId}#week-${week}`);
+    redirect(withSaved(`/coach/programs/${programId}#week-${week}`));
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
@@ -283,7 +288,7 @@ export async function saveGroup(_: unknown, f: FormData): Promise<Result> {
     const { data, error } = await q;
     if (error) return { ok: false, error: plain(error) };
     done();
-    redirect(`/coach/groups/${data.id}${id ? '?saved=1' : ''}`);
+    redirect(withSaved(`/coach/groups/${data.id}`));
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 

@@ -30,9 +30,9 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
     <div className="card p-5">
       <div className="flex items-baseline justify-between gap-3">
         <div className="h-card">Custom weeks</div>
-        <span className="text-[13px] text-on-surface-variant">{sessions * minutes} min a week</span>
+        <span className="text-[14px] text-on-surface-variant">{sessions * minutes} min a week</span>
       </div>
-      <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">For every player, unless you change it on their page.</p>
+      <p className="mt-1 text-[14px] leading-snug text-on-surface-variant">For every player, unless you change it on their page.</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
       <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
         <span>
           <span className="block text-[14px] font-bold text-on-surface">Level up week to week</span>
-          <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
+          <span className="mt-0.5 block text-[13px] leading-snug text-on-surface-variant">
             {progress
               ? 'Drills a player handles go up a level each week, with a lighter week every fourth.'
               : 'Every drill stays at its own amount. You set levels yourself.'}
@@ -65,7 +65,7 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
       )}
       {ai && (
         <div className="mt-5 border-t border-outline-variant pt-4">
-          <div className="flex items-baseline justify-between gap-3 text-[13px]">
+          <div className="flex items-baseline justify-between gap-3 text-[14px]">
             <span className="font-bold text-on-surface">AI this month</span>
             <span className="text-on-surface-variant">{ai.on ? `${ai.used} of ${ai.limit}` : 'Not set up'}</span>
           </div>
@@ -74,13 +74,13 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
               <div className="h-full rounded-full bg-on-surface" style={{ width: `${Math.min(100, (ai.used / ai.limit) * 100)}%` }} />
             </div>
           )}
-          <p className="mt-2 text-[12.5px] leading-snug text-on-surface-variant">
+          <p className="mt-2 text-[13px] leading-snug text-on-surface-variant">
             {ai.on ? 'Builds and suggestions. Past the limit, weeks are still built, just without AI.'
               : 'Weeks are built from each player’s settings.'}
           </p>
         </div>
       )}
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

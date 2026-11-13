@@ -16,7 +16,7 @@ export function PickSession({ programId, week, sessions }: { programId: string; 
           <li key={s.id} className="flex items-center justify-between gap-3 py-2.5 pl-4 pr-3">
             <span className="min-w-0">
               <span className="block truncate text-[14.5px] font-semibold text-on-surface">{s.name}</span>
-              <span className="block truncate text-[12.5px] text-on-surface-variant">
+              <span className="block truncate text-[13px] text-on-surface-variant">
                 {s.drills} {s.drills === 1 ? 'drill' : 'drills'} · {s.minutes} min{s.here && ' · already in this week'}
               </span>
             </span>
@@ -31,7 +31,7 @@ export function PickSession({ programId, week, sessions }: { programId: string; 
           </li>
         ))}
       </ul>
-      {err && <p role="alert" className="mt-2 text-[13px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
     </>
   );
 }

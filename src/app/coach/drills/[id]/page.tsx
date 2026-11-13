@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { DrillForm } from '@/components/coach/DrillForm';
 import { DrillSessions, type ProgramWeeks } from '@/components/coach/DrillSessions';
 import { loadContent } from '@/lib/academy-data';
 import type { DrillRow } from '@/lib/academy-week';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Drill', robots: { index: false } };
 
@@ -39,7 +39,7 @@ export default async function DrillPage({ params, searchParams }: {
   const sessions = (
     <section className={`card p-5 ${fresh ? '' : 'mt-10'}`}>
       <div className="h-card">{fresh ? 'Add it to sessions?' : 'In sessions'}</div>
-      <p className="mb-4 mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+      <p className="mb-4 mt-1 text-[14px] leading-snug text-on-surface-variant">
         {fresh ? 'Tick any it belongs in. It goes at the end of each; you can reorder in the session.'
           : 'Tick to add it to a session, untick to take it out.'}
       </p>
@@ -49,9 +49,8 @@ export default async function DrillPage({ params, searchParams }: {
 
   return (
     <div className="animate-pop">
-      <BackLink href="/coach/drills" label="Drills" />
-      {fresh && <p className="eyebrow mb-3">Saved</p>}
-      <h1 className="h-page mb-6">{drill.name}</h1>
+      <PageHead back={{ href: '/coach/drills', label: 'Drills' }} title={drill.name} />
+      <div className="mt-6" />
       {fresh && sessions}
       <div className={fresh ? 'mt-10' : ''}>
         {fresh && <p className="eyebrow mb-3">The drill</p>}

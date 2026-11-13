@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { buildWeekFor, saveBuiltSession, savePlan, setMode } from '@/app/coach/plan-actions';
 import { Chip } from '@/components/Chip';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { useToast } from './Toast';
 import { drillTags, type CustomRow, type DrillRow, type TeamDays } from '@/lib/academy-week';
 import { MAX_STEP, MINUTE_CHOICES, progressAmount, swapFor, type Target } from '@/lib/week-builder';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
@@ -52,6 +53,9 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
   const [focus, setFocus] = useState(savedFocus);
   const [progress, setProgress] = useState(savedProgress);
   const [confirm, setConfirm] = useState(false);
+  // Rebuilding replaces the week, including anything changed by hand: asked first.
+  const [rebuild, setRebuild] = useState<'this' | 'next' | null>(null);
+  const toast = useToast();
   // The drill row open for editing, as "session:index".
   const [open, setOpen] = useState('');
   // Drills swapped out, per session, so tapping Swap again moves on.
@@ -65,11 +69,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
     return (Object.keys(FOCUS_LABELS) as FocusArea[]).filter((t) => have.has(t) || focus.includes(t));
   }, [drills, focus]);
 
-  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void) => start(async () => {
+  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void, said = 'Saved.') => start(async () => {
     setErr('');
     const r = await f();
     if (!r.ok) setErr(r.error ?? 'That didn’t work.');
-    else { if ('why' in r) setWhy(r.why ?? ''); after?.(); router.refresh(); }
+    else { if ('why' in r) setWhy(r.why ?? ''); after?.(); toast(said); router.refresh(); }
   });
 
   const save = () => run(() => savePlan(userId, {
@@ -106,7 +110,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                     className={`pressable rounded-2xl border p-3.5 text-left transition-colors
                       ${on ? 'border-on-surface bg-surface-container-high' : 'border-outline-variant'}`}>
               <span className="block text-[14.5px] font-bold text-on-surface">{o.title}</span>
-              <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">{o.line}</span>
+              <span className="mt-0.5 block text-[13px] leading-snug text-on-surface-variant">{o.line}</span>
             </button>
           );
         })}
@@ -117,7 +121,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
           <section className="card p-5">
             <div className="flex items-baseline justify-between gap-3">
               <div className="h-card">How much they train</div>
-              <span className="text-[13px] text-on-surface-variant">{sessions * minutes} min a week</span>
+              <span className="text-[14px] text-on-surface-variant">{sessions * minutes} min a week</span>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -133,7 +137,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
 
             <div className="mt-5 flex items-baseline justify-between">
               <div className="text-[14px] font-bold text-on-surface">Work on</div>
-              <span className="text-[12.5px] text-on-surface-variant">Up to 3</span>
+              <span className="text-[13px] text-on-surface-variant">Up to 3</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {tags.map((t) => {
@@ -144,13 +148,13 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                   </Chip>
                 );
               })}
-              {!tags.length && <p className="text-[13px] text-on-surface-variant">Tag your drills with what they work on, and the tags show up here.</p>}
+              {!tags.length && <p className="text-[14px] text-on-surface-variant">Tag your drills with what they work on, and the tags show up here.</p>}
             </div>
 
             <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
               <span>
                 <span className="block text-[14px] font-bold text-on-surface">Level up week to week</span>
-                <span className="mt-0.5 block text-[12.5px] leading-snug text-on-surface-variant">
+                <span className="mt-0.5 block text-[13px] leading-snug text-on-surface-variant">
                   {progress
                     ? 'Drills they handle go up a level each week, with a lighter week every fourth.'
                     : 'Every drill stays at its own amount. You set levels yourself.'}
@@ -160,7 +164,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                      onChange={(e) => setProgress(e.target.checked)} />
             </label>
 
-            <p className="mt-4 text-[12.5px] text-on-surface-variant">
+            <p className="mt-4 text-[13px] text-on-surface-variant">
               {ownSettings ? <>Just for {first}. <button type="button" disabled={pending} onClick={resetToDefaults}
                 className="font-semibold text-on-surface underline underline-offset-4">Use academy defaults</button></>
                 : `Academy defaults. Changes here are just for ${first}.`}
@@ -177,13 +181,17 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
           {customWeek({ title: 'Next week', rows: nextWeek, which: 'next' })}
         </>
       )}
-      {why && <p role="status" className="text-[12.5px] text-on-surface-variant">{why}.</p>}
-      {err && <p role="alert" className="text-[13px] font-semibold text-on-surface">{err}</p>}
+      {why && <p role="status" className="text-[13px] text-on-surface-variant">{why}.</p>}
+      {err && <p role="alert" className="text-[14px] font-semibold text-on-surface">{err}</p>}
 
       <ConfirmSheet open={confirm} title="Back to their program?" confirmLabel="Back to program" busy={pending}
         body={`${first}’s custom weeks from this week on are taken away, and their program is their week again.`}
         onCancel={() => setConfirm(false)}
         onConfirm={() => run(() => setMode(userId, 'program'), () => setConfirm(false))} />
+      <ConfirmSheet open={!!rebuild} title={`Rebuild ${rebuild === 'next' ? 'next' : 'this'} week?`} confirmLabel="Rebuild" busy={pending}
+        body={`${first}’s sessions for that week are built again from their settings. Any drills you changed by hand are replaced; sessions they’ve done stay done.`}
+        onCancel={() => setRebuild(null)}
+        onConfirm={() => rebuild && run(() => buildWeekFor(userId, rebuild), () => setRebuild(null), 'Week rebuilt.')} />
     </div>
   );
 
@@ -203,8 +211,8 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
             ))}
           </div>
           {rows.length > 0 && (
-            <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))}
-                    className="shrink-0 text-[13px] font-semibold underline underline-offset-4">Rebuild</button>
+            <button type="button" disabled={pending || dirty} onClick={() => setRebuild(which)}
+                    className="shrink-0 text-[14px] font-semibold underline underline-offset-4">Rebuild</button>
           )}
         </div>
 
@@ -221,17 +229,17 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                   <div className="flex items-center justify-between gap-3">
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-bold text-on-surface">{s.name}</span>
-                      <span className="text-[12.5px] text-on-surface-variant">{total} min{note && ` · ${note}`}</span>
+                      <span className="text-[13px] text-on-surface-variant">{total} min{note && ` · ${note}`}</span>
                       {ran && (
-                        <span className="mt-0.5 block text-[12.5px] font-semibold text-on-surface">
+                        <span className="mt-0.5 block text-[13px] font-semibold text-on-surface">
                           Done{ran.feel ? `, ${FEEL[ran.feel]}` : ''}
                         </span>
                       )}
-                      {s.note && <span className="mt-1 block text-[12.5px] italic leading-snug text-on-surface">“{s.note}”</span>}
+                      {s.note && <span className="mt-1 block text-[13px] italic leading-snug text-on-surface">“{s.note}”</span>}
                     </span>
                     <select aria-label={`Day for ${s.name}`} value={day} disabled={pending}
                             onChange={(e) => run(() => saveBuiltSession(s.id, { weekday: Number(e.target.value) }))}
-                            className="rounded-lg border border-outline bg-surface px-2 py-1.5 text-[13px] font-semibold">
+                            className="rounded-lg border border-outline bg-surface px-2 py-1.5 text-[14px] font-semibold">
                       {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
                     </select>
                   </div>
@@ -244,7 +252,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
           </ol>
         ) : (
           <>
-            <p className="mt-1 text-[13px] text-on-surface-variant">
+            <p className="mt-1 text-[14px] text-on-surface-variant">
               {which === 'this' ? `Not built yet, so ${first} is on their program this week.` : 'Not built yet.'} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
             </p>
             <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which))}
@@ -274,7 +282,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
       <li key={`${id}-${i}`} className="py-2">
         <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? '' : key)} className="block w-full text-left">
           <span className="flex items-center gap-2">
-            <span className="truncate text-[13.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
+            <span className="truncate text-[14px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
             {change && (
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold
                 ${s.changes![i] === 'hold' ? 'bg-surface-container-highest text-on-surface-variant' : 'bg-on-surface text-surface'}`}>{change}</span>
@@ -288,7 +296,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
         {isOpen && (
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
             {d?.amount && (
-              <span className="flex items-center gap-1.5 text-[12.5px] text-on-surface-variant">
+              <span className="flex items-center gap-1.5 text-[13px] text-on-surface-variant">
                 <button type="button" className="icon-btn !h-8 !w-8" aria-label={`Level down ${d.name}`}
                         disabled={pending || step <= 0} onClick={() => setLevel(step - 1)}>−</button>
                 <span className="min-w-[3.5rem] text-center font-semibold text-on-surface">Level {step + 1}</span>
@@ -296,7 +304,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                         disabled={pending || step >= TOP_STEP} onClick={() => setLevel(step + 1)}>+</button>
               </span>
             )}
-            <button type="button" disabled={pending} className="text-[12.5px] font-semibold underline underline-offset-4"
+            <button type="button" disabled={pending} className="text-[13px] font-semibold underline underline-offset-4"
                     onClick={() => {
                       const gone = [...(tried[s.id] ?? []), id];
                       const alt = swapFor(drills, s.drill_ids, id, focus, [...gone, ...sorted.flatMap((x) => x.drill_ids)]);
@@ -305,7 +313,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                       save(s.drill_ids.map((x, k) => k === i ? alt.id : x), steps.map((x, k) => k === i ? 0 : x), changes.map((c, k) => k === i ? 'new' : c));
                     }}>Swap</button>
             {s.drill_ids.length > 1 && (
-              <button type="button" disabled={pending} className="text-[12.5px] font-semibold text-on-surface-variant underline underline-offset-4"
+              <button type="button" disabled={pending} className="text-[13px] font-semibold text-on-surface-variant underline underline-offset-4"
                       onClick={() => {
                         setOpen('');
                         save(s.drill_ids.filter((_, k) => k !== i), steps.filter((_, k) => k !== i), changes.filter((_, k) => k !== i));

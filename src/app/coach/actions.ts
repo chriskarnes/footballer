@@ -1,5 +1,4 @@
 'use server';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { plain } from '@/lib/plain-error';
@@ -15,7 +14,7 @@ async function staff() {
   return v as typeof v & { academy: NonNullable<typeof v.academy> };
 }
 
-export async function sendNote(input: { body: string; to: string[] | null; kind: 'note' | 'nudge'; back?: string }) {
+export async function sendNote(input: { body: string; to: string[] | null; kind: 'note' | 'nudge' }) {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can send notes.' };
   const body = input.body.trim();
@@ -28,11 +27,8 @@ export async function sendNote(input: { body: string; to: string[] | null; kind:
   if (error) return { ok: false as const, error: plain(error) };
 
   revalidatePath('/coach', 'layout');
-  // Sent from the dialog: the page it's over stays where it is.
-  if (input.back === undefined) return { ok: true as const };
-  // Back where they came from, with the confirmation. Only our own pages.
-  const back = /^\/coach(\/[\w/-]*)?$/.test(input.back) ? input.back : '/coach';
-  redirect(`${back}?sent=1`);
+  // Sent from the note dialog: the page it's over stays where it is.
+  return { ok: true as const };
 }
 
 export async function rotateInvite(role: 'player' | 'trainer') {

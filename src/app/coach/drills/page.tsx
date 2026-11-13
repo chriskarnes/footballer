@@ -7,6 +7,7 @@ import { loadContent } from '@/lib/academy-data';
 import { FOCUS_LABELS, type FocusArea } from '@/lib/types';
 import { youtubeId } from '@/lib/video';
 import { drillTags, type DrillRow } from '@/lib/academy-week';
+import { Empty } from '@/components/coach/Empty';
 
 export const metadata = { title: 'Drills', robots: { index: false } };
 
@@ -37,7 +38,7 @@ export default async function DrillsPage() {
                   <Link href={`/coach/drills/${d.id}`} className="flex items-center justify-between gap-4 px-4 py-3.5">
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d.name}</span>
-                      <span className="mt-0.5 block truncate text-[12.5px] text-on-surface-variant">
+                      <span className="mt-0.5 block truncate text-[13px] text-on-surface-variant">
                         {[d.amount, `${d.minutes} min`, tagLabels(d)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
@@ -74,9 +75,9 @@ export default async function DrillsPage() {
             </div>
           </>
         ) : (
-          <p className="card-flat p-5 text-[13.5px] leading-relaxed text-on-surface-variant">
-            No drills yet. A name and &ldquo;3 × 50 each foot&rdquo; is enough to start; a YouTube link is a bonus.
-          </p>
+          <Empty title="No drills yet" href="/coach/drills/new" cta="Add your first drill">
+            A name and &ldquo;3 × 50 each foot&rdquo; is enough to start; a YouTube link is a bonus.
+          </Empty>
         )}
       </section>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from './Toast';
 import { NoteComposer, type NoteGroup, type NotePlayer, type NoteTo } from './NoteComposer';
 
 type Person = NotePlayer & { nudge?: string };
@@ -21,7 +22,7 @@ export function NoteProvider({ players, groups = [], only = false, children }: {
   players: Person[]; groups?: NoteGroup[]; only?: boolean; children: React.ReactNode;
 }) {
   const [ask, setAsk] = useState<Ask | null>(null);
-  const [toast, setToast] = useState('');
+  const setToast = useToast();
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
 
@@ -31,11 +32,6 @@ export function NoteProvider({ players, groups = [], only = false, children }: {
     if (ask && !d.open) d.showModal();
     if (!ask && d.open) d.close();
   }, [ask]);
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(''), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const person = ask?.to ? players.find((p) => p.id === ask.to) : undefined;
   const group = ask?.group ? groups.find((g) => g.id === ask.group) : undefined;
@@ -73,11 +69,6 @@ export function NoteProvider({ players, groups = [], only = false, children }: {
           </div>
         )}
       </dialog>
-      {toast && (
-        <p role="status" className="sheet-in fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] mx-auto w-fit max-w-[90vw] rounded-full bg-inverse-surface px-5 py-3 text-[13.5px] font-semibold text-inverse-on-surface shadow-level3 lg:bottom-8">
-          {toast}
-        </p>
-      )}
     </Ctx.Provider>
   );
 }

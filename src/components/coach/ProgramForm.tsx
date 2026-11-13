@@ -8,6 +8,7 @@ import { Field, FormError } from './Field';
 export function ProgramForm({ program }: { program?: { id: string; name: string; description: string | null; weeks: number } }) {
   const [state, action, pending] = useActionState(saveProgram, null);
   const [confirm, setConfirm] = useState(false);
+  const [gone, setGone] = useState('');
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="id" value={program?.id ?? ''} />
@@ -26,11 +27,15 @@ export function ProgramForm({ program }: { program?: { id: string; name: string;
       {program && (
         <>
           <button type="button" onClick={() => setConfirm(true)}
-                  className="w-full text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">Delete this program</button>
+                  className="w-full text-center text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">Delete this program</button>
           <ConfirmSheet open={confirm} title="Delete this program?" confirmLabel="Delete"
             body="Its sessions go too, and any group using it is left without one. Drills stay."
             onCancel={() => setConfirm(false)}
-            onConfirm={async () => { await deleteProgram(program.id); window.location.href = '/coach/content'; }} />
+            onConfirm={async () => {
+              const r = await deleteProgram(program.id);
+              if (r.ok) window.location.href = '/coach/content'; else { setConfirm(false); setGone(r.error); }
+            }} />
+          {gone && <p role="alert" className="text-center text-[14px] font-semibold text-on-surface">{gone}</p>}
         </>
       )}
     </form>

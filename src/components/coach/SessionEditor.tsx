@@ -58,7 +58,7 @@ export function SessionEditor({ target, session, drills: given }: {
       <section>
         <div className="mb-2 flex items-baseline justify-between">
           <p className="eyebrow">In this session</p>
-          <span className="text-[13px] text-on-surface-variant">{ids.length} drills · {minutes} min</span>
+          <span className="text-[14px] text-on-surface-variant">{ids.length} drills · {minutes} min</span>
         </div>
         {ids.length ? (
           <ol className="card divide-y divide-outline-variant">
@@ -66,10 +66,10 @@ export function SessionEditor({ target, session, drills: given }: {
               const d = byId.get(id);
               return (
                 <li key={`${id}-${i}`} className="flex items-center gap-2 py-2.5 pl-4 pr-2">
-                  <span className="w-5 shrink-0 text-[13px] font-bold text-on-surface-variant">{i + 1}</span>
+                  <span className="w-5 shrink-0 text-[14px] font-bold text-on-surface-variant">{i + 1}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
-                    {d && <span className="block truncate text-[12.5px] text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>}
+                    {d && <span className="block truncate text-[13px] text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>}
                   </span>
                   <button type="button" className="icon-btn" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
                   <button type="button" className="icon-btn" aria-label="Move down" disabled={i === ids.length - 1} onClick={() => move(i, 1)}>↓</button>
@@ -78,13 +78,13 @@ export function SessionEditor({ target, session, drills: given }: {
               );
             })}
           </ol>
-        ) : <p className="card-flat px-4 py-3 text-[13.5px] text-on-surface-variant">Tap drills below to add them.</p>}
+        ) : <p className="card-flat px-4 py-3 text-[14px] text-on-surface-variant">Tap drills below to add them.</p>}
       </section>
 
       <section>
         <div className="mb-2 flex items-baseline justify-between">
           <p className="eyebrow">Your drills</p>
-          {!writing && <button type="button" onClick={() => setWriting(true)} className="text-[13px] font-semibold text-on-surface underline underline-offset-4">New drill</button>}
+          {!writing && <button type="button" onClick={() => setWriting(true)} className="text-[14px] font-semibold text-on-surface underline underline-offset-4">New drill</button>}
         </div>
         {writing ? (
           <div className="card p-5">
@@ -104,15 +104,15 @@ export function SessionEditor({ target, session, drills: given }: {
                         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
                   <span className="min-w-0">
                     <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d.name}</span>
-                    <span className="block truncate text-[12.5px] text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>
+                    <span className="block truncate text-[13px] text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>
                   </span>
-                  <span className="shrink-0 text-[13px] font-bold text-on-surface">{ids.includes(d.id) ? 'Again' : 'Add'}</span>
+                  <span className="shrink-0 text-[14px] font-bold text-on-surface">{ids.includes(d.id) ? 'Again' : 'Add'}</span>
                 </button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="card-flat px-4 py-3 text-[13.5px] text-on-surface-variant">
+          <p className="card-flat px-4 py-3 text-[14px] text-on-surface-variant">
             No drills yet. <button type="button" onClick={() => setWriting(true)} className="font-semibold text-on-surface underline underline-offset-4">Add your first</button>.
           </p>
         )}
@@ -146,7 +146,7 @@ export function SessionEditor({ target, session, drills: given }: {
           return (
             <>
               {!!usedIn.length && (
-                <p className="text-[13px] leading-snug text-on-surface-variant">
+                <p className="text-[14px] leading-snug text-on-surface-variant">
                   Used in <b className="font-semibold text-on-surface">{usedIn.join(', ')}</b>. Saving changes it there too.
                 </p>
               )}
@@ -155,7 +155,7 @@ export function SessionEditor({ target, session, drills: given }: {
                 {busy ? 'Saving…' : 'Save session'}
               </button>
               {id && (usedIn.length
-                ? <p className="text-center text-[13px] text-on-surface-variant">To delete it, take it out of those weeks first.</p>
+                ? <p className="text-center text-[14px] text-on-surface-variant">To delete it, take it out of those weeks first.</p>
                 : <Remove label="Delete this session" title="Delete this session?" confirm="Delete"
                           body="It isn’t in any program. The drills stay."
                           run={() => deleteLibrarySession(id)} then="/coach/sessions" />)}
@@ -168,7 +168,7 @@ export function SessionEditor({ target, session, drills: given }: {
         return (
           <>
             {shared && (
-              <p className="text-[13px] leading-snug text-on-surface-variant">
+              <p className="text-[14px] leading-snug text-on-surface-variant">
                 Also used in <b className="font-semibold text-on-surface">{alsoIn.join(', ')}</b>.
               </p>
             )}
@@ -206,8 +206,8 @@ function Remove({ label, title, body, confirm, run, then }: {
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-              className="w-full text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">{label}</button>
-      {err && <p role="alert" className="text-center text-[13px] font-semibold text-on-surface">{err}</p>}
+              className="w-full text-center text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">{label}</button>
+      {err && <p role="alert" className="text-center text-[14px] font-semibold text-on-surface">{err}</p>}
       <ConfirmSheet open={open} busy={busy} title={title} confirmLabel={confirm} body={body}
         onCancel={() => setOpen(false)}
         onConfirm={async () => {

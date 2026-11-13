@@ -25,11 +25,10 @@ const QUICK = [
  * `fixed` is a note that already knows its one reader (from their page, or
  * a Nudge): no picker, just their name.
  */
-export function NoteComposer({ players, groups = [], initial, fixed, initialBody, kind, back, onSent }: {
+export function NoteComposer({ players, groups = [], initial, fixed, initialBody, kind, onSent }: {
   players: NotePlayer[]; groups?: NoteGroup[]; initial: NoteTo; fixed?: NotePlayer;
   initialBody: string; kind: 'note' | 'nudge';
-  /** A page to return to with ?sent=1. Leave out, with onSent, to stay put. */
-  back?: string; onSent?: (count: number) => void;
+  onSent?: (count: number) => void;
 }) {
   const usable = groups.filter((g) => g.members.length);
   const [mode, setMode] = useState<NoteTo['mode']>(initial.mode);
@@ -53,8 +52,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
   function send() {
     setErr('');
     start(async () => {
-      const r = await sendNote({ body, to: !fixed && mode === 'everyone' ? null : to, kind, back });
-      // With a page to go back to the action redirects, so a result is an error or "stay here".
+      const r = await sendNote({ body, to: !fixed && mode === 'everyone' ? null : to, kind });
       if (r && !r.ok) setErr(r.error);
       else if (r?.ok) onSent?.(to.length);
     });
@@ -82,7 +80,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
           </div>
           <div className="mt-3 min-h-[44px]">
             {mode === 'everyone' && (
-              <p className="pt-2.5 text-[13.5px] text-on-surface-variant">All {players.length} {players.length === 1 ? 'player' : 'players'} in the academy.</p>
+              <p className="pt-2.5 text-[14px] text-on-surface-variant">All {players.length} {players.length === 1 ? 'player' : 'players'} in the academy.</p>
             )}
             {mode === 'groups' && (
               <div className="flex flex-wrap gap-2">
@@ -113,7 +111,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
         <div className="card-flat mt-3 divide-y divide-outline-variant overflow-hidden">
           {QUICK.map((q) => (
             <button key={q} type="button" onClick={() => setBody(q)}
-                    className="pressable block w-full px-4 py-2.5 text-left text-[13.5px] text-on-surface">{q}</button>
+                    className="pressable block w-full px-4 py-2.5 text-left text-[14px] text-on-surface">{q}</button>
           ))}
         </div>
       )}
@@ -122,8 +120,8 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
               className="btn-primary pressable mt-6 w-full disabled:opacity-50">
         {pending ? 'Sending…' : !to.length ? (mode === 'groups' ? 'Pick a group' : 'Pick a player') : `Send to ${who}`}
       </button>
-      <p className="mt-3 text-center text-[12.5px] text-on-surface-variant">Players see it in the app and can&rsquo;t reply.</p>
-      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">Couldn&rsquo;t send: {err}</p>}
+      <p className="mt-3 text-center text-[13px] text-on-surface-variant">Players see it in the app and can&rsquo;t reply.</p>
+      {err && <p role="alert" className="mt-3 text-[14px] font-semibold text-on-surface">Couldn&rsquo;t send: {err}</p>}
     </div>
   );
 }

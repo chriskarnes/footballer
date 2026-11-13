@@ -75,7 +75,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
         <>
           {invite
             ? <InviteLink path={`/join/${invite}`} role="player" canRotate={false} />
-            : <p className="mt-3 text-[13.5px] text-on-surface-variant">No invite link yet.</p>}
+            : <p className="mt-3 text-[14px] text-on-surface-variant">No invite link yet.</p>}
           {!!players && <p className="mt-3 text-[14px] font-semibold text-on-surface">{players} {players === 1 ? 'player has' : 'players have'} joined.</p>}
           <FinishSetup name={name} ready={done.slice(0, 4).every(Boolean)} />
         </>
@@ -89,7 +89,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
         Five steps, and your players have something to do before your next session.
       </PageHead>
       {!s.ready && (
-        <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
+        <p role="status" className="card-flat mt-4 px-4 py-3 text-[14px] font-semibold text-on-surface">
           Your progress here isn’t saved yet. It will be once this is switched on.
         </p>
       )}
@@ -119,7 +119,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
               {/* A done step can be opened again to change it. */}
               {isDone && !open && (
                 <details className="mt-1 pl-[52px]">
-                  <summary className="cursor-pointer text-[13.5px] font-semibold text-on-surface-variant underline underline-offset-4">Change</summary>
+                  <summary className="cursor-pointer text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">Change</summary>
                   <div>{st.body}</div>
                 </details>
               )}

@@ -4,12 +4,12 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
     <label className="text-field">
       <span>{label}</span>
       {children}
-      {hint && <small className="mt-1.5 block text-[12.5px] text-on-surface-variant">{hint}</small>}
+      {hint && <small className="mt-1.5 block text-[13px] text-on-surface-variant">{hint}</small>}
     </label>
   );
 }
 
 /** What the server action said went wrong, if it did. */
 export function FormError({ error }: { error?: string | null }) {
-  return error ? <p role="alert" className="text-[13.5px] font-semibold text-on-surface">{error}</p> : null;
+  return error ? <p role="alert" className="text-[14px] font-semibold text-on-surface">{error}</p> : null;
 }

@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { setMembership } from '@/app/coach/content-actions';
+import { useToast } from './Toast';
 
 /** One player's row in a group's roster: tap to put them in or take them out. */
 export function MemberToggle({ groupId, userId, name, detail, initial }: {
@@ -11,6 +12,8 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
   const [busy, start] = useTransition();
   const [err, setErr] = useState(false);
   const router = useRouter();
+  const toast = useToast();
+  const first = name.split(' ')[0];
   return (
     <button type="button" role="switch" aria-checked={on} disabled={busy}
             onClick={() => start(async () => {
@@ -18,7 +21,7 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
               const r = await setMembership(groupId, userId, next);
               if (!r.ok) { setOn(!next); setErr(true); }
               // The list of who's in it, above, is the server's: bring it up to date.
-              else router.refresh();
+              else { toast(next ? `${first} is in the group.` : `${first} is out of the group.`); router.refresh(); }
             })}
             className="flex w-full items-center gap-3 px-4 py-3 text-left">
       <span className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${on ? 'border-on-surface bg-on-surface' : 'border-outline'}`}>
@@ -26,7 +29,7 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14.5px] font-semibold text-on-surface">{name}</span>
-        {(detail || err) && <span className="block truncate text-[12.5px] text-on-surface-variant">{err ? 'Couldn’t save. Try again.' : detail}</span>}
+        {(detail || err) && <span className="block truncate text-[13px] text-on-surface-variant">{err ? 'Couldn’t save. Try again.' : detail}</span>}
       </span>
     </button>
   );

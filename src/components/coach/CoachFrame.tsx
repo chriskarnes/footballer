@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { haptic } from '@/lib/haptics';
+import { ToastProvider } from './Toast';
 
 /**
  * The trainer area's frame. Not the player app with a Coach tab: its own
@@ -13,7 +14,7 @@ import { haptic } from '@/lib/haptics';
  */
 const PLACES = [
   // Players holds the list and the calendar (Week); Library, programs and drills.
-  { href: '/coach',         label: 'Players',  match: ['/coach', '/coach/players', '/coach/send', '/coach/week'],
+  { href: '/coach',         label: 'Players',  match: ['/coach', '/coach/players', '/coach/week'],
     d: 'M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
   { href: '/coach/groups',  label: 'Groups',   match: ['/coach/groups'],
     d: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0' },
@@ -35,7 +36,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
   const wide = WIDE.some((r) => r.test(path));
 
   return (
-    <>
+    <ToastProvider>
       {/* Desktop: the sidebar. */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-outline-variant bg-surface-container-low px-3 py-6 lg:flex">
         <div className="px-3">{brand}</div>
@@ -52,7 +53,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
             );
           })}
         </nav>
-        <Link href="/" className="mt-auto flex min-h-11 items-center gap-3 rounded-full px-4 text-[13.5px] font-semibold text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
+        <Link href="/" className="mt-auto flex min-h-11 items-center gap-3 rounded-full px-4 text-[14px] font-semibold text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
           <Icon d="M15 18l-6-6 6-6" />Player view
         </Link>
       </aside>
@@ -61,7 +62,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
         {/* Phone: the wordmark, and the way back to training. */}
         <header className="safe-t safe-x mx-auto flex max-w-lg items-center justify-between px-5 lg:hidden">
           {brand}
-          <Link href="/" className="text-[13px] font-semibold text-on-surface-variant underline underline-offset-4">Player view</Link>
+          <Link href="/" className="text-[14px] font-semibold text-on-surface-variant underline underline-offset-4">Player view</Link>
         </header>
         <main className={`safe-x mx-auto w-full max-w-lg px-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-2
                           lg:px-10 lg:pb-16 lg:pt-10 ${wide ? 'lg:max-w-6xl' : 'lg:max-w-2xl'}`}>
@@ -77,7 +78,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
             return (
               <Link key={p.href} href={p.href} aria-current={on ? 'page' : undefined}
                     onClick={() => { if (!on) haptic('tap'); }}
-                    className={`pressable flex min-h-11 items-center gap-2 rounded-full px-3.5 text-[12.5px] font-bold tracking-tight transition-colors duration-300
+                    className={`pressable flex min-h-11 items-center gap-2 rounded-full px-3.5 text-[13px] font-bold tracking-tight transition-colors duration-300
                       ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant'}`}>
                 <Icon d={p.d} />
                 <span className={on ? 'inline' : 'sr-only'}>{p.label}</span>
@@ -86,7 +87,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
           })}
         </div>
       </nav>
-    </>
+    </ToastProvider>
   );
 }
 

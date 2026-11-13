@@ -511,6 +511,10 @@ input, textarea, [data-selectable] {
 }
 .scroll-x::-webkit-scrollbar, .scroll-y::-webkit-scrollbar { display: none; }
 .scroll-x { overflow-x: auto; }
+/* A row that scrolls where it isn't obvious: a wide table. The thin bar stays. */
+.scroll-shown { scrollbar-width: thin; }
+.scroll-shown::-webkit-scrollbar { display: block; height: 6px; }
+.scroll-shown::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 3px; }
 .scroll-y { overflow-y: auto; }
 
 /* ==========================================================================
@@ -1101,6 +1105,11 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
   padding: 0 16px max(20px, env(safe-area-inset-bottom));
 }
 .confirm-sheet::backdrop { background: color-mix(in srgb, #000 32%, transparent); }
+/* From 640px, centred like the note dialog: a sheet glued to the bottom of
+   a laptop screen is far from the button that opened it. */
+@media (min-width: 640px) {
+  .confirm-sheet { margin: auto; padding: 24px; }
+}
 
 /* The note dialog — <NoteProvider />. The same native <dialog>, but it holds
    a form: on a phone it is a sheet that slides up from the bottom edge and

@@ -27,11 +27,11 @@ export function ArchiveGroup({ id, name, archived }: { id: string; name: string;
   return (
     <>
       <button type="button" disabled={busy}
-              className="mt-6 min-h-11 w-full text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4"
+              className="mt-6 min-h-11 w-full text-center text-[14px] font-semibold text-on-surface-variant underline underline-offset-4"
               onClick={() => (archived ? go() : setAsking(true))}>
         {archived ? 'Bring this group back' : 'Finish this group'}
       </button>
-      {err && <p role="alert" className="mt-2 text-center text-[13.5px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-center text-[14px] font-semibold text-on-surface">{err}</p>}
       <ConfirmSheet open={asking} busy={busy}
                     title={`Finish ${name}?`}
                     body="Its players stop getting the group’s sessions. Their history stays, and you can bring the group back."

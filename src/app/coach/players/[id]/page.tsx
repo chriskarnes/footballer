@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { RemovePlayer } from '@/components/coach/RemovePlayer';
@@ -13,6 +12,7 @@ import { soccerLabel } from '@/lib/soccer-days';
 import { teamDays } from '@/lib/academy-week';
 import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { nudgeDraft } from '@/lib/nudge';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
@@ -24,14 +24,13 @@ const AGE: Record<string, string> = { u10: 'Under 10', '10_12': 'Age 10–12', '
  * what they actually did, and every note they've been sent — with whether
  * they've read it.
  */
-export default async function PlayerPage({ params, searchParams }: {
-  params: Promise<{ id: string }>; searchParams: Promise<{ sent?: string }>;
+export default async function PlayerPage({ params }: {
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
   const gate = await staffOnly(`/coach/players/${id}`);
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
-  const { sent } = await searchParams;
 
   const content = await loadContent(db, academy.id);
   const [{ players }, { data: notes }, { data: runsRaw }] = await Promise.all([
@@ -59,27 +58,20 @@ export default async function PlayerPage({ params, searchParams }: {
     <NoteProvider only players={[{ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, pr) }]}>
     <div className="animate-pop xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)] xl:gap-x-10">
      <div className="min-w-0">
-      <BackLink href="/coach" label="Players" />
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <h1 className="h-page min-w-0">{p.name}</h1>
-        <div className="flex shrink-0 gap-2">
-          <NoteButton to={p.user_id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
-          {pr.status !== 'good' && <NoteButton to={p.user_id} kind="nudge" className="btn-primary btn-sm pressable">Nudge</NoteButton>}
-        </div>
-      </div>
-      <p className="mt-2 flex items-center gap-2 text-[14px] text-on-surface-variant">
-        <StatusDot status={pr.status} />
-        <span>
-          <b className="font-semibold text-on-surface">{pr.reason}</b> · last trained {sinceLabel(pr.daysSince)}
-          {about && <> · {about}</>}
+      <PageHead back={{ href: '/coach', label: 'Players' }} title={p.name}
+                action={<>
+                  <NoteButton to={p.user_id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
+                  {pr.status !== 'good' && <NoteButton to={p.user_id} kind="nudge" className="btn-primary btn-sm pressable">Nudge</NoteButton>}
+                </>}>
+        <span className="flex items-center gap-2">
+          <StatusDot status={pr.status} />
+          <span>
+            <b className="font-semibold text-on-surface">{pr.reason}</b> · last trained {sinceLabel(pr.daysSince)}
+            {about && <> · {about}</>}
+          </span>
         </span>
-      </p>
+      </PageHead>
 
-      {sent && (
-        <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
-          Sent. {p.first} sees it next time they open the app.
-        </p>
-      )}
 
       {content.ready && (() => {
         const t = targetFor(content, p.user_id);
@@ -134,15 +126,15 @@ export default async function PlayerPage({ params, searchParams }: {
       <section className="card mt-9 p-5 xl:mt-0">
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
-          <div className="text-[13px] text-on-surface-variant">
+          <div className="text-[14px] text-on-surface-variant">
             {pr.hasPlan ? `${pr.done} of ${pr.planned}` : pr.done} · {pr.minutesThisWeek} min
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
 
         <div className="mt-6 flex items-baseline justify-between border-t border-outline-variant pt-5">
-          <div className="text-[13.5px] font-semibold text-on-surface">Last four weeks</div>
-          <div className="text-[13px] text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
+          <div className="text-[14px] font-semibold text-on-surface">Last four weeks</div>
+          <div className="text-[14px] text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
         </div>
         <div className="mt-3 flex h-24 gap-3" role="img"
              aria-label={pr.weeks.map((w) => `${w.done} sessions`).join(', ')}>
@@ -161,7 +153,7 @@ export default async function PlayerPage({ params, searchParams }: {
 
       <section className="card mt-3 p-5">
         <div className="h-card">Their soccer</div>
-        <p className="mt-1 text-[13px] leading-snug text-on-surface-variant">
+        <p className="mt-1 text-[14px] leading-snug text-on-surface-variant">
           {soccer ? soccerLabel(teamDays(soccer)) ?? 'All days off.' : `${p.first} hasn’t said yet.`} Sessions go on the off days.
         </p>
         <div className="mt-4">
@@ -179,11 +171,11 @@ export default async function PlayerPage({ params, searchParams }: {
                   <span className="block truncate text-[14px] font-semibold text-on-surface">{d.title}</span>
                   <span className="text-[12px] text-on-surface-variant">{dayLabel(d.at, tz)}</span>
                 </span>
-                <span className="shrink-0 text-[13px] text-on-surface-variant">{Math.round(Number(d.minutes) || 0)} min</span>
+                <span className="shrink-0 text-[14px] text-on-surface-variant">{Math.round(Number(d.minutes) || 0)} min</span>
               </li>
             ))}
           </ul>
-        ) : <p className="pl-1 text-[13.5px] text-on-surface-variant">Nothing finished yet.</p>}
+        ) : <p className="pl-1 text-[14px] text-on-surface-variant">Nothing finished yet.</p>}
       </section>
 
       <section className="mt-9">
@@ -199,7 +191,7 @@ export default async function PlayerPage({ params, searchParams }: {
               </li>
             ))}
           </ul>
-        ) : <p className="pl-1 text-[13.5px] text-on-surface-variant">No notes yet.</p>}
+        ) : <p className="pl-1 text-[14px] text-on-surface-variant">No notes yet.</p>}
       </section>
 
       <div className="xl:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>

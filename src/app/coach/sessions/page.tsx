@@ -4,6 +4,7 @@ import { PageHead } from '@/components/coach/PageHead';
 import { LIBRARY_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { loadContent } from '@/lib/academy-data';
 import { placesOf } from '@/lib/session-library';
+import { Empty } from '@/components/coach/Empty';
 
 export const metadata = { title: 'Sessions', robots: { index: false } };
 
@@ -33,7 +34,7 @@ export default async function SessionsPage() {
 
       <section className="mt-6">
         {!c.libraryReady ? (
-          <p className="card-flat px-4 py-3 text-[13.5px] text-on-surface-variant">
+          <p className="card-flat px-4 py-3 text-[14px] text-on-surface-variant">
             Sessions on their own aren’t switched on yet. Until then, build them inside a program.
           </p>
         ) : rows.length ? (
@@ -45,7 +46,7 @@ export default async function SessionsPage() {
                   <Link href={`/coach/sessions/${s.id}`} className="flex items-center justify-between gap-4 px-4 py-3.5">
                     <span className="min-w-0">
                       <span className="block truncate text-[14.5px] font-semibold text-on-surface">{s.name}</span>
-                      <span className="mt-0.5 block truncate text-[12.5px] text-on-surface-variant">
+                      <span className="mt-0.5 block truncate text-[13px] text-on-surface-variant">
                         {s.drill_ids.length} {s.drill_ids.length === 1 ? 'drill' : 'drills'} · {s.minutes} min · {s.used.length ? s.used.join(', ') : 'Not used yet'}
                       </span>
                     </span>
@@ -78,13 +79,9 @@ export default async function SessionsPage() {
             </div>
           </>
         ) : (
-          <div className="card-flat p-5">
-            <div className="h-card">No sessions yet</div>
-            <p className="mt-1 text-[13.5px] leading-relaxed text-on-surface-variant">
-              A session is a few drills in order. Build it once here, then add it to any week of any program.
-            </p>
-            <Link href="/coach/sessions/new" className="btn-ghost btn-sm pressable mt-4">Build your first session</Link>
-          </div>
+          <Empty title="No sessions yet" href="/coach/sessions/new" cta="Build your first session">
+            A session is a few drills in order. Build it once here, then add it to any week of any program.
+          </Empty>
         )}
       </section>
     </div>

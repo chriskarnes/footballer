@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { SessionEditor } from '@/components/coach/SessionEditor';
 import { loadContent } from '@/lib/academy-data';
 import { placesOf } from '@/lib/session-library';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Session', robots: { index: false } };
 
@@ -18,8 +18,8 @@ export default async function LibrarySessionPage({ params }: { params: Promise<{
   if (!s) notFound();
   return (
     <div className="animate-pop">
-      <BackLink href="/coach/sessions" label="Sessions" />
-      <h1 className="h-page mb-6">{s.name}</h1>
+      <PageHead back={{ href: '/coach/sessions', label: 'Sessions' }} title={s.name} />
+      <div className="mt-6" />
       <SessionEditor session={s} drills={c.drills} target={{ kind: 'library', id: s.id, usedIn: placesOf(c, s.id) }} />
     </div>
   );

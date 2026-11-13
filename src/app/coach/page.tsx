@@ -24,11 +24,11 @@ export const metadata = { title: 'Coach', robots: { index: false } };
  * question a trainer opens this with. The list is sorted worst first, so the
  * players to act on are at the top and the Nudge button is next to them.
  */
-export default async function CoachPage({ searchParams }: { searchParams: Promise<{ sent?: string; group?: string; ready?: string }> }) {
+export default async function CoachPage({ searchParams }: { searchParams: Promise<{ group?: string; ready?: string }> }) {
   const gate = await staffOnly('/coach');
   if ('page' in gate) return gate.page;
   const { db, academy, role, user } = gate.viewer;
-  const { sent, group, ready } = await searchParams;
+  const { group, ready } = await searchParams;
   const [content, setup] = await Promise.all([loadContent(db, academy.id), readSetup(db, academy.id)]);
   // A new academy's owner is led back to the checklist until it's done.
   const steps = role === 'owner' && setup.ready && !setup.done ? setupSteps(setup, content) : null;
@@ -63,7 +63,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
     members: content.memberships.filter((m) => m.group_id === g.id && all.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
   }));
 
-  const headline = !players.length ? 'No players yet'
+  const headline = !players.length ? (inGroup ? `No one in ${inGroup.name} yet` : 'No players yet')
     : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
     : 'Everyone’s on track';
 
@@ -96,16 +96,11 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       )}
       {askName && <YourName />}
       {ready && (
-        <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
+        <p role="status" className="card-flat mt-4 px-4 py-3 text-[14px] font-semibold text-on-surface lg:max-w-xl">
           {academy.name} is open. Players can find you by name in Find your trainer.
         </p>
       )}
 
-      {sent && (
-        <p role="status" className="card-flat mt-4 px-4 py-3 text-[13.5px] font-semibold text-on-surface">
-          Note sent. Players see it next time they open the app.
-        </p>
-      )}
 
       {!!asking?.length && <JoinRequests requests={(asking as Omit<JoinRequest, 'when'>[]).map((r) => ({ ...r, when: ago(r.created_at) }))} />}
 
@@ -118,7 +113,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         </nav>
       )}
 
-      {error && <p className="mt-4 text-[13px] text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
+      {error && <p className="mt-4 text-[14px] text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
 
       {/* Phone: cards, worst first. */}
       <ul className="mt-6 space-y-2.5 lg:hidden">
@@ -131,7 +126,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                 {!inGroup && !!p.groups.length && (
                   <span className="block truncate text-[12px] font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
                 )}
-                <span className="mt-1 flex items-center gap-2 text-[13px] text-on-surface-variant">
+                <span className="mt-1 flex items-center gap-2 text-[14px] text-on-surface-variant">
                   <StatusDot status={p.progress.status} />
                   <span className="truncate">
                     <span className="font-semibold text-on-surface">{p.progress.reason}</span>
@@ -163,15 +158,15 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                     <td className="px-5 py-3.5 font-bold text-on-surface">
                       <Link href={`/coach/players/${p.user_id}`} className="after:absolute after:inset-0">{p.name}</Link>
                     </td>
-                    <td className="max-w-[14rem] truncate px-5 py-3.5 text-[13px] text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
+                    <td className="max-w-[14rem] truncate px-5 py-3.5 text-[14px] text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
                     <td className="px-5 py-3.5"><WeekDots week={p.progress.week} /></td>
-                    <td className="px-5 py-3.5 text-[13px] text-on-surface-variant">
+                    <td className="px-5 py-3.5 text-[14px] text-on-surface-variant">
                       <span className="flex items-center gap-2">
                         <StatusDot status={p.progress.status} />
                         <span><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-[13px] text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-[14px] text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
                     <td className="relative z-10 px-5 py-3.5 text-right">
                       {p.progress.status !== 'good' && (
                         <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable">Nudge</NoteButton>
@@ -190,12 +185,12 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
         <section className="mt-6 lg:max-w-xl">
           <div className="card p-5">
             <div className="h-card">Invite your players</div>
-            <p className="mt-1 text-[13.5px] leading-snug text-on-surface-variant">
+            <p className="mt-1 text-[14px] leading-snug text-on-surface-variant">
               Text this link to a player or a parent. They sign in with their email and appear here.
             </p>
             {invite?.code
               ? <InviteLink path={`/join/${invite.code}`} role="player" canRotate={false} />
-              : <p className="mt-3 text-[13px]">No invite link yet.</p>}
+              : <p className="mt-3 text-[14px]">No invite link yet.</p>}
           </div>
         </section>
       )}

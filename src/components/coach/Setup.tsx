@@ -33,13 +33,13 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
           }}>
       <label className="block">
         <span className="text-[14px] font-bold text-on-surface">Your name</span>
-        <span className="mt-0.5 block text-[13px] text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</span>
+        <span className="mt-0.5 block text-[14px] text-on-surface-variant">Players see your first name: &ldquo;Mike is getting your training ready.&rdquo;</span>
         <input value={n} onChange={(e) => setN(e.target.value)} required maxLength={60} autoComplete="name"
                className="mt-2 min-h-12 w-full rounded-xl border border-outline bg-transparent px-3.5 text-[16px] font-semibold text-on-surface outline-none focus:border-on-surface" />
       </label>
       <label className="block">
         <span className="text-[14px] font-bold text-on-surface">Your time zone</span>
-        <span className="mt-0.5 block text-[13px] text-on-surface-variant">Your players&rsquo; weeks start on Monday here.</span>
+        <span className="mt-0.5 block text-[14px] text-on-surface-variant">Your players&rsquo; weeks start on Monday here.</span>
         <select value={tz} onChange={(e) => setTz(e.target.value)}
                 className="mt-2 min-h-12 w-full rounded-xl border border-outline bg-transparent px-3 text-[15px] font-semibold text-on-surface outline-none focus:border-on-surface">
           {zones.map((z) => <option key={z} value={z}>{z.replace(/_/g, ' ')}</option>)}
@@ -48,7 +48,7 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
       <button type="submit" disabled={busy} className="btn-primary pressable w-full">
         {busy ? 'Saving…' : 'Save'}
       </button>
-      {err && <p role="status" className="text-[13.5px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="status" className="text-[14px] font-semibold text-on-surface">{err}</p>}
     </form>
   );
 }
@@ -68,10 +68,10 @@ export function FinishSetup({ name, ready }: { name: string; ready: boolean }) {
               }}>
         {busy ? 'One moment…' : `Open ${name}`}
       </button>
-      <p className="mt-2 text-[13px] text-on-surface-variant">
+      <p className="mt-2 text-[14px] text-on-surface-variant">
         {ready ? 'Players can then find you by name in Find your trainer.' : 'Finish steps 1 to 4 first.'}
       </p>
-      {err && <p role="status" className="mt-2 text-[13.5px] font-semibold text-on-surface">{err}</p>}
+      {err && <p role="status" className="mt-2 text-[14px] font-semibold text-on-surface">{err}</p>}
     </div>
   );
 }

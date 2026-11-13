@@ -32,6 +32,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
   }, [state, onSaved]);
   const [video, setVideo] = useState(drill?.video_url ?? '');
   const [confirm, setConfirm] = useState(false);
+  const [gone, setGone] = useState('');
   // In the order picked: the first is the drill's main focus.
   const [tags, setTags] = useState<FocusArea[]>(drillTags(drill ?? { focus: null }).filter((t): t is FocusArea => t in FOCUS_LABELS));
   // Three at most: past that, tags stop telling drills apart.
@@ -50,7 +51,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
         <Field label="Minutes"><input name="minutes" type="number" inputMode="numeric" min={1} max={120} defaultValue={drill?.minutes ?? 5} /></Field>
       </div>
       <fieldset>
-        <legend className="mb-1.5 text-[13px] font-semibold text-on-surface-variant">Works on</legend>
+        <legend className="mb-1.5 text-[14px] font-semibold text-on-surface-variant">Works on</legend>
         <div className="flex flex-wrap gap-2">
           {(Object.entries(FOCUS_LABELS) as [FocusArea, string][]).map(([k, l]) => (
             <span key={k} className={!tags.includes(k) && tags.length >= MAX_TAGS ? 'opacity-40' : ''}>
@@ -59,7 +60,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
           ))}
         </div>
         {tags.map((t) => <input key={t} type="hidden" name="focus" value={t} />)}
-        <p className="mt-1.5 text-[12.5px] text-on-surface-variant">
+        <p className="mt-1.5 text-[13px] text-on-surface-variant">
           {tags.length >= MAX_TAGS ? `That’s three. Main focus: ${FOCUS_LABELS[tags[0]]}, the first you picked.`
             : tags.length > 1 ? `Main focus: ${FOCUS_LABELS[tags[0]]}, the first you picked.`
             : 'Up to three. The first you pick is its main focus.'}
@@ -95,12 +96,16 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
       </div>
       {drill && (
         <>
-          <button type="button" className="w-full text-center text-[13px] font-semibold text-on-surface-variant underline underline-offset-4"
+          <button type="button" className="w-full text-center text-[14px] font-semibold text-on-surface-variant underline underline-offset-4"
                   onClick={() => setConfirm(true)}>Delete this drill</button>
           <ConfirmSheet open={confirm} title="Delete this drill?" confirmLabel="Delete"
             body="It comes out of every session that uses it."
             onCancel={() => setConfirm(false)}
-            onConfirm={async () => { await deleteDrill(drill.id); window.location.href = back; }} />
+            onConfirm={async () => {
+              const r = await deleteDrill(drill.id);
+              if (r.ok) window.location.href = back; else { setConfirm(false); setGone(r.error); }
+            }} />
+          {gone && <p role="alert" className="text-center text-[14px] font-semibold text-on-surface">{gone}</p>}
         </>
       )}
     </form>

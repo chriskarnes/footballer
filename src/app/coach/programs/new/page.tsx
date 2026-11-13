@@ -1,6 +1,6 @@
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { ProgramForm } from '@/components/coach/ProgramForm';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'New program', robots: { index: false } };
 
@@ -9,12 +9,10 @@ export default async function NewProgramPage() {
   if ('page' in gate) return gate.page;
   return (
     <div className="animate-pop">
-      <BackLink href="/coach/content" label="Programs" />
-      <h1 className="h-page">New program</h1>
-      <p className="mb-6 mt-2 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">
+      <PageHead back={{ href: '/coach/content', label: 'Programs' }} title="New program">
         Weeks of at-home work. Give it to a group, or to one player.
-      </p>
-      <ProgramForm />
+      </PageHead>
+      <div className="mt-6"><ProgramForm /></div>
     </div>
   );
 }

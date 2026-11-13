@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { BackLink } from '@/components/BackLink';
 import { staffOnly } from '@/components/coach/Gate';
 import { ProgramForm } from '@/components/coach/ProgramForm';
 import { CopyWeek } from '@/components/coach/CopyWeek';
 import { loadContent } from '@/lib/academy-data';
 import { sessionsForWeek } from '@/lib/academy-week';
+import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Program', robots: { index: false } };
 
@@ -30,11 +30,10 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="animate-pop">
-      <BackLink href="/coach/content" label="Programs" />
-      <p className="eyebrow mb-3">{p.weeks} weeks</p>
-      <h1 className="h-page">{p.name}</h1>
-      {p.description && <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-on-surface-variant">{p.description}</p>}
-      <p className="mt-3 text-[13.5px] text-on-surface-variant">
+      <PageHead back={{ href: '/coach/content', label: 'Programs' }} eyebrow={`${p.weeks} weeks`} title={p.name}>
+        {p.description}
+      </PageHead>
+      <p className="mt-3 text-[14px] text-on-surface-variant">
         {groups.length || players
           ? <>Used by {[...groups.map((g) => g.name), players ? `${players} ${players === 1 ? 'player' : 'players'} on their own` : ''].filter(Boolean).join(', ')}</>
           : 'Not given to anyone yet. Add it to a group, or to a player from their page.'}
@@ -49,7 +48,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
             <li key={n} id={`week-${n}`} className={own ? 'card p-5' : 'card-flat p-5'}>
               <div className="flex items-baseline justify-between gap-3">
                 <div className="h-card">Week {n}</div>
-                <span className="text-[12.5px] text-on-surface-variant">
+                <span className="text-[13px] text-on-surface-variant">
                   {own ? `${shown.length} ${shown.length === 1 ? 'session' : 'sessions'}` : repeats ? `Repeats week ${repeats}` : 'Nothing yet'}
                 </span>
               </div>
@@ -62,11 +61,11 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
                         <Link href={`/coach/programs/${p.id}/session?id=${s.id}`} className="flex items-center justify-between gap-3 py-3">
                           <span className="min-w-0">
                             <span className="block truncate text-[14.5px] font-semibold text-on-surface">{s.name}</span>
-                            <span className="block truncate text-[12.5px] text-on-surface-variant">
+                            <span className="block truncate text-[13px] text-on-surface-variant">
                               {s.drill_ids.map((d) => drills.get(d)?.name).filter(Boolean).join(', ')}
                             </span>
                           </span>
-                          <span className="shrink-0 text-[12.5px] text-on-surface-variant">{mins} min</span>
+                          <span className="shrink-0 text-[13px] text-on-surface-variant">{mins} min</span>
                         </Link>
                       </li>
                     );
