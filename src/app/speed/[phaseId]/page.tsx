@@ -56,7 +56,7 @@ export default async function PhasePage({ params }: { params: Promise<{ phaseId:
                   <div className="min-w-0 flex-1">
                     <div className="h-card">Test day</div>
                     <div className="mt-1 text-body font-medium text-on-surface-variant">
-                      Week {b * 4} · replaces top speed · 45 min after the warm-up
+                      Week {b * 4} · test day, in place of Thursday’s session · 45 min after the warm-up
                     </div>
                   </div>
                 </Link>

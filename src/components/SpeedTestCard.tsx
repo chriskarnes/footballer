@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { shortDate } from '@/lib/dates';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { BackButton, BackLink } from './BackLink';
 import { ConfirmSheet } from './ConfirmSheet';
@@ -10,8 +11,7 @@ import { position } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 
 /** 2026-11-13 → Nov 13. */
-const dayName = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const dayName = shortDate;
 
 type Screen = 'card' | 'entry';
 
@@ -109,7 +109,7 @@ export function SpeedTestCard() {
                   <th className="p-3 font-semibold">Test</th>
                   {entries.map((e) => (
                     <th key={e.date} className="p-3 font-semibold whitespace-nowrap">
-                      {e.date.slice(5)}<br /><span className="font-medium">{e.label}</span>
+                      {shortDate(e.date)}<br /><span className="font-medium">{e.label}</span>
                     </th>
                   ))}
                 </tr>

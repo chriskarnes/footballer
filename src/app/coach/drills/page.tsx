@@ -19,7 +19,11 @@ export default async function DrillsPage() {
   if ('page' in gate) return gate.page;
   const { db, academy } = gate.viewer;
   const c = await loadContent(db, academy.id);
-  const used = (id: string) => c.sessions.filter((s) => s.drill_ids?.includes(id)).length;
+  // Sessions as the trainer knows them, the way the drill's own page lists
+  // them: each library session once (however many weeks it's placed in),
+  // plus program sessions that stand on their own.
+  const used = (id: string) => c.library.filter((s) => s.drill_ids.includes(id)).length
+    + c.sessions.filter((s) => !s.library_id && s.drill_ids?.includes(id)).length;
 
   return (
     <div className="animate-pop">

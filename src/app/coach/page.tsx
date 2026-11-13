@@ -90,7 +90,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           <span className="shrink-0"><TickMark on={false} here /></span>
           <div className="min-w-0 flex-1">
             <div className="h-card">Finish setting up {academy.name}</div>
-            <p className="mt-0.5 text-body text-on-surface-variant">{steps.filter(Boolean).length} of 5 done</p>
+            <p className="mt-0.5 text-body text-on-surface-variant">{steps.filter(Boolean).length} of {steps.length} done</p>
           </div>
           <Link href="/coach/setup" className="btn-primary btn-sm pressable shrink-0">Continue</Link>
         </section>

@@ -58,7 +58,7 @@ export const readMyWeek = cache(async (): Promise<MyWeek | null> => {
   const why = !c.drills.length ? 'Your trainer hasn’t added drills yet.'
     : schedule?.games.includes(weekday) ? 'Game day. Rest up.'
     : items.some((i) => !i.extra && !i.done && i.weekday <= weekday) ? 'Finish today’s session first.'
-    : !left ? `That’s ${allowed === 1 ? 'your extra' : `all ${allowed} extras`} this week.`
+    : !left ? `That’s ${allowed === 1 ? 'your extra session' : `all ${allowed} extra sessions`} this week.`
     : null;
   const programIds = new Set([...mine.map((g) => g.program_id), ...c.playerPrograms.filter((p) => p.user_id === v.user!.id).map((p) => p.program_id)].filter(Boolean));
   const about = programIds.size === 1 ? c.programs.find((p) => programIds.has(p.id))?.description ?? null : null;

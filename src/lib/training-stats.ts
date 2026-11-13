@@ -18,8 +18,8 @@ export function relativeDay(iso: string, now = new Date()): string {
   if (days <= 0) return 'Today';
   if (days === 1) return 'Yesterday';
   const d = new Date(iso);
-  if (days < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
-  return d.toLocaleDateString(undefined, {
+  if (days < 7) return d.toLocaleDateString('en-US', { weekday: 'long' });
+  return d.toLocaleDateString('en-US', {
     day: 'numeric', month: 'short',
     ...(d.getFullYear() !== now.getFullYear() && { year: 'numeric' }),
   });

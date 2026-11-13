@@ -87,7 +87,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
 
   return (
     <div className="animate-pop">
-      <PageHead eyebrow={`${done.filter(Boolean).length} of 5 done`} title={`Set up ${name}`}>
+      <PageHead eyebrow={`${done.filter(Boolean).length} of ${done.length} done`} title={`Set up ${name}`}>
         {s.done
           ? 'All done. Change anything here whenever you like.'
           : 'Five steps to get your first session ready and your players in. Then give them your program from their page or a group.'}

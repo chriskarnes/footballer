@@ -67,7 +67,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
         </p>
       </fieldset>
       {others && others.length > 0 && (
-        <Field label="Next drill" hint="Once a player has levelled this drill all the way up, custom weeks move them on to this one. Optional.">
+        <Field label="Next drill" hint="Once a player has leveled this drill all the way up, custom weeks move them on to this one. Optional.">
           <input type="hidden" name="has_harder" value="1" />
           <select name="harder_id" defaultValue={drill?.harder_id ?? ''}>
             <option value="">None</option>
@@ -85,7 +85,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
       )}
       <Field label="How to do it" hint="A few short lines. Players see it under the drill.">
         <textarea name="how" rows={4} maxLength={1000} defaultValue={drill?.how ?? ''}
-                  placeholder={'Stand 2 metres from a wall.\nPass with the inside of the foot.\nControl, then pass back.'} />
+                  placeholder={'Stand 6 feet from a wall.\nPass with the inside of the foot.\nControl, then pass back.'} />
       </Field>
       <FormError error={state && !state.ok ? state.error : null} />
       <div className={onCancel ? 'grid grid-cols-2 gap-2.5' : ''}>

@@ -5,7 +5,8 @@ import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { Field, FormError } from './Field';
 
 /** A program's name, length and what it's for. Sessions are added week by week after. */
-export function ProgramForm({ program }: { program?: { id: string; name: string; description: string | null; weeks: number } }) {
+/** `solo` is how many players have this program on their own, outside a group. */
+export function ProgramForm({ program, solo = 0 }: { program?: { id: string; name: string; description: string | null; weeks: number }; solo?: number }) {
   const [state, action, pending] = useActionState(saveProgram, null);
   const [confirm, setConfirm] = useState(false);
   const [gone, setGone] = useState('');
@@ -29,7 +30,7 @@ export function ProgramForm({ program }: { program?: { id: string; name: string;
           <button type="button" onClick={() => setConfirm(true)}
                   className="w-full text-center text-body font-semibold text-on-surface-variant underline underline-offset-4">Delete this program</button>
           <ConfirmSheet open={confirm} title="Delete this program?" confirmLabel="Delete"
-            body="Its sessions go too, and any group using it is left without one. Drills stay."
+            body={`Its sessions go too, and any group using it is left without one.${solo ? ` ${solo === 1 ? '1 player has' : `${solo} players have`} it on their own and stop getting it.` : ''} Drills stay.`}
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
               const r = await deleteProgram(program.id);

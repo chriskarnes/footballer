@@ -60,9 +60,11 @@ export function NoteProvider({ players, groups = [], only = false, children }: {
             <div className="mt-4">
               <NoteComposer players={players} groups={groups} initial={initial} fixed={fixed}
                             initialBody={nudge ? person?.nudge ?? '' : ''} kind={nudge ? 'nudge' : 'note'}
-                            onSent={(n) => {
+                            onSent={(n, ids) => {
                               setAsk(null);
-                              setToast(n === 1 ? `Sent to ${players.find((p) => p.id === (fixed?.id ?? ''))?.name.split(' ')[0] ?? '1 player'}.` : `Sent to ${n} players.`);
+                              // One player, picked or fixed: by name, as the button said it.
+                              const one = n === 1 ? players.find((p) => p.id === (fixed?.id ?? ids[0])) : undefined;
+                              setToast(one ? `Sent to ${one.name.split(' ')[0]}.` : `Sent to ${n} ${n === 1 ? 'player' : 'players'}.`);
                               router.refresh();
                             }} />
             </div>

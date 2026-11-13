@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { shortDate } from '@/lib/dates';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { addAddon, assignProgram, removeAddon, setMembership, unassignProgram } from '@/app/coach/content-actions';
@@ -88,7 +89,7 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
               <li key={o.program_id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <span className="min-w-0">
                   <span className="block truncate text-body-lg font-semibold text-on-surface">{o.label}</span>
-                  <span className="block text-body-sm text-on-surface-variant">Started {o.starts_on}</span>
+                  <span className="block text-body-sm text-on-surface-variant">Started {shortDate(o.starts_on)}</span>
                 </span>
                 <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => setStopping(o)}>Stop</button>
               </li>
@@ -100,7 +101,7 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
             <label className="text-field flex-1">
               <select value={program} onChange={(e) => setProgram(e.target.value)} aria-label="Program">
                 <option value="">Give {first} a program…</option>
-                {left.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.weeks} wks)</option>)}
+                {left.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.weeks} {p.weeks === 1 ? 'week' : 'weeks'})</option>)}
               </select>
             </label>
             <button type="button" disabled={busy || !program} className="btn-primary btn-sm pressable self-center"

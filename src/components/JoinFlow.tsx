@@ -26,7 +26,7 @@ export function JoinFlow({ code, role, email, initial }: {
   if (role === 'trainer') {
     return email
       ? <JoinButton code={code} label="Join as a trainer" email={email} />
-      : <SignIn next={`/join/${code}`} title="Join as a trainer" button="Email me a link" />;
+      : <SignIn next={`/join/${code}`} title="Join as a trainer" />;
   }
 
   return (
@@ -57,7 +57,7 @@ export function JoinFlow({ code, role, email, initial }: {
         <div key={who} className="animate-pop">
           {email
             ? <JoinButton code={code} who={who} label={`Join as ${as}`} email={email} />
-            : <SignIn next={`/join/${code}?as=${who}`} button="Email me a link" title="Your email" />}
+            : <SignIn next={`/join/${code}?as=${who}`} title="Your email" />}
         </div>
       )}
     </div>

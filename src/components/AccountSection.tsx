@@ -38,7 +38,7 @@ export function AccountSection({ email, version, canBrand, role }: {
         )}
         {role === 'player' && (
           <Link href="/me/notes" className="pressable block">
-            <Row label="Notes from my trainer">
+            <Row label="Notes from your trainer">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
                    fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />

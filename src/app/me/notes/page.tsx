@@ -3,7 +3,7 @@ import { MarkSeen } from '@/components/MarkSeen';
 import { getViewer } from '@/lib/viewer';
 import { readInbox, ago } from '@/lib/notes';
 
-export const metadata = { title: 'Notes' };
+export const metadata = { title: 'Notes from your trainer' };
 
 /**
  * Every note the player's trainers have sent, newest first. Opening the page
@@ -19,7 +19,7 @@ export default async function NotesPage() {
   return (
     <div className="animate-pop">
       <BackLink href="/me" label="Me" />
-      <h1 className="h-page">From my trainer</h1>
+      <h1 className="h-page">Notes from your trainer</h1>
       {notes.length ? (
         <ul className="mt-6 space-y-2.5">
           {notes.map((n) => (

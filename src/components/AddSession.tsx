@@ -17,7 +17,7 @@ export function AddSession({ why, inBand = false }: { why: string | null; inBand
               className={inBand ? 'btn-primary btn-on-brand btn-big pressable w-full'
                 : 'btn-ghost pressable min-h-[52px] w-full text-body-lg font-bold disabled:opacity-50'}
               onClick={() => start(async () => { haptic('tap'); setErr(''); const r = await addMySession(); if (r && !r.ok) setErr(r.error); })}>
-        {pending ? 'Building…' : inBand ? 'Bonus session' : '+ Add an extra session'}
+        {pending ? 'Building…' : inBand ? 'Extra session' : '+ Extra session'}
       </button>
       {(err || why) && (
         <p className={`mt-2 text-center text-body font-medium ${inBand ? 'text-on-surface-brand-variant' : 'text-on-surface-variant'}`}>{err || why}</p>

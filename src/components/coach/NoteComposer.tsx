@@ -28,7 +28,8 @@ const QUICK = [
 export function NoteComposer({ players, groups = [], initial, fixed, initialBody, kind, onSent }: {
   players: NotePlayer[]; groups?: NoteGroup[]; initial: NoteTo; fixed?: NotePlayer;
   initialBody: string; kind: 'note' | 'nudge';
-  onSent?: (count: number) => void;
+  /** How many it went to, and who, so one can be named. */
+  onSent?: (count: number, ids: string[]) => void;
 }) {
   const usable = groups.filter((g) => g.members.length);
   const [mode, setMode] = useState<NoteTo['mode']>(initial.mode);
@@ -54,7 +55,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
     start(async () => {
       const r = await sendNote({ body, to: !fixed && mode === 'everyone' ? null : to, kind });
       if (r && !r.ok) setErr(r.error);
-      else if (r?.ok) onSent?.(to.length);
+      else if (r?.ok) onSent?.(to.length, to);
     });
   }
 

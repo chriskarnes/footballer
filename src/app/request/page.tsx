@@ -40,7 +40,7 @@ export default async function RequestPage() {
       </BrandBand>
       <div className="relative -mt-12">
         {!v.user ? (
-          <SignIn next="/request" title="First, sign in" button="Email me a link" />
+          <SignIn next="/request" title="First, sign in" />
         ) : v.role ? (
           <div className="card p-5">
             <div className="h-card">You&rsquo;re already in</div>

@@ -96,7 +96,7 @@ export function SpeedNow() {
         <BandTitle>Get faster</BandTitle>
         <p className={info}>A year of sessions to get faster, a few a week.</p>
         <button type="button" className={big} onClick={() => s.save(autoStart(s.now!))}>
-          Start my speed program
+          Start Speed
         </button>
       </>
     );
@@ -109,7 +109,7 @@ export function SpeedNow() {
       <>
         <BandTag>Next week</BandTag>
         <BandTitle>Starts Monday</BandTitle>
-        <p className={info}>{pos.startsOn.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })} · {phase.name}</p>
+        <p className={info}>{pos.startsOn.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} · {phase.name}</p>
       </>
     );
   }
@@ -220,7 +220,7 @@ export function SpeedWeek() {
                     {d.type === 'test' ? 'Test day' : d.session.name}
                   </span>
                   <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
-                    {day} · {d.type === 'test' ? 'replaces top speed' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
+                    {day} · {d.type === 'test' ? 'Five tests · about 45 min' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
                     {missed ? ' · Missed' : ''}
                   </span>
                 </span>

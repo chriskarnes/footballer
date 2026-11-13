@@ -87,7 +87,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
 
       <details className="mt-9">
         <summary className="cursor-pointer text-body font-semibold text-on-surface">Name, length and description</summary>
-        <div className="mt-5"><ProgramForm program={p} /></div>
+        <div className="mt-5"><ProgramForm program={p} solo={c.playerPrograms.filter((x) => x.program_id === p.id).length} /></div>
       </details>
     </div>
   );

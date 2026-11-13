@@ -70,7 +70,7 @@ export default async function LibraryPage() {
                         {/* No minute total. The number that helps is per drill, on
                             Train — "384m" against a program is not actionable. */}
                         <div className="mt-0.5 text-body font-semibold text-on-surface-variant">
-                          {n} sessions
+                          {n} {n === 1 ? 'session' : 'sessions'}
                         </div>
                       </div>
                       <svg viewBox="0 0 24 24" aria-hidden="true"

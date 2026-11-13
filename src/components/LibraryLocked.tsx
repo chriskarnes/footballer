@@ -85,7 +85,7 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
         <BandTag>{title}</BandTag>
         <BandTitle>Nothing yet</BandTitle>
         <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
-          Your trainer hasn&rsquo;t set a session.
+          Your trainer hasn&rsquo;t set this week yet.
         </p>
       </BrandBand>
       <Suspense fallback={null}><NoteBanner /></Suspense>

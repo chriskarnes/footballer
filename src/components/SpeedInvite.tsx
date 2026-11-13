@@ -41,7 +41,7 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
   // pink on a red band or brown on a yellow one.
   const look = `btn-outline flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full text-title font-bold ${
     onBrand ? 'text-on-surface-brand' : 'text-on-surface'} ${className}`;
-  const inner = <><Icon d={WATCH} className="h-5 w-5" />{start ? 'My speed program' : 'Try the speed program'}</>;
+  const inner = <><Icon d={WATCH} className="h-5 w-5" />{start ? 'Go to Speed' : 'Try Speed'}</>;
 
   // Until the stored start is read, hold the button's place: it could be
   // either one.
@@ -79,7 +79,7 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
               <li className="flex gap-3"><Icon d="M5 21V4M5 4h11l-2 4 2 4H5" className="mt-px h-5 w-5 shrink-0" />A test day every four weeks, to see your times drop</li>
             </ul>
             <button type="button" onClick={begin} className="btn-primary btn-big pressable mt-5 w-full">
-              Start my speed program
+              Start Speed
             </button>
             <button type="button" onClick={() => setOpen(false)}
                     className="pressable mt-1.5 min-h-12 w-full rounded-full text-title-sm font-bold text-on-surface-variant">

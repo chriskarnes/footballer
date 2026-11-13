@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { shortDate } from '@/lib/dates';
 import { notFound } from 'next/navigation';
 import { staffOnly } from '@/components/coach/Gate';
 import { GroupForm } from '@/components/coach/GroupForm';
@@ -43,7 +44,7 @@ export default async function GroupPage({ params }: {
 
   const meta = [when, program
     ? n ? `${program.name} · Week ${n} of ${program.weeks}`
-        : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${g.starts_on}` : 'finished'}`
+        : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${shortDate(g.starts_on)}` : 'finished'}`
     : null].filter(Boolean).join(' · ');
 
   // This group stays on the list even when finished: Send a note here is to it,

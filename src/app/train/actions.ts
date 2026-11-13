@@ -51,7 +51,7 @@ export async function addMySession(): Promise<{ ok: false; error: string }> {
       p_academy: v.academy.id, p_week_of: monday, p_name: s.name, p_drill_ids: s.drill_ids,
       p_steps: s.drill_ids.map((d) => level.get(d) ?? 0), p_weekday: weekdayOf(today),
     });
-    if (error) return { ok: false, error: /limit/.test(error.message) ? 'That’s all your extras this week.' : /function|schema/.test(error.message) ? notReady(error, '0015') : plain(error) };
+    if (error) return { ok: false, error: /limit/.test(error.message) ? 'That’s all your extra sessions this week.' : /function|schema/.test(error.message) ? notReady(error, '0015') : plain(error) };
     redirect(`/train/custom/${id}`);
   } catch (e) {
     if (isRedirect(e)) throw e;

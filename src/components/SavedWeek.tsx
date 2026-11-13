@@ -79,7 +79,7 @@ export function SavedWeek({
         confirmLabel="Make active" busy={switching}
         onConfirm={activate} onCancel={() => setConfirming(false)} />
 
-      <h2 className="h-card mt-9">The week</h2>
+      <h2 className="h-card mt-9">Your week</h2>
       <PlanWeek rows={rows} drillsBySession={drillsBySession}
                 done={state?.done} today={state?.today ?? null} />
 

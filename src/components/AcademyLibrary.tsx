@@ -50,7 +50,7 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
                   <summary className="pressable flex cursor-pointer list-none items-center gap-4 p-4">
                     <span className="min-w-0 flex-1">
                       <span className="block text-title-sm font-bold leading-snug text-on-surface">{p.name}</span>
-                      <span className="mt-0.5 block text-body font-semibold text-on-surface-variant">{sessions.length} sessions</span>
+                      <span className="mt-0.5 block text-body font-semibold text-on-surface-variant">{sessions.length} {sessions.length === 1 ? 'session' : 'sessions'}</span>
                     </span>
                     <span className="transition-transform group-open:rotate-90"><Chevron /></span>
                   </summary>

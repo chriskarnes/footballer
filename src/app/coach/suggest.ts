@@ -20,7 +20,7 @@ const PICK_SCHEMA = {
   required: ['drill_id', 'note', 'why'],
 };
 
-const SYSTEM = 'You help a youth soccer trainer personalise at-home training. Choose one drill from the trainer\'s list that fits this player right now: something their group work doesn\'t already cover, short enough to actually get done if they\'re behind.';
+const SYSTEM = 'You help a youth soccer trainer personalize at-home training. Choose one drill from the trainer\'s list that fits this player right now: something their group work doesn\'t already cover, short enough to actually get done if they\'re behind.';
 
 /**
  * A "just for you" drill for one player, for the trainer to approve. Picks

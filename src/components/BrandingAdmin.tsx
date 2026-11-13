@@ -218,7 +218,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
 
       <ConfirmSheet open={resetting} title="Clear colors and logo?"
         body="Your players go back to the black-and-white app. The academy keeps its name."
-        confirmLabel="Reset" onConfirm={reset} onCancel={() => setResetting(false)} />
+        confirmLabel="Clear" onConfirm={reset} onCancel={() => setResetting(false)} />
     </div>
   );
 }

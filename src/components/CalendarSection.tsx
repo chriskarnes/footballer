@@ -110,7 +110,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
         <p className="mb-2.5 mt-6 text-body font-bold text-on-surface">Include</p>
         <div className="flex flex-wrap gap-2">
           {plan && <Chip on={feed.include_plan} onClick={() => update({ include_plan: !feed.include_plan })}>Weekly plan</Chip>}
-          {speed && <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed &amp; Stamina</Chip>}
+          {speed && <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed</Chip>}
         </div>
         </>}
 

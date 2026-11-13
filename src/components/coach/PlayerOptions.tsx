@@ -55,7 +55,7 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
 
       <label className="mt-5 flex cursor-pointer items-start justify-between gap-4">
         <span>
-          <span className="block text-body font-bold text-on-surface">Do Speed &amp; Stamina</span>
+          <span className="block text-body font-bold text-on-surface">Do Speed</span>
           <span className="mt-0.5 block text-body-sm leading-snug text-on-surface-variant">
             {speed
               ? 'A year of sprint, jump and strength sessions, in their Speed tab.'

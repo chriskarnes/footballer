@@ -19,7 +19,7 @@ import { PageHead } from '@/components/coach/PageHead';
 export const metadata = { title: 'Player', robots: { index: false } };
 
 // The bands the profile form offers (ProfileSetup).
-const AGE: Record<string, string> = { u10: 'Under 10', '10_12': 'Age 10–12', '13_15': 'Age 13–15', '16_18': 'Age 16–18', '18_plus': '18+' };
+const AGE: Record<string, string> = { u10: 'Under 10', '10_12': 'Age 10–12', '13_15': 'Age 13–15', '16_18': 'Age 16–17', '18_plus': '18+' };
 
 /**
  * One player, for the trainer: this week day by day, the last four weeks,
@@ -148,7 +148,7 @@ export default async function PlayerPage({ params }: {
                 <div className={`absolute inset-x-1 bottom-0 rounded-small ${i === 3 ? 'bg-on-surface' : 'bg-surface-container-highest'}`}
                      style={{ height: `${Math.max(4, (w.done / max) * 100)}%` }} />
               </div>
-              <span className="text-label-sm text-on-surface-variant">{i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} wks ago`}</span>
+              <span className="text-label-sm text-on-surface-variant">{i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} weeks ago`}</span>
             </div>
           ))}
         </div>

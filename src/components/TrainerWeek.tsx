@@ -83,7 +83,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
         {(!weekDone || gameDay) && (
           <p className="mt-2 text-title-sm font-semibold text-on-surface-brand-variant">
             {next ? `${next.minutes} min · ${next.drills} ${next.drills === 1 ? 'drill' : 'drills'}`
-              : weekDone ? 'Game day. Rest up.' : 'Your trainer hasn’t set this week.'}
+              : weekDone ? 'Game day. Rest up.' : 'Your trainer hasn’t set this week yet.'}
           </p>
         )}
         {/* The trainer, in their words, where the player is about to press. */}

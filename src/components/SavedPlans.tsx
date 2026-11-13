@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { shortDate } from '@/lib/dates';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ConfirmSheet } from './ConfirmSheet';
@@ -73,7 +74,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
 
   return (
     <section id="plans" className="mt-10 scroll-mt-5">
-      <h2 className="h-sec mb-3">My plans</h2>
+      <h2 className="h-sec mb-3">Your plans</h2>
       <ul role="radiogroup" aria-label="Active weekly plan" className="space-y-2">
         {plans.map((p) => (
           <li key={p.id} className="card p-4">
@@ -152,8 +153,8 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
         open={!!deleting}
         title={`Delete ${deleting?.name ?? ''}?`}
         body={deleting?.active
-          ? <>This is your active plan, so you&rsquo;ll have none until you make another one active. Sessions you&rsquo;ve done stay in your history.</>
-          : <>Sessions you&rsquo;ve done stay in your history.</>}
+          ? <>This is your active plan, so you&rsquo;ll have none until you make another one active. Sessions you&rsquo;ve done stay in Your training.</>
+          : <>Sessions you&rsquo;ve done stay in Your training.</>}
         confirmLabel="Delete" busy={busy}
         onConfirm={() => deleting && remove(deleting)}
         onCancel={() => setDeleting(null)} />
@@ -161,11 +162,8 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
   );
 }
 
-/** "3 Sep", the same on the server and in the browser — a locale-default
- *  date rendered "9/3/2026" in one and could disagree with the other. */
-function savedOn(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-}
+/** "Sep 3": see lib/dates. */
+const savedOn = shortDate;
 
 /** The Plan tab's calendar, with a tick in it for the active week. */
 function CalendarIcon({ checked }: { checked: boolean }) {

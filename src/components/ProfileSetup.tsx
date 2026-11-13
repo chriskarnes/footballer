@@ -18,7 +18,7 @@ import { POSITIONS, positionName } from '@/lib/positions';
 
 const AGE_BANDS: [string, string][] = [
   ['u10', 'Under 10'], ['10_12', '10–12'], ['13_15', '13–15'],
-  ['16_18', '16–18'], ['18_plus', '18+'],
+  ['16_18', '16–17'], ['18_plus', '18+'],
 ];
 
 

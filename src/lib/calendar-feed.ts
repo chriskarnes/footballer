@@ -93,7 +93,7 @@ export function feedEvents(data: FeedData, sessions: SessionRow[], origin: strin
           events.push({
             uid: `speed-${date}@train.futbol`, date,
             summary: summary(tick, day.session.name, minutes),
-            description: `${tick ? 'Done. ' : ''}Speed & Stamina · ${KIND_LABELS[day.session.kind]} · ${pos.phase.name}, week ${pos.weekOfYear + 1} of ${pos.totalWeeks}.\n${url}`,
+            description: `${tick ? 'Done. ' : ''}Speed · ${KIND_LABELS[day.session.kind]} · ${pos.phase.name}, week ${pos.weekOfYear + 1} of ${pos.totalWeeks}.\n${url}`,
             url, timed: timed(minutes, offset),
           });
         } else if (day.type === 'test') {
