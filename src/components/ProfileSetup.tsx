@@ -33,6 +33,8 @@ export type ProfileValues = {
   club?: string | null;
 };
 
+const SIGNED_OUT = 'signed-out';
+
 export function ProfileSetup({ email, initial, photo, next = '/', parent = false, heading = true }: {
   email?: string; initial?: ProfileValues;
   /** The optional photo picker, on the profile screen; not part of first-time setup. */
@@ -47,8 +49,17 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   /** False where the page's brand band already says what this is (first-time setup on Me). */
   heading?: boolean;
 }) {
-  const named = parent === null && !!initial?.display_name?.trim();
-  const who = initial?.display_name?.trim().split(/\s+/)[0] ?? '';
+  // Someone who has answered before is correcting, not starting. Same four
+  // questions either way — only the framing around them changes, because
+  // "Let's set you up" over your own filled-in answers reads as a reset.
+  // Age, not name: a player let in from a join request already has the name
+  // they asked with, and is still starting, not correcting.
+  const returning = !!initial?.age_band;
+  const [name, setName] = useState(initial?.display_name ?? '');
+  // By name only while starting: someone correcting their own answers is
+  // asked as themselves. The name follows the field as it's edited.
+  const named = parent === null && !returning && !!initial?.display_name?.trim();
+  const who = (name.trim() || initial?.display_name?.trim() || '').split(/\s+/)[0];
   const q = named
     ? { name: 'Player’s name', age: `How old is ${who}?`, where: `Where does ${who} play?`,
         foot: `Which foot is ${who}’s best?`, team: `${who}’s team (you can skip this)`, club: `${who}’s team, if they’re in one` }
@@ -58,7 +69,6 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
     : { name: 'What’s your name?', age: 'How old are you?', where: 'Where do you play?',
         foot: 'Which foot is your best?', team: 'Your team (you can skip this)', club: 'Your team, if you’re in one' };
   const router = useRouter();
-  const [name, setName] = useState(initial?.display_name ?? '');
   const [ageBand, setAgeBand] = useState(initial?.age_band ?? '');
   const [positions, setPositions] = useState<string[]>((initial?.positions ?? []).map(positionName));
   const [foot, setFoot] = useState(initial?.dominant_foot ?? '');
@@ -66,13 +76,6 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   const [club, setClub] = useState(initial?.club ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-
-  // Someone who has answered before is correcting, not starting. Same four
-  // questions either way — only the framing around them changes, because
-  // "Let's set you up" over your own filled-in answers reads as a reset.
-  // Age, not name: a player let in from a join request already has the name
-  // they asked with, and is still starting, not correcting.
-  const returning = !!initial?.age_band;
 
   // The four that count are the four that change a drill. Region and club are
   // deliberately not in this number — showing "4 of 6" would make skippable
@@ -110,7 +113,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           region: region.trim() || null, club: club.trim() || null,
         }),
       });
-      if (r.status === 401) { setError('You’ve been signed out. Sign in again from Me, then save.'); setBusy(false); return; }
+      if (r.status === 401) { setError(SIGNED_OUT); setBusy(false); return; }
       if (!r.ok) throw new Error(String(r.status));
       // First time through, go where the answers are used: the week, when
       // this academy has one, otherwise Train. Someone correcting one answer
@@ -126,7 +129,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   return (
     // First-time setup asks the install prompt to keep out of the way.
     <div className="animate-pop" data-install-quiet={returning ? undefined : ''}>
-      {heading && <h1 className="h-page">{returning ? (parent ? 'Player profile' : 'My profile') : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>}
+      {heading && <h1 className="h-page">{returning ? (parent !== false ? 'Player profile' : 'My profile') : named ? `Set ${who} up` : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>}
       {photo}
 
       {/* Name is required now the profile is about someone else, but a first
@@ -228,7 +231,11 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           {answered} of 4 answered. Answer the questions above to finish.
         </p>
       )}
-      {error && <p role="alert" className="mt-3 text-body-sm font-medium text-on-surface">{error}</p>}
+      {error === SIGNED_OUT ? (
+        <p role="alert" className="mt-3 text-body-sm font-medium text-on-surface">
+          You&rsquo;ve been signed out. <a href="/me" className="font-semibold underline underline-offset-4">Sign in again</a>, then answer these once more.
+        </p>
+      ) : error && <p role="alert" className="mt-3 text-body-sm font-medium text-on-surface">{error}</p>}
 
     </div>
   );

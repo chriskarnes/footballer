@@ -23,7 +23,7 @@ export default async function TrainNowPage() {
   // joining with the link does, in every academy: this comes before the
   // library gate, which most academies stop at. One let in from a join
   // request arrives here with only the name they asked with.
-  if (state.kind === 'new' && await unanswered()) redirect('/me');
+  if (state.kind !== 'none' && await unanswered()) redirect('/me');
   if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;
   // Only what the session builder reads goes to the phone: this is the front

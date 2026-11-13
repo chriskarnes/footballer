@@ -50,8 +50,11 @@ async function readProfile(db: any, id: string): Promise<ProfileValues | null> {
     .select(`${BASE}, age_band, positions, region, club`).eq('id', id).maybeSingle();
   if (!error) return data ?? null;
   const { data: base } = await db.from('profiles').select(BASE).eq('id', id).maybeSingle();
+  // Marked, so the questions aren't asked: there'd be nowhere to save them.
+  if (base) BEFORE_0001.add(base);
   return base ?? null;
 }
+const BEFORE_0001 = new WeakSet<object>();
 
 /**
  * Whether the first-time questions are still to answer. Not just the name:
@@ -59,7 +62,7 @@ async function readProfile(db: any, id: string): Promise<ProfileValues | null> {
  * and age and position still unasked. A null is unanswered; a missing column
  * (the fallback read above) isn't held against them.
  */
-const needsProfile = (p: ProfileValues | null) => profileMissing(p);
+const needsProfile = (p: ProfileValues | null) => !(p && BEFORE_0001.has(p)) && profileMissing(p);
 
 /** When their photo last changed, or null: no photo, or the column isn't there yet (0016). */
 async function readAvatarAt(db: any, id: string): Promise<string | null> {
@@ -164,7 +167,8 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       <div>
         <BrandBand>
           <BandTag>Welcome</BandTag>
-          <BandTitle>{signedUpBy === 'parent' ? 'Set your player up' : 'Let’s set you up'}</BandTitle>
+          <BandTitle>{signedUpBy === 'parent' ? 'Set your player up'
+            : !signedUpBy && !profile?.age_band && profile?.display_name?.trim() ? `Set ${profile.display_name.trim().split(/\s+/)[0]} up` : 'Let’s set you up'}</BandTitle>
         </BrandBand>
         <ProfileSetup email={user.email} initial={profile ?? undefined} next="/" parent={signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} heading={false} />
       </div>
