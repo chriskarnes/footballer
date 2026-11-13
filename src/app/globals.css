@@ -688,7 +688,17 @@ input, textarea, [data-selectable] {
 
 /* M3 requires a visible focus indicator. There wasn't one. */
 .pressable:focus-visible,
-a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+a:focus-visible,
+.chip:focus-visible, .tile:focus-visible, .icon-btn:focus-visible, .segment:focus-visible,
+button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+
+/* A text button or link — "New drill", "Skip", "Build one" — is a line of
+   14px type, about 20px tall. On a touch screen its hit area grows to 44px
+   without moving the text. */
+@media (pointer: coarse) {
+  button.underline, a.underline { position: relative; }
+  button.underline::before, a.underline::before { content: ''; position: absolute; inset: -12px -4px; }
+}
 
 /* ==========================================================================
    SURFACES — M3 card variants.
@@ -889,10 +899,14 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    so it does not out-weigh the card it sits in. Four call sites were each
    doing this with their own px/py/text-xs overrides, and no two agreed. */
 .btn-sm {
+  position: relative;
   min-height: 40px;
   padding: 0 16px;
   font-size: 13px;
 }
+/* 40px to the eye, 44 to the thumb: the hit area reaches 2px past each edge,
+   the way the chip's does. */
+.btn-sm::before { content: ''; position: absolute; inset: -2px 0; border-radius: inherit; }
 }
 
 
@@ -928,12 +942,15 @@ a:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset
    unlayered this rule silently won and drew them as small white discs. */
 @layer components {
 .icon-btn {
+  position: relative;
   display: inline-flex; align-items: center; justify-content: center;
   width: 36px; height: 36px; flex-shrink: 0; cursor: pointer;
   border: 0; border-radius: var(--md-sys-shape-corner-full);
   background: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-on-surface);
 }
+/* 36px to the eye, 44 to the thumb, like the chip. */
+.icon-btn::before { content: ''; position: absolute; inset: -4px; border-radius: inherit; }
 }
 
 /* ==========================================================================

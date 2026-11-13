@@ -319,10 +319,11 @@ function Builder({
           {(Object.keys(FOCUS_LABELS) as FocusArea[]).map((f) => {
             const rank = intake.weaknesses.indexOf(f);
             return (
-              <button key={f} type="button" onClick={() => toggleWeakness(f)}
+              <button key={f} type="button" onClick={() => toggleWeakness(f)} aria-pressed={rank >= 0}
+                aria-label={rank >= 0 ? `${FOCUS_LABELS[f]}, number ${rank + 1}` : FOCUS_LABELS[f]}
                 className={`chip ${rank >= 0 ? 'chip-on' : ''}`}>
                 {rank >= 0 && (
-                  <span className="mr-1.5 font-brand text-[11px] font-bold text-primary">
+                  <span aria-hidden="true" className="mr-1.5 font-brand text-[11px] font-bold text-primary">
                     {rank + 1}
                   </span>
                 )}

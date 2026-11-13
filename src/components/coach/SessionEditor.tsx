@@ -71,9 +71,9 @@ export function SessionEditor({ target, session, drills: given }: {
                     <span className="block truncate text-[14.5px] font-semibold text-on-surface">{d?.name ?? 'Deleted drill'}</span>
                     {d && <span className="block truncate text-[13px] text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>}
                   </span>
-                  <button type="button" className="icon-btn" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
-                  <button type="button" className="icon-btn" aria-label="Move down" disabled={i === ids.length - 1} onClick={() => move(i, 1)}>↓</button>
-                  <button type="button" className="icon-btn" aria-label="Remove" onClick={() => setIds((xs) => xs.filter((_, k) => k !== i))}>×</button>
+                  <button type="button" className="icon-btn" aria-label={`Move ${d?.name ?? 'drill'} up`} disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+                  <button type="button" className="icon-btn" aria-label={`Move ${d?.name ?? 'drill'} down`} disabled={i === ids.length - 1} onClick={() => move(i, 1)}>↓</button>
+                  <button type="button" className="icon-btn" aria-label={`Remove ${d?.name ?? 'drill'}`} onClick={() => setIds((xs) => xs.filter((_, k) => k !== i))}>×</button>
                 </li>
               );
             })}
@@ -94,7 +94,7 @@ export function SessionEditor({ target, session, drills: given }: {
           </div>
         ) : <>
         {drills.length > 6 && (
-          <label className="text-field mb-2"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a drill" /></label>
+          <label className="text-field mb-2"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a drill" aria-label="Find a drill" /></label>
         )}
         {drills.length ? (
           <ul className="card divide-y divide-outline-variant">

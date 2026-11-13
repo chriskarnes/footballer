@@ -1,6 +1,7 @@
 import type { Progress, Status } from '@/lib/progress';
 
 const DAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const SPOKEN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const STATUS_BG: Record<Status, string> = {
   good: 'bg-status-good', warn: 'bg-status-warn', bad: 'bg-status-bad',
@@ -18,9 +19,13 @@ export function StatusDot({ status, className = '' }: { status: Status; classNam
  */
 export function WeekDots({ week, large }: { week: Progress['week']; large?: boolean }) {
   const size = large ? 'h-7 w-7' : 'h-2.5 w-2.5';
+  // Read aloud as one line: the count, then any day planned and missed.
+  const missed = week.map((d, i) => d.planned > d.done && !d.future && !d.today ? SPOKEN[i] : null).filter(Boolean);
+  const trained = week.filter((d) => d.done).length;
+  const said = `This week: trained ${trained} ${trained === 1 ? 'day' : 'days'}`
+    + (missed.length ? `, missed ${missed.join(', ')}` : '');
   return (
-    <div className={`flex ${large ? 'justify-between' : 'gap-1.5'}`}
-         aria-label={`This week: ${week.filter((d) => d.done).length} days trained`}>
+    <div role="img" aria-label={said} className={`flex ${large ? 'justify-between' : 'gap-1.5'}`}>
       {week.map((d, i) => {
         const missed = d.planned > d.done && !d.future && !d.today;
         const cls = d.done ? 'bg-on-surface border-on-surface'

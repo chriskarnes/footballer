@@ -145,7 +145,7 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
                 <span className="block truncate text-[14.5px] font-semibold text-on-surface">{a.name}</span>
                 {a.note && <span className="block text-[13px] leading-snug text-on-surface-variant">{a.note}</span>}
               </span>
-              <button type="button" disabled={busy} className="icon-btn" aria-label="Remove" onClick={() => run(() => removeAddon(a.id))}>×</button>
+              <button type="button" disabled={busy} className="icon-btn" aria-label={`Remove ${a.name}`} onClick={() => run(() => removeAddon(a.id))}>×</button>
             </li>
           ))}
         </ul>
