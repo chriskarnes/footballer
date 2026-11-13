@@ -5,7 +5,7 @@ import { getViewer } from '@/lib/viewer';
 import { mondayOf, localDate } from '@/lib/progress';
 import { FOCUS_LABELS } from '@/lib/types';
 import type { DrillRow } from '@/lib/academy-week';
-import { plain, Said } from '@/lib/plain-error';
+import { plain, notReady, Said } from '@/lib/plain-error';
 
 /**
  * Writes for the trainer's own content (drills, programs, sessions), groups,
@@ -95,8 +95,13 @@ export async function saveDrill(_: unknown, f: FormData): Promise<Result> {
 export async function deleteDrill(id: string): Promise<Result> {
   try {
     const v = await staff();
-    const { error } = await v.db.from('drills').delete().eq('id', id).eq('academy_id', v.academy.id);
-    if (error) return { ok: false, error: plain(error) };
+    // In one step on the database: out of every session, then gone (0023).
+    const { error } = await v.db.rpc('delete_drill', { p_drill: id });
+    if (error) {
+      const only = /only drill in: (.+)/.exec(error.message)?.[1];
+      if (only) return { ok: false, error: `It’s the only drill in ${only}. Add another drill there first, or delete that session.` };
+      return { ok: false, error: /function .* does not exist|Could not find the function/i.test(error.message) ? notReady(error, '0023') : plain(error) };
+    }
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -371,43 +376,50 @@ export async function setDrillSessions(drillId: string, sessionIds: string[], li
   try {
     const v = await staff();
     const want = new Set(sessionIds);
+    // Every change is worked out and checked first, then written: a full or
+    // emptied session found halfway used to leave the earlier ones saved.
+    type Write = { table: 'library_sessions' | 'academy_sessions'; id: string; name: string; drill_ids: string[] };
+    const writes: Write[] = [];
     // Library sessions, when the page offered them: each change follows into
     // every program week it's in (the 0017 trigger), so their placed copies
     // below are left alone.
     const libraryChosen = libraryIds !== undefined;
+    const { data: lib, error: le } = await v.db.from('library_sessions').select('id, name, drill_ids').eq('academy_id', v.academy.id);
+    if (le && libraryChosen) return { ok: false, error: plain(le) };
+    const libById = new Map(((lib ?? []) as { id: string; name: string; drill_ids: string[] }[]).map((l) => [l.id, l]));
     if (libraryChosen) {
       const wantLib = new Set(libraryIds);
-      const { data: lib, error: le } = await v.db.from('library_sessions').select('id, drill_ids').eq('academy_id', v.academy.id);
-      if (le) return { ok: false, error: plain(le) };
-      for (const s of (lib ?? []) as { id: string; drill_ids: string[] }[]) {
-        const has = s.drill_ids.includes(drillId);
-        if (has === wantLib.has(s.id)) continue;
-        if (!has && s.drill_ids.length >= 30) return { ok: false, error: 'One of those sessions is full (30 drills).' };
-        const drill_ids = has ? s.drill_ids.filter((d) => d !== drillId) : [...s.drill_ids, drillId];
-        if (!drill_ids.length) return { ok: false, error: 'A session needs at least one drill: that would empty one.' };
-        const { error: e } = await v.db.from('library_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
-        if (e) return { ok: false, error: plain(e) };
+      for (const l of libById.values()) {
+        const has = l.drill_ids.includes(drillId);
+        if (has === wantLib.has(l.id)) continue;
+        writes.push({ table: 'library_sessions', id: l.id, name: l.name,
+          drill_ids: has ? l.drill_ids.filter((d) => d !== drillId) : [...l.drill_ids, drillId] });
       }
     }
     const q = (cols: string) => v.db.from('academy_sessions').select(cols).eq('academy_id', v.academy.id);
-    let { data: sessions, error } = await q('id, drill_ids, library_id');
-    if (error) ({ data: sessions, error } = await q('id, drill_ids'));
+    let { data: sessions, error } = await q('id, name, drill_ids, library_id');
+    if (error) ({ data: sessions, error } = await q('id, name, drill_ids'));
     if (error) return { ok: false, error: plain(error) };
     // A library session changes once, and everywhere it's used follows.
     const changed = new Set<string>();
-    for (const s of (sessions ?? []) as unknown as { id: string; drill_ids: string[]; library_id?: string | null }[]) {
+    for (const s of (sessions ?? []) as unknown as { id: string; name: string; drill_ids: string[]; library_id?: string | null }[]) {
       if (libraryChosen && s.library_id) continue;
       const has = s.drill_ids.includes(drillId);
       if (has === want.has(s.id)) continue;
       if (s.library_id && changed.has(s.library_id)) continue;
-      if (!has && s.drill_ids.length >= 30) return { ok: false, error: 'One of those sessions is full (30 drills).' };
       const drill_ids = has ? s.drill_ids.filter((d) => d !== drillId) : [...s.drill_ids, drillId];
-      if (!drill_ids.length) return { ok: false, error: 'A session needs at least one drill: that would empty one.' };
-      const { error: e } = s.library_id
-        ? await v.db.from('library_sessions').update({ drill_ids }).eq('id', s.library_id).eq('academy_id', v.academy.id)
-        : await v.db.from('academy_sessions').update({ drill_ids }).eq('id', s.id).eq('academy_id', v.academy.id);
-      if (e) return { ok: false, error: plain(e) };
-      if (s.library_id) changed.add(s.library_id);
+      if (s.library_id) {
+        changed.add(s.library_id);
+        writes.push({ table: 'library_sessions', id: s.library_id, name: libById.get(s.library_id)?.name ?? s.name, drill_ids });
+      } else writes.push({ table: 'academy_sessions', id: s.id, name: s.name, drill_ids });
+    }
+    const full = writes.find((w) => w.drill_ids.length > 30);
+    if (full) return { ok: false, error: `${full.name} is full (30 drills). Nothing was changed.` };
+    const emptied = writes.find((w) => !w.drill_ids.length);
+    if (emptied) return { ok: false, error: `This is the only drill in ${emptied.name}, which needs at least one. Nothing was changed.` };
+    for (const w of writes) {
+      const { error: e } = await v.db.from(w.table).update({ drill_ids: w.drill_ids }).eq('id', w.id).eq('academy_id', v.academy.id);
+      if (e) { done(); return { ok: false, error: plain(e) }; }
     }
     done();
     return { ok: true };

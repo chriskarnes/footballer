@@ -47,8 +47,16 @@ export default async function SessionPage({
         // one is done again as a new session — passing its id made the runner
         // PATCH the old row, so doing a session twice overwrote the first time.
         const again = w.status === 'completed';
+        // A built session done more than once through: saved with its rounds
+        // since they went into the spec; before that, worked out from the
+        // minutes it was saved with.
+        const once = drills.reduce((t, d) => t + d.total_seconds, 0);
+        const rounds = w.source !== 'coach' ? 1
+          : Number(w.spec?.rounds) >= 1 ? Math.floor(Number(w.spec.rounds))
+          : once && w.planned_minutes ? Math.max(1, Math.round((w.planned_minutes * 60) / once)) : 1;
         return <Runner title={w.title}
-                       drills={drills}
+                       drills={drills} rounds={rounds}
+                       note={rounds > 1 ? `Do the list ${rounds} times.` : null}
                        workoutId={again ? undefined : w.id}
                        sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
                        back={{ href: '/me', label: 'Your training' }} />;

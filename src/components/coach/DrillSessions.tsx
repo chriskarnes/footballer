@@ -36,7 +36,8 @@ export function DrillSessions({ drillId, library = [], programs, fresh }: {
     const ids = [...on];
     const r = await setDrillSessions(drillId, ids.filter((x) => !x.startsWith('lib:')),
       ids.filter((x) => x.startsWith('lib:')).map((x) => x.slice(4)));
-    if (!r.ok) { setError(r.error); return; }
+    // On failure the page is read again, so the ticks show what was saved.
+    if (!r.ok) { setError(r.error); router.refresh(); return; }
     setSaved(new Set(on));
     if (fresh) router.push('/coach/drills'); else router.refresh();
   });

@@ -24,6 +24,12 @@ export interface TestEntry {
 
 const KEY = 'forge.speed.card.v1';
 
+/** A date as the player's own calendar day, YYYY-MM-DD. Not toISOString(),
+ *  which is UTC: in the evening in the Americas that's already tomorrow. */
+export function localDay(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function read(): TestEntry[] {
   try {
     const raw = localStorage.getItem(KEY);
@@ -41,8 +47,10 @@ export function useSpeedCard() {
   const [ready, setReady] = useState(false);
   useEffect(() => { setEntries(read()); setReady(true); }, []);
 
+  // One test day per date: recording the same day again replaces it, so the
+  // date stays a key the table and Delete can rely on.
   const add = (e: TestEntry) => {
-    const next = [...entries, e].sort((a, b) => a.date.localeCompare(b.date));
+    const next = [...entries.filter((x) => x.date !== e.date), e].sort((a, b) => a.date.localeCompare(b.date));
     setEntries(next); write(next);
   };
   const remove = (date: string) => {

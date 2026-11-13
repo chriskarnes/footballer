@@ -20,7 +20,8 @@ export async function joinAcademy(code: string, who?: 'player' | 'parent') {
   if (user && (who === 'player' || who === 'parent')) await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
   if ((data as { role: string }).role !== 'player') redirect('/coach');
   // A new player is asked their name (and the rest) first, on Me; their
-  // trainer sees that name, not an email address.
-  const { data: me } = user ? await db.from('profiles').select('display_name').eq('id', user.id).maybeSingle() : { data: null };
-  redirect(me?.display_name ? '/?joined=1' : '/me');
+  // trainer sees that name, not an email address. A name alone isn't enough:
+  // one let in from a join request has the name they asked with, and nothing else.
+  const { data: me } = user ? await db.from('profiles').select('display_name, age_band').eq('id', user.id).maybeSingle() : { data: null };
+  redirect(me?.display_name && me?.age_band ? '/?joined=1' : '/me');
 }

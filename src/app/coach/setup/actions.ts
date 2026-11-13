@@ -1,6 +1,7 @@
 'use server';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
+import { academyTag } from '@/lib/branding-server';
 import { getViewer } from '@/lib/viewer';
 import { plain, notReady } from '@/lib/plain-error';
 
@@ -30,6 +31,9 @@ export async function saveYou(name: string, timeZone: string): Promise<Result> {
   if (a.error) return { ok: false, error: plain(a.error) };
   const { error } = await v.db.rpc('academy_setup_mark', { p_academy: v.academy.id, p_step: 'you' });
   if (error) return { ok: false, error: missing(error.message) ? notReady(error, '0020') : plain(error) };
+  // The academy row is cached: without this, weeks and program start dates
+  // keep using the old time zone for up to five minutes.
+  updateTag(academyTag(v.academy.slug));
   revalidatePath('/coach/setup');
   return { ok: true };
 }
@@ -67,13 +71,19 @@ export async function setListed(listed: boolean): Promise<Result> {
 export async function finishSetup(listed = true): Promise<Result> {
   const v = await getViewer();
   if (!v.user || !v.academy || v.role !== 'owner') return { ok: false, error: 'Only the owner sets this up.' };
-  const { error } = await v.db.rpc('academy_setup_mark', { p_academy: v.academy.id, p_step: 'done' });
-  if (error) return { ok: false, error: missing(error.message) ? notReady(error, '0020') : plain(error) };
-  // Marking it done lists it; an owner who said no is taken back out.
-  if (!listed) {
-    const r = await v.db.from('academies').update({ listed: false }).eq('id', v.academy.id);
-    if (r.error) return { ok: false, error: plain(r.error) };
-  }
+  // Done and listed (or not) in one statement (0023), so a failed second
+  // write can't leave an academy listed that its owner kept to the link.
+  const { error } = await v.db.rpc('academy_setup_finish', { p_academy: v.academy.id, p_listed: listed });
+  if (error && missing(error.message)) {
+    // Before 0023: the old way, done (which lists it) and then back out.
+    const r = await v.db.rpc('academy_setup_mark', { p_academy: v.academy.id, p_step: 'done' });
+    if (r.error) return { ok: false, error: missing(r.error.message) ? notReady(r.error, '0020') : plain(r.error) };
+    if (!listed) {
+      const u = await v.db.from('academies').update({ listed: false }).eq('id', v.academy.id);
+      if (u.error) return { ok: false, error: plain(u.error) };
+    }
+  } else if (error) return { ok: false, error: plain(error) };
+  updateTag(academyTag(v.academy.slug));
   revalidatePath('/coach');
   redirect(`/coach?ready=${listed ? 'listed' : 'link'}`);
 }

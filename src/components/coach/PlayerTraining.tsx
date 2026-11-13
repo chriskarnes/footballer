@@ -17,9 +17,12 @@ function useRun() {
   const [busy, start] = useTransition();
   const [err, setErr] = useState('');
   const toast = useToast();
-  const run = (f: () => Promise<{ ok: boolean; error?: string }>, after?: () => void, said = 'Saved.') => start(async () => {
+  // `close` runs either way: a confirm sheet left open on failure would hide
+  // the error, which is drawn on the page behind it.
+  const run = (f: () => Promise<{ ok: boolean; error?: string }>, after?: () => void, said = 'Saved.', close?: () => void) => start(async () => {
     setErr('');
     const r = await f();
+    close?.();
     if (!r.ok) setErr(r.error ?? 'That didn’t work.'); else { after?.(); toast(said); router.refresh(); }
   });
   return { busy, start, err, setErr, run };
@@ -109,7 +112,7 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
       <ConfirmSheet open={!!stopping} busy={busy} title={`Stop ${stopping?.label ?? ''}?`} confirmLabel="Stop program"
         body={`${first} stops getting its sessions from this week on. What they’ve done stays in their history.`}
         onCancel={() => setStopping(null)}
-        onConfirm={() => stopping && run(() => unassignProgram(userId, stopping.program_id), () => setStopping(null), 'Program stopped.')} />
+        onConfirm={() => stopping && run(() => unassignProgram(userId, stopping.program_id), undefined, 'Program stopped.', () => setStopping(null))} />
     </div>
   );
 }

@@ -52,6 +52,17 @@ async function readProfile(db: any, id: string): Promise<ProfileValues | null> {
   return base ?? null;
 }
 
+/**
+ * Whether the first-time questions are still to answer. Not just the name:
+ * a player let in from a join request arrives with the name they asked with,
+ * and age and position still unasked. A null is unanswered; a missing column
+ * (the fallback read above) isn't held against them.
+ */
+function needsProfile(p: ProfileValues | null): boolean {
+  if (!p?.display_name) return true;
+  return p.age_band === null || p.positions === null || (Array.isArray(p.positions) && !p.positions.length);
+}
+
 /** When their photo last changed, or null: no photo, or the column isn't there yet (0016). */
 async function readAvatarAt(db: any, id: string): Promise<string | null> {
   const { data } = await db.from('profiles').select('avatar_updated_at').eq('id', id).maybeSingle();
@@ -149,14 +160,14 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   // should not be sent back to a form.
   // Trainers aren't asked these: their name is asked on the trainer side.
   const staff = role === 'owner' || role === 'trainer';
-  if (!profile?.display_name && !workouts.length && !staff) {
+  if (needsProfile(profile) && !workouts.length && !staff) {
     return (
       <div>
         <BrandBand>
           <BandTag>Welcome</BandTag>
           <BandTitle>{signedUpBy === 'parent' ? 'Set your player up' : 'Let’s set you up'}</BandTitle>
         </BrandBand>
-        <ProfileSetup email={user.email} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent'} heading={false} />
+        <ProfileSetup email={user.email} initial={profile ?? undefined} next={library ? '/plan' : '/'} parent={signedUpBy === 'parent'} heading={false} />
       </div>
     );
   }

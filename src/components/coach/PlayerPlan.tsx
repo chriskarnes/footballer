@@ -69,9 +69,12 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
     return (Object.keys(FOCUS_LABELS) as FocusArea[]).filter((t) => have.has(t) || focus.includes(t));
   }, [drills, focus]);
 
-  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void, said = 'Saved.') => start(async () => {
+  // `close` runs either way: a confirm sheet left open on failure would hide
+  // the error, which is drawn on the page behind it.
+  const run = (f: () => Promise<{ ok: boolean; error?: string; why?: string }>, after?: () => void, said = 'Saved.', close?: () => void) => start(async () => {
     setErr('');
     const r = await f();
+    close?.();
     if (!r.ok) setErr(r.error ?? 'That didn’t work.');
     else { if ('why' in r) setWhy(r.why ?? ''); after?.(); toast(said); router.refresh(); }
   });
@@ -187,11 +190,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
       <ConfirmSheet open={confirm} title="Back to their program?" confirmLabel="Back to program" busy={pending}
         body={`${first}’s custom weeks from this week on are taken away, and their program is their week again.`}
         onCancel={() => setConfirm(false)}
-        onConfirm={() => run(() => setMode(userId, 'program'), () => setConfirm(false))} />
+        onConfirm={() => run(() => setMode(userId, 'program'), undefined, 'Saved.', () => setConfirm(false))} />
       <ConfirmSheet open={!!rebuild} title={`Rebuild ${rebuild === 'next' ? 'next' : 'this'} week?`} confirmLabel="Rebuild" busy={pending}
         body={`${first}’s sessions for that week are built again from their settings. Any drills you changed by hand are replaced; sessions they’ve done stay done.`}
         onCancel={() => setRebuild(null)}
-        onConfirm={() => rebuild && run(() => buildWeekFor(userId, rebuild), () => setRebuild(null), 'Week rebuilt.')} />
+        onConfirm={() => rebuild && run(() => buildWeekFor(userId, rebuild), undefined, 'Week rebuilt.', () => setRebuild(null))} />
     </div>
   );
 

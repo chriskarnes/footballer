@@ -6,6 +6,7 @@ import {
   autoStart, mondayOf, position, weekPlan, type DayPlan, type Position, type YearStart,
 } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
+import { localDay, useSpeedCard } from '@/lib/speed-card';
 import { BandTag, BandTitle } from './BandText';
 import { TickMark } from './TickMark';
 
@@ -42,13 +43,17 @@ type Running = Extract<Position, { state: 'running' }>;
 type Training = Exclude<DayPlan, { type: 'off' }>;
 
 /** This week of a running year: the days, which are done, today and the next one. */
-function thisWeek(pos: Running, now: Date, completions: Completion[]) {
+function thisWeek(pos: Running, now: Date, completions: Completion[], testDates: string[]) {
   const since = mondayOf(now).getTime();
+  // Test day is done once the card has numbers from this week (its dates
+  // are the player's own calendar days).
+  const monday = localDay(mondayOf(now));
+  const tested = testDates.some((d) => d >= monday);
   const doneRefs = new Set(completions
     .filter((c) => c.source_ref && c.completed_at && new Date(c.completed_at).getTime() >= since)
     .map((c) => c.source_ref!));
   const days = weekPlan(pos);
-  const isDone = (d: DayPlan) => d.type === 'session' && doneRefs.has(d.session.id);
+  const isDone = (d: DayPlan) => d.type === 'test' ? tested : d.type === 'session' && doneRefs.has(d.session.id);
   const next = days.find((d): d is Training => d.weekday > pos.today && d.type !== 'off');
   return { days, isDone, today: days[pos.today], next };
 }
@@ -56,8 +61,9 @@ function thisWeek(pos: Running, now: Date, completions: Completion[]) {
 function useSpeed() {
   const s = useContext(SpeedContext);
   if (!s) throw new Error('Speed parts go inside SpeedYearProvider');
+  const card = useSpeedCard();
   const pos = s.ready && s.start && s.now ? position(s.start, s.now) : null;
-  return { ...s, pos };
+  return { ...s, pos, testDates: card.entries.map((e) => e.date) };
 }
 
 const href = (d: Training) => d.type === 'test' ? '/speed/test' : `/speed/session/${d.session.id}?from=speed`;
@@ -121,7 +127,7 @@ export function SpeedNow() {
     );
   }
 
-  const { today, next, isDone } = thisWeek(pos, s.now, s.completions);
+  const { today, next, isDone } = thisWeek(pos, s.now, s.completions, s.testDates);
   // Where they are in the year, in their words; the block and the week's
   // name are the planner's, in "For parents and coaches".
   const year = (
@@ -141,7 +147,7 @@ export function SpeedNow() {
       </>
     );
   }
-  if (today.type === 'test') {
+  if (today.type === 'test' && !isDone(today)) {
     return (
       <>
         <BandTag>Today</BandTag>
@@ -177,7 +183,7 @@ export function SpeedWeek() {
   if (!s.ready || !s.now) return null;
   if (!s.start || !s.pos || s.pos.state !== 'running') return null;
   const pos = s.pos;
-  const { days, isDone } = thisWeek(pos, s.now, s.completions);
+  const { days, isDone } = thisWeek(pos, s.now, s.completions, s.testDates);
   const training = days.filter((d) => d.type !== 'off');
 
   return (

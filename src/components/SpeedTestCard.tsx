@@ -4,7 +4,7 @@ import { BackLink } from './BackLink';
 import { ConfirmSheet } from './ConfirmSheet';
 import { haptic } from '@/lib/haptics';
 import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS } from '@/lib/speed';
-import { bests, heightGain, useSpeedCard, type TestEntry } from '@/lib/speed-card';
+import { bests, heightGain, localDay, useSpeedCard, type TestEntry } from '@/lib/speed-card';
 import { position } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 
@@ -14,7 +14,7 @@ const dayName = (iso: string) =>
 
 type Screen = 'card' | 'entry';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => localDay();
 const fmt = (v: number, unit: string) => unit === 's' ? v.toFixed(2) : String(Math.round(v));
 
 /**

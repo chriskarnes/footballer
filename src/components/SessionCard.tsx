@@ -27,7 +27,8 @@ export function SessionCard({
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         title: sessionTitle(built.spec),
-        source: 'coach', spec: built.spec,
+        // Rounds ride in the spec, so the session runs the same way from history.
+        source: 'coach', spec: { ...built.spec, rounds: built.rounds },
         exercise_ids: built.drills.map((d) => d.id),
         planned_minutes: mins, planned_touches: built.totalTouches,
       }),
