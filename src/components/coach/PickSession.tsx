@@ -26,7 +26,8 @@ export function PickSession({ programId, week, sessions }: { programId: string; 
                       const r = await placeSession(s.id, programId, week);
                       if (r && !r.ok) setErr(r.error);
                     }); }}>
-              {busy && picked === s.id ? 'Adding…' : 'Add'}
+              {/* Twice in a week can be what the trainer wants; say it's a second copy. */}
+              {busy && picked === s.id ? 'Adding…' : s.here ? 'Add again' : 'Add'}
             </button>
           </li>
         ))}

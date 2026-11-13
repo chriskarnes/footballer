@@ -437,7 +437,7 @@ export function Runner({
       )}
       {!review && !allDone && done.size > 0 && phase === 'running' && (
         <button onClick={() => setPhase('confirm-end')}
-                className="btn-ghost pressable mt-6 min-h-[52px] w-full text-body-lg font-bold">
+                className="btn-ghost pressable mt-6 min-h-13 w-full text-body-lg font-bold">
           Stop early
         </button>
       )}
@@ -445,7 +445,7 @@ export function Runner({
         <div className="hint-in card mt-6 p-5">
           <p className="h-sec">Stop now?</p>
           <div className="mt-4 flex gap-2.5">
-            <button onClick={() => setPhase('running')} className="btn-ghost pressable min-h-[52px] flex-1 font-bold">
+            <button onClick={() => setPhase('running')} className="btn-ghost pressable min-h-13 flex-1 font-bold">
               Keep going
             </button>
             <button onClick={finish} className="btn-primary pressable flex-1">
@@ -467,10 +467,10 @@ function Circle({ on, here, locked, name, onTick }: {
   on: boolean; here: boolean; locked: boolean; name: string; onTick: () => void;
 }) {
   const mark = <TickMark on={on} here={here} draw={!locked} />;
-  if (locked) return <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center">{mark}</span>;
+  if (locked) return <span className="flex size-13 shrink-0 items-center justify-center">{mark}</span>;
   return (
     <button type="button" aria-pressed={on} aria-label={`Mark ${name} done`} onClick={onTick}
-            className="pressable flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full">
+            className="pressable flex size-13 shrink-0 items-center justify-center rounded-full">
       {mark}
     </button>
   );

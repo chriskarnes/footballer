@@ -79,7 +79,7 @@ function Bar({ academyId, library = true, plan = true, speed = true, from }: Pro
             // it read as a circle stamped on the bar.
             <Link key={t.href} href={t.href} aria-current={on ? (path === t.href ? 'page' : 'true') : undefined}
               onClick={() => { if (!on) haptic('tap'); }}
-              className={`tab flex min-h-[52px] min-w-[54px] flex-col items-center justify-center rounded-medium px-3 pt-1
+              className={`tab flex min-h-13 min-w-[54px] flex-col items-center justify-center rounded-medium px-3 pt-1
                           text-caption font-bold tracking-tight transition-colors duration-300
                           ${on ? 'text-primary' : 'text-on-surface-variant'}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.3 : 1.9}

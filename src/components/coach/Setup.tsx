@@ -97,7 +97,7 @@ function Listing({ on, onChange, disabled }: { on: boolean; onChange: (on: boole
   return (
     <label className="flex cursor-pointer items-start gap-3">
       <input type="checkbox" checked={on} disabled={disabled} onChange={(e) => onChange(e.target.checked)}
-             className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--md-sys-color-primary)]" />
+             className="mt-0.5 h-5 w-5 shrink-0 accent-primary" />
       <span>
         <span className="block text-body font-semibold text-on-surface">Show in Find your trainer</span>
         <span className="block text-body text-on-surface-variant">

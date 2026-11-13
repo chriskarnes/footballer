@@ -48,7 +48,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
           <p className="mt-3 text-body font-bold text-on-surface">{drills} of 3</p>
           <div className="mt-3 flex flex-wrap gap-2.5">
             <Link href="/coach/drills/new?back=/coach/setup" className="btn-primary pressable">Add a drill</Link>
-            {drills > 0 && <Link href="/coach/drills" className="btn-ghost pressable min-h-[52px]">See your drills</Link>}
+            {drills > 0 && <Link href="/coach/drills" className="btn-ghost pressable min-h-13">See your drills</Link>}
           </div>
         </>
       ),
@@ -122,7 +122,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
               {open && st.body}
               {/* A done step can be opened again to change it. */}
               {isDone && !open && (
-                <details className="mt-1 pl-[52px]">
+                <details className="mt-1 pl-13">
                   <summary className="cursor-pointer text-body font-semibold text-on-surface-variant underline underline-offset-4">Change</summary>
                   <div>{st.body}</div>
                 </details>

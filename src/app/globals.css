@@ -642,11 +642,13 @@ input, textarea, [data-selectable] {
    holds still — the same reason hover draws an outline instead of a fill. */
 .pressable:active::after { opacity: var(--md-sys-state-pressed-state-layer-opacity); }
 
-/* M3 requires a visible focus indicator. There wasn't one. */
+/* M3 requires a visible focus indicator. Every button and select gets one,
+   whether or not it remembered .pressable, and so does a label wrapping a
+   visually hidden radio or checkbox (the join page's parent/player choice). */
 .pressable:focus-visible,
-a:focus-visible,
+a:focus-visible, button:focus-visible, select:focus-visible,
 .chip:focus-visible, .tile:focus-visible, .icon-btn:focus-visible, .segment:focus-visible,
-button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+label:has(> input.sr-only:focus-visible) { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
 
 /* A text button or link — "New drill", "Skip", "Build one" — is a line of
    14px type, about 20px tall. On a touch screen its hit area grows to 44px
@@ -1036,8 +1038,13 @@ button.card:focus-visible { outline: 3px solid var(--md-sys-color-primary); outl
    right border and read as falling out of the box. */
 .text-field select {
   appearance: none; -webkit-appearance: none; padding-right: 44px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235F6B66' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23474747' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 16px center; background-size: 12px 8px;
+}
+/* The chevron is an image, so it can't follow currentColor: it takes the
+   on-surface-variant of each scheme by hand. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .text-field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23C7C7C7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 }
 .text-field input::placeholder, .text-field textarea::placeholder { color: var(--md-sys-color-on-surface-variant); }
 .text-field textarea:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }

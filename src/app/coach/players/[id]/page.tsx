@@ -140,7 +140,7 @@ export default async function PlayerPage({ params }: {
           <div className="text-body text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
         </div>
         <div className="mt-3 flex h-24 gap-3" role="img"
-             aria-label={pr.weeks.map((w) => `${w.done} sessions`).join(', ')}>
+             aria-label={pr.weeks.map((w, i) => `${weekName(i)}: ${w.done} of ${w.planned} done`).join(', ')}>
           {pr.weeks.map((w, i) => (
             <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
               <span className="text-caption font-bold text-on-surface">{w.done}</span>
@@ -148,7 +148,7 @@ export default async function PlayerPage({ params }: {
                 <div className={`absolute inset-x-1 bottom-0 rounded-small ${i === 3 ? 'bg-on-surface' : 'bg-surface-container-highest'}`}
                      style={{ height: `${Math.max(4, (w.done / max) * 100)}%` }} />
               </div>
-              <span className="text-label-sm text-on-surface-variant">{i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} weeks ago`}</span>
+              <span className="text-label-sm text-on-surface-variant">{weekName(i)}</span>
             </div>
           ))}
         </div>
@@ -210,4 +210,9 @@ function dayLabel(at: string, tz: string) {
   if (days === 0) return 'Today';
   if (days === 1) return 'Yesterday';
   return new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(at));
+}
+
+/** The four-weeks chart's columns, oldest first. */
+function weekName(i: number) {
+  return i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} weeks ago`;
 }

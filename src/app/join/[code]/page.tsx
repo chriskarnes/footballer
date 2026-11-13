@@ -23,7 +23,7 @@ export const metadata = { title: 'Join', robots: { index: false } };
 export default async function JoinPage({ params, searchParams }: {
   params: Promise<{ code: string }>; searchParams: Promise<{ as?: string }>;
 }) {
-  const { code } = await params;
+  const [{ code }, q] = await Promise.all([params, searchParams]);
   const v = await getViewer();
   const { data: invite } = /^[a-z0-9]{8,40}$/.test(code)
     ? await v.db.rpc('invite_preview', { p_code: code })
@@ -44,7 +44,6 @@ export default async function JoinPage({ params, searchParams }: {
   if (slug !== v.slug) {
     const h = await headers();
     const here = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('x-forwarded-host') ?? h.get('host')}`;
-    const q = await searchParams;
     redirect(`${academyOrigin(slug, here)}/join/${code}${isWho(q.as) ? `?as=${q.as}` : ''}`);
   }
 
@@ -53,7 +52,6 @@ export default async function JoinPage({ params, searchParams }: {
   const shown = brand?.name ?? name;
   const dot = shown.indexOf('.');
   const [head, tail] = dot > 0 ? [shown.slice(0, dot), shown.slice(dot)] : [shown, ''];
-  const q = await searchParams;
 
   return (
     <div className="animate-pop pb-10">

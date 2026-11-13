@@ -67,7 +67,7 @@ export function AccountSection({ email, version, canBrand, role }: {
           </Link>
         )}
         {/* The whole row is the button, like the row above it. */}
-        <SignOut className="pressable flex min-h-[56px] w-full items-center px-4 text-left
+        <SignOut className="pressable flex min-h-14 w-full items-center px-4 text-left
                             text-body-lg font-bold text-on-surface" />
       </div>
       <p className="mt-3 pl-1 text-caption text-on-surface-variant">{email && `${email} · `}v{version}</p>
@@ -82,7 +82,7 @@ const Chevron = () => (
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[56px] items-center justify-between gap-4 px-4">
+    <div className="flex min-h-14 items-center justify-between gap-4 px-4">
       <span className="shrink-0 text-body-lg font-bold text-on-surface">{label}</span>
       <span className="flex min-w-0 items-center text-body-sm text-on-surface-variant">{children}</span>
     </div>

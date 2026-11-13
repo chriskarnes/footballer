@@ -24,7 +24,7 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
               else { toast(next ? `${first} is in the group.` : `${first} is out of the group.`); router.refresh(); }
             })}
             className="flex w-full items-center gap-3 px-4 py-3 text-left">
-      <span className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-small border-2 ${on ? 'border-on-surface bg-on-surface' : 'border-outline'}`}>
+      <span className={`flex size-5.5 shrink-0 items-center justify-center rounded-small border-2 ${on ? 'border-on-surface bg-on-surface' : 'border-outline'}`}>
         {on && <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-surface" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>}
       </span>
       <span className="min-w-0 flex-1">

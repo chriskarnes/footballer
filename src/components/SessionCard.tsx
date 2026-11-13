@@ -36,12 +36,6 @@ export function SessionCard({
     setSaving(res?.status === 401 ? 'signin' : res?.ok ? 'saved' : 'error');
   }
 
-  if (!built.drills.length) {
-    return <div className="card p-6 text-body-lg text-on-surface-variant">
-      Nothing matched. Try a longer session.
-    </div>;
-  }
-
   return (
     <div>
       {/* What it is in one line, and the one thing this screen is for. */}

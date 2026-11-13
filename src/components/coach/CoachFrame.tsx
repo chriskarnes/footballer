@@ -94,6 +94,6 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
 function Icon({ d }: { d: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-         strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0" aria-hidden="true"><path d={d} /></svg>
+         strokeLinejoin="round" className="size-4.5 shrink-0" aria-hidden="true"><path d={d} /></svg>
   );
 }

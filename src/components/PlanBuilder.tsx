@@ -209,7 +209,7 @@ function Builder({
         <div className="mt-7 brand-card p-6">
           <div className="flex items-end gap-6">
             <div>
-              <div className="font-brand text-[46px] font-extrabold leading-none tracking-brand-tight text-on-surface-brand">
+              <div className="font-brand text-headline-lg font-extrabold leading-none tracking-brand-tight text-on-surface-brand">
                 {sessionsCount}
               </div>
               <div className="mt-1.5 text-body-sm font-semibold text-on-surface-brand-variant">
@@ -229,7 +229,7 @@ function Builder({
             </button>
             <button onClick={() => show(buildPlan(sessions, plan.intake, Math.random()), 'replace')}
                     aria-label="Shuffle the whole week" title="Shuffle the whole week"
-                    className="icon-btn pressable h-[52px] w-[52px] bg-brand-track text-on-surface-brand">
+                    className="icon-btn pressable size-13 bg-brand-track text-on-surface-brand">
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true"
                    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 {/* The swap arrows, as Another mix has on Train: the same
@@ -344,6 +344,7 @@ function Builder({
         <div className="mt-3.5 space-y-2">
           {PHASES.map(([v, title, why]) => (
             <button key={v} type="button" onClick={() => set({ seasonPhase: v, targetMinutes: undefined })}
+              aria-pressed={intake.seasonPhase === v && !intake.targetMinutes}
               className={`tile pressable w-full p-3.5 text-left
                 ${intake.seasonPhase === v && !intake.targetMinutes ? 'tile-on' : ''}`}>
               <span className="block text-body-lg font-bold text-on-surface">{title}</span>

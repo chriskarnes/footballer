@@ -220,7 +220,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       {library && finished.length >= 3 && !plans.length && (
         <section className="card mt-10 p-5">
           <div className="h-sec">Want a weekly plan?</div>
-          <Link href="/plan" className="btn-ghost mt-4 min-h-[52px] w-full text-body-lg font-bold">Make my week</Link>
+          <Link href="/plan" className="btn-ghost mt-4 min-h-13 w-full text-body-lg font-bold">Make my week</Link>
         </section>
       )}
 

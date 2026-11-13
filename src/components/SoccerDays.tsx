@@ -118,10 +118,10 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
           return (
             <button key={label} type="button" onClick={() => tap(i)} disabled={pending}
                     aria-label={`${FULL[i]}: ${NAME[k]}`}
-                    className={`pressable flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-medium text-body font-bold transition-colors ${LOOK[k]}`}>
+                    className={`pressable flex min-h-14 flex-col items-center justify-center gap-1 rounded-medium text-body font-bold transition-colors ${LOOK[k]}`}>
               {label}
-              <span className="flex h-[18px] w-[18px] items-center justify-center">
-                <Mark className="h-[18px] w-[18px]" />
+              <span className="flex size-4.5 items-center justify-center">
+                <Mark className="size-4.5" />
                 {k === 'off' && <span className="h-1 w-1 rounded-full bg-outline" aria-hidden="true" />}
               </span>
             </button>

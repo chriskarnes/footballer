@@ -34,7 +34,7 @@ export function ConfirmSheet({
           <p id="confirm-sheet-title" className="h-card">{title}</p>
           {body && <div className="mt-1.5 text-body leading-snug text-on-surface-variant">{body}</div>}
           <div className="mt-5 flex gap-2.5">
-            <button type="button" onClick={onCancel} className="btn-ghost min-h-[52px] flex-1">Cancel</button>
+            <button type="button" onClick={onCancel} className="btn-ghost min-h-13 flex-1">Cancel</button>
             <button type="button" onClick={onConfirm} disabled={busy}
                     className="btn-primary pressable flex-1">
               {busy ? 'One moment…' : confirmLabel}

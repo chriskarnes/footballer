@@ -142,7 +142,7 @@ function Today({
         <span>This week</span>
         <span>{state.doneCount} of {state.trainingCount} done</span>
       </div>
-      <div className="mt-2 h-[6px] overflow-hidden rounded-full bg-brand-track">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-track">
         <div className="h-full rounded-full bg-brand-accent transition-all duration-700"
              style={{ width: `${pct}%` }} />
       </div>

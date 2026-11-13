@@ -7,6 +7,7 @@ import { loadContent } from '@/lib/academy-data';
 import { teamDays } from '@/lib/academy-week';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
+import { Empty } from '@/components/coach/Empty';
 import { byAttention, localDate, weekdayOf } from '@/lib/progress';
 
 export const metadata = { title: 'This week', robots: { index: false } };
@@ -57,6 +58,17 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         </p>
       )}
 
+      {!players.length ? (
+        <div className="mt-6">
+          {inGroup
+            ? <Empty title={`No one in ${inGroup.name} yet`} href={`/coach/groups/${inGroup.id}`} cta="Add players">
+                Add players to the group and their week shows here.
+              </Empty>
+            : <Empty title="No players yet" href="/coach/team" cta="Invite players">
+                Once players join, their week shows here, day by day.
+              </Empty>}
+        </div>
+      ) : <>
       {/* Seven days fit from a 1024px screen up (the name column narrows on
           a laptop); narrower, it scrolls, with the bar showing so it's clear
           there's more. */}
@@ -92,7 +104,8 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                     const items = p.week.filter((w) => w.weekday === d);
                     const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'Trainer' : s.practice.includes(d) ? 'Practice' : meets.has(d) ? 'Trainer' : null;
                     return (
-                      <td key={d} className={`border-b border-l border-outline-variant px-1.5 py-2 ${tag ? 'bg-surface-container' : ''} ${d === today ? 'bg-surface-container-low' : ''}`}>
+                      <td key={d} className={`border-b border-l border-outline-variant px-1.5 py-2 ${/* One background per cell: two collided, and today hid the busy shading. */
+                        tag ? (d === today ? 'bg-surface-container-high' : 'bg-surface-container') : d === today ? 'bg-surface-container-low' : ''}`}>
                         {tag && <span className="eyebrow block px-1">{tag}</span>}
                         {items.map((it) => {
                           const missed = !it.done && d < today;
@@ -121,6 +134,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         <span>↷ Moved by the player</span>
         <span>Shaded: practice, game or trainer day</span>
       </p>
+      </>}
     </div>
   );
 }

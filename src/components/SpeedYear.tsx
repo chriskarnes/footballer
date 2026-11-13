@@ -214,8 +214,9 @@ export function SpeedWeek() {
             <li key={d.day}>
               {/* Built like a drill in the session, as Train's week is. */}
               <Link href={href(d)} className="card pressable flex items-center gap-1.5 p-3">
-                <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center"><TickMark on={done} /></span>
+                <span className="flex size-13 shrink-0 items-center justify-center"><TickMark on={done} /></span>
                 <span className="min-w-0 flex-1 py-2 pl-1.5 pr-1">
+                  {done && <span className="sr-only">Done: </span>}
                   <span className="block text-title font-bold leading-snug text-on-surface">
                     {d.type === 'test' ? 'Test day' : d.session.name}
                   </span>

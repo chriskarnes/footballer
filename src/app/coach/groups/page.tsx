@@ -74,7 +74,7 @@ export default async function GroupsPage() {
 
       {!!players.length && !!solo && !!active.length && (
         <p className="mt-4 pl-1 text-body text-on-surface-variant">
-          {solo ? `${solo} ${solo === 1 ? 'player isn’t' : 'players aren’t'} in a group yet.` : ''}
+          {solo} {solo === 1 ? 'player isn’t' : 'players aren’t'} in a group yet.
         </p>
       )}
 

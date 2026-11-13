@@ -91,7 +91,7 @@ export default async function TeamPage() {
               : <p className="text-body text-on-surface-variant">Players can find you by name once you finish setup.</p>}
           </div>
           {/* The checklist, any time: the way back to it once it's off the dashboard. */}
-          <Link href="/coach/setup" className="card pressable mt-3 flex min-h-[56px] items-center justify-between px-4">
+          <Link href="/coach/setup" className="card pressable mt-3 flex min-h-14 items-center justify-between px-4">
             <span className="text-body font-semibold text-on-surface">Setup checklist</span>
             <span className="text-body text-on-surface-variant">{setup.done ? 'Done ›' : 'Continue ›'}</span>
           </Link>
@@ -99,7 +99,7 @@ export default async function TeamPage() {
       )}
 
       {canBrand && (
-        <Link href="/coach/brand" className="card pressable mt-9 flex min-h-[56px] items-center justify-between px-4">
+        <Link href="/coach/brand" className="card pressable mt-9 flex min-h-14 items-center justify-between px-4">
           <span className="text-body font-semibold text-on-surface">Brand settings</span>
           <span className="text-body text-on-surface-variant">Name, colors, logo ›</span>
         </Link>

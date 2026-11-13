@@ -144,8 +144,8 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
       </div>
 
       <div className="mt-9">
-        <p className="h-sec mb-3">{q.age}</p>
-        <div className="flex flex-wrap gap-2">
+        <p id="q-age" className="h-sec mb-3">{q.age}</p>
+        <div role="group" aria-labelledby="q-age" className="flex flex-wrap gap-2">
           {AGE_BANDS.map(([v, l]) => (
             <Chip key={v} on={ageBand === v} onClick={() => setAgeBand(v)}>{l}</Chip>
           ))}
@@ -157,8 +157,8 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
       </div>
 
       <div className="mt-8">
-        <p className="h-sec mb-3">{q.where}</p>
-        <div className="flex flex-wrap gap-2">
+        <p id="q-where" className="h-sec mb-3">{q.where}</p>
+        <div role="group" aria-labelledby="q-where" className="flex flex-wrap gap-2">
           {POSITIONS.map((p) => (
             <Chip key={p} on={positions.includes(p)} onClick={() => togglePosition(p)}>{p}</Chip>
           ))}
@@ -206,10 +206,17 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
       </div>
 
       <button type="button" onClick={save} disabled={!complete || busy}
-              className="btn-primary btn-big mt-8 w-full">
+              aria-describedby={complete ? undefined : 'profile-left'}
+              className="btn-primary btn-big pressable mt-8 w-full">
         {busy ? 'Saving…' : returning ? 'Save' : 'Done'}
       </button>
-      {error && <p className="mt-3 text-body-sm font-medium text-error">{error}</p>}
+      {/* A disabled button with no reason reads as broken. */}
+      {!complete && (
+        <p id="profile-left" className="mt-3 text-center text-body-sm font-medium text-on-surface-variant">
+          {answered} of 4 answered. Answer the questions above to finish.
+        </p>
+      )}
+      {error && <p role="alert" className="mt-3 text-body-sm font-medium text-on-surface">{error}</p>}
 
     </div>
   );

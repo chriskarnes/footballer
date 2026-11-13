@@ -3,8 +3,8 @@
 /**
  * The filter chip, with the checkmark the design system has always specified.
  *
- * Selection is a black fill with a white label — the same pair the navigation
- * uses for the tab you are on. The mark is kept anyway: it is what makes
+ * Selection is a ring in the brand's container colour on a clear fill (see
+ * .chip-on in globals.css). The mark is kept anyway: it is what makes
  * selected and unselected legible to a reader who cannot separate two fills by
  * lightness, and it costs nothing to a reader who can.
  *

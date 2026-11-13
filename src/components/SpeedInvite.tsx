@@ -39,7 +39,7 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
   // Outlined in its own ink (.btn-outline): white or black on the band,
   // whichever the band's colour takes, never a see-through white that turns
   // pink on a red band or brown on a yellow one.
-  const look = `btn-outline flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full text-title font-bold ${
+  const look = `btn-outline flex min-h-14 w-full items-center justify-center gap-2 rounded-full text-title font-bold ${
     onBrand ? 'text-on-surface-brand' : 'text-on-surface'} ${className}`;
   const inner = <><Icon d={WATCH} className="h-5 w-5" />{start ? 'Go to Speed' : 'Try Speed'}</>;
 

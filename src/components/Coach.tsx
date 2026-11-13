@@ -285,7 +285,7 @@ function Train({
         Build my session
       </button>
       {/* For a player who doesn't know what to pick, which at this age is most of them. */}
-      <button type="button" onClick={surpriseMe} className="btn-ghost pressable mt-3 min-h-[52px] w-full text-body-lg font-bold">
+      <button type="button" onClick={surpriseMe} className="btn-ghost pressable mt-3 min-h-13 w-full text-body-lg font-bold">
         Surprise me
       </button>
 

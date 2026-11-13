@@ -117,7 +117,7 @@ export function BrandingAdmin({ initial, academyName }: { initial: Branding | nu
         <div className="mt-5"><BandTag>Today</BandTag></div>
         <div className="site-wide mt-3 text-headline uppercase leading-[.95] text-on-surface-brand">Touch and pass</div>
         <p className="mt-3 text-body-sm font-semibold text-on-surface-brand-variant">Today&rsquo;s session · 45 min</p>
-        <div className="mt-2 h-[6px] overflow-hidden rounded-full bg-brand-track">
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-track">
           <div className="h-full w-[62%] rounded-full bg-brand-accent" />
         </div>
         <div className="mt-5 flex gap-2.5">
@@ -238,7 +238,7 @@ function Swatch({ on, onPick, name, note, primary, accent }: {
     <button type="button" role="radio" aria-checked={on} onClick={onPick}
             className={`tile pressable overflow-hidden p-0 text-left ${on ? 'tile-on' : ''}`}>
       <span className="relative block h-16" style={{ background: primary }}>
-        <span className="absolute inset-x-0 top-0 h-[5px]" style={{ background: accent }} />
+        <span className="absolute inset-x-0 top-0 h-1.5" style={{ background: accent }} />
         <span className="absolute bottom-0 right-5 top-0 w-[7px]" style={{ background: accent, opacity: 0.9 }} />
         {on && (
           <svg viewBox="0 0 24 24" aria-hidden="true" className="absolute left-3 top-3.5 h-5 w-5"

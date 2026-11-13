@@ -21,6 +21,9 @@ const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      /* The in-between steps the app keeps needing: 18px icons, 22px boxes,
+         52px rows and buttons (the tick column and the big ghost button). */
+      spacing: { 4.5: '18px', 5.5: '22px', 13: '52px' },
       fontFamily: {
         brand: ['var(--md-ref-typeface-brand)'],
         plain: ['var(--md-ref-typeface-plain)'],

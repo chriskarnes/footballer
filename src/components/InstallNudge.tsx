@@ -93,8 +93,12 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
   const install = async () => {
     if (!prompt) return;
     haptic('select');
-    await prompt.prompt();
-    await prompt.userChoice;
+    // A prompt can be used once, and the browser may refuse it: either way,
+    // put the nudge away rather than leave a button that does nothing.
+    try {
+      await prompt.prompt();
+      await prompt.userChoice;
+    } catch { /* nothing to tell them: the menu's Install still works */ }
     localStorage.setItem(DISMISSED, '1');
     setOpen(false);
   };
@@ -137,7 +141,7 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
                 Tap
                 {/* The Share glyph, drawn rather than described - it is the step people
                     get stuck on, and naming it is not enough. */}
-                <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] text-primary" fill="none"
+                <svg viewBox="0 0 24 24" className="size-4.5 text-primary" fill="none"
                      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"
                      strokeLinejoin="round" aria-label="the Share button">
                   <path d="M12 15V3M12 3 8.5 6.5M12 3l3.5 3.5" />

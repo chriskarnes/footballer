@@ -283,7 +283,7 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
       </div>
 
       <div className="mt-6 flex gap-2.5">
-        <button type="button" onClick={onCancel} className="btn-ghost pressable min-h-[52px] flex-1">Cancel</button>
+        <button type="button" onClick={onCancel} className="btn-ghost pressable min-h-13 flex-1">Cancel</button>
         <button type="button" onClick={save} disabled={!any} className="btn-primary pressable flex-1">
           Save to card
         </button>

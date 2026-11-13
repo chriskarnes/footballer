@@ -123,8 +123,10 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
             {items.map((it) => (
               <li key={it.key} className="card card-press flex items-center gap-1.5 p-3">
                 <Link href={`/train/${it.kind}/${it.ref}`} className="card-hit flex min-w-0 flex-1 items-center gap-1.5 text-left">
-                  <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center"><TickMark on={it.done} /></span>
+                  <span className="flex size-13 shrink-0 items-center justify-center"><TickMark on={it.done} /></span>
                   <span className="min-w-0 flex-1 py-2 pl-1.5 pr-1">
+                    {/* The tick is hidden from screen readers; say it in words. */}
+                    {it.done && <span className="sr-only">Done: </span>}
                     <span className="block text-title font-bold leading-snug text-on-surface">{it.title}</span>
                     {/* How long, so a player can pick one that fits the time they have. */}
                     <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
@@ -159,7 +161,6 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
  * headline; a ring is one still to come; a rest day is a speck.
  */
 function WeekStrip({ items, today, nextDay }: { items: MyWeek['items']; today: number; nextDay: number | null }) {
-  const ink = 'var(--app-on-surface-brand)';
   return (
     <ol className="mt-3 flex max-w-sm justify-between" aria-label="This week">
       {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
@@ -169,19 +170,17 @@ function WeekStrip({ items, today, nextDay }: { items: MyWeek['items']; today: n
         const label = `${DAYS[i]}${isToday ? ' (today)' : ''}: ${todo.length ? `${todo.length} to do` : doneHere ? 'done' : 'rest'}`;
         return (
           <li key={i} aria-label={label} aria-current={isToday ? 'date' : undefined}
-              className="flex w-10 flex-col items-center gap-1 rounded-full pb-1 pt-1"
-              style={isToday ? { background: `color-mix(in srgb, ${ink} 18%, transparent)` } : undefined}>
-            <span className="text-body-sm font-extrabold" style={{ color: ink, opacity: isToday ? 1 : 0.7 }}>{d}</span>
+              className={`flex w-10 flex-col items-center gap-1 rounded-full pb-1 pt-1 ${isToday ? 'bg-[color-mix(in_srgb,var(--app-on-surface-brand)_18%,transparent)]' : ''}`}>
+            <span className={`text-body-sm font-extrabold text-on-surface-brand ${isToday ? '' : 'opacity-70'}`}>{d}</span>
             <span className="flex h-6 w-6 items-center justify-center">
               {!todo.length && doneHere ? (
                 <span className="flex h-6 w-6 items-center justify-center rounded-full accent-badge">
                   <Tick className="h-3 w-3" />
                 </span>
               ) : todo.length ? (
-                <span className="h-6 w-6 rounded-full"
-                      style={i === nextDay ? { background: ink } : { boxShadow: `inset 0 0 0 2.5px ${ink}` }} />
+                <span className={`h-6 w-6 rounded-full ${i === nextDay ? 'bg-on-surface-brand' : 'ring-[2.5px] ring-inset ring-on-surface-brand'}`} />
               ) : (
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: ink, opacity: 0.35 }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-on-surface-brand opacity-40" />
               )}
             </span>
           </li>

@@ -242,7 +242,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                     </span>
                     <select aria-label={`Day for ${s.name}`} value={day} disabled={pending}
                             onChange={(e) => run(() => saveBuiltSession(s.id, { weekday: Number(e.target.value) }))}
-                            className="rounded-small border border-outline bg-surface px-2 py-1.5 text-body font-semibold">
+                            className="h-11 rounded-small border border-outline bg-surface px-3 text-body font-semibold">
                       {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
                     </select>
                   </div>
@@ -300,10 +300,10 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
             {d?.amount && (
               <span className="flex items-center gap-1.5 text-body-sm text-on-surface-variant">
-                <button type="button" className="icon-btn !h-8 !w-8" aria-label={`Level down ${d.name}`}
+                <button type="button" className="icon-btn" aria-label={`Level down ${d.name}`}
                         disabled={pending || step <= 0} onClick={() => setLevel(step - 1)}>−</button>
                 <span className="min-w-[3.5rem] text-center font-semibold text-on-surface">Level {step + 1}</span>
-                <button type="button" className="icon-btn !h-8 !w-8" aria-label={`Level up ${d.name}`}
+                <button type="button" className="icon-btn" aria-label={`Level up ${d.name}`}
                         disabled={pending || step >= TOP_STEP} onClick={() => setLevel(step + 1)}>+</button>
               </span>
             )}
