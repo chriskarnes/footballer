@@ -26,7 +26,9 @@ export default async function GroupsPage() {
   const today = localDate(new Date(), academy.timeZone);
   const active = c.groups.filter((g) => !g.archived);
   const archived = c.groups.filter((g) => g.archived);
-  const inAny = new Set(c.memberships.map((m) => m.user_id));
+  // In a group that's still running: a finished group doesn't count.
+  const running = new Set(active.map((g) => g.id));
+  const inAny = new Set(c.memberships.filter((m) => running.has(m.group_id)).map((m) => m.user_id));
   const solo = players.filter((p) => !inAny.has(p.user_id)).length;
 
   return (

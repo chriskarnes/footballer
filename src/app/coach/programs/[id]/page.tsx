@@ -21,13 +21,18 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
   if ('page' in gate) return gate.page;
   const { db, academy, role } = gate.viewer;
   // Mid-setup, the program step ends here: the way back is to the checklist.
-  const [c, setup] = await Promise.all([loadContent(db, academy.id), inSetup(db, academy.id, role)]);
+  const [c, setup, { data: members }] = await Promise.all([
+    loadContent(db, academy.id), inSetup(db, academy.id, role),
+    db.from('academy_members').select('user_id').eq('academy_id', academy.id).eq('role', 'player'),
+  ]);
   const p = c.programs.find((x) => x.id === id);
   if (!p) notFound();
 
   const drills = new Map(c.drills.map((d) => [d.id, d]));
   const groups = c.groups.filter((g) => g.program_id === p.id && !g.archived);
-  const players = c.playerPrograms.filter((x) => x.program_id === p.id).length;
+  // Current players only: someone removed from the academy no longer has it.
+  const current = new Set(((members ?? []) as { user_id: string }[]).map((m) => m.user_id));
+  const players = c.playerPrograms.filter((x) => x.program_id === p.id && (!members || current.has(x.user_id))).length;
   const built = new Set(c.sessions.filter((s) => s.program_id === p.id).map((s) => s.week));
 
   return (
@@ -87,7 +92,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
 
       <details className="mt-9">
         <summary className="cursor-pointer text-body font-semibold text-on-surface">Name, length and description</summary>
-        <div className="mt-5"><ProgramForm program={p} solo={c.playerPrograms.filter((x) => x.program_id === p.id).length} /></div>
+        <div className="mt-5"><ProgramForm program={p} solo={players} /></div>
       </details>
     </div>
   );

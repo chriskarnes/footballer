@@ -166,9 +166,11 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       } else why = 'AI didn’t answer, so this is the rules’ week';
     } else why = `${DENIED[gate.why]}, so this is built from their settings`;
 
-    // The player's own extra sessions stay.
-    const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
-    if (del.error) return { ok: false, error: missing(del.error.message) };
+    // The new week goes in before the old one comes out, so a failed write
+    // leaves the player the week they had, not none. Their own extras stay.
+    const old = await v.db.from('player_week_sessions').select('id').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
+    if (old.error) return { ok: false, error: missing(old.error.message) };
+    const oldIds = ((old.data ?? []) as { id: string }[]).map((x) => x.id);
     // Newest columns first; before 0012 (steps, light) or 0011 (note), without them.
     const tiers: string[][] = [['note', 'steps', 'light', 'changes'], ['note'], []];
     let error: { message: string } | null = null;
@@ -184,6 +186,10 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       if (!error || !/note|steps|light|changes/.test(error.message)) break;
     }
     if (error) return { ok: false, error: missing(error.message) };
+    if (oldIds.length) {
+      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).in('id', oldIds);
+      if (del.error) { done(); return { ok: false, error: plain(del.error, 'The new week is in, but the old one couldn’t be cleared. Try Rebuild.') }; }
+    }
     // Building a week means custom weeks, if they weren't already (before 0014, no mode).
     if (t.mode !== 'auto') {
       const m = await v.db.from('player_plans').upsert({ academy_id: v.academy.id, user_id: userId, mode: 'custom' });
@@ -233,6 +239,11 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
     const row: Record<string, unknown> = { made_by: 'trainer' };
     if (change.drill_ids) {
       if (!change.drill_ids.length) return { ok: false, error: 'A session needs at least one drill.' };
+      // Written into the player's week as ids: they have to be this academy's.
+      const unique = [...new Set(change.drill_ids)];
+      const { data: mine, error: de } = await v.db.from('drills').select('id').eq('academy_id', v.academy.id).in('id', unique);
+      if (de) return { ok: false, error: plain(de) };
+      if ((mine ?? []).length !== unique.length) return { ok: false, error: 'One of those drills isn’t in your academy any more. Reload and try again.' };
       row.drill_ids = change.drill_ids.slice(0, 20);
       if (change.steps) row.steps = change.steps.slice(0, 20).map((n) => clamp(n, 0, 9) ?? 0);
       if (change.changes) row.changes = change.changes.slice(0, 20).map((c) => ['new', 'same', 'up', 'harder', 'hold'].includes(c) ? c : 'new');

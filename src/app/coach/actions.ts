@@ -48,6 +48,12 @@ export async function removeMember(userId: string) {
     .delete({ count: 'exact' }).eq('academy_id', v.academy.id).eq('user_id', userId);
   if (error) return { ok: false as const, error: plain(error) };
   if (!count) return { ok: false as const, error: 'You can’t remove that person.' };
+  // Out of their groups and programs too, so they stop counting in them.
+  // Best effort: the counts below also look only at current players.
+  await Promise.all([
+    v.db.from('group_members').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
+    v.db.from('player_programs').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
+  ]);
   revalidatePath('/coach', 'layout');
   return { ok: true as const };
 }
@@ -57,8 +63,10 @@ export async function answerJoinRequest(userId: string, approve: boolean) {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
   const { error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve });
-  // Another trainer answered it first: nothing left to do, and nothing wrong.
-  if (error && !/no such request/i.test(error.message)) return { ok: false as const, error: plain(error) };
+  // Another trainer answered it first: nothing left to do, and nothing wrong,
+  // but say so rather than claim this tap let them in.
+  const already = !!error && /no such request/i.test(error.message);
+  if (error && !already) return { ok: false as const, error: plain(error) };
   revalidatePath('/coach', 'layout');
-  return { ok: true as const };
+  return { ok: true as const, already };
 }

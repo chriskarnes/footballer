@@ -19,7 +19,8 @@ export function JoinRequests({ requests }: { requests: JoinRequest[] }) {
 
   const answer = (id: string, yes: boolean) => start(async () => {
     const r = await answerJoinRequest(id, yes);
-    if (r.ok) { setGone((g) => [...g, id]); toast(yes ? 'Let in.' : 'Turned away.'); } else setErr(r.error);
+    if (r.ok) { setGone((g) => [...g, id]); toast(r.already ? 'Someone already answered that one.' : yes ? 'Let in.' : 'Declined.'); }
+    else setErr(r.error);
   });
 
   return (

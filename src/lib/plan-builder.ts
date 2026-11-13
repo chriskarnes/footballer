@@ -296,6 +296,7 @@ export function defaultPlanName(intake: PlanIntake): string {
  *  until proven otherwise. */
 export interface HistoryRow {
   created_at?: string | null;
+  completed_at?: string | null;
   planned_minutes?: number | string | null;
   actual_minutes?: number | string | null;
   spec?: { focus?: FocusArea[]; minutes?: number } | null;
@@ -341,6 +342,9 @@ export function derivePrefill(
   history: HistoryRow[],
   profile: ProfileRow | null,
   today = 0,
+  /** Whose calendar a finish falls on: the academy's. The server's clock is
+   *  UTC, where a US evening session is already tomorrow. */
+  timeZone = 'America/New_York',
 ): Prefill {
   const done = history.filter((h) => h.status === 'completed' || h.status === 'planned');
 
@@ -364,12 +368,17 @@ export function derivePrefill(
   // Availability: the weekdays they have actually trained on become training
   // days. Everything else starts as rest, which is the honest default — better
   // to under-promise a week they'll keep than fill seven days they won't.
+  // Finished sessions, on the day they were finished: a session saved for
+  // later and never done isn't a day trained.
   const trained = new Set<number>();
-  done.forEach((h) => {
-    if (!h.created_at) return;
-    const d = new Date(h.created_at);
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' });
+  const DAY: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+  history.forEach((h) => {
+    if (h.status !== 'completed' || !h.completed_at) return;
+    const d = new Date(h.completed_at);
     if (Number.isNaN(d.getTime())) return;
-    trained.add((d.getDay() + 6) % 7);          // JS Sunday=0 → our Monday=0
+    const i = DAY[weekday.format(d)];
+    if (i !== undefined) trained.add(i);
   });
   const availability: Availability[] = trained.size
     ? Array.from({ length: 7 }, (_, i) => (trained.has(i) ? 'technical' : 'rest'))

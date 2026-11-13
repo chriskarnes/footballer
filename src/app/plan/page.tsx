@@ -2,6 +2,7 @@ import { getExercises, getSessions } from '@/lib/library';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { serverClient } from '@/lib/supabase/server';
+import { getAcademy } from '@/lib/branding-server';
 import { derivePrefill, type HistoryRow, type ProfileRow } from '@/lib/plan-builder';
 import { PlanBuilder } from '@/components/PlanBuilder';
 import { SavedWeek } from '@/components/SavedWeek';
@@ -68,7 +69,7 @@ export default async function PlanPage({
         // narrows it to its own Monday.
         const since = new Date(Date.now() - 8 * 86400000).toISOString();
         const [{ data: rows }, { data: prof }, { data: done }, { count: planCount }] = await Promise.all([
-          db.from('workouts').select('created_at,planned_minutes,actual_minutes,spec,status')
+          db.from('workouts').select('created_at,completed_at,planned_minutes,actual_minutes,spec,status')
             .order('created_at', { ascending: false }).limit(50),
           db.from('profiles').select('level,equipment,home_only,season_phase,weaknesses')
             .eq('id', uid).maybeSingle(),
@@ -133,7 +134,7 @@ export default async function PlanPage({
         <BandTitle>{editing ? `Change ${editing.name}` : 'Make my week'}</BandTitle>
       </BrandBand>
     <PlanBuilder sessions={sessions} drillsBySession={drillsBySession}
-      prefill={derivePrefill(history, profile)} signedIn={signedIn}
+      prefill={derivePrefill(history, profile, 0, (await getAcademy()).academy?.timeZone)} signedIn={signedIn}
       editing={editing?.intake ? { id: editing.id, name: editing.name, intake: editing.intake } : null} />
     </div>
   );

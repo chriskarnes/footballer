@@ -139,6 +139,15 @@ export async function saveProgram(_: unknown, f: FormData): Promise<Result> {
       weeks: Math.max(1, Math.min(52, Number(f.get('weeks')) || 8)),
     };
     if (!row.name) return { ok: false, error: 'Give the program a name.' };
+    // Shorter than a week that has sessions would hide them: the page only
+    // draws weeks 1 to `weeks`, so they couldn't be seen or removed.
+    if (id) {
+      const { data: last } = await v.db.from('academy_sessions').select('week')
+        .eq('program_id', id).eq('academy_id', v.academy.id).order('week', { ascending: false }).limit(1).maybeSingle();
+      if (last && last.week > row.weeks) {
+        return { ok: false, error: `Week ${last.week} has sessions. Clear weeks past ${row.weeks} first, or keep it at ${last.week} weeks.` };
+      }
+    }
     const q = id
       ? v.db.from('academy_programs').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
       : v.db.from('academy_programs').insert(row).select('id').single();
@@ -215,13 +224,17 @@ export async function saveLibrarySession(input: {
       const { data, error } = await v.db.from('library_sessions')
         .insert({ academy_id: v.academy.id, name, drill_ids }).select('id').single();
       if (error) return { ok: false, error: plain(error) };
+      // The new session and where it goes are one save: if the second half
+      // fails, take the first back, so a retry doesn't leave a duplicate.
+      const undo = () => v.db.from('library_sessions').delete().eq('id', data.id).eq('academy_id', v.academy.id);
       if (input.relink) {
         const { error: e } = await v.db.from('academy_sessions').update({ library_id: data.id, name, drill_ids })
           .eq('id', input.relink).eq('academy_id', v.academy.id);
-        if (e) return { ok: false, error: plain(e) };
+        if (e) { await undo(); return { ok: false, error: plain(e) }; }
       } else if (input.place) {
-        const r = await place(v, { id: data.id, name, drill_ids }, input.place.programId, input.place.week);
-        if (r) return { ok: false, error: r };
+        const r = await place(v, { id: data.id, name, drill_ids }, input.place.programId, input.place.week)
+          .catch(async (err: unknown) => { await undo(); throw err; });
+        if (r) { await undo(); return { ok: false, error: r }; }
       }
     }
     done();
@@ -405,6 +418,8 @@ function isRedirect(e: unknown) {
 export async function setDrillSessions(drillId: string, sessionIds: string[], libraryIds?: string[]): Promise<Result> {
   try {
     const v = await staff();
+    // The drill is written into sessions as an id: it has to be this academy's.
+    await ownDrills(v, [drillId]);
     const want = new Set(sessionIds);
     // Every change is worked out and checked first, then written: a full or
     // emptied session found halfway used to leave the earlier ones saved.
@@ -447,9 +462,10 @@ export async function setDrillSessions(drillId: string, sessionIds: string[], li
     if (full) return { ok: false, error: `${full.name} is full (30 drills). Nothing was changed.` };
     const emptied = writes.find((w) => !w.drill_ids.length);
     if (emptied) return { ok: false, error: `This is the only drill in ${emptied.name}, which needs at least one. Nothing was changed.` };
-    for (const w of writes) {
+    for (const [i, w] of writes.entries()) {
       const { error: e } = await v.db.from(w.table).update({ drill_ids: w.drill_ids }).eq('id', w.id).eq('academy_id', v.academy.id);
-      if (e) { done(); return { ok: false, error: plain(e) }; }
+      // Earlier ones are saved: say so, rather than read as nothing changed.
+      if (e) { done(); return { ok: false, error: i ? `Some sessions were changed, but not ${w.name}. ${plain(e)}` : plain(e) }; }
     }
     done();
     return { ok: true };
