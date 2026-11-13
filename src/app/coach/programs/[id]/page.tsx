@@ -4,7 +4,8 @@ import { staffOnly } from '@/components/coach/Gate';
 import { ProgramForm } from '@/components/coach/ProgramForm';
 import { CopyWeek } from '@/components/coach/CopyWeek';
 import { loadContent } from '@/lib/academy-data';
-import { sessionsForWeek } from '@/lib/academy-week';
+import { programWeek, sessionsForWeek } from '@/lib/academy-week';
+import { localDate } from '@/lib/progress';
 import { PageHead } from '@/components/coach/PageHead';
 import { inSetup } from '@/lib/setup';
 
@@ -34,6 +35,17 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
   const current = new Set(((members ?? []) as { user_id: string }[]).map((m) => m.user_id));
   const players = c.playerPrograms.filter((x) => x.program_id === p.id && (!members || current.has(x.user_id))).length;
   const built = new Set(c.sessions.filter((s) => s.program_id === p.id).map((s) => s.week));
+  // Who is on which week right now: changing that week swaps the sessions
+  // under them, and what they've done of it this week stops showing as done.
+  const today = localDate(new Date(), academy.timeZone);
+  const onWeek = (n: number) => [
+    ...groups.filter((g) => g.starts_on && programWeek(g.starts_on, p.weeks, today) === n).map((g) => g.name),
+    ...(() => {
+      const k = c.playerPrograms.filter((x) => x.program_id === p.id && (!members || current.has(x.user_id))
+        && programWeek(x.starts_on, p.weeks, today) === n).length;
+      return k ? [`${k} ${k === 1 ? 'player' : 'players'} on their own`] : [];
+    })(),
+  ];
 
   return (
     <div className="animate-pop">
@@ -81,7 +93,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
               )}
               <div className="mt-3 flex flex-wrap gap-2">
                 {repeats
-                  ? <CopyWeek programId={p.id} from={repeats} to={n} label={`Change week ${n}`} />
+                  ? <CopyWeek programId={p.id} from={repeats} to={n} label={`Change week ${n}`} onNow={onWeek(n)} />
                   : <Link href={`/coach/programs/${p.id}/session?week=${n}`} className="btn-ghost btn-sm pressable">
                       {own ? 'Add a session' : 'Build this week'}
                     </Link>}

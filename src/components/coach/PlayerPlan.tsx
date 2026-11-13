@@ -193,7 +193,7 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
       {err && !errAt && <p role="alert" className="text-body font-semibold text-on-surface">{err}</p>}
 
       <ConfirmSheet open={confirm} title="Back to their program?" confirmLabel="Back to program" busy={pending}
-        body={`${first}’s custom weeks from this week on are taken away, and their program is their week again.`}
+        body={`${first}’s custom weeks from this week on are taken away, apart from sessions they’ve already done, and their program is their week again.`}
         onCancel={() => setConfirm(false)}
         onConfirm={() => run(() => setMode(userId, 'program'), undefined, 'Saved.', () => setConfirm(false))} />
       <ConfirmSheet open={!!rebuild} title={`Rebuild ${rebuild === 'next' ? 'next' : 'this'} week?`} confirmLabel="Rebuild" busy={pending}

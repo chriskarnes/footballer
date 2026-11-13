@@ -66,8 +66,15 @@ export async function setMode(userId: string, mode: 'program' | 'custom'): Promi
     if (error) return { ok: false, error: /mode/.test(error.message) ? notReady(error, '0014') : missing(error.message) };
     if (mode === 'program') {
       const from = mondayOf(localDate(new Date(), v.academy.timeZone));
-      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
-      if (del.error) return { ok: false, error: missing(del.error.message) };
+      const rows = await v.db.from('player_week_sessions').select('id').eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
+      if (rows.error) return { ok: false, error: missing(rows.error.message) };
+      const ids = ((rows.data ?? []) as { id: string }[]).map((x) => x.id);
+      const finished = await doneOf(v.db, v.academy.id, userId, from, ids);
+      const gone = ids.filter((id) => !finished.has(id));
+      if (gone.length) {
+        const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).in('id', gone);
+        if (del.error) return { ok: false, error: missing(del.error.message) };
+      }
     }
     done(); return { ok: true };
   } catch (e) { return fail(e); }
@@ -168,9 +175,23 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
 
     // The new week goes in before the old one comes out, so a failed write
     // leaves the player the week they had, not none. Their own extras stay.
-    const old = await v.db.from('player_week_sessions').select('id').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
+    const old = await v.db.from('player_week_sessions').select('id, weekday, position').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
     if (old.error) return { ok: false, error: missing(old.error.message) };
-    const oldIds = ((old.data ?? []) as { id: string }[]).map((x) => x.id);
+    const before = (old.data ?? []) as { id: string; weekday: number | null; position: number }[];
+    // Sessions already done stay as they are; the new week fills the rest:
+    // fewer sessions, and off the days already done where it can.
+    const finished = await doneOf(v.db, v.academy.id, userId, week_of, before.map((x) => x.id));
+    const kept = before.filter((x) => finished.has(x.id));
+    const oldIds = before.filter((x) => !finished.has(x.id)).map((x) => x.id);
+    if (kept.length) {
+      const room = rows.length - kept.length;
+      if (room <= 0) return { ok: false, error: 'They’ve done every session that week already, so there’s nothing to rebuild.' };
+      const doneDays = new Set(kept.map((x) => x.weekday));
+      const order = [...rows.keys()].sort((a, b) => Number(doneDays.has(rows[a].weekday)) - Number(doneDays.has(rows[b].weekday)) || a - b);
+      const pick = new Set(order.slice(0, room));
+      rows = rows.filter((_, i) => pick.has(i));
+    }
+    const offset = kept.length ? Math.max(...kept.map((x) => x.position)) + 1 : 0;
     // Newest columns first; before 0012 (steps, light) or 0011 (note), without them.
     const tiers: string[][] = [['note', 'steps', 'light', 'changes'], ['note'], []];
     let error: { message: string } | null = null;
@@ -178,7 +199,7 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       ({ error } = await v.db.from('player_week_sessions').insert(rows.map((s, i) => {
         const all: Record<string, unknown> = { note: s.note, steps: s.steps, light: s.light, changes: s.changes };
         return {
-          academy_id: v.academy.id, user_id: userId, week_of, position: i,
+          academy_id: v.academy.id, user_id: userId, week_of, position: offset + i,
           name: s.name, drill_ids: s.drill_ids, weekday: s.weekday, made_by: s.made_by,
           ...Object.fromEntries(extra.map((k) => [k, all[k]])),
         };
@@ -212,6 +233,20 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
  * The player's built weeks before `weekOf`, newest first, each session with
  * whether it was done, how it felt and which drills were ticked.
  */
+/**
+ * Which of these built sessions the player has already done. Rebuilding or
+ * going back to the program leaves those: a finished session stays finished,
+ * with its feel and ticks, and still counts for the next week's levels.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function doneOf(db: any, academyId: string, userId: string, since: string, ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const { data, error } = await db.rpc('academy_completions', { p_academy: academyId, p_since: `${since}T00:00:00Z` });
+  if (error) throw error;
+  return new Set(((data ?? []) as { user_id: string; source_ref: string | null }[])
+    .filter((r) => r.user_id === userId && r.source_ref && ids.includes(r.source_ref)).map((r) => r.source_ref as string));
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function pastWeeks(db: any, academyId: string, custom: CustomRow[], userId: string, weekOf: string): Promise<PastWeek[]> {
   // The trainer's weeks only: a player's own extras don't set levels or blocks.
@@ -249,13 +284,15 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
       if (change.changes) row.changes = change.changes.slice(0, 20).map((c) => ['new', 'same', 'up', 'harder', 'hold'].includes(c) ? c : 'new');
     }
     if (change.weekday !== undefined) row.weekday = clamp(change.weekday, 0, 6);
-    let { error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id);
+    let { data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id');
     // Before 0012: just the drills and the day.
     if (error && /steps|changes/.test(error.message)) {
       delete row.steps; delete row.changes;
-      ({ error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id));
+      ({ data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id'));
     }
     if (error) return { ok: false, error: missing(error.message) };
+    // Nothing matched: the week was rebuilt or taken away since this page loaded.
+    if (!hit?.length) return { ok: false, error: 'That session isn’t in their week any more. Reload and try again.' };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }

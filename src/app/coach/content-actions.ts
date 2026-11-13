@@ -142,8 +142,9 @@ export async function saveProgram(_: unknown, f: FormData): Promise<Result> {
     // Shorter than a week that has sessions would hide them: the page only
     // draws weeks 1 to `weeks`, so they couldn't be seen or removed.
     if (id) {
-      const { data: last } = await v.db.from('academy_sessions').select('week')
+      const { data: last, error: le } = await v.db.from('academy_sessions').select('week')
         .eq('program_id', id).eq('academy_id', v.academy.id).order('week', { ascending: false }).limit(1).maybeSingle();
+      if (le) return { ok: false, error: plain(le) };
       if (last && last.week > row.weeks) {
         return { ok: false, error: `Week ${last.week} has sessions. Clear weeks past ${row.weeks} first, or keep it at ${last.week} weeks.` };
       }
@@ -179,7 +180,10 @@ export async function saveSession(input: { id?: string; programId: string; week:
     const row = { academy_id: v.academy.id, program_id: input.programId, week: input.week, name, drill_ids: input.drillIds.slice(0, 30) };
     let error;
     if (input.id) {
-      ({ error } = await v.db.from('academy_sessions').update(row).eq('id', input.id).eq('academy_id', v.academy.id));
+      // Nothing matched (deleted in another tab): say so, rather than "Saved".
+      const u = await v.db.from('academy_sessions').update(row).eq('id', input.id).eq('academy_id', v.academy.id).select('id');
+      error = u.error;
+      if (!error && !u.data?.length) return { ok: false, error: 'That session isn’t here any more. Reload and try again.' };
     } else {
       const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
         .eq('program_id', input.programId).eq('week', input.week);
@@ -217,9 +221,10 @@ export async function saveLibrarySession(input: {
     await ownDrills(v, drill_ids);
 
     if (input.libraryId && !input.relink) {
-      const { error } = await v.db.from('library_sessions').update({ name, drill_ids })
-        .eq('id', input.libraryId).eq('academy_id', v.academy.id);
+      const { data: hit, error } = await v.db.from('library_sessions').update({ name, drill_ids })
+        .eq('id', input.libraryId).eq('academy_id', v.academy.id).select('id');
       if (error) return { ok: false, error: plain(error) };
+      if (!hit?.length) return { ok: false, error: 'That session isn’t here any more. Reload and try again.' };
     } else {
       const { data, error } = await v.db.from('library_sessions')
         .insert({ academy_id: v.academy.id, name, drill_ids }).select('id').single();
@@ -228,9 +233,10 @@ export async function saveLibrarySession(input: {
       // fails, take the first back, so a retry doesn't leave a duplicate.
       const undo = () => v.db.from('library_sessions').delete().eq('id', data.id).eq('academy_id', v.academy.id);
       if (input.relink) {
-        const { error: e } = await v.db.from('academy_sessions').update({ library_id: data.id, name, drill_ids })
-          .eq('id', input.relink).eq('academy_id', v.academy.id);
+        const { data: hit, error: e } = await v.db.from('academy_sessions').update({ library_id: data.id, name, drill_ids })
+          .eq('id', input.relink).eq('academy_id', v.academy.id).select('id');
         if (e) { await undo(); return { ok: false, error: plain(e) }; }
+        if (!hit?.length) { await undo(); return { ok: false, error: 'That session isn’t here any more. Reload and try again.' }; }
       } else if (input.place) {
         const r = await place(v, { id: data.id, name, drill_ids }, input.place.programId, input.place.week)
           .catch(async (err: unknown) => { await undo(); throw err; });
@@ -296,6 +302,16 @@ export async function deleteSession(id: string): Promise<Result> {
 export async function copyWeek(programId: string, from: number, to: number): Promise<Result> {
   try {
     const v = await staff();
+    const { data: prog, error: pe } = await v.db.from('academy_programs').select('weeks').eq('id', programId).eq('academy_id', v.academy.id).maybeSingle();
+    if (pe) return { ok: false, error: plain(pe) };
+    if (!prog) return { ok: false, error: 'That program isn’t here any more. Reload and try again.' };
+    const weeks = (prog as { weeks: number }).weeks;
+    if (!Number.isInteger(to) || to < 1 || to > weeks || to === from) return { ok: false, error: `The program has ${weeks} weeks. Reload and try again.` };
+    // Never on top of a week that has its own sessions: two copies of each would be a surprise.
+    const there = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
+      .eq('program_id', programId).eq('academy_id', v.academy.id).eq('week', to);
+    if (there.error) return { ok: false, error: plain(there.error) };
+    if (there.count) return { ok: false, error: `Week ${to} already has sessions. Reload to see them.` };
     // The same library sessions, used again (0017); before it, plain copies.
     const q = (cols: string) => v.db.from('academy_sessions').select(cols)
       .eq('program_id', programId).eq('academy_id', v.academy.id).eq('week', from);
