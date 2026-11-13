@@ -9,10 +9,10 @@ const SIZES = new Set([32, 180, 192, 512]);
 const DRAWABLE = new Set(['image/png', 'image/jpeg', 'image/svg+xml']);
 
 /**
- * An academy's app icon: its logo on its kit colour, or its initial when
+ * An academy's app icon: its logo on its main color, or its initial when
  * there's no logo. /brand/icon?size=192, &maskable=1 for Android's cropped
  * shape, which needs the mark inside the middle 80%. Callers add
- * `v=<updated_at>`, so a URL never changes and caches for a year.
+ * `v=` (see appOf), so a URL never changes and caches for a year.
  *
  * Without an academy (the bare domain) it's the Train.futbol icon.
  */
@@ -28,7 +28,9 @@ export async function GET(req: Request) {
     return Response.redirect(new URL(file, url), 307);
   }
 
-  const bg = academy.branding.primary ?? '#111111';
+  // No colors: white, the app's own page, so a dark crest shows. (It was
+  // near-black, and a black crest on a clear background vanished.)
+  const bg = academy.branding.primary ?? '#FFFFFF';
   const logo = academy.branding.logo ? await getLogo() : null;
   const src = logo && DRAWABLE.has(logo.type) ? `data:${logo.type};base64,${logo.data}` : null;
   const mark = Math.round(size * (maskable ? 0.56 : 0.72));

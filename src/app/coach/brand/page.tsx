@@ -26,7 +26,7 @@ export default async function BrandPage() {
       <PageHead back={{ href: '/coach/team', label: 'Academy' }} eyebrow={v.academy.name} title="Brand settings">
         Pick your colors, add your crest, and every player sees it on their next load.
       </PageHead>
-      <BrandingAdmin initial={v.academy.branding} />
+      <BrandingAdmin initial={v.academy.branding} academyName={v.academy.name} />
     </div>
   );
 }

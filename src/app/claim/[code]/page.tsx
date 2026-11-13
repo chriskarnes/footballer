@@ -58,29 +58,31 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
         </p>
       </BrandBand>
 
+      {/* One card, never one inside another: SignIn draws its own. */}
       <div className="relative -mt-12">
-        <div className="card p-5">
-          {claim.claimed ? (
-            <>
+        {claim.claimed ? (
+          <>
+            <div className="card p-5">
               <p className="text-body-lg leading-relaxed text-on-surface">
                 If that&rsquo;s you, sign in with the email you asked with.
               </p>
-              {v.user
-                ? <>
-                    <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">Open the app</Link>
-                    {/* Signed in as someone else: the way to switch. */}
-                    <p className="mt-4 text-body text-on-surface-variant">Signed in as {v.user.email}. Not the address you asked with?</p>
-                    <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-2 min-h-12 w-full text-body-lg font-bold" />
-                  </>
-                : <div className="mt-4"><SignIn next="/coach" /></div>}
-            </>
-          ) : v.user ? (
-            <ClaimButton code={code} name={claim.name} email={v.user.email ?? ''} hint={claim.hint} />
-          ) : (
-            <SignIn next={`/claim/${code}`} title="Sign in to make it yours"
-                    note={`Use the email you asked with: ${claim.hint}`} />
-          )}
-        </div>
+              {v.user && (
+                <>
+                  <Link href={v.staff ? '/coach' : '/'} className="btn-primary pressable mt-4 w-full">Open the app</Link>
+                  {/* Signed in as someone else: the way to switch. */}
+                  <p className="mt-4 text-body text-on-surface-variant">Signed in as {v.user.email}. Not the address you asked with?</p>
+                  <SignOut to={`/claim/${code}`} className="btn-ghost pressable mt-2 min-h-12 w-full text-body-lg font-bold" />
+                </>
+              )}
+            </div>
+            {!v.user && <div className="mt-3"><SignIn next="/coach" /></div>}
+          </>
+        ) : v.user ? (
+          <div className="card p-5"><ClaimButton code={code} name={claim.name} email={v.user.email ?? ''} hint={claim.hint} /></div>
+        ) : (
+          <SignIn next={`/claim/${code}`} title="Sign in to make it yours"
+                  note={`Use the email you asked with: ${claim.hint}`} />
+        )}
       </div>
     </div>
   );

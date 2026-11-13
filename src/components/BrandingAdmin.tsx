@@ -17,7 +17,8 @@ type Choice = string | 'none' | 'custom';
  * stylesheet the layout would write, applied here before it is saved. What
  * you see before Save is what every player gets after it.
  */
-export function BrandingAdmin({ initial }: { initial: Branding | null }) {
+/** `academyName` is what an empty name box keeps: an academy always has one. */
+export function BrandingAdmin({ initial, academyName }: { initial: Branding | null; academyName: string }) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? '');
   const [choice, setChoice] = useState<Choice>(
@@ -104,7 +105,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
     router.refresh();
   }
 
-  const shown = name.trim() || 'Train.futbol';
+  const shown = name.trim() || academyName;
 
   return (
     <div className="pb-10">
@@ -134,12 +135,12 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
       <section className="mt-9">
         <p className="eyebrow mb-0.5">Name</p>
         <p className="mb-2.5 text-body-sm text-on-surface-variant">
-          Replaces &ldquo;Train.futbol&rdquo; in the header and the browser tab. A dot splits it the
-          same way: &ldquo;Riverside.fc&rdquo; sets the part after the dot lighter.
+          How your academy is named in the header, the browser tab and the installed app. A dot
+          splits it: &ldquo;Riverside.fc&rdquo; sets the part after the dot lighter.
         </p>
         <label className="text-field">
           <input type="text" value={name} maxLength={40} onChange={(e) => setName(e.target.value)}
-                 placeholder="Train.futbol" autoComplete="off" aria-label="Name" />
+                 placeholder={academyName} autoComplete="off" aria-label="Name" />
         </label>
       </section>
 
@@ -176,8 +177,9 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
       <section className="mt-9">
         <p className="eyebrow mb-0.5">Logo</p>
         <p className="mb-3 text-body-sm text-on-surface-variant">
-          A crest or badge, shown beside the name. Square works best. PNG or SVG with a
-          transparent background, under 512 KB. Saves as soon as you pick it.
+          A crest or badge, shown beside the name and on the app icon. Square works best. PNG or
+          SVG with a transparent background, under 512 KB (a WebP shows in the app, but the icon
+          uses your initial). Saves as soon as you pick it.
         </p>
         <div className="card-flat flex items-center gap-4 p-4">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-medium bg-surface-container">
