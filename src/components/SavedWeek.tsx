@@ -6,8 +6,8 @@ import type { DrillBrief, SessionRow } from '@/lib/types';
 import { WEEKDAYS } from '@/lib/types';
 import { dayKey, weekState, type Completion } from '@/lib/plan-today';
 import { PlanWeek, type WeekRow } from './PlanWeek';
-import { BackLink } from './BackLink';
 import { ConfirmSheet } from './ConfirmSheet';
+import { splitSessionName } from '@/lib/program-copy';
 
 const FULL_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -35,34 +35,27 @@ export function SavedWeek({
   useEffect(() => { setNow(new Date()); }, []);
   const [confirming, setConfirming] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [err, setErr] = useState('');
 
   const state = now && plan.active
     ? weekState(rows.map((r) => ({ ...r, session_id: r.session?.id ?? null })), completions, now)
     : null;
   const byKey = new Map(rows.map((r) => [dayKey(r), r]));
 
-  const training = rows.filter((d) => d.kind !== 'rest' && d.session);
-  const minutes = Math.round(training.reduce((a, d) => a + (d.session?.total_minutes ?? 0), 0));
 
   async function activate() {
-    setSwitching(true);
+    setSwitching(true); setErr('');
     const res = await fetch('/api/plans', {
       method: 'PATCH', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ id: plan.id, follow: true }),
     }).catch(() => null);
     if (res?.ok) router.push('/plan');
-    else setSwitching(false);
+    else { setSwitching(false); setConfirming(false); setErr('Couldn’t save that. Check your connection and try again.'); }
   }
 
   return (
     <div className="animate-pop">
-      {/* The way to every saved week, and to renaming one. Plan is a tab, but
-          the list of plans lives with the rest of your account. */}
-      <BackLink href="/me#plans" label="Your plans" />
-      <h1 className="h-hero">{plan.name}</h1>
-      <p className="mt-3 text-[14px] font-medium text-on-surface-variant">
-        {training.length} session{training.length === 1 ? '' : 's'} a week · {minutes} min
-      </p>
+      {/* The week's name and numbers are in the band above (plan/page). */}
 
       {plan.active && state && (
         <Today state={state} byKey={byKey} drillsBySession={drillsBySession} />
@@ -75,9 +68,10 @@ export function SavedWeek({
             show you each day.
           </p>
           <button onClick={() => setConfirming(true)}
-                  className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                  className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
             Make active
           </button>
+          {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface-brand">{err}</p>}
         </div>
       )}
       <ConfirmSheet open={confirming} title={`Make ${plan.name} active?`}
@@ -123,7 +117,7 @@ function Today({
         <>
           <SessionLine session={session} drills={drillsBySession[session.id]?.length ?? 0} />
           <Link href={`/session/${session.id}?from=plan`}
-                className="btn-primary pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
+                className="btn-primary btn-big pressable mt-5 w-full bg-on-surface-brand text-surface-brand">
             Start
           </Link>
         </>
@@ -137,7 +131,7 @@ function Today({
       {!session && (
         <p className="mt-2 text-[13.5px] font-medium text-on-surface-brand-variant">
           {next?.session
-            ? `Next up: ${WEEKDAYS[next.weekday]} — ${next.session.name}`
+            ? `Next up: ${WEEKDAYS[next.weekday]} — ${splitSessionName(next.session.name).title}`
             : state.doneCount === state.trainingCount && state.trainingCount
               ? 'That’s the whole week done.'
               : 'Nothing else left this week.'}
@@ -160,7 +154,7 @@ function SessionLine({ session, drills }: { session: SessionRow; drills: number 
   return (
     <>
       <p className="mt-2 font-brand text-[24px] font-extrabold leading-tight tracking-tight text-on-surface-brand">
-        {session.name}
+        {splitSessionName(session.name).title}
       </p>
       <p className="mt-1.5 text-[12.5px] font-semibold text-on-surface-brand-variant">
         {Math.round(session.total_minutes)} min · {drills} drill{drills === 1 ? '' : 's'}

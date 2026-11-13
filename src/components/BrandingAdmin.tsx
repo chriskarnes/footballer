@@ -120,7 +120,7 @@ export function BrandingAdmin({ initial }: { initial: Branding | null }) {
           <div className="h-full w-[62%] rounded-full bg-brand-accent" />
         </div>
         <div className="mt-5 flex gap-2.5">
-          <span className="btn-primary flex-1 bg-on-surface-brand text-surface-brand">Start</span>
+          <span className="btn-primary btn-big flex-1 bg-on-surface-brand text-surface-brand">Start</span>
         </div>
       </section>
       <div className="mt-4 flex flex-wrap items-center gap-2" aria-hidden="true">

@@ -197,7 +197,7 @@ function Builder({
     return (
       <div key="week" className="animate-pop">
         <div className="mt-6"><BackButton onClick={back} label="Back" destination="your answers" /></div>
-        <h1 className="h-hero">Your week</h1>
+        <h2 className="h-page">Your week</h2>
 
         {/* The week's headline numbers and its actions, on one card — the
             same arrangement as a session on Train: one primary action, and the
@@ -268,9 +268,8 @@ function Builder({
 
   return (
     <div key="questions" className="animate-pop">
-      <h1 className="h-hero">{editing ? `Change ${editing.name}` : 'Make my week'}</h1>
-
-      <div className="mt-8">
+      {/* Its title is the band's, above (plan/page). */}
+      <div className="mt-6">
       {/* ---- what we already knew ---- */}
       {prefill.sessionsSeen > 0 ? (
         <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-high p-4 text-[14px]

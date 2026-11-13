@@ -23,8 +23,10 @@ const zone = () => {
  * sometime") or start at a set time. The zone is the device's, sent with
  * every change, so a timed 5 pm stays 5 pm where the player is.
  */
-export function CalendarSection({ initial, speed = true }: {
+export function CalendarSection({ initial, speed = true, plan = true }: {
   initial: CalendarFeed | null;
+  /** Whether they have Plan (the weekly plan is built from the drill library). */
+  plan?: boolean;
   /** Whether they get Speed & Stamina: off when their trainer has it off. */
   speed?: boolean;
 }) {
@@ -104,11 +106,13 @@ export function CalendarSection({ initial, speed = true }: {
           {copied ? 'Copied' : 'Copy link (Outlook, others)'}
         </button>
 
+        {(plan || speed) && <>
         <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Include</p>
         <div className="flex flex-wrap gap-2">
-          <Chip on={feed.include_plan} onClick={() => update({ include_plan: !feed.include_plan })}>Weekly plan</Chip>
+          {plan && <Chip on={feed.include_plan} onClick={() => update({ include_plan: !feed.include_plan })}>Weekly plan</Chip>}
           {speed && <Chip on={feed.include_speed} onClick={() => update({ include_speed: !feed.include_speed })}>Speed &amp; Stamina</Chip>}
         </div>
+        </>}
 
         <p className="mb-2.5 mt-6 text-[14px] font-bold text-on-surface">Show sessions</p>
         <div className="segmented" role="radiogroup" aria-label="Show sessions">

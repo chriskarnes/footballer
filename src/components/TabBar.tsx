@@ -22,7 +22,7 @@ const TABS = [
 const COACH = { href: '/coach', label: 'Coach', d: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M9 12h6M9 16h4' };
 
 // A session opened from somewhere says so in ?from=, and keeps that tab lit.
-const FROM: Record<string, string> = { train: '/', plan: '/plan', history: '/me' };
+const FROM: Record<string, string> = { train: '/', plan: '/plan', history: '/me', library: '/library' };
 
 /**
  * The tab a page belongs to. A session is a step into the tab it was opened

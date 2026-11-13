@@ -5,6 +5,8 @@ import { serverClient } from '@/lib/supabase/server';
 import { derivePrefill, type HistoryRow, type ProfileRow } from '@/lib/plan-builder';
 import { PlanBuilder } from '@/components/PlanBuilder';
 import { SavedWeek } from '@/components/SavedWeek';
+import Link from 'next/link';
+import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import type { Completion } from '@/lib/plan-today';
 import type { DrillBrief, PlanIntake } from '@/lib/types';
 
@@ -93,16 +95,42 @@ export default async function PlanPage({
     } catch { /* not configured yet — fall through to the signed-out build */ }
   }
 
+  // Plan opens like the other tabs: the band, with this week's name on it.
+  // The way to every saved week sits in its corner, since the list of plans
+  // lives on Me.
+  const toPlans = signedIn ? (
+    <Link href="/me#plans" className="underline underline-offset-4">Your plans</Link>
+  ) : undefined;
+
   if (shown) {
     const byId = new Map(sessions.map((s) => [s.id, s]));
     const rows = days.map((d) => ({ ...d, session: d.session_id ? byId.get(d.session_id) ?? null : null }));
-    return <SavedWeek plan={{ id: shown.id, name: shown.name, active: shown.active }}
-                      rows={rows} drillsBySession={drillsBySession} completions={completions} />;
+    const training = rows.filter((d) => d.kind !== 'rest' && d.session);
+    const minutes = Math.round(training.reduce((a, d) => a + (d.session?.total_minutes ?? 0), 0));
+    return (
+      <div>
+        <BrandBand right={toPlans}>
+          <BandTag>Plan</BandTag>
+          <BandTitle>{shown.name}</BandTitle>
+          <p className="mt-3 text-[16px] font-semibold text-on-surface-brand-variant">
+            {training.length} session{training.length === 1 ? '' : 's'} a week · {minutes} min
+          </p>
+        </BrandBand>
+        <SavedWeek plan={{ id: shown.id, name: shown.name, active: shown.active }}
+                   rows={rows} drillsBySession={drillsBySession} completions={completions} />
+      </div>
+    );
   }
 
   return (
+    <div>
+      <BrandBand right={toPlans}>
+        <BandTag>Plan</BandTag>
+        <BandTitle>{editing ? `Change ${editing.name}` : 'Make my week'}</BandTitle>
+      </BrandBand>
     <PlanBuilder sessions={sessions} drillsBySession={drillsBySession}
       prefill={derivePrefill(history, profile)} signedIn={signedIn}
       editing={editing?.intake ? { id: editing.id, name: editing.name, intake: editing.intake } : null} />
+    </div>
   );
 }

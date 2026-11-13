@@ -13,20 +13,23 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 export function MoveDay({ itemKey, weekday, placed, title }: { itemKey: string; weekday: number; placed: number; title: string }) {
   const [day, setDay] = useState(weekday);
   const [pending, start] = useTransition();
+  const [err, setErr] = useState('');
   const router = useRouter();
 
   const change = (to: number) => {
     const was = day;
-    setDay(to);
+    setDay(to); setErr('');
     start(async () => {
       const r = await moveItem({ key: itemKey, weekday: to, placed });
-      if (!r.ok) { setDay(was); alertless(r.error); return; }
+      // A failed move snaps back, and says so under the picker.
+      if (!r.ok) { setDay(was); setErr(r.error); return; }
       router.refresh();
     });
   };
 
   return (
-    <label className={`relative shrink-0 ${pending ? 'opacity-60' : ''}`}>
+    <span className="flex shrink-0 flex-col items-end">
+    <label className={`relative ${pending ? 'opacity-60' : ''}`}>
       <span className="sr-only">Day for {title}</span>
       <select value={day} onChange={(e) => change(Number(e.target.value))} disabled={pending}
               className="h-9 appearance-none rounded-full border border-outline bg-transparent pl-3 pr-7 text-[12.5px] font-bold text-on-surface">
@@ -36,9 +39,7 @@ export function MoveDay({ itemKey, weekday, placed, title }: { itemKey: string; 
         <path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </label>
+    {err && <span role="alert" className="mt-1 max-w-[14rem] text-right text-[12px] font-semibold text-on-surface">{err}</span>}
+    </span>
   );
 }
-
-// A failed move snaps back; the reason goes to the console rather than an
-// alert, which would block the page.
-function alertless(msg: string) { console.warn(`Couldn't move: ${msg}`); }

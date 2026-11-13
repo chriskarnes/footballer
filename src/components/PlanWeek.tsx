@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { DrillBrief, SessionRow } from '@/lib/types';
 import { WEEKDAYS } from '@/lib/types';
 import { dayKey } from '@/lib/plan-today';
+import { splitSessionName } from '@/lib/program-copy';
 
 export interface WeekRow {
   weekday: number;
@@ -76,7 +77,7 @@ export function PlanWeek({
                     Ground" cut to "Weeks 1-4 (Day 3) First…" tells you nothing. */}
                 <span className="flex items-start gap-1.5">
                   <span className="min-w-0 text-[14.5px] font-bold leading-snug text-on-surface">
-                    {d.session?.name ?? 'Nothing fits this day'}
+                    {d.session ? splitSessionName(d.session.name).title : 'Nothing fits this day'}
                   </span>
                   {!!d.session && (
                     <svg viewBox="0 0 24 24" aria-hidden="true"

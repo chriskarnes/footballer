@@ -57,7 +57,7 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
                   <ul className="divide-y divide-outline-variant border-t border-outline-variant">
                     {sessions.map((s) => (
                       <li key={s.id}>
-                        <Link href={`/train/session/${s.id}`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
+                        <Link href={`/train/session/${s.id}?from=library`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
                           <span className="min-w-0 flex-1">
                             <span className="block text-[15px] font-bold text-on-surface">{s.name}</span>
                             <span className="block text-[13.5px] font-medium text-on-surface-variant">Week {s.week}</span>
@@ -80,7 +80,7 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
           <ul className="card divide-y divide-outline-variant">
             {g.drills.map((d) => (
               <li key={d.id}>
-                <Link href={`/train/drill/${d.id}`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
+                <Link href={`/train/drill/${d.id}?from=library`} className="flex min-h-[56px] items-center gap-3 px-4 py-3">
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-bold text-on-surface">{d.name}</span>
                     <span className="block truncate text-[13.5px] font-medium text-on-surface-variant">{d.amount ?? `${d.minutes} min`}</span>

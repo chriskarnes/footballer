@@ -223,7 +223,7 @@ function Train({
       <div key="session" className="animate-pop">
         <div className="mt-6"><BackButton onClick={change} label="Back" destination="your choices" /></div>
         <section>
-          <h1 className="h-hero">Your session</h1>
+          <h1 className="h-page">Your session</h1>
         </section>
         <div className="mt-7">
           <SessionCard built={built} startHref={startHref}

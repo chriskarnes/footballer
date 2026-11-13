@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatTouches } from '@/lib/session-builder';
 import { relativeDay } from '@/lib/training-stats';
+import { ConfirmSheet } from './ConfirmSheet';
 
 export type WorkoutRow = {
   id: string;
@@ -33,17 +34,24 @@ export type WorkoutRow = {
 export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind: 'saved' | 'history' }) {
   const [rows, setRows] = useState(initial);
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
   const [now, setNow] = useState<Date | null>(null);
   // Relative days need the player's clock; the server's would call a
   // Sunday-evening session Monday's.
   useEffect(() => { setNow(new Date()); }, []);
 
   async function remove(id: string) {
+    setBusy(true); setErr('');
     const res = await fetch(`/api/workouts?id=${id}`, { method: 'DELETE' }).catch(() => null);
-    if (res?.ok) { setRows((r) => r.filter((x) => x.id !== id)); setConfirm(null); }
+    setBusy(false); setConfirm(null);
+    if (res?.ok) setRows((r) => r.filter((x) => x.id !== id));
+    else setErr('Couldn’t delete it. Check your connection and try again.');
   }
+  const asking = rows.find((w) => w.id === confirm);
 
   return (
+    <>
     <ul className="space-y-2">
       {rows.map((w) => {
         const partial = w.done && w.ticked < w.drills;
@@ -54,18 +62,6 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
           w.touches ? `${formatTouches(w.touches)} touches` : null,
         ].filter(Boolean).join(' · ');
 
-        if (confirm === w.id) {
-          return (
-            <li key={w.id} className="card p-4">
-              <p className="text-[14px] font-medium text-on-surface">Remove {w.title}?</p>
-              <div className="mt-3 flex gap-2.5">
-                <button type="button" onClick={() => setConfirm(null)} className="btn-ghost flex-1">Keep it</button>
-                <button type="button" onClick={() => remove(w.id)} className="btn-primary btn-sm flex-1">Remove</button>
-              </div>
-            </li>
-          );
-        }
-
         return (
           <li key={w.id} className="card flex items-center gap-3 p-4">
             <div className="min-w-0 flex-1">
@@ -74,7 +70,7 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
             </div>
             {kind === 'saved' && (
               <button type="button" onClick={() => setConfirm(w.id)}
-                      aria-label={`Remove ${w.title}`} title="Remove"
+                      aria-label={`Delete ${w.title}`} title="Delete"
                       className="icon-btn pressable text-on-surface-variant hover:text-on-surface">
                 <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true"
                      stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -101,5 +97,10 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
         );
       })}
     </ul>
+    {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
+    <ConfirmSheet open={!!asking} busy={busy} title={`Delete ${asking?.title ?? ''}?`}
+                  body="It comes off your saved sessions. Anything you’ve done stays in your training."
+                  confirmLabel="Delete" onConfirm={() => asking && remove(asking.id)} onCancel={() => setConfirm(null)} />
+    </>
   );
 }

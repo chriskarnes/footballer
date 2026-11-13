@@ -165,9 +165,10 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       {/* Who this is, and nothing else: the name is the headline. The rest of
           the profile is a tap away, under Account. */}
       <BrandBand>
-        <div className="flex items-center gap-4">
+        <BandTag>Me</BandTag>
+        <div className="mt-4 flex items-center gap-4">
           <Avatar name={name} email={user.email} src={avatarSrc(avatarAt)} className="h-16 w-16 text-[24px]" />
-          <h1 className="site-wide min-w-0 flex-1 text-[30px] uppercase leading-[.95] [overflow-wrap:anywhere]">{name || 'Me'}</h1>
+          <h1 className="site-wide min-w-0 flex-1 text-[34px] uppercase leading-[.95] [overflow-wrap:anywhere]">{name || 'Me'}</h1>
         </div>
       </BrandBand>
       {/* Every section 40px from the last. NoteBanner keeps its own gap below. */}
@@ -205,7 +206,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       <section className="mt-10">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="h-sec">Done</h2>
+          <h2 className="h-sec">Your training</h2>
           {finished.length > HISTORY_ON_ME && (
             <Link href="/me/history"
                   className="text-[13px] font-semibold text-primary underline underline-offset-4">
@@ -224,7 +225,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         )}
       </section>
 
-      {calendar !== undefined && <CalendarSection initial={calendar} speed={await speedAllowed().catch(() => true)} />}
+      {calendar !== undefined && <CalendarSection initial={calendar} plan={library} speed={await speedAllowed().catch(() => true)} />}
 
       <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={role} />
     </div>

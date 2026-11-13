@@ -1,7 +1,8 @@
 import { getSessions } from '@/lib/library';
-import { libraryAllowed } from '@/lib/branding-server';
+import { libraryAllowed } from '@/lib/library-gate';
 import { serverClient } from '@/lib/supabase/server';
 import { TodayCard } from './TodayCard';
+import { splitSessionName } from '@/lib/program-copy';
 
 /**
  * "Today on your plan", for Train. Train is the front door, so it's where a
@@ -33,7 +34,7 @@ export async function TodayOnPlan() {
     // Only the sessions this week uses cross to the client.
     const ids = new Set((days ?? []).map((d) => d.session_id).filter(Boolean));
     const used = sessions.filter((s) => ids.has(s.id))
-      .map((s) => ({ id: s.id, name: s.name, total_minutes: s.total_minutes }));
+      .map((s) => ({ id: s.id, name: splitSessionName(s.name).title, total_minutes: s.total_minutes }));
 
     return <TodayCard planName={plan.name} days={days ?? []} completions={done ?? []} sessions={used} />;
   } catch {

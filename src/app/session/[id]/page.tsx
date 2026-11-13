@@ -5,6 +5,7 @@ import { getExercises, getPrograms, getSessions } from '@/lib/library';
 import { Runner } from '@/components/Runner';
 import { serverClient } from '@/lib/supabase/server';
 import type { Exercise } from '@/lib/types';
+import { splitSessionName } from '@/lib/program-copy';
 
 /**
  * One route serves both a library session and a saved workout ("do it again"),
@@ -77,7 +78,7 @@ export default async function SessionPage({
     : program ? { href: `/library/${program.id}`, label: program.name }
     : { href: '/library', label: 'Library' };
 
-  return <Runner title={s.name} drills={drills}
+  return <Runner title={splitSessionName(s.name).title} drills={drills}
                  sessionRef={s.id} back={back} />;
 }
 

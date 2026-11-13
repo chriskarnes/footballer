@@ -13,7 +13,7 @@ export function SessionCard({
   startHref: string;
   onSwap: (i: number) => void; onShuffle: () => void;
 }) {
-  const [saving, setSaving] = useState<'idle' | 'saving' | 'saved' | 'signin'>('idle');
+  const [saving, setSaving] = useState<'idle' | 'saving' | 'saved' | 'signin' | 'error'>('idle');
   const mins = Math.round(built.totalSeconds / 60);
 
   // "Saved" describes these drills. After a swap or another mix it's a different
@@ -31,8 +31,8 @@ export function SessionCard({
         exercise_ids: built.drills.map((d) => d.id),
         planned_minutes: mins, planned_touches: built.totalTouches,
       }),
-    });
-    setSaving(res.status === 401 ? 'signin' : res.ok ? 'saved' : 'idle');
+    }).catch(() => null);
+    setSaving(res?.status === 401 ? 'signin' : res?.ok ? 'saved' : 'error');
   }
 
   if (!built.drills.length) {
@@ -67,6 +67,9 @@ export function SessionCard({
             {saving === 'saved' ? 'Saved' : 'Save for later'}
           </button>
         </div>
+        {saving === 'error' && (
+          <p role="alert" className="mt-3 text-[14px] font-medium text-on-surface-brand">Couldn&rsquo;t save it. Try again.</p>
+        )}
         {saving === 'signin' && (
           <p role="status" className="mt-3 text-[14px] font-medium text-on-surface-brand-variant">
             <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> to save sessions.

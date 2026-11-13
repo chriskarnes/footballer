@@ -29,17 +29,19 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
   const [switching, setSwitching] = useState<SavedPlan | null>(null);
   const [deleting, setDeleting] = useState<SavedPlan | null>(null);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
   const active = plans.find((p) => p.active);
 
   async function call(method: 'PATCH' | 'DELETE', body: Record<string, unknown>) {
-    setBusy(true);
+    setBusy(true); setErr('');
     try {
       const res = await fetch(method === 'DELETE' ? `/api/plans?id=${body.id}` : '/api/plans', {
         method, headers: { 'content-type': 'application/json' },
         body: method === 'DELETE' ? undefined : JSON.stringify(body),
       });
+      if (!res.ok) setErr('Couldn’t save that. Check your connection and try again.');
       return res.ok;
-    } catch { return false; } finally { setBusy(false); }
+    } catch { setErr('Couldn’t save that. Check your connection and try again.'); return false; } finally { setBusy(false); }
   }
 
   async function rename(id: string) {
@@ -58,7 +60,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
         .sort((a, b) => Number(b.active) - Number(a.active)));
       setSwitching(null);
       router.refresh();
-    }
+    } else setSwitching(null);
   }
 
   async function remove(plan: SavedPlan) {
@@ -66,7 +68,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
       setPlans((ps) => ps.filter((p) => p.id !== plan.id));
       setDeleting(null);
       router.refresh();
-    }
+    } else setDeleting(null);
   }
 
   return (
@@ -133,6 +135,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
           </li>
         ))}
       </ul>
+      {err && <p role="alert" className="mt-3 text-[13px] font-semibold text-on-surface">{err}</p>}
       <Link href="/plan?new=1" className="btn-ghost pressable mt-3 w-full">Build another week</Link>
 
       <ConfirmSheet

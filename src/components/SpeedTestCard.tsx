@@ -120,14 +120,14 @@ export function SpeedTestCard() {
           </div>
           {last && (
             <button type="button" onClick={() => setRemoving(true)} className="btn-ghost pressable mt-3">
-              Remove last test day
+              Delete last test day
             </button>
           )}
           {/* The app's confirmation rather than the browser's, which on a
               phone is a system alert that looks like nothing else here. */}
-          <ConfirmSheet open={removing && !!last} title={`Remove the ${last?.date ?? ''} test day?`}
+          <ConfirmSheet open={removing && !!last} title={`Delete the ${last?.date ?? ''} test day?`}
             body="Its numbers come off your card and your bests are worked out again without them."
-            confirmLabel="Remove" onCancel={() => setRemoving(false)}
+            confirmLabel="Delete" onCancel={() => setRemoving(false)}
             onConfirm={() => { if (last) remove(last.date); setRemoving(false); }} />
         </section>
       )}

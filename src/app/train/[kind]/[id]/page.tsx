@@ -42,7 +42,10 @@ export default async function TrainerSessionPage({ params, searchParams }: {
   const history = (await searchParams).from === 'history';
   const v = await getViewer();
   if (!v.academy || !v.user || !/^[0-9a-f-]{36}$/.test(id)) notFound();
-  const back = history ? { href: '/me', label: 'Your training' } : { href: '/', label: 'Train' };
+  const from = (await searchParams).from;
+  const back = history ? { href: '/me', label: 'Your training' }
+    : from === 'library' ? { href: '/library', label: 'Library' }
+    : { href: '/', label: 'Train' };
   const player = v.role === 'player';
   const [week, trainer] = player ? await Promise.all([getMyWeek().catch(() => null), getTrainer()]) : [null, undefined];
   const item = week?.items.find((i) => i.kind === kind && i.ref === id);
