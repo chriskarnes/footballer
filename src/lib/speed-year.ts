@@ -84,7 +84,10 @@ export type Position =
 
 export function position(start: YearStart, now = new Date()): Position {
   const first = parseDate(start.monday);
-  const weeks = Math.floor((mondayOf(now).getTime() - first.getTime()) / (7 * DAY_MS));
+  // Rounded, not floored: both are local midnights, and across a clock change
+  // the gap is a whole number of weeks give or take an hour. Floored, the
+  // spring change put the whole summer a week behind.
+  const weeks = Math.round((mondayOf(now).getTime() - mondayOf(first).getTime()) / (7 * DAY_MS));
   if (weeks < 0) return { state: 'upcoming', startsOn: first };
 
   // A year is all four phases, wherever it starts: begin in May at Power and

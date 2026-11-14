@@ -120,9 +120,17 @@ export function useSpeedCard() {
   }, []);
 
   const save = (next: TestEntry[]) => { setEntries(next); write(next); flag(true); upload(next); };
-  // One test day per date: recording the same day again replaces it, so the
-  // date stays a key the table and Delete can rely on.
-  const add = (e: TestEntry) => save([...entries.filter((x) => x.date !== e.date), e].sort(byDate));
+  // One test day per date, so the date stays a key the table and Delete can rely on.
+  // Recording a day that's there already adds to it: the sprints at practice
+  // and the jump at home that evening are one test day, and the second save
+  // used to wipe the first.
+  const add = (e: TestEntry) => {
+    const was = entries.find((x) => x.date === e.date);
+    const merged: TestEntry = was
+      ? { ...was, ...e, values: { ...was.values, ...e.values }, height: e.height ?? was.height, note: e.note ?? was.note }
+      : e;
+    save([...entries.filter((x) => x.date !== e.date), merged].sort(byDate));
+  };
   const remove = (date: string) => save(entries.filter((e) => e.date !== date));
   return { entries, ready, add, remove };
 }

@@ -110,7 +110,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
       {/* Anyone who has since joined by link isn't asking any more (0022 clears
           these; this covers a database that hasn't run it). */}
-      {!!waiting.length && <JoinRequests requests={waiting.map((r) => ({ ...r, when: ago(r.created_at) }))} />}
+      {!!waiting.length && <JoinRequests requests={waiting.map((r) => ({ ...r, when: ago(r.created_at, academy.timeZone) }))} />}
 
       {!!groups.length && (
         <nav className="scroll-x -mx-5 mt-6 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">

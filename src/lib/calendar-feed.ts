@@ -100,7 +100,7 @@ export function feedEvents(data: FeedData, sessions: SessionRow[], origin: strin
           events.push({
             uid: `speed-${date}@train.futbol`, date,
             summary: 'Speed test day',
-            description: `Warm up, then the five tests. Height too.\n${origin}/speed/test`,
+            description: `Warm up, then the six tests. Height too.\n${origin}/speed/test`,
             url: `${origin}/speed/test`, timed: timed(45, offset),
           });
         }

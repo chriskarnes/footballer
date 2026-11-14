@@ -107,15 +107,14 @@ export default async function SpeedPage() {
                     <div className={`min-w-0 flex-1 text-body-lg font-semibold ${t.kind ? '' : 'text-on-surface-variant'}`}>
                       {t.label}
                     </div>
-                    {!!t.minutes && (
-                      <span className="font-brand text-body font-bold tracking-brand-snug">{t.minutes}m</span>
-                    )}
+                    {/* No minutes here: each block's sessions run their own length
+                        (shown on the day), and a fixed 45m sat over a 15-minute session. */}
                   </div>
                 ))}
               </div>
               <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
                 Speed is trained fresh: sprints come first, after the warm-up, with full rest.
-                In-season, Mon and Thu shrink to 30 minutes and Fri is dropped after a midweek match.
+                In-season, Mon and Thu get shorter and Fri is dropped after a midweek match.
               </p>
             </section>
 

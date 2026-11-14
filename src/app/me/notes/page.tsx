@@ -26,7 +26,7 @@ export default async function NotesPage() {
             <li key={n.id} className="card p-5">
               <p className="flex items-center gap-2 text-body font-bold text-on-surface-variant">
                 {!n.seen && <><span className="h-2 w-2 rounded-full bg-on-surface" aria-hidden="true" /><span className="sr-only">New:</span></>}
-                {n.author} · {ago(n.at)}
+                {n.author} · {ago(n.at, v.academy?.timeZone)}
               </p>
               <p className="mt-1.5 whitespace-pre-line text-title-sm leading-snug text-on-surface">{n.body}</p>
             </li>

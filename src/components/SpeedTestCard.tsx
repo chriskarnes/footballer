@@ -37,9 +37,11 @@ export function SpeedTestCard() {
     else router.replace('/speed/test', { scroll: false });
   };
   const [removing, setRemoving] = useState(false);
+  // Which test day Delete takes off: the last, unless another is picked.
+  const [pick, setPick] = useState<string | null>(null);
 
   if (screen === 'entry') {
-    return <Entry onDone={(e) => { add(e); clearDraft(); haptic('success'); setScreen('card'); }}
+    return <Entry taken={entries.map((e) => e.date)} onDone={(e) => { add(e); clearDraft(); haptic('success'); setScreen('card'); }}
                   onCancel={() => { clearDraft(); setScreen('card'); }} />;
   }
 
@@ -53,7 +55,7 @@ export function SpeedTestCard() {
       <p className="eyebrow mb-2">Test day</p>
       <h1 className="h-page">Your card</h1>
       <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
-        Thursday of every fourth week. Same five tests, same order, same surface, after the
+        Thursday of every fourth week. Same six tests, same order, same surface, after the
         normal warm-up. Height every time.
       </p>
 
@@ -133,16 +135,26 @@ export function SpeedTestCard() {
             </table>
           </div>
           {last && (
-            <button type="button" onClick={() => setRemoving(true)} className="btn-ghost pressable mt-3">
-              Delete last test day
+            <button type="button" onClick={() => { setPick(last.date); setRemoving(true); }} className="btn-ghost pressable mt-3">
+              Delete a test day
             </button>
           )}
           {/* The app's confirmation rather than the browser's, which on a
-              phone is a system alert that looks like nothing else here. */}
-          <ConfirmSheet open={removing && !!last} title={`Delete the ${last ? dayName(last.date) : ''} test day?`}
-            body="Its numbers come off your card and your bests are worked out again without them."
+              phone is a system alert that looks like nothing else here. Any
+              day, not just the last: a mistyped date was stuck behind every
+              newer one. */}
+          <ConfirmSheet open={removing && !!last} title="Delete a test day?"
+            body={<>
+              <label className="text-field mb-3 block">
+                <span>Test day</span>
+                <select value={pick ?? last?.date ?? ''} onChange={(e) => setPick(e.target.value)}>
+                  {[...entries].reverse().map((e) => <option key={e.date} value={e.date}>{e.date ? dayName(e.date) : 'No date'}</option>)}
+                </select>
+              </label>
+              Its numbers come off your card and your bests are worked out again without them.
+            </>}
             confirmLabel="Delete" onCancel={() => setRemoving(false)}
-            onConfirm={() => { if (last) remove(last.date); setRemoving(false); }} />
+            onConfirm={() => { remove(pick ?? last?.date ?? ''); setRemoving(false); }} />
         </section>
       )}
 
@@ -193,7 +205,7 @@ function readDraft(): Draft | null {
 }
 function clearDraft() { try { sessionStorage.removeItem(DRAFT); } catch { /* private mode */ } }
 
-function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel: () => void }) {
+function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => void; onCancel: () => void; taken?: string[] }) {
   // Which block this test closes, from the year if one has been started —
   // the athlete shouldn't have to know they're in Build, block 2.
   const { start } = useYearStart();
@@ -227,7 +239,8 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
     const values: Record<string, number> = {};
     for (const t of TESTS) { const v = num(vals[t.id] ?? ''); if (v !== undefined) values[t.id] = v; }
     const p = PHASES.find((x) => x.id === phase)!;
-    onDone({ date, label: `${p.name} · block ${block}`, values, height: num(height), note: note.trim() || undefined });
+    // A cleared date field (iOS has Clear) would save a day with no date.
+    onDone({ date: /^\d{4}-\d\d-\d\d$/.test(date) ? date : today(), label: `${p.name} · block ${block}`, values, height: num(height), note: note.trim() || undefined });
   }
 
   // The app's own .text-field, as the profile and sign-in use: 16px so iOS
@@ -247,8 +260,13 @@ function Entry({ onDone, onCancel }: { onDone: (e: TestEntry) => void; onCancel:
       <div className="mt-6 grid grid-cols-2 gap-2.5">
         <label className="text-field">
           <span>Date</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} required />
         </label>
+        {taken.includes(date) && (
+          <p className="col-span-2 -mt-1 text-body-sm text-on-surface-variant">
+            You&rsquo;ve tests on {dayName(date)} already. These add to them; a test you fill in again replaces that one.
+          </p>
+        )}
         <label className="text-field">
           <span>Block</span>
           <select value={block} onChange={(e) => setBlock(Number(e.target.value) as 1 | 2 | 3)} className={field}>

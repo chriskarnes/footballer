@@ -152,7 +152,7 @@ export function SpeedNow() {
       <>
         <BandTag>Today</BandTag>
         <BandTitle>Test day</BandTitle>
-        <p className={info}>Warm up, then the five tests.</p>
+        <p className={info}>Warm up, then the six tests.</p>
         <Link href="/speed/test" className={big}>Record your tests</Link>
         {year}
       </>
