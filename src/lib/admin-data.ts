@@ -103,8 +103,10 @@ export function sourceLabel(s: string) {
 /** 1,234 */
 export const n = (x: number | null | undefined) => (x ?? 0).toLocaleString('en-US');
 
-/** "Mar 4, 2026" */
+/** "Mar 4", or "Mar 4, 2025" when it isn't this year. */
 export function day(at: string | null | undefined) {
   if (!at) return '—';
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(at));
+  const d = new Date(at);
+  const year = d.getUTCFullYear() !== new Date().getUTCFullYear();
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...(year && { year: 'numeric' }), timeZone: 'UTC' }).format(d);
 }

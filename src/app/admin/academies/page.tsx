@@ -19,7 +19,7 @@ export default async function AdminAcademies() {
       {error ? <Failed error={error} /> : (
         <>
           <p className="mt-2 text-body text-on-surface-variant">
-            {n(rows.length)} {rows.length === 1 ? 'academy' : 'academies'} · {n(rows.reduce((s, r) => s + r.players, 0))} players.
+            {n(rows.length)} {rows.length === 1 ? 'academy' : 'academies'}. A player in two academies is counted in each.
             Sessions count what players did for that academy or on their own, not for another one.
           </p>
           <Table head={<><Th>Academy</Th><Th>Owner</Th><Th right>Trainers</Th><Th right>Players</Th><Th right>Trained 7d</Th>

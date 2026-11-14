@@ -18,7 +18,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
 
   const p = u.profile;
   const done = u.workouts.filter((w) => w.status === 'completed');
-  const about = p && [p.positions?.length ? p.positions.join(', ') : null, p.age_band, p.level,
+  const about = p && [p.positions?.length ? p.positions.join(', ') : null, p.age_band && `ages ${p.age_band.replace('_', '–')}`, p.level,
                       p.dominant_foot && `${p.dominant_foot} foot`, p.club, p.region].filter(Boolean).join(' · ');
 
   return (
@@ -36,7 +36,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
         <Stat label="Sessions" value={n(u.sessions_all)} sub={`${n(u.minutes_all)} minutes in all`} />
         <Stat label="Last session" value={done[0] ? ago(done[0].at) : '—'} sub={done[0]?.title} />
         <Stat label="Notes" value={n(u.notes.received)} sub={`${n(u.notes.unread)} unread · ${n(u.notes_sent)} sent`} />
-        <Stat label="Speed tests" value={n(p?.speed_tests ?? 0)} sub={u.plan ? `Plan: ${u.plan.name ?? 'their own'} · ${u.plan.days} slots` : 'No plan'} />
+        <Stat label="Speed tests" value={n(p?.speed_tests ?? 0)} sub={u.plan ? `Own plan: ${u.plan.name ?? 'unnamed'}, ${u.plan.days} ${u.plan.days === 1 ? 'slot' : 'slots'}` : undefined} />
       </div>
 
       <Section title="Academies">

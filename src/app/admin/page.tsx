@@ -27,10 +27,10 @@ function Body({ o }: { o: Overview }) {
   return (
     <>
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Accounts" value={n(o.users)} sub={`+${n(o.users_7d)} this week · +${n(o.users_30d)} in 30 days`} href="/admin/users" />
+        <Stat label="Accounts" value={n(o.users)} sub={`+${n(o.users_7d)} in 7 days · +${n(o.users_30d)} in 30 days`} href="/admin/users" />
         <Stat label="Academies" value={n(o.academies)} sub={`${n(o.trainers)} trainers · ${n(o.players)} players`} href="/admin/academies" />
-        <Stat label="Trained this week" value={n(o.active_7d)} sub={`${n(o.active_30d)} in the last 30 days`} />
-        <Stat label="Sessions this week" value={n(o.sessions_7d)} sub={`${n(o.minutes_7d)} min · ${n(o.sessions_30d)} in 30 days · ${n(o.sessions_all)} ever`} />
+        <Stat label="Trained, last 7 days" value={n(o.active_7d)} sub={`${n(o.active_30d)} in the last 30 days`} />
+        <Stat label="Sessions, last 7 days" value={n(o.sessions_7d)} sub={`${n(o.minutes_7d)} min · ${n(o.sessions_30d)} in 30 days · ${n(o.sessions_all)} ever`} />
       </div>
 
       {(o.requests_open > 0 || o.join_waiting > 0 || o.no_academy > 0) && (

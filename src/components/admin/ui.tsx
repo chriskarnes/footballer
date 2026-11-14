@@ -32,12 +32,12 @@ export function Stat({ label, value, sub, href }: { label: string; value: React.
 }
 
 export function Th({ children, right }: { children?: React.ReactNode; right?: boolean }) {
-  return <th scope="col" className={`whitespace-nowrap px-4 py-3 font-semibold ${right ? 'text-right' : ''}`}>{children}</th>;
+  return <th scope="col" className={`whitespace-nowrap px-3 py-3 font-semibold first:pl-5 last:pr-5 ${right ? 'text-right' : ''}`}>{children}</th>;
 }
 
 export function Td({ children, right, strong, className = '' }: { children?: React.ReactNode; right?: boolean; strong?: boolean; className?: string }) {
   return (
-    <td className={`px-4 py-3 ${right ? 'text-right tabular-nums' : ''} ${strong ? 'font-bold text-on-surface' : 'text-on-surface-variant'} ${className}`}>
+    <td className={`px-3 py-3 first:pl-5 last:pr-5 ${right ? 'text-right tabular-nums' : ''} ${strong ? 'font-bold text-on-surface' : 'text-on-surface-variant'} ${className}`}>
       {children}
     </td>
   );

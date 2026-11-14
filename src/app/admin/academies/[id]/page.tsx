@@ -36,10 +36,10 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Players" value={n(players.length)} sub={`${n(staff.length)} staff`} />
-        <Stat label="Trained this week" value={n(active)} sub={players.length ? `of ${n(players.length)}` : undefined} />
-        <Stat label="Sessions this week" value={n(players.reduce((s, m) => s + m.sessions_7d, 0))}
+        <Stat label="Trained, last 7 days" value={n(active)} sub={players.length ? `of ${n(players.length)}` : undefined} />
+        <Stat label="Sessions, last 7 days" value={n(players.reduce((s, m) => s + m.sessions_7d, 0))}
               sub={`${n(players.reduce((s, m) => s + m.sessions_30d, 0))} in 30 days`} />
-        <Stat label="Built" value={n(x.programs.length)} sub={`programs · ${n(x.groups.length)} groups · ${n(x.drills)} own drills`} />
+        <Stat label="Programs" value={n(x.programs.length)} sub={`${n(x.groups.length)} ${x.groups.length === 1 ? 'group' : 'groups'} · ${n(x.drills)} own ${x.drills === 1 ? 'drill' : 'drills'}`} />
       </div>
       <p className="mt-3 text-body-sm text-on-surface-variant">
         {n(x.notes_30d)} notes sent in 30 days · AI: {n(x.ai_30d.calls)} builds{x.ai_30d.failed ? ` (${n(x.ai_30d.failed)} failed)` : ''}, {n(x.ai_30d.tokens)} tokens in 30 days
@@ -63,9 +63,9 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
           <Table head={<><Th>Name</Th><Th>Role</Th><Th>Groups</Th><Th right>7d</Th><Th right>30d</Th><Th>Last session</Th><Th>Last sign-in</Th><Th>Joined</Th></>}>
             {x.members.map((m) => (
               <tr key={m.id} className="relative hover:bg-surface-container-low">
-                <Td strong>
+                <Td strong className="max-w-[15rem]">
                   <Link href={`/admin/users/${m.id}`} className="after:absolute after:inset-0 hover:underline">{m.name || m.email}</Link>
-                  {m.name && <span className="block text-body-sm font-normal text-on-surface-variant">{m.email}</span>}
+                  {m.name && <span className="block truncate text-body-sm font-normal text-on-surface-variant" title={m.email}>{m.email}</span>}
                 </Td>
                 <Td><RoleTag role={m.role} /></Td>
                 <Td className="max-w-[12rem] truncate">{m.groups ?? '—'}</Td>

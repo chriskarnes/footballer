@@ -64,10 +64,10 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
             <Table head={<><Th>Name</Th><Th>Academies</Th><Th right>Sessions 30d</Th><Th right>Ever</Th><Th>Last session</Th><Th>Last sign-in</Th><Th>Joined</Th></>}>
               {rows.map((u) => (
                 <tr key={u.id} className="relative hover:bg-surface-container-low">
-                  <Td strong>
+                  <Td strong className="max-w-[15rem]">
                     <Link href={`/admin/users/${u.id}`} className="after:absolute after:inset-0 hover:underline">{u.name || u.email}</Link>
                     {u.admin && <span className="ml-2 text-caption font-semibold text-on-surface-variant">ADMIN</span>}
-                    {u.name && <span className="block text-body-sm font-normal text-on-surface-variant">{u.email}</span>}
+                    {u.name && <span className="block truncate text-body-sm font-normal text-on-surface-variant" title={u.email}>{u.email}</span>}
                   </Td>
                   <Td>
                     {u.academies?.length
