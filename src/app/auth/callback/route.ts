@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
+import { safeNext } from '@/lib/safe-next';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   // A path on this site only. `//evil.com` or `@evil.com` after the origin
   // would send a freshly signed-in player somewhere else.
-  const asked = searchParams.get('next') ?? '/';
-  const next = /^\/(?!\/)/.test(asked) && !asked.includes('\\') ? asked : '/';
+  const next = safeNext(searchParams.get('next'), '/');
   if (code) {
     const db = await serverClient();
     const { error } = await db.auth.exchangeCodeForSession(code);

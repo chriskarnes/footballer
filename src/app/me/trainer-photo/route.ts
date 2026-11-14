@@ -1,5 +1,6 @@
 import { getAcademy } from '@/lib/branding-server';
 import { serverClient } from '@/lib/supabase/server';
+import { AVATAR_TYPES } from '@/lib/avatar';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,12 +15,15 @@ export async function GET() {
   const db = await serverClient();
   const { data, error } = await db.rpc('academy_trainer_photo', { p_academy: academy.id });
   const photo = data as { type: string; data: string } | null;
-  if (error || !photo?.type || !photo.data) return new Response(null, { status: 404 });
+  // Images only: an owner can write their own avatar_type, and anything else
+  // (a web page, an SVG with script) would run for the player who opens it.
+  if (error || !photo?.type || !photo.data || !AVATAR_TYPES.includes(photo.type)) return new Response(null, { status: 404 });
   return new Response(Buffer.from(photo.data, 'base64'), {
     headers: {
       'Content-Type': photo.type,
       'Cache-Control': 'private, max-age=31536000, immutable',
       'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; sandbox",
     },
   });
 }

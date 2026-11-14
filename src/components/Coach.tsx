@@ -177,6 +177,12 @@ function Train({
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ message: text, current: spec }),
       });
+      // Signed out, or too many at once: the server says what to do instead.
+      if (r.status === 401 || r.status === 429) {
+        const said = await r.json().catch(() => null);
+        setReply(said?.reply ?? 'Pick from the buttons above instead.');
+        return;
+      }
       if (!r.ok) throw new Error(String(r.status));
       const data = await r.json();
       if (data.spec) {

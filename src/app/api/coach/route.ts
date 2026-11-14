@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import type { SessionSpec } from '@/lib/types';
+import { serverClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
@@ -49,11 +50,39 @@ more confident on the ball" implies ball_mastery and first_touch; "get faster" i
 If they mention touches or getting lots of reps on the ball, set priority to "touches".
 Keep the reply field to one warm, short sentence. Never invent drill names — you do not choose drills.`;
 
+// A few messages a minute per account, per server instance: enough for anyone
+// typing, not for a script spending the key. Best effort (instances don't share
+// it); signing in is the real gate.
+const RECENT = new Map<string, number[]>();
+const PER_MINUTE = 6;
+
+function tooMany(user: string) {
+  const now = Date.now();
+  const times = (RECENT.get(user) ?? []).filter((t) => now - t < 60_000);
+  if (times.length >= PER_MINUTE) { RECENT.set(user, times); return true; }
+  times.push(now);
+  RECENT.set(user, times);
+  if (RECENT.size > 5000) RECENT.clear();
+  return false;
+}
+
 export async function POST(req: Request) {
-  const { message, current } = (await req.json()) as {
-    message: string;
-    current?: Partial<SessionSpec>;
-  };
+  const body = (await req.json().catch(() => null)) as { message?: unknown; current?: unknown } | null;
+  const message = typeof body?.message === 'string' ? body.message.trim().slice(0, 300) : '';
+  const current = body?.current && typeof body.current === 'object' && JSON.stringify(body.current).length <= 1000
+    ? body.current as Partial<SessionSpec> : undefined;
+  if (!message) return NextResponse.json({ error: 'empty' }, { status: 400 });
+
+  // Signed-in players only: each message costs money, and an open endpoint is
+  // one anyone can loop. The buttons build a session without it.
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ reply: 'Sign in to describe a session in your own words. The buttons above work without it.' }, { status: 401 });
+  }
+  if (tooMany(user.id)) {
+    return NextResponse.json({ reply: 'That’s a lot at once. Give it a minute, or use the buttons above.' }, { status: 429 });
+  }
 
   // No key configured is a normal state, not a fault — the app is designed to work
   // without one. Answering 200 with a nudge keeps the console clean during testing
@@ -61,7 +90,7 @@ export async function POST(req: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({
       spec: {},
-      reply: 'Free-text is off until an API key is set — use the buttons below and I’ll build it.',
+      reply: 'Free-text is off until an API key is set. Use the buttons above and I’ll build it.',
     });
   }
 
@@ -70,7 +99,9 @@ export async function POST(req: Request) {
   // Haiku is the right tool here: this is structured extraction, not reasoning.
   // ~$1/M in, $5/M out — roughly a tenth of a cent per message. Override with
   // COACH_MODEL if you ever want to trade cost for nuance.
-  const res = await anthropic.messages.create({
+  let res: Anthropic.Message;
+  try {
+    res = await anthropic.messages.create({
     model: process.env.COACH_MODEL ?? 'claude-haiku-4-5',
     max_tokens: 400,
     system: SYSTEM,
@@ -85,7 +116,11 @@ export async function POST(req: Request) {
             : '') + `Player says: ${message}`,
       },
     ],
-  });
+    });
+  } catch (e) {
+    console.error('[coach]', e);
+    return NextResponse.json({ error: 'model failed' }, { status: 502 });
+  }
 
   const block = res.content.find((c) => c.type === 'tool_use');
   if (!block || block.type !== 'tool_use') {

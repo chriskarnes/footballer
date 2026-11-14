@@ -25,7 +25,7 @@
  */
 
 // A new name clears every older cache on activate, the forge-v1 ones included.
-const VERSION = 'train-v4';
+const VERSION = 'train-v5';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 const PAGES = `${VERSION}-pages`;
@@ -68,6 +68,8 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;   // YouTube thumbs, Supabase, etc.
   if (url.pathname.startsWith('/api/')) return;      // never serve stale data
   if (url.pathname.startsWith('/auth/')) return;     // magic-link callbacks must be live
+  // The platform admin panel lists every account: never kept on the device.
+  if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) return;
 
   // Content-hashed build output: safe to serve from cache forever.
   if (url.pathname.startsWith('/_next/static/')) {
