@@ -1,7 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
-import { localDate, mondayOf } from '@/lib/progress';
+import { localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import type { TeamDays } from '@/lib/academy-week';
 import { plain } from '@/lib/plain-error';
 
@@ -49,8 +49,14 @@ export async function moveItem(input: { key: string; weekday: number; placed: nu
   const v = await getViewer();
   if (!v.user || !v.academy) return { ok: false, error: 'Sign in first.' };
   const weekday = days([input.weekday])[0];
-  if (weekday === undefined || !/^[sa]:[0-9a-f-]{36}$/.test(input.key)) return { ok: false, error: 'That day doesn’t work.' };
-  const week_of = mondayOf(localDate(new Date(), v.academy.timeZone));
+  // s: a program's session, a: a trainer's extra, c: a week built for them
+  // or a session they added. buildWeek applies a move to any of them by key.
+  if (weekday === undefined || !/^[sac]:[0-9a-f-]{36}$/.test(input.key)) return { ok: false, error: 'That day doesn’t work.' };
+  const today = localDate(new Date(), v.academy.timeZone);
+  const week_of = mondayOf(today);
+  // Not onto a day that's gone (it would only read as missed). Back to where
+  // the app put it is always fine.
+  if (weekday !== input.placed && weekday < weekdayOf(today)) return { ok: false, error: 'That day’s gone. Pick today or later.' };
   const row = { user_id: v.user.id, academy_id: v.academy.id, week_of, item_key: input.key };
   const { error } = weekday === input.placed
     ? await v.db.from('session_moves').delete().match(row)

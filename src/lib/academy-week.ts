@@ -25,7 +25,7 @@ export const drillTags = (d: Pick<DrillRow, 'focus' | 'focus_areas'>): string[] 
   d.focus_areas?.length ? d.focus_areas : d.focus ? [d.focus] : [];
 export type GroupRow = { id: string; name: string; meets_weekday: number | null; meets_time: string | null; program_id: string | null; starts_on: string | null; archived?: boolean };
 export type PlayerProgramRow = { user_id: string; program_id: string; starts_on: string };
-export type AddonRow = { id: string; user_id: string; drill_id: string; note: string | null; week_of: string };
+export type AddonRow = { id: string; user_id: string; drill_id: string; note: string | null; week_of: string; created_at?: string };
 export type CompletionRow = { source: string; source_ref: string | null; completed_at: string | null };
 /**
  * The days a player already has soccer, as stored. 0 = Monday. game_days and
@@ -37,7 +37,9 @@ export type ScheduleRow = { user_id: string; club_days: number[]; game_day: numb
 export type TeamDays = { trainer: number[]; practice: number[]; games: number[] };
 
 /** What placeDays keeps sessions off: their soccer, and their groups' meeting days. */
-export type Busy = Partial<TeamDays> & { meets?: number[] };
+export type Busy = Partial<TeamDays> & { meets?: number[];
+  /** First day that can be used: today, for a week built mid-week. */
+  from?: number };
 
 /** A schedule row as its days; none set, without one. A day marked twice counts as the game, then the trainer. */
 export function teamDays(s?: Pick<ScheduleRow, 'club_days' | 'game_day' | 'game_days' | 'trainer_days'> | null): TeamDays {
@@ -116,11 +118,12 @@ export function placeDays(count: number, busy: Busy = {}): number[] {
   const games = busy.games ?? [];
   const taken = new Set([...(busy.practice ?? []), ...(busy.trainer ?? []), ...(busy.meets ?? []), ...games]);
   const afterGame = new Set(games.map((g) => (g + 1) % 7));
+  const left = WEEK.filter((d) => d >= (busy.from ?? 0));
   const tiers = [
-    WEEK.filter((d) => !taken.has(d) && !afterGame.has(d)),
-    WEEK.filter((d) => !taken.has(d)),
-    WEEK.filter((d) => !games.includes(d)),
-    WEEK,
+    left.filter((d) => !taken.has(d) && !afterGame.has(d)),
+    left.filter((d) => !taken.has(d)),
+    left.filter((d) => !games.includes(d)),
+    left,
   ];
   // Fill from the best days down: every day of a tier before any of the next.
   const picked: number[] = [];
@@ -235,7 +238,12 @@ export function buildWeek(input: {
     if (!d) continue;
     items.push({
       key: `a:${a.id}`, kind: 'addon', ref: a.id, title: d.name, from: 'Just for you', groups: [],
-      weekday: weekdayOf(today), minutes: d.minutes, drills: 1, note: a.note, done: false,
+      // The day it was given (Monday, for one given ahead for next week), so it
+      // has a day of its own that can pass, rather than following today
+      // around. Without created_at (older reads), today, as before.
+      weekday: !a.created_at ? weekdayOf(today)
+        : (() => { const on = localDate(a.created_at, input.tz ?? 'UTC'); return on < monday ? 0 : weekdayOf(on); })(),
+      minutes: d.minutes, drills: 1, note: a.note, done: false,
     });
   }
 
@@ -270,8 +278,10 @@ export function buildWeek(input: {
 }
 
 /** The week as progress() wants it: one planned slot per item, on its day. */
+// Not extras, the player's or the trainer's ("Just for you"): they're on top
+// of the week, so giving one never makes an on-track player "behind".
 export const asPlanDays = (items: WeekItem[]) =>
-  items.filter((it) => !it.extra).map((it, i) => ({ weekday: it.weekday, slot: 10 + i, kind: 'technical' }));
+  items.filter((it) => !it.extra && it.kind !== 'addon').map((it, i) => ({ weekday: it.weekday, slot: 10 + i, kind: 'technical' }));
 
 /** "Tue 5:00 pm" */
 export function meetingLabel(g: Pick<GroupRow, 'meets_weekday' | 'meets_time'>): string | null {

@@ -136,7 +136,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
                 </Link>
                 {it.done
                   ? <span className="shrink-0 pr-2 text-body-sm font-bold text-on-surface-variant">{DAYS[it.doneOn ?? it.weekday].slice(0, 3)}</span>
-                  : <MoveDay itemKey={it.key} weekday={it.weekday} placed={it.placed ?? it.weekday} title={it.title} />}
+                  : <MoveDay itemKey={it.key} weekday={it.weekday} placed={it.placed ?? it.weekday} title={it.title} today={today} games={schedule?.games} />}
               </li>
             ))}
           </ul>

@@ -53,7 +53,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     db.from('groups').select('id, name, meets_weekday, meets_time, program_id, starts_on, archived').eq('academy_id', academyId).order('name'),
     db.from('group_members').select('group_id, user_id').eq('academy_id', academyId),
     db.from('player_programs').select('user_id, program_id, starts_on').eq('academy_id', academyId),
-    db.from('addons').select('id, user_id, drill_id, note, week_of').eq('academy_id', academyId).gte('week_of', since),
+    db.from('addons').select('id, user_id, drill_id, note, week_of, created_at').eq('academy_id', academyId).gte('week_of', since),
     // RLS: a player gets their own row; a trainer gets their players'.
     withFallback((c) => db.from('player_schedules').select(c), 'user_id, club_days, game_day', ', game_days, trainer_days'),
     db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since),

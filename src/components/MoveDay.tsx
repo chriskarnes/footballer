@@ -11,7 +11,13 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
  * phone gives its own wheel. It moves this week only; picking the day the
  * app chose puts it back.
  */
-export function MoveDay({ itemKey, weekday, placed, title }: { itemKey: string; weekday: number; placed: number; title: string }) {
+export function MoveDay({ itemKey, weekday, placed, title, today, games = [] }: {
+  itemKey: string; weekday: number; placed: number; title: string;
+  /** Days before it can't be picked: a session moved there only reads as missed. */
+  today: number;
+  /** Their game days, said in the list: the app keeps sessions off them. */
+  games?: number[];
+}) {
   const [day, setDay] = useState(weekday);
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
@@ -35,7 +41,11 @@ export function MoveDay({ itemKey, weekday, placed, title }: { itemKey: string; 
       <span className="sr-only">Day for {title}</span>
       <select value={day} onChange={(e) => change(Number(e.target.value))} disabled={pending}
               className="h-11 appearance-none rounded-full border border-outline bg-transparent pl-3 pr-7 text-body-sm font-bold text-on-surface">
-        {DAYS.map((d, i) => <option key={d} value={i}>{d}{i === placed && day !== placed ? ' (usual)' : ''}</option>)}
+        {DAYS.map((d, i) => (
+          <option key={d} value={i} disabled={i < today && i !== day && i !== placed}>
+            {d}{i === placed && day !== placed ? ' (usual)' : games.includes(i) ? ' (game)' : ''}
+          </option>
+        ))}
       </select>
       <svg viewBox="0 0 12 8" className="pointer-events-none absolute right-3 top-1/2 h-2 w-2.5 -translate-y-1/2 text-on-surface-variant" aria-hidden="true">
         <path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

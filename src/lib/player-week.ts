@@ -55,9 +55,12 @@ export const readMyWeek = cache(async (): Promise<MyWeek | null> => {
   const allowed = c.defaults.playerExtras;
   const left = Math.max(0, allowed - items.filter((i) => i.extra).length);
   // The rules: today's set session first, rest on a game day, within the trainer's number.
+  // Named by the day it's on: a missed Monday isn't "today's".
+  const blocker = items.find((i) => !i.extra && !i.done && i.weekday <= weekday);
+  const DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const why = !c.drills.length ? 'Your trainer hasn’t added drills yet.'
     : schedule?.games.includes(weekday) ? 'Game day. Rest up.'
-    : items.some((i) => !i.extra && !i.done && i.weekday <= weekday) ? 'Finish today’s session first.'
+    : blocker ? (blocker.weekday === weekday ? 'Finish today’s session first.' : `Catch up on ${DAY[blocker.weekday]}’s session first.`)
     : !left ? `That’s ${allowed === 1 ? 'your extra session' : `all ${allowed} extra sessions`} this week.`
     : null;
   const programIds = new Set([...mine.map((g) => g.program_id), ...c.playerPrograms.filter((p) => p.user_id === v.user!.id).map((p) => p.program_id)].filter(Boolean));

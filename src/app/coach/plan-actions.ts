@@ -1,7 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
-import { addDays, localDate, mondayOf } from '@/lib/progress';
+import { addDays, localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import { loadContent, loadDefaults, targetFor } from '@/lib/academy-data';
 import { MAX_MINUTES, MIN_MINUTES, buildPlayerWeek, fitToTarget, type BuiltSession, type Feel, type PastWeek } from '@/lib/week-builder';
 import { teamDays, type CustomRow } from '@/lib/academy-week';
@@ -137,14 +137,18 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     const sched = c.schedules.find((s) => s.user_id === userId);
     const meets = c.groups.filter((g) => !g.archived && g.meets_weekday !== null
       && c.memberships.some((m) => m.group_id === g.id && m.user_id === userId)).map((g) => g.meets_weekday as number);
-    const busy = { ...teamDays(sched), meets };
+    // This week, built mid-week: only the days left, and no more sessions
+    // than there are days for. On days already gone they'd only read as missed.
+    const from = which === 'this' ? weekdayOf(today) : 0;
+    const busy = { ...teamDays(sched), meets, from };
+    const fit = Math.min(t.sessions, 7 - from);
     const past = await pastWeeks(v.db, v.academy.id, c.custom, userId, week_of);
     const recent = past.slice(0, 2).flatMap((w) => w.sessions.flatMap((x) => x.drill_ids));
     // Step-ups off: no history, so every drill starts at its own amount and
     // nothing carries over; recent drills still give way to fresh ones.
     const history = t.progress ? past : [];
 
-    const rules = buildPlayerWeek({ drills: c.drills, target: t, focus: t.focus, recent, busy, seed: `${userId}:${week_of}`, weekOf: week_of, history });
+    const rules = buildPlayerWeek({ drills: c.drills, target: { ...t, sessions: fit }, focus: t.focus, recent, busy, seed: `${userId}:${week_of}`, weekOf: week_of, history });
     if (!rules.length) return { ok: false, error: 'Nothing to build from yet.' };
     let rows: (BuiltSession & { note: string | null; made_by: 'ai' | 'rules' })[] = rules.map((s) => ({ ...s, note: null, made_by: 'rules' }));
     let why: string | undefined;
@@ -156,7 +160,7 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       const last = p?.progress.weeks[p.progress.weeks.length - 2];
       const res = await proposeWeek({
         first: p?.first ?? 'Player', age: p?.age_band ?? null, positions: p?.positions ?? null,
-        target: t, focus: t.focus, drills: c.drills, recent, week: rules,
+        target: { ...t, sessions: fit }, focus: t.focus, drills: c.drills, recent, week: rules,
         lately: { done: last?.done ?? 0, planned: last?.planned ?? 0, titles: (p?.done ?? []).flatMap((d) => d.title ? [d.title] : []) },
       });
       await logCall(v.db, {
@@ -220,6 +224,10 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     if (shortest < t.minutes - 5) {
       const short = `Sessions come to about ${shortest} of ${t.minutes} min: add more drills${t.focus.length ? ` for ${t.focus.map((f) => FOCUS_LABELS[f as keyof typeof FOCUS_LABELS] ?? f).join(', ')}` : ''} to fill them`;
       why = why ? `${short}. ${why}` : short;
+    }
+    if (fit < t.sessions) {
+      const left = `${fit} ${fit === 1 ? 'session' : 'sessions'} for the ${fit === 1 ? 'day' : 'days'} left this week`;
+      why = why ? `${left}. ${why}` : left;
     }
     return { ok: true, by: rows.some((r) => r.made_by === 'ai') ? 'ai' : 'rules', why };
   } catch (e) { return fail(e); }
