@@ -100,6 +100,8 @@ const NEW_FOR_DAYS = 14;
 export const getPlayerState = cache(async (): Promise<PlayerState> => {
   const v = await getViewer();
   if (!v.academy || !v.user || v.role !== 'player') return { kind: 'none' };
+  // Self-serve (0030): no trainer to wait on. They build their own.
+  if (v.academy.selfServe) return { kind: 'none' };
   const week = await readMyWeek();
   if (!week) return { kind: 'none' };
   if (week.items.length) return { kind: week.items.every((i) => i.done) ? 'done' : 'active', week };
