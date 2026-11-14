@@ -53,10 +53,13 @@ export async function loadPlayers(db: any, academy: Academy, opts: { player?: st
       // "x of y" is the trainer's week, counted as the player's Train counts
       // it: their own library plan and their Speed or free sessions are
       // training (last trained, minutes, history), not what was set.
+      // Nothing set: their own training is the week, counted day by day.
       progress: progress({
         planDays: asPlanDays(week), done: r.done ?? [], lastDone: r.last_done, tz: academy.timeZone,
-        setDone: setItems(week).filter((i) => i.done).map((i) => i.doneOn ?? i.weekday),
-        setCovered: setItems(week).filter((i) => i.done).map((i) => i.weekday),
+        ...(setItems(week).length ? {
+          setDone: setItems(week).filter((i) => i.done).map((i) => i.doneOn ?? i.weekday),
+          setCovered: setItems(week).filter((i) => i.done).map((i) => i.weekday),
+        } : {}),
         since: localDate(since, academy.timeZone),
       }),
     };

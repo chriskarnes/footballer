@@ -28,8 +28,10 @@ type Mode = 'program' | 'custom' | 'auto';
  *     its day moved.
  */
 export function PlayerPlan({ userId, first, mode, program, target, defaults, own, focus: savedFocus, progress: savedProgress, ownProgress,
-  drills, thisWeek, nextWeek, weeks, busy, runs = {}, todayWeekday = 0 }: {
+  drills, thisWeek, nextWeek, weeks, busy, runs = {}, todayWeekday = 0, fallback = null }: {
   userId: string; first: string;
+  /** What they get in a week not built: their group's or own program, by name. Null: nothing. */
+  fallback?: string | null;
   mode: Mode;
   /** What Program shows: this week, groups and their own programs. */
   program: React.ReactNode;
@@ -272,7 +274,9 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
         ) : (
           <>
             <p className="mt-1 text-body text-on-surface-variant">
-              {which === 'this' ? `Not built yet, so ${first} is on their program this week.` : 'Not built yet.'} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
+              {fallback
+                ? `Not built yet, so ${first} gets ${fallback} ${which === 'this' ? 'this week' : 'next week, unless you build it'}.`
+                : `Not built yet, so ${first} has nothing set ${which === 'this' ? 'this week' : 'next week, unless you build it'}.`} Build it from {sessions} × {minutes} min{focus.length ? `, working on ${focus.map(label).join(', ')}` : ''}.
             </p>
             <button type="button" disabled={pending || dirty} onClick={() => run(() => buildWeekFor(userId, which), undefined, 'Week built.', undefined, `week:${which}`)}
                     className="btn-ghost pressable mt-4 w-full">

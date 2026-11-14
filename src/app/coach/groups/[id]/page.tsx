@@ -12,7 +12,7 @@ import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
 import { meetingLabel, programWeek, sessionsForWeek } from '@/lib/academy-week';
-import { detailOf, localDate, byAttention } from '@/lib/progress';
+import { detailOf, localDate, byAttention, mondayOf } from '@/lib/progress';
 import { PageHead } from '@/components/coach/PageHead';
 
 export const metadata = { title: 'Group', robots: { index: false } };
@@ -41,6 +41,10 @@ export default async function GroupPage({ params }: {
   const members = players.filter((p) => ids.has(p.user_id)).sort(byAttention);
   const others = players.filter((p) => !ids.has(p.user_id)).sort((a, b) => a.name.localeCompare(b.name));
   const when = meetingLabel(g);
+  // A week built for a player replaces their programs, this group's included.
+  const monday = mondayOf(today);
+  const onCustom = new Set(c.custom.filter((x) => x.week_of === monday && x.made_by !== 'player').map((x) => x.user_id));
+  const CUSTOM_NOTE = 'On a custom week: this group’s sessions aren’t in it';
 
   const meta = [when, program
     ? n ? `${program.name} · Week ${n} of ${program.weeks}`
@@ -98,6 +102,7 @@ export default async function GroupPage({ params }: {
                         <StatusDot status={p.progress.status} />
                         <span className="truncate"><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
                       </span>
+                      {onCustom.has(p.user_id) && <span className="mt-0.5 block text-body-sm text-on-surface-variant">{CUSTOM_NOTE}</span>}
                     </span>
                     <span className="shrink-0"><WeekDots week={p.progress.week} /></span>
                   </Link>
@@ -108,18 +113,24 @@ export default async function GroupPage({ params }: {
         )}
         {players.length ? (
           <div className="mt-3">
+            {g.archived ? (
+              <p className="pl-1 text-body text-on-surface-variant">Finished, so no one gets its sessions. Reopen it in Group settings to add players.</p>
+            ) : (
             <Disclose label="Add or remove players" startOpen={!members.length}>
             <div className="card divide-y divide-outline-variant">
               {[...members, ...others].map((p) => {
                 const elsewhere = c.groups.filter((x) => x.id !== g.id && !x.archived
                   && c.memberships.some((m) => m.group_id === x.id && m.user_id === p.user_id)).map((x) => x.name);
+                const detail = [elsewhere.length ? `Also in ${elsewhere.join(', ')}` : '', onCustom.has(p.user_id) ? CUSTOM_NOTE : '']
+                  .filter(Boolean).join(' · ');
                 return (
                   <MemberToggle key={p.user_id} groupId={g.id} userId={p.user_id} name={p.name}
-                                initial={ids.has(p.user_id)} detail={elsewhere.length ? `Also in ${elsewhere.join(', ')}` : undefined} />
+                                initial={ids.has(p.user_id)} detail={detail || undefined} />
                 );
               })}
             </div>
             </Disclose>
+            )}
           </div>
         ) : <p className="pl-1 text-body text-on-surface-variant">No players in the academy yet. <Link href="/coach/team" className="font-semibold text-on-surface underline underline-offset-4">Invite them from Academy</Link>.</p>}
       </section>

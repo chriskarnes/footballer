@@ -290,8 +290,10 @@ async function pastWeeks(db: any, academyId: string, custom: CustomRow[], userId
 export async function saveBuiltSession(id: string, change: { drill_ids?: string[]; steps?: number[]; changes?: string[]; weekday?: number }): Promise<Result> {
   try {
     const v = await staff();
-    const row: Record<string, unknown> = { made_by: 'trainer' };
+    // "Trainer" only when the drills change: a day moved keeps an AI week's tag.
+    const row: Record<string, unknown> = {};
     if (change.drill_ids) {
+      row.made_by = 'trainer';
       if (!change.drill_ids.length) return { ok: false, error: 'A session needs at least one drill.' };
       // Written into the player's week as ids: they have to be this academy's.
       const unique = [...new Set(change.drill_ids)];
@@ -312,11 +314,13 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
       }
       row.weekday = day;
     }
-    let { data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id');
+    if (!Object.keys(row).length) return { ok: true };
+    // A player's own extra is theirs: the trainer's editor never sends one, and this keeps it so.
+    let { data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).or('made_by.is.null,made_by.neq.player').select('id');
     // Before 0012: just the drills and the day.
     if (error && /steps|changes/.test(error.message)) {
       delete row.steps; delete row.changes;
-      ({ data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id'));
+      ({ data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).or('made_by.is.null,made_by.neq.player').select('id'));
     }
     if (error) return { ok: false, error: missing(error.message) };
     // Nothing matched: the week was rebuilt or taken away since this page loaded.

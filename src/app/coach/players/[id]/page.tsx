@@ -95,11 +95,20 @@ export default async function PlayerPage({ params }: {
         const nextWeek = mine.filter((x) => x.week_of === weeks.next);
         // Never chosen (before 0014, or never touched): custom if they have a custom week.
         const mode = t.mode ?? (thisWeek.length || nextWeek.length ? 'custom' : 'program');
+        // A week not built falls back to their programs: name them, so an empty
+        // "Next week" says what the player will actually get.
+        const progNames = [
+          ...content.groups.filter((g) => !g.archived && g.program_id
+            && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => `${g.name}’s program`),
+          ...content.playerPrograms.filter((x) => x.user_id === p.user_id)
+            .map((x) => content.programs.find((pr) => pr.id === x.program_id)?.name).filter((x): x is string => !!x),
+        ];
+        const fallback = progNames.length ? progNames.join(' and ') : null;
         return (
           <>
             <section className="mt-8">
               <p className="eyebrow mb-3">Their week</p>
-              <PlayerPlan userId={p.user_id} first={p.first} mode={mode}
+              <PlayerPlan userId={p.user_id} first={p.first} mode={mode} fallback={fallback}
                 program={
                   <div className="space-y-6">
                     <WeekList first={p.first} week={p.week} />
@@ -137,17 +146,17 @@ export default async function PlayerPage({ params }: {
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-body text-on-surface-variant">
-            {pr.hasPlan ? `${pr.done} of ${pr.planned}` : pr.done} · {pr.minutesThisWeek} min
+            {pr.hasPlan ? `${pr.done} of ${pr.planned} set` : `${pr.done} ${pr.done === 1 ? 'session' : 'sessions'}`} · {pr.minutesThisWeek} min
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
 
         <div className="mt-6 flex items-baseline justify-between border-t border-outline-variant pt-5">
-          <div className="text-body font-semibold text-on-surface">Last four weeks</div>
+          <div className="text-body font-semibold text-on-surface">All training, last four weeks</div>
           <div className="text-body text-on-surface-variant">{pr.streak}{pr.streakAtLeast ? '+' : ''} {pr.streak === 1 && !pr.streakAtLeast ? 'week' : 'weeks'} in a row</div>
         </div>
         <div className="mt-3 flex h-24 gap-3" role="img"
-             aria-label={pr.weeks.map((w, i) => `${weekName(i)}: ${w.done} ${w.done === 1 ? 'session' : 'sessions'}`).join(', ')}>
+             aria-label={`All training: ${pr.weeks.map((w, i) => `${weekName(i)}: ${w.done} ${w.done === 1 ? 'session' : 'sessions'}`).join(', ')}`}>
           {pr.weeks.map((w, i) => (
             <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
               <span className="text-caption font-bold text-on-surface">{w.done}</span>

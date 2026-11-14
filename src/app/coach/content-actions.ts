@@ -396,6 +396,11 @@ export async function archiveGroup(id: string, archived: boolean): Promise<Resul
 export async function setMembership(groupId: string, userId: string, member: boolean): Promise<Result> {
   try {
     const v = await staff();
+    // A finished group gives no one anything: adding to it would look like it did.
+    if (member) {
+      const { data: grp } = await v.db.from('groups').select('archived').eq('id', groupId).eq('academy_id', v.academy.id).maybeSingle();
+      if (grp?.archived) return { ok: false, error: 'This group is finished. Reopen it to add players.' };
+    }
     const { error } = member
       ? await v.db.from('group_members').upsert({ group_id: groupId, user_id: userId, academy_id: v.academy.id }, { onConflict: 'group_id,user_id', ignoreDuplicates: true })
       : await v.db.from('group_members').delete().eq('group_id', groupId).eq('user_id', userId).eq('academy_id', v.academy.id);

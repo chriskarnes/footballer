@@ -56,9 +56,11 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
     : all;
 
   const needs = players.filter((p) => p.progress.status !== 'good').length;
-  // Trained at all this week (Speed, their own sessions too), as the minutes beside it count.
-  const trained = players.filter((p) => p.progress.done > 0 || p.progress.minutesThisWeek > 0).length;
-  const sessions = players.reduce((a, p) => a + p.progress.done, 0);
+  // All three count all training this week (set sessions, Speed, their own),
+  // so they agree: "3 of 12 trained · 5 sessions · 140 min".
+  const thisWeek = (p: (typeof players)[number]) => p.progress.weeks[3]?.done ?? 0;
+  const trained = players.filter((p) => thisWeek(p) > 0 || p.progress.minutesThisWeek > 0).length;
+  const sessions = players.reduce((a, p) => a + thisWeek(p), 0);
   const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
   // What the note dialog needs: everyone it could go to, and who's in each group.
