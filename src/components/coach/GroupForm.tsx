@@ -37,7 +37,7 @@ export function GroupForm({ group, programs, today }: {
           {programs.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.weeks} {p.weeks === 1 ? 'week' : 'weeks'})</option>)}
         </select>
       </Field>
-      <Field label="Starts" hint="Week 1 is the week this date is in.">
+      <Field label="Starts" hint={group?.program_id ? "Week 1 is the week this date is in. A new program starts this week unless you change this too." : "Week 1 is the week this date is in."}>
         <input name="starts_on" type="date" defaultValue={group?.starts_on ?? today} />
       </Field>
       <FormError error={state && !state.ok ? state.error : null} />

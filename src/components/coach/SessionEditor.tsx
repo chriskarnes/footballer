@@ -30,8 +30,10 @@ export type SessionTarget =
   | { kind: 'placed'; programId: string; week: number; placementId?: string; libraryId?: string | null; alsoIn: string[] }
   | { kind: 'legacy'; programId: string; week: number; id?: string };
 
-export function SessionEditor({ target, session, drills: given }: {
+export function SessionEditor({ target, session, drills: given, lastNote }: {
   target: SessionTarget;
+  /** Said when removing it: it's the week's last session (see the page). */
+  lastNote?: string;
   session?: { name: string; drill_ids: string[] };
   drills: DrillRow[];
 }) {
@@ -139,7 +141,7 @@ export function SessionEditor({ target, session, drills: given }: {
                 {busy ? 'Saving…' : id ? 'Save' : 'Create session'}
               </button>
               {id && <Remove label="Delete this session" title="Delete this session?" confirm="Delete"
-                             body={`It comes out of week ${week}. The drills stay.`}
+                             body={`It comes out of week ${week}. The drills stay.${lastNote ? ` ${lastNote}` : ''}`}
                              run={() => deleteSession(id)} then={`/coach/programs/${programId}#week-${week}`} />}
             </>
           );
@@ -189,7 +191,7 @@ export function SessionEditor({ target, session, drills: given }: {
               </button>
             )}
             {placementId && <Remove label={`Take it out of week ${week}`} title={`Take it out of week ${week}?`} confirm="Take out"
-                                    body="It stays in your sessions, and anywhere else it’s used."
+                                    body={`It stays in your sessions, and anywhere else it’s used.${lastNote ? ` ${lastNote}` : ''}`}
                                     run={() => deleteSession(placementId)} then={back} />}
           </>
         );

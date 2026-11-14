@@ -3,6 +3,8 @@ import { staffOnly } from '@/components/coach/Gate';
 import { SessionEditor } from '@/components/coach/SessionEditor';
 import { PickSession } from '@/components/coach/PickSession';
 import { loadContent } from '@/lib/academy-data';
+import { programWeek } from '@/lib/academy-week';
+import { localDate } from '@/lib/progress';
 import { placesOf } from '@/lib/session-library';
 import { PageHead } from '@/components/coach/PageHead';
 
@@ -30,6 +32,22 @@ export default async function SessionEditPage({ params, searchParams }: {
   const week = session?.week ?? Math.max(1, Math.min(p.weeks, Number(q.week) || 1));
   const minutes = new Map(c.drills.map((d) => [d.id, d.minutes]));
 
+  // Taking out a week's last session doesn't empty the week: it repeats the
+  // last earlier one with sessions. Said in the confirm, with who's on it now.
+  let lastNote: string | undefined;
+  if (session && c.sessions.filter((s) => s.program_id === p.id && s.week === week).length === 1) {
+    const earlier = c.sessions.filter((s) => s.program_id === p.id && s.week < week).map((s) => s.week);
+    const repeats = earlier.length ? Math.max(...earlier) : null;
+    const today = localDate(new Date(), academy.timeZone);
+    const { data: members } = await db.from('academy_members').select('user_id').eq('academy_id', academy.id).eq('role', 'player');
+    const current = new Set(((members ?? []) as { user_id: string }[]).map((m) => m.user_id));
+    const groups = c.groups.filter((g) => !g.archived && g.program_id === p.id && g.starts_on && programWeek(g.starts_on, p.weeks, today) === week).map((g) => g.name);
+    const solo = c.playerPrograms.filter((x) => x.program_id === p.id && (!members || current.has(x.user_id)) && programWeek(x.starts_on, p.weeks, today) === week).length;
+    const who = [...groups, ...(solo ? [`${solo} ${solo === 1 ? 'player' : 'players'} on their own`] : [])];
+    lastNote = `It’s the last session in week ${week}, so week ${week} ${repeats ? `repeats week ${repeats}` : 'is empty'} after this.`
+      + (who.length ? ` ${who.join(', ')} ${who.length === 1 && !/players on their own$/.test(who[0]) ? 'is' : 'are'} on week ${week} now; what they’ve done of it this week will show as not done.` : '');
+  }
+
   return (
     <div className="animate-pop">
       <PageHead back={{ href: `/coach/programs/${p.id}`, label: p.name }} eyebrow={`Week ${week}`}
@@ -49,7 +67,7 @@ export default async function SessionEditPage({ params, searchParams }: {
         </section>
       )}
 
-      <SessionEditor session={session} drills={c.drills}
+      <SessionEditor session={session} drills={c.drills} lastNote={lastNote}
         target={c.libraryReady
           ? { kind: 'placed', programId: p.id, week, placementId: session?.id, libraryId: session?.library_id,
               alsoIn: session?.library_id ? placesOf(c, session.library_id, session.id) : [] }

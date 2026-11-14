@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { mondayOf, localDate } from '@/lib/progress';
 import { FOCUS_LABELS } from '@/lib/types';
-import type { DrillRow } from '@/lib/academy-week';
+import { programWeek, type DrillRow } from '@/lib/academy-week';
 import { plain, notReady, Said } from '@/lib/plain-error';
 
 /**
@@ -147,6 +147,23 @@ export async function saveProgram(_: unknown, f: FormData): Promise<Result> {
       if (le) return { ok: false, error: plain(le) };
       if (last && last.week > row.weeks) {
         return { ok: false, error: `Week ${last.week} has sessions. Clear weeks past ${row.weeks} first, or keep it at ${last.week} weeks.` };
+      }
+      // Nor shorter than the week someone is on now: the program would end
+      // under them, without a word, and their homework with it.
+      const [{ data: was }, { data: gs }, { data: pps }] = await Promise.all([
+        v.db.from('academy_programs').select('weeks').eq('id', id).eq('academy_id', v.academy.id).maybeSingle(),
+        v.db.from('groups').select('name, starts_on, archived').eq('academy_id', v.academy.id).eq('program_id', id),
+        v.db.from('player_programs').select('starts_on').eq('academy_id', v.academy.id).eq('program_id', id),
+      ]);
+      const before = (was as { weeks: number } | null)?.weeks ?? 0;
+      if (before > row.weeks) {
+        const today = localDate(new Date(), v.academy.timeZone);
+        const past = (startsOn: string | null) => { const n = startsOn ? programWeek(startsOn, before, today) : null; return n !== null && n > row.weeks ? n : null; };
+        const on = [
+          ...((gs ?? []) as { name: string; starts_on: string | null; archived?: boolean }[]).filter((g) => !g.archived && past(g.starts_on)).map((g) => `${g.name} is on week ${past(g.starts_on)}`),
+          ...(() => { const k = ((pps ?? []) as { starts_on: string }[]).filter((x) => past(x.starts_on)).length; return k ? [`${k} ${k === 1 ? 'player is' : 'players are'} past week ${row.weeks}`] : []; })(),
+        ];
+        if (on.length) return { ok: false, error: `${on.join(', ')}. Shortening it would end the program for them now. Keep it longer, or move them first.` };
       }
     }
     const q = id
@@ -344,6 +361,13 @@ export async function saveGroup(_: unknown, f: FormData): Promise<Result> {
     if (!row.name) return { ok: false, error: 'Give the group a name.' };
     if (row.program_id) await ownProgram(v, row.program_id);
     if (row.program_id && !row.starts_on) row.starts_on = localDate(new Date(), v.academy.timeZone);
+    // A new program starts at week 1, today, unless the start date was changed
+    // with it: the old program's date would put them weeks in, or past the end.
+    if (id && row.program_id) {
+      const { data: had } = await v.db.from('groups').select('program_id, starts_on').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+      const h = had as { program_id: string | null; starts_on: string | null } | null;
+      if (h && h.program_id !== row.program_id && row.starts_on === h.starts_on) row.starts_on = localDate(new Date(), v.academy.timeZone);
+    }
     const q = id
       ? v.db.from('groups').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id').single()
       : v.db.from('groups').insert(row).select('id').single();

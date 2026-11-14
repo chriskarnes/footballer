@@ -98,7 +98,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ id: st
                   : <Link href={`/coach/programs/${p.id}/session?week=${n}`} className="btn-ghost btn-sm pressable">
                       {own ? 'Add a session' : 'Build this week'}
                     </Link>}
-                {own && n < p.weeks && !built.has(n + 1) && <CopyWeek programId={p.id} from={n} to={n + 1} />}
+                {own && n < p.weeks && !built.has(n + 1) && <CopyWeek programId={p.id} from={n} to={n + 1} onNow={onWeek(n + 1)} />}
               </div>
             </li>
           );
