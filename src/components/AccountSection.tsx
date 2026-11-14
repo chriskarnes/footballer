@@ -13,8 +13,10 @@ import { SignOut } from './SignOut';
  * the third visit; it only appears where installing is possible and hasn't
  * happened.
  */
-export function AccountSection({ email, version, canBrand, role }: {
+export function AccountSection({ email, version, canBrand, role, admin }: {
   email?: string; version: string; canBrand?: boolean; role?: string | null;
+  /** A platform admin: the way into /admin. */
+  admin?: boolean;
 }) {
   const [installable, setInstallable] = useState(false);
   useEffect(() => watchInstallable(setInstallable), []);
@@ -59,6 +61,16 @@ export function AccountSection({ email, version, canBrand, role }: {
         {canBrand && (
           <Link href="/coach/brand" className="pressable block">
             <Row label="Brand settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
+                   fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </Row>
+          </Link>
+        )}
+        {admin && (
+          <Link href="/admin" className="pressable block">
+            <Row label="Platform admin">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
                    fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />

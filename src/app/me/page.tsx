@@ -92,6 +92,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   let library = false;
   let plans: SavedPlan[] = [];
   let canBrand = false;
+  let admin = false;
   let role: string | null = null;
   // undefined: the calendar table doesn't exist yet (migration 0003), so no
   // section. null: it does, and this player hasn't turned it on.
@@ -123,6 +124,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         state = st;
         avatarAt = photoAt;
         canBrand = viewer.canBrand;
+        admin = viewer.isAdmin;
         role = viewer.role;
         if (!cal.error) calendar = cal.data ?? null;
         workouts = rows;
@@ -249,7 +251,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       {calendar !== undefined && <CalendarSection initial={calendar} plan={library} speed={await speedAllowed().catch(() => true)} />}
 
-      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={role} />
+      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={role} admin={admin} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { SignIn } from '@/components/SignIn';
+import { AdminGate } from '@/components/admin/ui';
 import { getViewer } from '@/lib/viewer';
 import { ago } from '@/lib/notes';
 import { ApproveRequest } from '@/components/ApproveRequest';
@@ -21,15 +21,15 @@ type Req = {
  */
 export default async function RequestsPage() {
   const v = await getViewer();
-  if (!v.user) return <div className="pt-8"><h1 className="h-page">Academy requests</h1><div className="mt-5"><SignIn next="/admin/requests" /></div></div>;
-  if (!v.isAdmin) return <div className="pt-8"><h1 className="h-page">Admins only</h1></div>;
+  if (!v.user) return <AdminGate gate="signin" next="/admin/requests" />;
+  if (!v.isAdmin) return <AdminGate gate="denied" next="/admin/requests" />;
 
   const { data, error } = await v.db.from('academy_requests').select('*').order('created_at', { ascending: false }).limit(100);
   const rows = (data ?? []) as Req[];
 
   return (
-    <div className="pt-8">
-      <p className="eyebrow mb-3">Get started</p>
+    <div className="animate-pop">
+      <p className="eyebrow mb-2">Get started</p>
       <h1 className="h-page">Academy requests</h1>
       {error && <p className="mt-3 text-body-sm text-on-surface-variant">Couldn&rsquo;t load: {error.message}. Has migration 0006 run?</p>}
       {!error && !rows.length && <p className="mt-3 text-body text-on-surface-variant">None yet.</p>}

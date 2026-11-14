@@ -3,8 +3,10 @@ import { usePathname } from 'next/navigation';
 import { TabBar } from './TabBar';
 import { InstallNudge } from './InstallNudge';
 import { CoachFrame } from './coach/CoachFrame';
+import { AdminFrame } from './admin/AdminFrame';
 
 const inCoach = (path: string) => path === '/coach' || path.startsWith('/coach/');
+const inAdmin = (path: string) => path === '/admin' || path.startsWith('/admin/');
 
 /**
  * The player app's frame, or the trainer area's (CoachFrame), by the path.
@@ -23,7 +25,10 @@ export function AreaFrame({ brand, app, academyId, library, plan, speed, childre
   library: boolean; plan: boolean; speed: boolean;
   children: React.ReactNode;
 }) {
-  if (inCoach(usePathname())) return <CoachFrame brand={brand}>{children}</CoachFrame>;
+  const path = usePathname();
+  if (inCoach(path)) return <CoachFrame brand={brand}>{children}</CoachFrame>;
+  // The platform admin panel: every academy, on a desk.
+  if (inAdmin(path)) return <AdminFrame brand={brand}>{children}</AdminFrame>;
   return (
     <div className="pad-nav">
       <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">{children}</main>
