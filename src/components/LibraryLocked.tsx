@@ -10,6 +10,7 @@ import { speedAllowed } from '@/lib/speed-gate';
 import { Waiting } from './Waiting';
 import { SpeedInvite } from './SpeedInvite';
 import { SignOut } from './SignOut';
+import { StartOnYourOwn } from './StartOnYourOwn';
 
 /**
  * What Train, Library and Plan show in an academy that doesn't have the drill
@@ -24,6 +25,38 @@ import { SignOut } from './SignOut';
 /** `next` is where signing in returns: the tab this was shown on. */
 export async function LibraryLocked({ title, next = '/' }: { title: string; next?: string }) {
   const v = await getViewer().catch(() => null);
+  // Self-serve (0030): there's no trainer to ask. Open, it's one tap in;
+  // closed, it's by invite link only, and says so.
+  if (v?.academy?.selfServe && !v.role) {
+    return (
+      <div className="animate-pop">
+        <BrandBand>
+          <BandTag>{title}</BandTag>
+          <BandTitle>Train on your own</BandTitle>
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
+            No trainer needed. Build your own sessions, plan your week around your games, and track your speed.
+          </p>
+        </BrandBand>
+        {!v.user ? (
+          <div className="mt-5">
+            <SignIn next={next} title={v.academy.open ? 'Sign in to start' : 'Sign in'} />
+            {!v.academy.open && (
+              <p className="mt-5 text-center text-body text-on-surface-variant">Invite only for now. Got a link? Open it to join.</p>
+            )}
+          </div>
+        ) : v.academy.open ? (
+          <div className="mt-6"><StartOnYourOwn /></div>
+        ) : (
+          <p className="mt-5 text-center text-body text-on-surface-variant">Invite only for now. Got a link? Open it to join.</p>
+        )}
+        {v.user && (
+          <p className="mt-5 text-center text-body text-on-surface-variant">
+            Signed in as {v.user.email}. Not you? <SignOut to={next} className="pressable font-semibold text-on-surface underline underline-offset-4" />
+          </p>
+        )}
+      </div>
+    );
+  }
   if (v?.academy && (!v.user || !v.role)) {
     // Asked already: they're waiting on the trainer, not being told to ask.
     const req = v.user

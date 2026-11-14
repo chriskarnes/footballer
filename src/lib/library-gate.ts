@@ -13,10 +13,15 @@ import { loadDefaults } from './academy-data';
  *           visitors to a library academy (the demo) keep it.
  *   own     the academy's own programs and drills, in Library, where there
  *           is no licensed library: when players may browse.
+ *
+ * A self-serve space (0030) shows nothing to someone who hasn't joined it:
+ * it's private while it holds the licensed library, and its way in is the
+ * page shown instead.
  */
 export const libraryFor = cache(async (): Promise<{ drills: boolean; own: boolean }> => {
   const base = await licensed();
   const v = await getViewer();
+  if (v.academy?.selfServe && !v.role) return { drills: false, own: false };
   if (!v.academy || !v.user || !v.role) return { drills: base, own: false };
   const browse = (await loadDefaults(v.db, v.academy.id)).playerLibrary;
   if (base) return { drills: v.staff || browse, own: false };

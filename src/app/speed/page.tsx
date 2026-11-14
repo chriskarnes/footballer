@@ -3,6 +3,7 @@ import { BrandBand } from '@/components/BrandBand';
 import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS, SOURCES } from '@/lib/speed';
 import { serverClient } from '@/lib/supabase/server';
 import { SpeedNow, SpeedWeek, SpeedYearProvider } from '@/components/SpeedYear';
+import { getAcademy } from '@/lib/branding-server';
 
 const Chevron = ({ className }: { className: string }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none"
@@ -16,6 +17,8 @@ const Chevron = ({ className }: { className: string }) => (
  * started) is for the adults, in one closed section at the bottom.
  */
 export default async function SpeedPage() {
+  // The self-serve space (0030) has no trainer to read the adults' section.
+  const selfServe = !!(await getAcademy().catch(() => null))?.academy?.selfServe;
   // Finished speed sessions from the last eight days, to tick this week off.
   // Signed out there are none, and the year runs without ticks.
   let completions: { source_ref: string | null; completed_at: string | null }[] = [];
@@ -49,7 +52,7 @@ export default async function SpeedPage() {
         <details className="group mt-9">
           <summary className="card pressable flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4
                               [&::-webkit-details-marker]:hidden">
-            <span className="text-title-sm font-bold text-on-surface">For parents and trainers</span>
+            <span className="text-title-sm font-bold text-on-surface">{selfServe ? 'For parents' : 'For parents and trainers'}</span>
             <Chevron className="h-5 w-5 shrink-0 text-on-surface-variant transition-transform group-open:rotate-90" />
           </summary>
 

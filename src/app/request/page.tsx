@@ -5,6 +5,7 @@ import { AskToJoin } from '@/components/AskToJoin';
 import { getViewer } from '@/lib/viewer';
 import { SignOut } from '@/components/SignOut';
 import { rootHref } from '@/lib/root-link';
+import { redirect } from 'next/navigation';
 
 export const metadata = { title: 'Ask to join', robots: { index: false } };
 
@@ -14,6 +15,8 @@ export const metadata = { title: 'Ask to join', robots: { index: false } };
  */
 export default async function RequestPage() {
   const v = await getViewer();
+  // The self-serve space (0030) has no one to ask: Train is its way in.
+  if (v.academy?.selfServe) redirect('/');
   if (!v.academy) {
     return (
       <div className="pt-10">

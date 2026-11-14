@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { adminViewer, day, loadAcademies, n } from '@/lib/admin-data';
+import { adminViewer, day, loadAcademies, loadKinds, n } from '@/lib/admin-data';
 import { aiMonthlyLimit } from '@/lib/ai';
 import { ago } from '@/lib/notes';
 import { AdminGate, Failed, Table, Td, Th } from '@/components/admin/ui';
@@ -10,7 +10,7 @@ export const metadata = { title: 'Academies · Admin', robots: { index: false } 
 export default async function AdminAcademies() {
   const a = await adminViewer();
   if (a.gate) return <AdminGate gate={a.gate} next="/admin/academies" />;
-  const { data, error } = await loadAcademies();
+  const [{ data, error }, kinds] = await Promise.all([loadAcademies(), loadKinds()]);
   const rows = data ?? [];
 
   return (
@@ -31,7 +31,7 @@ export default async function AdminAcademies() {
                   <Link href={`/admin/academies/${r.id}`} className="after:absolute after:inset-0 hover:underline">{r.name}</Link>
                   <span className="block text-body-sm font-normal text-on-surface-variant">
                     {r.slug}{r.city ? ` · ${r.city}` : ''}
-                    {r.unclaimed ? ' · waiting to be claimed' : !r.set_up && ' · setting up'}{r.library_access && ' · Forge library'}{r.waiting > 0 && ` · ${r.waiting} waiting`}{!!r.ai_month && ` · AI ${n(r.ai_month)} of ${n(aiMonthlyLimit())} this month`}
+                    {kinds.get(r.id)?.selfServe ? ` · self-serve, ${kinds.get(r.id)!.open ? 'open' : 'invite only'}` : r.unclaimed ? ' · waiting to be claimed' : !r.set_up && ' · setting up'}{r.library_access && ' · Forge library'}{r.waiting > 0 && ` · ${r.waiting} waiting`}{!!r.ai_month && ` · AI ${n(r.ai_month)} of ${n(aiMonthlyLimit())} this month`}
                   </span>
                 </Td>
                 <Td className="max-w-[14rem] truncate">{r.owner ? (r.owner.name || r.owner.email) : '—'}</Td>

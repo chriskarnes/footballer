@@ -160,3 +160,18 @@ export function day(at: string | null | undefined) {
   const year = d.getUTCFullYear() !== new Date().getUTCFullYear();
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...(year && { year: 'numeric' }), timeZone: 'UTC' }).format(d);
 }
+
+/**
+ * Which academies are self-serve (0030), and whether they're open: by id.
+ * Empty before 0030 runs.
+ */
+export async function loadKinds(): Promise<Map<string, { selfServe: boolean; open: boolean }>> {
+  const v = await getViewer();
+  const { data, error } = await v.db.from('academies').select('id, kind, open');
+  const out = new Map<string, { selfServe: boolean; open: boolean }>();
+  if (error) return out;
+  for (const r of (data ?? []) as { id: string; kind: string; open: boolean }[]) {
+    out.set(r.id, { selfServe: r.kind === 'self_serve', open: r.open === true });
+  }
+  return out;
+}

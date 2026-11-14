@@ -68,7 +68,10 @@ export default async function JoinPage({ params, searchParams }: {
         <BandTag>{role === 'trainer' ? 'Trainer invite' : 'You’re invited'}</BandTag>
         <BandTitle>Join {head}{tail && <span className="text-on-surface-brand-variant">{tail}</span>}</BandTitle>
         <p className="mt-4 text-title-sm leading-relaxed text-on-surface-brand-variant">
-          {role === 'trainer' ? 'See every player’s week, and send them notes.' : 'Your trainer’s sessions, done at home.'}
+          {role === 'trainer' ? 'See every player’s week, and send them notes.'
+            // The self-serve space (0030): no trainer, the player runs it.
+            : v.academy?.selfServe ? 'Train on your own: build sessions, plan your week, track your speed.'
+            : 'Your trainer’s sessions, done at home.'}
         </p>
       </BrandBand>
 

@@ -7,6 +7,8 @@ import { toBranding, type Branding } from './branding';
 import { slugFromHost } from './tenant';
 
 export const ACADEMY_COLUMNS = 'id, slug, name, time_zone, palette_id, primary_color, accent_color, logo_type, updated_at, library_access';
+/** With 0030's kind and open; read without them until it runs. */
+const ACADEMY_COLUMNS_30 = `${ACADEMY_COLUMNS}, kind, open`;
 export const academyTag = (slug: string) => `academy:${slug}`;
 
 export type Academy = {
@@ -14,12 +16,17 @@ export type Academy = {
   branding: Branding;
   /** Sees the licensed drill library. Only `demo`; see migration 0005. */
   libraryAccess: boolean;
+  /** Self-serve (0030): the platform's space for players with no trainer. */
+  selfServe: boolean;
+  /** A self-serve space anyone can join with a tap; closed, it's invite-only. */
+  open: boolean;
 };
 
 type AcademyRow = {
   id: string; slug: string; name: string; time_zone: string; palette_id: string | null;
   primary_color: string | null; accent_color: string | null; logo_type: string | null; updated_at: string;
   library_access: boolean;
+  kind?: string | null; open?: boolean | null;
 };
 
 /**
@@ -36,6 +43,8 @@ export function toAcademy(row: AcademyRow): Academy {
     id: row.id, slug: row.slug, name: row.name, timeZone: row.time_zone,
     branding: toBranding({ ...row, enabled: true })!,
     libraryAccess: row.library_access === true,
+    selfServe: row.kind === 'self_serve',
+    open: row.kind === 'self_serve' && row.open === true,
   };
 }
 
@@ -52,7 +61,9 @@ const fetchAcademy = async (slug: string): Promise<Academy | null | undefined> =
   try {
     return await unstable_cache(
       async (): Promise<Academy | null> => {
-        const { data, error } = await anon().from('academies').select(ACADEMY_COLUMNS).eq('slug', slug).maybeSingle();
+        let { data, error } = await anon().from('academies').select(ACADEMY_COLUMNS_30).eq('slug', slug).maybeSingle();
+        // Before 0030: no kind or open column.
+        if (error?.code === '42703') ({ data, error } = await anon().from('academies').select(ACADEMY_COLUMNS).eq('slug', slug).maybeSingle());
         if (error) throw error;
         return data ? toAcademy(data as AcademyRow) : null;
       },

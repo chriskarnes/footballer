@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { adminViewer, aiLine, day, loadAcademy, n, sourceLabel } from '@/lib/admin-data';
+import { adminViewer, aiLine, day, loadAcademy, loadKinds, n, sourceLabel } from '@/lib/admin-data';
+import { OpenSwitch } from '@/components/admin/OpenSwitch';
 import { aiMonthlyLimit } from '@/lib/ai';
 import { ago } from '@/lib/notes';
 import { headers } from 'next/headers';
@@ -15,7 +16,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const a = await adminViewer();
   if (a.gate) return <AdminGate gate={a.gate} next={`/admin/academies/${id}`} />;
-  const { data: x, error } = await loadAcademy(id);
+  const [{ data: x, error }, kinds] = await Promise.all([loadAcademy(id), loadKinds()]);
   if (error) return <div><BackLink href="/admin/academies" label="Academies" /><Failed error={error} /></div>;
   if (!x) notFound();
 
@@ -24,6 +25,8 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
   const h = await headers();
   const site = academyOrigin(x.slug, `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('x-forwarded-host') ?? h.get('host')}`);
   const active = players.filter((m) => m.sessions_7d > 0).length;
+  // The self-serve space (0030): no owner or trainers, and an open switch.
+  const kind = kinds.get(x.id);
 
   return (
     <div className="animate-pop">
@@ -32,8 +35,10 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
       <p className="mt-2 text-body text-on-surface-variant">
         <a href={site} className="font-semibold text-on-surface underline underline-offset-4">{site.replace(/^https?:\/\//, '')}</a>
         {x.city && ` · ${x.city}`} · started {day(x.created_at)} · {x.time_zone}
-        {x.unclaimed ? ' · approved, not yet claimed by its owner' : !x.set_up && ' · still setting up'}{x.library_access && ' · Forge library on'}{!x.listed && ' · unlisted'}
+        {kind?.selfServe ? ` · self-serve, ${kind.open ? 'open to everyone' : 'invite only'}` : x.unclaimed ? ' · approved, not yet claimed by its owner' : !x.set_up && ' · still setting up'}{x.library_access && ' · Forge library on'}{!x.listed && ' · unlisted'}
       </p>
+
+      {kind?.selfServe && <OpenSwitch id={x.id} slug={x.slug} open={kind.open} licensed={x.library_access} />}
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Players" value={n(players.length)} sub={`${n(staff.length)} staff`} />

@@ -99,6 +99,8 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   let admin = false;
   // On an academy's address (not the bare domain), and staff anywhere.
   let onAcademy = false;
+  // The self-serve space (0030): no trainer, so no notes from one.
+  let selfServe = false;
   let timeZone = 'UTC';
   let staffAnywhere = false;
   let role: string | null = null;
@@ -134,6 +136,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         canBrand = viewer.canBrand;
         admin = viewer.isAdmin;
         onAcademy = !!viewer.academy;
+        selfServe = !!viewer.academy?.selfServe;
         timeZone = viewer.academy?.timeZone ?? 'UTC';
         const { data: staffRows } = await db.from('academy_members').select('role').eq('user_id', user.id).in('role', ['owner', 'trainer']).limit(1);
         staffAnywhere = !!staffRows?.length;
@@ -286,7 +289,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       {calendar !== undefined && <CalendarSection initial={calendar} plan={library} speed={await speedAllowed().catch(() => true)} />}
 
-      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={role} admin={admin} />
+      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={selfServe && role === 'player' ? null : role} admin={admin} />
     </div>
   );
 }

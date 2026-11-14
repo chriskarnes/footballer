@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { SectionHead, Step } from '@/components/site/SiteChrome';
 import { FindTrainer } from '@/components/site/FindTrainer';
 import { Lime, SiteHero } from '@/components/site/Photo';
+import { selfServeHref } from '@/lib/root-link';
 
 export const metadata = {
   title: 'For players · Train.futbol',
@@ -12,7 +13,9 @@ export const metadata = {
  * For players and parents. Most arrive with a link from their trainer and never
  * see this; it's for the ones who heard the name and typed it in.
  */
-export default function PlayersPage() {
+export default async function PlayersPage() {
+  // The self-serve space (0030), shown only once it's open to everyone.
+  const own = await selfServeHref();
   return (
     <>
       <SiteHero video={{ src: '/site/goal.mp4', poster: '/site/goal-poster.jpg' }}
@@ -55,6 +58,9 @@ export default function PlayersPage() {
           We&rsquo;re new, so there aren&rsquo;t many trainers here yet. If you work with a private trainer,
           send them this page. If you&rsquo;re a trainer, <Link href="/trainers" className="font-semibold text-on-surface underline underline-offset-4">start here</Link>.
         </p>
+        {own && (
+          <a href={own} className="btn-primary pressable mt-5 inline-flex">No trainer? Train on your own</a>
+        )}
       </section>
     </>
   );

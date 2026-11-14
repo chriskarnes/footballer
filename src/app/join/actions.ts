@@ -2,6 +2,7 @@
 import { readProfileMissing } from '@/lib/profile-check';
 import { redirect } from 'next/navigation';
 import { serverClient } from '@/lib/supabase/server';
+import { getAcademy } from '@/lib/branding-server';
 
 /**
  * Joins with the code; the database decides the role. Trainers land on their
@@ -36,5 +37,24 @@ export async function joinAcademy(code: string, who?: 'player' | 'parent') {
   // A new player is asked their name (and the rest) first, on Me; their
   // trainer sees that name, not an email address. A name alone isn't enough:
   // one let in from a join request has the name they asked with, and nothing else.
+  redirect(user && !(await readProfileMissing(db, user.id)) ? '/?joined=1' : '/me');
+}
+
+/**
+ * One tap into an open self-serve space (0030): no trainer to ask. A closed
+ * one is joined by its invite link, as any academy is.
+ */
+export async function joinSelfServe() {
+  const db = await serverClient();
+  const { academy } = await getAcademy();
+  if (!academy?.selfServe) return { ok: false as const, error: 'This isn’t a space you can join on your own.' };
+  const { error } = await db.rpc('join_self_serve', { p_slug: academy.slug });
+  if (error) {
+    console.error('join_self_serve', error);
+    return { ok: false as const, error: /not signed in/i.test(error.message) ? 'You’ve been signed out. Sign in again, then tap Start.'
+      : /not open/i.test(error.message) ? 'It’s invite-only for now. Open the link you were sent.'
+      : 'Couldn’t start just now. Try again.' };
+  }
+  const { data: { user } } = await db.auth.getUser();
   redirect(user && !(await readProfileMissing(db, user.id)) ? '/?joined=1' : '/me');
 }
