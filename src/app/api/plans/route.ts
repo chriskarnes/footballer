@@ -29,6 +29,9 @@ function invalid(intake: unknown, days: unknown): NextResponse | null {
   if (!intake || !Array.isArray(days) || !days.length) {
     return NextResponse.json({ error: 'intake and days are required' }, { status: 400 });
   }
+  if (JSON.stringify(intake).length > 10000 || days.length > 21) {
+    return NextResponse.json({ error: 'That plan is too large.' }, { status: 400 });
+  }
   const bad = (days as Day[]).find(
     (d) => typeof d.weekday !== 'number' || d.weekday < 0 || d.weekday > 6 ||
       !['rest', 'technical', 'physical'].includes(d.kind)

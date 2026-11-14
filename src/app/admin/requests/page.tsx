@@ -2,6 +2,17 @@ import { AdminGate } from '@/components/admin/ui';
 import { getViewer } from '@/lib/viewer';
 import { ago } from '@/lib/notes';
 import { ApproveRequest } from '@/components/ApproveRequest';
+import { RequestStatus } from '@/components/admin/RequestStatus';
+import { CheckIcon } from '@/components/Chip';
+import Link from 'next/link';
+
+const TABS = [
+  { id: 'open', label: 'Open', statuses: ['new', 'contacted'] },
+  { id: 'approved', label: 'Approved', statuses: ['approved', 'set_up'] },
+  { id: 'declined', label: 'Declined', statuses: ['declined'] },
+] as const;
+type Tab = typeof TABS[number]['id'];
+const SHOWN = 100;
 
 export const metadata = { title: 'Academy requests', robots: { index: false } };
 
@@ -19,26 +30,44 @@ type Req = {
  * trainer's claim link; they claim it, signed in with the email they asked
  * with, and set it up from a checklist (0020).
  */
-export default async function RequestsPage() {
+export default async function RequestsPage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   const v = await getViewer();
   if (!v.user) return <AdminGate gate="signin" next="/admin/requests" />;
   if (!v.isAdmin) return <AdminGate gate="denied" next="/admin/requests" />;
 
-  const { data, error } = await v.db.from('academy_requests').select('*').order('created_at', { ascending: false }).limit(100);
+  const show = (await searchParams).show;
+  const tab = TABS.find((t) => t.id === show) ?? TABS[0];
+  const count = (statuses: readonly string[]) =>
+    v.db.from('academy_requests').select('id', { count: 'exact', head: true }).in('status', statuses as string[]);
+  const [{ data, error }, ...counts] = await Promise.all([
+    v.db.from('academy_requests').select('*').in('status', tab.statuses as unknown as string[])
+      .order('created_at', { ascending: false }).limit(SHOWN),
+    ...TABS.map((t) => count(t.statuses)),
+  ]);
   const rows = (data ?? []) as Req[];
+  const total = (id: Tab) => counts[TABS.findIndex((t) => t.id === id)].count ?? 0;
 
   return (
     <div className="animate-pop">
       <p className="eyebrow mb-2">Get started</p>
       <h1 className="h-page">Academy requests</h1>
       {error && <p className="mt-3 text-body-sm text-on-surface-variant">Couldn&rsquo;t load: {error.message}. Has migration 0006 run?</p>}
-      {!error && !rows.length && <p className="mt-3 text-body text-on-surface-variant">None yet.</p>}
+      <nav className="mt-5 flex flex-wrap gap-2" aria-label="Show">
+        {TABS.map((t) => (
+          <Link key={t.id} href={t.id === 'open' ? '/admin/requests' : `/admin/requests?show=${t.id}`}
+                aria-current={t.id === tab.id ? 'page' : undefined} className={`chip ${t.id === tab.id ? 'chip-on' : ''}`}>
+            {t.id === tab.id && <CheckIcon />}{t.label} <span className="tabular-nums opacity-70">{total(t.id).toLocaleString('en-US')}</span>
+          </Link>
+        ))}
+      </nav>
+      {!error && !rows.length && <p className="mt-4 text-body text-on-surface-variant">{tab.id === 'open' ? 'Nothing waiting.' : 'None.'}</p>}
+      {total(tab.id) > SHOWN && <p className="mt-3 text-body-sm text-on-surface-variant">The newest {SHOWN} of {total(tab.id).toLocaleString('en-US')}.</p>}
       <ul className="mt-6 space-y-3">
         {rows.map((r) => (
           <li key={r.id} className="card p-5">
             <div className="flex items-baseline justify-between gap-3">
               <span className="truncate text-body-lg font-bold text-on-surface">{r.academy_name}</span>
-              <span className="shrink-0 text-body-sm text-on-surface-variant">{ago(r.created_at)}</span>
+              <span className="shrink-0 text-body-sm text-on-surface-variant">{r.status === 'contacted' ? 'Contacted · ' : ''}{ago(r.created_at)}</span>
             </div>
             <p className="mt-1 text-body text-on-surface-variant">
               {r.name} · <a href={`mailto:${r.email}`} className="font-semibold text-on-surface underline underline-offset-2">{r.email}</a>
@@ -48,6 +77,7 @@ export default async function RequestsPage() {
                 r.trainers && (r.trainers === 'Just me' ? 'trainer on their own' : `${r.trainers} trainers`), r.content].filter(Boolean).join(' · ')}
             </p>
             {r.message && <p className="mt-2 whitespace-pre-line text-body leading-relaxed text-on-surface">{r.message}</p>}
+            {['new', 'contacted', 'declined'].includes(r.status) && <RequestStatus id={r.id} status={r.status} />}
             {r.status !== 'declined' && (
               <ApproveRequest id={r.id} slug={r.slug} academyName={r.academy_name} email={r.email} trainer={r.name}
                 approved={r.academy_id && r.claim_code && r.slug

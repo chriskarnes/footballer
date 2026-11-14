@@ -22,11 +22,11 @@ export async function POST(req: Request) {
   const body = await req.json();
   const row: Record<string, unknown> = {
       user_id: user.id,
-      title: body.title,
+      title: String(body.title ?? '').trim().slice(0, 120) || 'Session',
       source: body.source ?? 'coach',
       source_ref: body.source_ref ?? null,
-      spec: body.spec ?? null,
-      exercise_ids: body.exercise_ids ?? [],
+      spec: body.spec && JSON.stringify(body.spec).length <= 10000 ? body.spec : null,
+      exercise_ids: Array.isArray(body.exercise_ids) ? body.exercise_ids.slice(0, 60).map(String) : [],
       planned_minutes: amount(body.planned_minutes, MIN),
       planned_touches: amount(body.planned_touches, TOUCHES),
       status: body.status ?? 'planned',

@@ -15,6 +15,8 @@ import { localDate, mondayOf } from './progress';
 export const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const PER_PLAYER_WEEK = Number(process.env.AI_PLAYER_WEEKLY_LIMIT) || 6;
 const PER_ACADEMY_MONTH = Number(process.env.AI_ACADEMY_MONTHLY_LIMIT) || 600;
+/** Each academy's monthly ceiling, for the admin panel. */
+export const aiMonthlyLimit = () => PER_ACADEMY_MONTH;
 
 /** How much AI this academy has used this month, against its limit. Null when it can't say. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -12,7 +12,8 @@ export type Overview = {
   trainers: number; players: number; no_academy: number;
   sessions_all: number; sessions_7d: number; sessions_30d: number; minutes_7d: number;
   active_7d: number; active_30d: number; requests_open: number; join_waiting: number;
-  ai_30d: { calls: number; failed: number; tokens: number };
+  /** 0029 adds week and suggest; before it, calls is week builds only. */
+  ai_30d: { calls: number; failed: number; tokens: number; week?: number; suggest?: number };
   weeks: { week: string; signups: number; sessions: number; active: number }[];
   recent: { id: string; user_id: string; title: string; source: string; feel: string | null; at: string;
             minutes: number | null; email: string; name: string | null;
@@ -30,7 +31,7 @@ export type AcademyRow = {
   owner: { id: string; email: string; name: string | null } | null;
   trainers: number; players: number; active_7d: number; sessions_7d: number; sessions_30d: number;
   last_done: string | null; programs: number; groups: number; drills: number; notes_30d: number;
-  waiting: number; ai_30d: number;
+  waiting: number; ai_30d: number; ai_month?: number;
 };
 
 export type AcademyDetail = {
@@ -43,7 +44,7 @@ export type AcademyDetail = {
   groups: { id: string; name: string; program: string | null; starts_on: string | null; members: number }[];
   waiting: { id: string; name: string; email: string; created_at: string; role?: 'player' | 'trainer' }[];
   drills: number; notes_30d: number;
-  ai_30d: { calls: number; failed: number; tokens: number };
+  ai_30d: { calls: number; failed: number; tokens: number; week?: number; suggest?: number; month?: number };
   recent: { id: string; user_id: string; title: string; source: string; feel: string | null; at: string;
             minutes: number | null; who: string }[];
 };
@@ -135,6 +136,18 @@ export const loadUser = (id: string) =>
 export function sourceLabel(s: string) {
   return ({ academy: 'Trainer session', addon: 'Extra', plan: 'Plan', library: 'Library', coach: 'Free session',
             speed: 'Speed', custom: 'Custom' } as Record<string, string>)[s] ?? s;
+}
+
+/** Where a finished session was for: the academy, the player's own, or a trainer's session since deleted. */
+export function forWhom(academy: string | null | undefined, source: string) {
+  if (academy) return academy;
+  return source === 'academy' || source === 'addon' ? 'A deleted session' : 'Own';
+}
+
+/** "12 AI calls (8 week builds, 4 suggestions)": every call counts toward the monthly limit. */
+export function aiLine(a: { calls: number; failed: number; tokens: number; week?: number; suggest?: number }) {
+  const kinds = a.week !== undefined ? ` (${n(a.week)} week ${a.week === 1 ? 'build' : 'builds'}, ${n(a.suggest)} ${a.suggest === 1 ? 'suggestion' : 'suggestions'})` : ' week builds';
+  return `${n(a.calls)} AI ${a.calls === 1 ? 'call' : 'calls'}${kinds}${a.failed ? `, ${n(a.failed)} failed` : ''}, ${n(a.tokens)} tokens`;
 }
 
 /** 1,234 */

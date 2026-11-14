@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { approveRequest } from '@/app/admin/requests/actions';
 import { academyOrigin } from '@/lib/tenant';
+import { ConfirmSheet } from '@/components/ConfirmSheet';
 
 /**
  * Approving a "Get started" request, on its card in /admin/requests: the
@@ -22,6 +23,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const [here, setHere] = useState('');
+  const [confirming, setConfirming] = useState(false);
   useEffect(() => { setHere(window.location.origin); }, []);
 
   if (done) {
@@ -66,13 +68,16 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
 
   return (
     <form className="mt-4 border-t border-outline-variant pt-4"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setBusy(true); setErr('');
-            const r = await approveRequest(id, address, name);
-            setBusy(false);
-            if (r.ok) setDone({ slug: r.slug, code: r.code, claimed: false }); else setErr(r.error);
-          }}>
+          onSubmit={(e) => { e.preventDefault(); setErr(''); setConfirming(true); }}>
+      <ConfirmSheet open={confirming} busy={busy} title={`Make ${address.trim() || 'this'}.train.futbol?`} confirmLabel="Approve"
+        body={`This creates ${name.trim() || 'the academy'} at ${address.trim()}.train.futbol, unlisted, for ${email} to claim. The address can't be taken back.`}
+        onCancel={() => setConfirming(false)}
+        onConfirm={async () => {
+          setBusy(true);
+          const r = await approveRequest(id, address, name);
+          setBusy(false); setConfirming(false);
+          if (r.ok) setDone({ slug: r.slug, code: r.code, claimed: false }); else setErr(r.error);
+        }} />
       <div className="grid gap-2.5 sm:grid-cols-2">
         <label className="text-field">
           <span>Address (.train.futbol)</span>
@@ -85,7 +90,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
         </label>
       </div>
       <button type="submit" disabled={busy} className="btn-primary btn-sm pressable mt-3">
-        {busy ? 'Approving…' : 'Approve'}
+        Approve…
       </button>
       {err && <p role="alert" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
     </form>

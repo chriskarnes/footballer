@@ -36,3 +36,15 @@ export async function approveRequest(id: string, slug: string, name: string): Pr
   updateTag(academyTag(r.slug));
   return { ok: true, slug: r.slug, code: r.code };
 }
+
+/** New, contacted or declined: the admin's own note of where a request stands. */
+export async function setRequestStatus(id: string, status: 'new' | 'contacted' | 'declined'): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!['new', 'contacted', 'declined'].includes(status)) return { ok: false, error: 'Unknown status.' };
+  const db = await serverClient();
+  const { data, error } = await db.from('academy_requests').update({ status }).eq('id', id).in('status', ['new', 'contacted', 'declined']).select('id');
+  if (error) return { ok: false, error: 'Couldn’t change that. Try again.' };
+  if (!data?.length) return { ok: false, error: 'Only platform admins can change requests, and not once one is approved.' };
+  revalidatePath('/admin/requests');
+  revalidatePath('/admin');
+  return { ok: true };
+}

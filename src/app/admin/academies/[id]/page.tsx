@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { adminViewer, day, loadAcademy, n, sourceLabel } from '@/lib/admin-data';
+import { adminViewer, aiLine, day, loadAcademy, n, sourceLabel } from '@/lib/admin-data';
+import { aiMonthlyLimit } from '@/lib/ai';
 import { ago } from '@/lib/notes';
 import { headers } from 'next/headers';
 import { academyOrigin } from '@/lib/tenant';
@@ -42,7 +43,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
         <Stat label="Programs" value={n(x.programs.length)} sub={`${n(x.groups.length)} ${x.groups.length === 1 ? 'group' : 'groups'} · ${n(x.drills)} own ${x.drills === 1 ? 'drill' : 'drills'}`} />
       </div>
       <p className="mt-3 text-body-sm text-on-surface-variant">
-        {n(x.notes_30d)} notes sent in 30 days · AI week builds: {n(x.ai_30d.calls)}{x.ai_30d.failed ? ` (${n(x.ai_30d.failed)} failed)` : ''}, {n(x.ai_30d.tokens)} tokens in 30 days
+        Sessions count what players did for this academy and on their own (library, Speed, free sessions), not for another academy. {n(x.notes_30d)} notes sent in 30 days · {aiLine(x.ai_30d)} in 30 days{x.ai_30d.month !== undefined && ` · ${n(x.ai_30d.month)} of ${n(aiMonthlyLimit())} this month`}
       </p>
 
       {!!x.waiting.length && (

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { adminViewer, day, loadUser, n, sourceLabel } from '@/lib/admin-data';
+import { adminViewer, day, forWhom, loadUser, n, sourceLabel } from '@/lib/admin-data';
 import { ago } from '@/lib/notes';
 import { BackLink } from '@/components/BackLink';
 import { AGE_LABEL } from '@/lib/positions';
@@ -77,7 +77,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
               <tr key={w.id} className="hover:bg-surface-container-low">
                 <Td strong>{w.title}{w.feel && <span className="block text-body-sm font-normal text-on-surface-variant">felt {w.feel}</span>}</Td>
                 <Td>{sourceLabel(w.source)}</Td>
-                <Td className="max-w-[12rem] truncate">{w.academy !== undefined ? (w.academy ?? 'Own') : w.status === 'completed' ? 'Done' : w.status === 'in_progress' ? 'Started' : 'Planned'}</Td>
+                <Td className="max-w-[12rem] truncate">{w.academy !== undefined ? forWhom(w.academy, w.source) : w.status === 'completed' ? 'Done' : w.status === 'in_progress' ? 'Started' : 'Planned'}</Td>
                 <Td right>{w.minutes != null ? Math.round(w.minutes) : '—'}</Td>
                 <Td right>{w.touches != null ? n(w.touches) : '—'}</Td>
                 <Td className="whitespace-nowrap">{ago(w.at)}</Td>

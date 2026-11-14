@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { adminViewer, loadOverview, n, sourceLabel, type Overview } from '@/lib/admin-data';
+import { adminViewer, aiLine, forWhom, loadOverview, n, sourceLabel, type Overview } from '@/lib/admin-data';
 import { ago } from '@/lib/notes';
 import { AdminGate, Failed, RoleTag, Section, Stat, Table, Td, Th } from '@/components/admin/ui';
 
@@ -49,7 +49,7 @@ function Body({ o }: { o: Overview }) {
         </div>
         <p className="mt-2 text-body-sm text-on-surface-variant">
           Weeks run Monday to Sunday (UTC); the last bar is this week so far.
-          AI week builds in the last 30 days: {n(o.ai_30d.calls)}{o.ai_30d.failed ? ` (${n(o.ai_30d.failed)} failed)` : ''}, {n(o.ai_30d.tokens)} tokens.
+          In the last 30 days: {aiLine(o.ai_30d)}.
         </p>
       </Section>
 
@@ -61,7 +61,7 @@ function Body({ o }: { o: Overview }) {
                 <tr key={w.id} className="hover:bg-surface-container-low">
                   <Td strong><Link href={`/admin/users/${w.user_id}`} className="hover:underline">{w.name || w.email}</Link></Td>
                   <Td><span className="text-on-surface">{w.title}</span><span className="block text-body-sm">{sourceLabel(w.source)}{w.feel ? ` · felt ${w.feel}` : ''}</span></Td>
-                  <Td className="max-w-[12rem] truncate">{(w.academy !== undefined ? w.academy : w.academies) ?? 'Own'}</Td>
+                  <Td className="max-w-[12rem] truncate">{w.academy !== undefined ? forWhom(w.academy, w.source) : (w.academies ?? 'Own')}</Td>
                   <Td right>{w.minutes != null ? Math.round(w.minutes) : '—'}</Td>
                   <Td className="whitespace-nowrap">{ago(w.at)}</Td>
                 </tr>
