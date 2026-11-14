@@ -59,7 +59,9 @@ export default async function SessionPage({
                        note={rounds > 1 ? `Do the list ${rounds} times.` : null}
                        workoutId={again ? undefined : w.id}
                        sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
-                       back={again ? { href: '/me', label: 'Your training' } : { href: '/me#saved', label: 'Saved for later' }} />;
+                       back={again ? { href: '/me', label: 'Your training' } : { href: '/me#saved', label: 'Saved for later' }}
+                       // Once finished it's in Your training, not Saved for later.
+                       doneHref={again ? undefined : '/me'} />;
       }
     } catch { /* fall through to library lookup */ }
   }
@@ -100,11 +102,19 @@ export default async function SessionPage({
 async function fromHistory(id: string): Promise<string | null> {
   try {
     const db = await serverClient();
-    const { data: w } = await db.from('workouts').select('source, source_ref').eq('id', id).maybeSingle();
+    const { data: w } = await db.from('workouts').select('source, source_ref, exercise_ids').eq('id', id).maybeSingle();
     const ref = w?.source_ref as string | null | undefined;
     if (!w || !ref) return null;
     if (w.source === 'speed') return `/speed/session/${ref}?from=history`;
-    if (w.source === 'addon') return `/train/addon/${ref}?from=history`;
+    if (w.source === 'addon') {
+      // The trainer may have taken the "just for you" back since: the drill
+      // itself is still theirs to do again.
+      const { data: x } = await db.from('addons').select('id').eq('id', ref).maybeSingle();
+      if (x) return `/train/addon/${ref}?from=history`;
+      const drill = (w.exercise_ids as string[] | null)?.[0];
+      const { data: d } = drill ? await db.from('drills').select('id').eq('id', drill).maybeSingle() : { data: null };
+      return d ? `/train/drill/${drill}?from=history` : null;
+    }
     if (w.source !== 'academy') return null;
     for (const [table, kind] of [['academy_sessions', 'session'], ['player_week_sessions', 'custom'], ['drills', 'drill']] as const) {
       const { data } = await db.from(table).select('id').eq('id', ref).maybeSingle();

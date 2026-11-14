@@ -56,7 +56,8 @@ export const readMyWeek = cache(async (): Promise<MyWeek | null> => {
   const left = Math.max(0, allowed - items.filter((i) => i.extra).length);
   // The rules: today's set session first, rest on a game day, within the trainer's number.
   // Named by the day it's on: a missed Monday isn't "today's".
-  const blocker = items.find((i) => !i.extra && !i.done && i.weekday <= weekday);
+  // "Just for you" drills aren't due (setItems), so they don't hold up an extra.
+  const blocker = items.find((i) => !i.extra && i.kind !== 'addon' && !i.done && i.weekday <= weekday);
   const DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const why = !c.drills.length ? 'Your trainer hasn’t added drills yet.'
     : schedule?.games.includes(weekday) ? 'Game day. Rest up.'

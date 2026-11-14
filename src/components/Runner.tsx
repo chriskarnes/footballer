@@ -136,24 +136,28 @@ export function Runner({
   // Ticks outlive a refresh, the phone dropping the app in a bag, or a trip
   // to another tab and back: kept on the phone until Finish, for half a day.
   const tickKey = `forge.ticks:${workoutId ?? sessionRef ?? title}:${drills.map((d) => d.id).join(',')}`;
+  // Done this week already: it opens as done, not half-ticked. A Speed
+  // session done last week (same id, next week of the block) still restores.
+  const rerunRef = useRef(false);
+  const doneBefore = completedDay !== null || !!(completedAt?.length && firstThisWeek(completedAt) !== null);
   useEffect(() => {
-    // Done this week already: it opens as done, not half-ticked. A Speed
-    // session done last week (same id, next week of the block) still restores.
-    if (completedDay !== null || (completedAt?.length && firstThisWeek(completedAt) !== null)) return;
     try {
       const raw = localStorage.getItem(tickKey);
       if (!raw) return;
-      const { at, ids } = JSON.parse(raw) as { at: number; ids: string[] };
+      const { at, ids, again: rerun } = JSON.parse(raw) as { at: number; ids: string[]; again?: boolean };
       if (Date.now() - at > 12 * 3600_000) { localStorage.removeItem(tickKey); return; }
+      // Done before, and these ticks are from that run: it opens as done.
+      // Ticks from "Do it again" open the second run where it was.
+      if (doneBefore && !rerun) return;
       const keep = ids.filter((id) => drills.some((d) => d.id === id));
-      if (keep.length) setDone(new Set(keep));
+      if (keep.length) { if (doneBefore) { rerunRef.current = true; setDoneDay(null); } setDone(new Set(keep)); }
     } catch { /* nothing kept */ }
     // Once, on arrival.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tickKey]);
   const keepTicks = (next: Set<string>) => {
     try {
-      if (next.size) localStorage.setItem(tickKey, JSON.stringify({ at: Date.now(), ids: [...next] }));
+      if (next.size) localStorage.setItem(tickKey, JSON.stringify({ at: Date.now(), ids: [...next], again: doneBefore }));
       else localStorage.removeItem(tickKey);
     } catch { /* storage blocked: they live in memory only */ }
   };
@@ -162,7 +166,8 @@ export function Runner({
   useEffect(() => {
     if (!doneKey) return;
     const day = firstThisWeek(doneKey.split(','));
-    if (day !== null) { setDoneDay(day); setHowOpen(null); }
+    // A second run restored from its ticks stays running.
+    if (day !== null && !rerunRef.current) { setDoneDay(day); setHowOpen(null); }
     setChecked(true);
   }, [doneKey]);
 
@@ -236,8 +241,12 @@ export function Runner({
       // weren't. A signed-out finish (or one whose sign-in has lapsed) is kept
       // in this browser until sign-in.
       if (res.status === 401) {
+        // Whose it was: the lapsed sign-in is still on the phone. Without it,
+        // the next account to sign in (a sibling) would get it.
+        let uid: string | null = null;
+        try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
         const q = patched ? pendingFinish : pendingWorkout;
-        queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body), body };
+        queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
         setSave('signin');
       }
       else {
@@ -267,7 +276,16 @@ export function Runner({
   const queued = useRef<{ q: typeof pendingWorkout; id: string; body: Record<string, unknown> } | null>(null);
   useEffect(() => {
     if (save !== 'queued') return;
-    const sent = () => { if (queued.current && !queued.current.q.has(queued.current.id)) setSave('saved'); };
+    const sent = () => {
+      const w = queued.current;
+      if (!w || w.q.has(w.id)) return;
+      const r = w.q.result(w.id);
+      // Turned down by the server: not "saved", whatever the queue did with it.
+      if (r && !r.ok) { setSave('error'); return; }
+      setSave('saved');
+      // A feel picked once it had gone goes straight to the saved row.
+      if (r?.id) { setSavedId(r.id); queued.current = null; }
+    };
     window.addEventListener(PENDING_SENT, sent);
     return () => window.removeEventListener(PENDING_SENT, sent);
   }, [save]);

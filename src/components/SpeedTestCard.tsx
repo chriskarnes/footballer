@@ -239,8 +239,9 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
     const values: Record<string, number> = {};
     for (const t of TESTS) { const v = num(vals[t.id] ?? ''); if (v !== undefined) values[t.id] = v; }
     const p = PHASES.find((x) => x.id === phase)!;
-    // A cleared date field (iOS has Clear) would save a day with no date.
-    onDone({ date: /^\d{4}-\d\d-\d\d$/.test(date) ? date : today(), label: `${p.name} · block ${block}`, values, height: num(height), note: note.trim() || undefined });
+    // A cleared date field (iOS has Clear) would save a day with no date, and
+    // one typed in the future would tick a test week that hasn't come.
+    onDone({ date: /^\d{4}-\d\d-\d\d$/.test(date) && date <= today() ? date : today(), label: `${p.name} · block ${block}`, values, height: num(height), note: note.trim() || undefined });
   }
 
   // The app's own .text-field, as the profile and sign-in use: 16px so iOS
@@ -260,7 +261,7 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
       <div className="mt-6 grid grid-cols-2 gap-2.5">
         <label className="text-field">
           <span>Date</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} required />
+          <input type="date" value={date} max={today()} onChange={(e) => setDate(e.target.value)} className={field} required />
         </label>
         {taken.includes(date) && (
           <p className="col-span-2 -mt-1 text-body-sm text-on-surface-variant">

@@ -6,7 +6,10 @@
  * Takes a day (2026-11-13), as stored for start dates and test days, or a
  * timestamp. A day is read at noon UTC so no time zone moves it.
  */
-export function shortDate(iso: string): string {
-  const d = /^\d{4}-\d\d-\d\d$/.test(iso) ? new Date(`${iso}T12:00:00Z`) : new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+export function shortDate(iso: string, timeZone = 'UTC'): string {
+  const day = /^\d{4}-\d\d-\d\d$/.test(iso);
+  const d = day ? new Date(`${iso}T12:00:00Z`) : new Date(iso);
+  // A timestamp is the day it was where the player is (`timeZone`): a week
+  // saved at 8pm in California isn't "tomorrow".
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: day ? 'UTC' : timeZone });
 }

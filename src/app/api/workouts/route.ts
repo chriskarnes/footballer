@@ -8,6 +8,11 @@ const FEELS = ['easy', 'right', 'hard'];
 const playedAt = (v: unknown) =>
   typeof v === 'string' && !Number.isNaN(Date.parse(v)) && Date.parse(v) <= Date.now() + 60_000 ? v : new Date().toISOString();
 
+/** Minutes and touches within reason (0027 checks the same): anything else is dropped. */
+const amount = (v: unknown, max: number) =>
+  typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(max, v)) : null;
+const MIN = 600, TOUCHES = 50000;
+
 /** Save a built session to history. This is what makes "order it again" possible. */
 export async function POST(req: Request) {
   const db = await serverClient();
@@ -22,16 +27,16 @@ export async function POST(req: Request) {
       source_ref: body.source_ref ?? null,
       spec: body.spec ?? null,
       exercise_ids: body.exercise_ids ?? [],
-      planned_minutes: body.planned_minutes ?? null,
-      planned_touches: body.planned_touches ?? null,
+      planned_minutes: amount(body.planned_minutes, MIN),
+      planned_touches: amount(body.planned_touches, TOUCHES),
       status: body.status ?? 'planned',
       // A session finished in the runner arrives already completed, with what
       // was actually done. completed_at comes from the client because a session
       // finished signed out is sent later, after sign-in — the time it was
       // sent is not the time it was played.
       completed_at: body.status === 'completed' ? playedAt(body.completed_at) : null,
-      actual_minutes: body.actual_minutes ?? null,
-      actual_touches: body.actual_touches ?? null,
+      actual_minutes: amount(body.actual_minutes, MIN),
+      actual_touches: amount(body.actual_touches, TOUCHES),
       // Picked on the finish screen while it was waiting for a signal.
       ...(FEELS.includes(body.feel) ? { feel: body.feel } : {}),
   };
@@ -101,8 +106,8 @@ export async function PATCH(req: Request) {
     .update({
       status: 'completed',
       completed_at: at,
-      actual_minutes: actual_minutes ?? null,
-      actual_touches: actual_touches ?? null,
+      actual_minutes: amount(actual_minutes, MIN),
+      actual_touches: amount(actual_touches, TOUCHES),
       ...(FEELS.includes(body.feel) ? { feel: body.feel } : {}),
     })
     .eq('id', id).eq('user_id', user.id).select('id');

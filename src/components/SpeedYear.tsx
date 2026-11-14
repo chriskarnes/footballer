@@ -48,7 +48,8 @@ function thisWeek(pos: Running, now: Date, completions: Completion[], testDates:
   // Test day is done once the card has numbers from this week (its dates
   // are the player's own calendar days).
   const monday = localDay(mondayOf(now));
-  const tested = testDates.some((d) => d >= monday);
+  const sunday = localDay(new Date(mondayOf(now).getTime() + 6 * 86400000));
+  const tested = testDates.some((d) => d >= monday && d <= sunday);
   const doneRefs = new Set(completions
     .filter((c) => c.source_ref && c.completed_at && new Date(c.completed_at).getTime() >= since)
     .map((c) => c.source_ref!));
@@ -221,7 +222,7 @@ export function SpeedWeek() {
                     {d.type === 'test' ? 'Test day' : d.session.name}
                   </span>
                   <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
-                    {day} · {d.type === 'test' ? 'Five tests · about 45 min' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
+                    {day} · {d.type === 'test' ? 'Six tests · about 45 min' : `${KIND_LABELS[d.session.kind]} · ${minutes(d)} min`}
                     {missed ? ' · Missed' : ''}
                   </span>
                 </span>

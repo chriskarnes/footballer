@@ -22,7 +22,7 @@ export type SavedPlan = { id: string; name: string; active: boolean; created_at:
  * week runs your Plan tab and your Train card is worth being sure of, and the
  * week that stops being active doesn't go anywhere.
  */
-export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
+export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedPlan[]; /** The academy's, for "Saved Nov 13". */ timeZone?: string }) {
   const router = useRouter();
   const [plans, setPlans] = useState(initial);
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
                 <Link href={p.active ? '/plan' : `/plan?plan=${p.id}`} className="min-w-0 flex-1">
                   <div className="h-card truncate">{p.name}</div>
                   <div className="mt-1 text-body-sm font-medium text-on-surface-variant">
-                    {p.active ? 'Active' : `Saved ${savedOn(p.created_at)}`}
+                    {p.active ? 'Active' : `Saved ${shortDate(p.created_at, timeZone)}`}
                   </div>
                 </Link>
 
@@ -163,7 +163,6 @@ export function SavedPlans({ plans: initial }: { plans: SavedPlan[] }) {
 }
 
 /** "Sep 3": see lib/dates. */
-const savedOn = shortDate;
 
 /** The Plan tab's calendar, with a tick in it for the active week. */
 function CalendarIcon({ checked }: { checked: boolean }) {

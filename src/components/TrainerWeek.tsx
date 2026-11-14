@@ -42,7 +42,10 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
   // The set sessions, as the trainer's pages count them: not extras.
   const set = setItems(items);
   const done = set.filter((i) => i.done).length;
-  const next = items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
+  // A set session first (a missed one is "Missed Monday"); a "Just for you"
+  // drill or an extra isn't due, so it's only ever next, never missed.
+  const next = set.find((i) => !i.done && i.weekday >= today) ?? set.find((i) => !i.done)
+    ?? items.find((i) => !i.done && i.weekday >= today) ?? null;
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);
   const weekDone = !next && items.length > 0;
   const gameDay = !!schedule?.games.includes(today);
@@ -132,7 +135,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
                     <span className="block text-title font-bold leading-snug text-on-surface">{it.title}</span>
                     {/* How long, so a player can pick one that fits the time they have. */}
                     <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
-                      {it.minutes} min{!it.done && it.weekday < today ? ' · Missed' : ''}
+                      {it.minutes} min{!it.done && it.weekday < today && set.includes(it) ? ' · Missed' : ''}
                     </span>
                   </span>
                 </Link>

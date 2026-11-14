@@ -77,7 +77,7 @@ export function PlanWeek({
                     Ground" cut to "Weeks 1-4 (Day 3) First…" tells you nothing. */}
                 <span className="flex items-start gap-1.5">
                   <span className="min-w-0 text-body-lg font-bold leading-snug text-on-surface">
-                    {d.session ? splitSessionName(d.session.name).title : 'Nothing fits this day'}
+                    {d.session ? splitSessionName(d.session.name).title : onSwap ? 'Nothing fits this day' : 'This session is gone'}
                   </span>
                   {!!d.session && (
                     <svg viewBox="0 0 24 24" aria-hidden="true"
@@ -93,7 +93,9 @@ export function PlanWeek({
                   {d.session
                     ? `${Math.round(d.session.total_minutes)} min · ${drills.length} drill${
                         drills.length === 1 ? '' : 's'}${d.reason ? ` · ${d.reason}` : ''}`
-                    : 'Try adding kit, or turning off Home only'}
+                    // Building: the settings are on this screen. A saved week:
+                    // the session left the library since, and a rebuild replaces it.
+                    : onSwap ? 'Try adding kit, or turning off Home only' : 'It’s not in the library any more. Rebuild your week to replace it.'}
                 </span>
               </button>
 

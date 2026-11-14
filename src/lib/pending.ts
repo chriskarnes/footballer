@@ -61,6 +61,12 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
   const peek = (uid: string | null = null) => read().some((e) => e.uid === null || e.uid === uid);
   const clear = () => write([]);
 
+  // What happened to each entry sent from this page: saved (with the new
+  // row's id) or turned down. A finish screen still open reads it, to send a
+  // feel picked after, or to say it wasn't saved rather than that it was.
+  const results = new Map<string, { ok: boolean; id?: string }>();
+  const result = (id: string) => results.get(id);
+
   async function send(uid: string): Promise<boolean> {
     let sent = false;
     for (const e of read()) {
@@ -72,6 +78,8 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
         });
         // A 4xx other than sign-in won't get better by sending again.
         if (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 401)) {
+          const j = res.ok ? await res.json().catch(() => null) as { id?: string } | null : null;
+          results.set(e.id, { ok: res.ok, id: j?.id ?? (typeof e.payload.id === 'string' ? e.payload.id : undefined) });
           write(read().filter((x) => x.id !== e.id));
           sent ||= res.ok;
         }
@@ -94,7 +102,7 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
     return inflight;
   }
 
-  return { stash, update, has, peek, clear, flush };
+  return { stash, update, has, peek, clear, flush, result };
 }
 
 /** A session finished in the runner. */

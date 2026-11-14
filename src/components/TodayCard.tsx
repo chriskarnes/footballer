@@ -35,11 +35,12 @@ export function TodayCard({
       <div className="min-w-0 flex-1">
         <p className="text-body font-bold text-on-surface-variant">Today</p>
         <div className="h-card mt-1.5">
-          {session ? session.name : todayDone ? 'Done for today' : 'Rest day'}
+          {session ? session.name : todayDone ? 'Done for today' : todo?.session_id ? 'Today’s session is gone' : 'Rest day'}
         </div>
         <div className="mt-1 text-body-sm font-medium text-on-surface-variant">
           {session
             ? `${Math.round(session.total_minutes)} min`
+            : todo?.session_id ? 'It left the library. Rebuild your week on Plan.'
             : next?.s ? `Next: ${next.day}` : `${state.doneCount} of ${state.trainingCount} done this week`}
         </div>
       </div>

@@ -40,6 +40,23 @@ const dayRows = (planId: string, days: Day[]) => days.map((d) => ({
   plan_id: planId, weekday: d.weekday, slot: d.slot ?? 0, kind: d.kind, session_id: d.session_id ?? null,
 }));
 
+/**
+ * Makes one of the player's plans the active one, and every other inactive,
+ * in one step (activate_plan, 0027): never none active, never two. true when
+ * done, null when there's no such plan, else what went wrong.
+ */
+async function activate(db: Awaited<ReturnType<typeof signedIn>>['db'], userId: string, id: string): Promise<true | null | string> {
+  const { data, error } = await db.rpc('activate_plan', { p_plan: id });
+  if (!error) return data ? true : null;
+  if (error.code !== 'PGRST202') return plain(error);
+  // Before 0027: the new one first, then the others off.
+  const { data: on, error: e1 } = await db.from('plans').update({ active: true }).eq('id', id).eq('user_id', userId).select('id');
+  if (e1) return plain(e1);
+  if (!on?.length) return null;
+  await db.from('plans').update({ active: false }).eq('user_id', userId).eq('active', true).neq('id', id);
+  return true;
+}
+
 export async function POST(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
@@ -48,12 +65,10 @@ export async function POST(req: Request) {
   const bad = invalid(intake, days);
   if (bad) return bad;
 
-  // Making a new week active makes the old one inactive. It's kept — an
-  // inactive plan, not a retired one.
-  if (follow) await db.from('plans').update({ active: false }).eq('user_id', user.id).eq('active', true);
-
+  // Written inactive, days and all, and only then made the active one: a
+  // failure part-way leaves the old week active, not none.
   const { data: plan, error } = await db.from('plans')
-    .insert({ user_id: user.id, name: (name || 'My weekly schedule').slice(0, 60), active: !!follow, intake })
+    .insert({ user_id: user.id, name: (name || 'My weekly schedule').slice(0, 60), active: false, intake })
     .select('id').single();
   if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
 
@@ -63,6 +78,12 @@ export async function POST(req: Request) {
   if (dayError) {
     await db.from('plans').delete().eq('id', plan.id);
     return NextResponse.json({ error: dayError.message }, { status: 400 });
+  }
+  // Making a new week active makes the old one inactive. It's kept — an
+  // inactive plan, not a retired one.
+  if (follow) {
+    const made = await activate(db, user.id, plan.id);
+    if (made !== true) return NextResponse.json({ error: 'Saved, but couldn’t make it your active week. Try Follow this week.' }, { status: 400 });
   }
   return NextResponse.json({ id: plan.id });
 }
@@ -108,9 +129,9 @@ export async function PATCH(req: Request) {
   }
 
   if (follow === true) {
-    await db.from('plans').update({ active: false }).eq('user_id', user.id).eq('active', true);
-    const { error } = await db.from('plans').update({ active: true }).eq('id', id).eq('user_id', user.id);
-    if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
+    const made = await activate(db, user.id, id);
+    if (made === null) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    if (made !== true) return NextResponse.json({ error: made }, { status: 400 });
   }
   return NextResponse.json({ ok: true });
 }
