@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { Exercise } from '@/lib/types';
 import { haptic } from '@/lib/haptics';
@@ -61,6 +62,15 @@ function glide(el: () => Element | null | undefined, block: ScrollLogicalPositio
   });
 }
 
+/** A fresh id for one finish. randomUUID needs a secure page; a local address over plain http hasn't one. */
+function newId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const h = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0'));
+  h[6] = '4' + h[6][1]; h[8] = ((parseInt(h[8], 16) & 0x3f) | 0x80).toString(16);
+  const x = h.join('');
+  return `${x.slice(0, 8)}-${x.slice(8, 12)}-${x.slice(12, 16)}-${x.slice(16, 20)}-${x.slice(20)}`;
+}
+
 export function Runner({
   title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
   completedDay = null, completedAt, trainer, spec,
@@ -100,6 +110,7 @@ export function Runner({
   const [done, setDone] = useState<Set<string>>(new Set());
   const [phase, setPhase] = useState<Phase>('running');
   const [save, setSave] = useState<Save>('saving');
+  const router = useRouter();
   const [played, setPlayed] = useState(0);
   // A trainer's session asks how it felt: that's what steps the next week up.
   const [savedId, setSavedId] = useState<string | null>(workoutId ?? null);
@@ -202,32 +213,41 @@ export function Runner({
     setSave('saving');
     const completed_at = new Date().toISOString();
     const doneIds = drills.filter((d) => done.has(d.id)).map((d) => d.id);
-    const body = workoutId
-      ? { id: workoutId, doneIds, actual_minutes: minutes, actual_touches: doneTouches, completed_at }
-      : { title, source: source ?? (sessionRef ? 'library' : 'coach'), source_ref: sessionRef,
+    // The whole session as a new one: a fresh finish, or a saved-for-later one
+    // that was removed in the meantime. client_id makes a resend (the answer
+    // lost to the signal) count once.
+    const fresh = { title, source: source ?? (sessionRef ? 'library' : 'coach'), source_ref: sessionRef,
           exercise_ids: drills.map((d) => d.id), done_ids: doneIds,
           planned_minutes: Math.round(total / 60), planned_touches: totalTouches,
           ...(spec ? { spec } : {}),
           actual_minutes: minutes, actual_touches: doneTouches,
-          status: 'completed', completed_at };
+          status: 'completed', completed_at, client_id: newId() };
+    let body: Record<string, unknown> = workoutId
+      ? { id: workoutId, doneIds, actual_minutes: minutes, actual_touches: doneTouches, completed_at }
+      : fresh;
+    const post = (b: Record<string, unknown>, method: 'POST' | 'PATCH') =>
+      fetch('/api/workouts', { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
+    let patched = !!workoutId;
     try {
-      const res = await fetch('/api/workouts', {
-        method: workoutId ? 'PATCH' : 'POST',
-        headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
-      });
+      let res = await post(body, patched ? 'PATCH' : 'POST');
+      if (res.status === 404 && patched) { body = fresh; patched = false; res = await post(body, 'POST'); }
       // This used to say "Saved to your history" whatever came back, and Train
       // needs no account — so most first sessions were reported saved and
-      // weren't. A signed-out finish is kept in this browser until sign-in.
-      if (res.status === 401 && !workoutId) {
-        queued.current = { q: pendingWorkout, id: pendingWorkout.stash(feelRef.current ? { ...body, feel: feelRef.current } : body), body };
+      // weren't. A signed-out finish (or one whose sign-in has lapsed) is kept
+      // in this browser until sign-in.
+      if (res.status === 401) {
+        const q = patched ? pendingFinish : pendingWorkout;
+        queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body), body };
         setSave('signin');
       }
       else {
         setSave(res.ok ? 'saved' : 'error');
-        if (res.ok && !workoutId) {
+        if (res.ok && !patched) {
           const j = await res.json().catch(() => null);
           if (j?.id) { setSavedId(j.id); if (feelRef.current) sendFeel(j.id, feelRef.current); }
         }
+        // Train and Me, behind this screen, show it done when you go back.
+        if (res.ok) router.refresh();
       }
     } catch {
       // No signal (a field, a basement gym): keep it on the phone, marked as
@@ -235,8 +255,8 @@ export function Runner({
       // waits for a sign-in instead, and says so.
       let uid: string | null = null;
       try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
-      if (!uid && workoutId) { setSave('error'); return; }
-      const q = workoutId ? pendingFinish : pendingWorkout;
+      if (!uid && patched) { setSave('error'); return; }
+      const q = patched ? pendingFinish : pendingWorkout;
       queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
       setSave(uid ? 'queued' : 'signin');
     }
@@ -335,8 +355,12 @@ export function Runner({
           </div>
         )}
 
-        <Link href={doneHref ?? back?.href ?? '/'} className="btn-primary btn-big pressable mt-7 w-full">
-          {!doneHref && back?.label ? `Back to ${back.label}` : 'Done'}
+        {/* Held while it saves: leaving straight away showed Train without it,
+            and the player did the session again. */}
+        <Link href={doneHref ?? back?.href ?? '/'} aria-disabled={save === 'saving' || undefined}
+              onClick={(e) => { if (save === 'saving') e.preventDefault(); }}
+              className={`btn-primary btn-big pressable mt-7 w-full ${save === 'saving' ? 'opacity-60' : ''}`}>
+          {save === 'saving' ? 'Saving…' : !doneHref && back?.label ? `Back to ${back.label}` : 'Done'}
         </Link>
       </div>
     );

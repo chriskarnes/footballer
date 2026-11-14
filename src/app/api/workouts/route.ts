@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
 import { plain } from '@/lib/plain-error';
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FEELS = ['easy', 'right', 'hard'];
 /** A finish time from the phone: kept when it's a real time, not in the future. */
 const playedAt = (v: unknown) =>
@@ -40,8 +41,24 @@ export async function POST(req: Request) {
   // needs them to tell a session stopped early from one done in full.
   const ticked = (body.source === 'academy' || body.source === 'addon' || body.source === 'speed') && Array.isArray(body.done_ids)
     ? body.done_ids.filter((x: unknown) => typeof x === 'string').slice(0, 40) : null;
-  let { data, error } = await db.from('workouts').insert(ticked ? { ...row, done_ids: ticked } : row).select('id').single();
-  if (error && ticked && /done_ids/.test(error.message)) ({ data, error } = await db.from('workouts').insert(row).select('id').single());
+  // The phone's own id for this finish (0025): a save that reached us but
+  // whose answer was lost to the signal is sent again, and must not count twice.
+  const clientId = typeof body.client_id === 'string' && UUID.test(body.client_id) ? body.client_id : null;
+  if (clientId) row.client_id = clientId;
+  const insert = (r: Record<string, unknown>) => db.from('workouts').insert(r).select('id').single();
+  let { data, error } = await insert(ticked ? { ...row, done_ids: ticked } : row);
+  if (error && ticked && /done_ids/.test(error.message)) ({ data, error } = await insert(row));
+  // Before 0025: no client_id column, so save it without.
+  if (error && clientId && /client_id/.test(error.message)) {
+    delete row.client_id;
+    ({ data, error } = await insert(ticked ? { ...row, done_ids: ticked } : row));
+    if (error && ticked && /done_ids/.test(error.message)) ({ data, error } = await insert(row));
+  }
+  // Already saved, the first time it was sent: that one stands.
+  if (error && clientId && error.code === '23505') {
+    const { data: was } = await db.from('workouts').select('id').eq('user_id', user.id).eq('client_id', clientId).maybeSingle();
+    if (was) return NextResponse.json({ id: was.id, again: true });
+  }
 
   if (error || !data) return NextResponse.json({ error: error?.message ?? 'not saved' }, { status: 400 });
 
@@ -80,7 +97,7 @@ export async function PATCH(req: Request) {
   const { id, doneIds, actual_minutes, actual_touches } = body;
   // A finish sent later (no signal at the time) keeps the time it was played.
   const at = playedAt(body.completed_at);
-  const { error } = await db.from('workouts')
+  const { data: updated, error } = await db.from('workouts')
     .update({
       status: 'completed',
       completed_at: at,
@@ -88,8 +105,11 @@ export async function PATCH(req: Request) {
       actual_touches: actual_touches ?? null,
       ...(FEELS.includes(body.feel) ? { feel: body.feel } : {}),
     })
-    .eq('id', id).eq('user_id', user.id);
+    .eq('id', id).eq('user_id', user.id).select('id');
   if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
+  // Nothing matched: removed (on another phone, say) since it was started.
+  // Not "saved": the runner saves it as a new session instead.
+  if (!updated?.length) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
   if (Array.isArray(doneIds) && doneIds.length) {
     await db.from('workout_items')

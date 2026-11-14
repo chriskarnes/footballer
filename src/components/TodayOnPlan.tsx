@@ -25,7 +25,8 @@ export async function TodayOnPlan() {
 
     const since = new Date(Date.now() - 8 * 86400000).toISOString();
     const [{ data: days }, { data: done }, sessions] = await Promise.all([
-      db.from('plan_days').select('weekday,slot,kind,session_id').eq('plan_id', plan.id),
+      // In order, as Plan reads them: ticks go to the earliest matching day.
+      db.from('plan_days').select('weekday,slot,kind,session_id').eq('plan_id', plan.id).order('weekday').order('slot'),
       db.from('workouts').select('source_ref,completed_at')
         .eq('status', 'completed').eq('source', 'library').gte('completed_at', since),
       getSessions(),

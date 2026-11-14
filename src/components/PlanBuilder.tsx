@@ -171,6 +171,9 @@ function Builder({
     // week — once you sign in. It used to say it "won't be here
     // tomorrow", which was true and the end of it.
     if (!signedIn) {
+      // The latest week only: saving again replaces it, rather than making
+      // every version a plan at sign-in.
+      pendingPlan.clear();
       pendingPlan.stash({ intake: week.intake, days, name: defaultPlanName(week.intake) });
       setSave('signin');
       return;
