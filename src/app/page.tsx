@@ -15,7 +15,11 @@ import { readProfileMissing } from '@/lib/profile-check';
 import type { Exercise } from '@/lib/types';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
-export default async function TrainNowPage() {
+export default async function TrainNowPage({ searchParams }: { searchParams: Promise<{ error_code?: string }> }) {
+  // A sign-in link that failed (used, expired, or opened in another browser)
+  // comes back from Supabase to the site's front door with an error on it.
+  // Say so on Me, where they can send a new one, not a silent Train.
+  if ((await searchParams).error_code) redirect('/me?auth=error');
   // A player waiting on their trainer gets that, not the builder. Anyone
   // else (signed out, staff) is through this with no lookup.
   const state = await getPlayerState().catch(() => ({ kind: 'none' }) as const);

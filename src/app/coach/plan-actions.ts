@@ -66,15 +66,11 @@ export async function setMode(userId: string, mode: 'program' | 'custom'): Promi
     if (error) return { ok: false, error: /mode/.test(error.message) ? notReady(error, '0014') : missing(error.message) };
     if (mode === 'program') {
       const from = mondayOf(localDate(new Date(), v.academy.timeZone));
-      const rows = await v.db.from('player_week_sessions').select('id').eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
-      if (rows.error) return { ok: false, error: missing(rows.error.message) };
-      const ids = ((rows.data ?? []) as { id: string }[]).map((x) => x.id);
-      const finished = await doneOf(v.db, v.academy.id, userId, from, ids);
-      const gone = ids.filter((id) => !finished.has(id));
-      if (gone.length) {
-        const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).in('id', gone);
-        if (del.error) return { ok: false, error: missing(del.error.message) };
-      }
+      // All of them, done ones too: any built session left in a week takes
+      // the program's place that week (buildWeek). What they did stays in
+      // their history either way.
+      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
+      if (del.error) return { ok: false, error: missing(del.error.message) };
     }
     done(); return { ok: true };
   } catch (e) { return fail(e); }
