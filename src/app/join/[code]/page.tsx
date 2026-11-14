@@ -5,6 +5,7 @@ import { SignOut } from '@/components/SignOut';
 import { Brand } from '@/components/Brand';
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
 import { JoinFlow } from '@/components/JoinFlow';
+import { TrainerAsked } from '@/components/JoinButton';
 import { isWho } from '@/lib/who';
 import { getBranding } from '@/lib/branding-server';
 import { getViewer } from '@/lib/viewer';
@@ -49,6 +50,11 @@ export default async function JoinPage({ params, searchParams }: {
   }
 
   const already = v.role && (v.role !== 'player' || role === 'player');
+  // A trainer link asks the owner (0027): asked already, or turned down.
+  const { data: asked } = role === 'trainer' && v.user && v.academy && !already
+    ? await v.db.from('join_requests').select('role, declined_at').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle()
+    : { data: null };
+  const trainerAsked = (asked as { role?: string; declined_at?: string | null } | null)?.role === 'trainer' ? asked as { declined_at: string | null } : null;
   const brand = await getBranding();
   const shown = brand?.name ?? name;
   const dot = shown.indexOf('.');
@@ -83,6 +89,8 @@ export default async function JoinPage({ params, searchParams }: {
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>
           </div>
+        ) : v.user && trainerAsked ? (
+          <TrainerAsked email={v.user.email ?? ''} code={code} declined={!!trainerAsked.declined_at} />
         ) : (
           <JoinFlow code={code} role={role} email={v.user?.email ?? null} initial={isWho(q.as) ? q.as : null} />
         )}

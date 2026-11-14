@@ -25,9 +25,12 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
   const v = await getViewer().catch(() => null);
   if (v?.academy && (!v.user || !v.role)) {
     // Asked already: they're waiting on the trainer, not being told to ask.
-    const asked = v.user
-      ? !!(await v.db.from('join_requests').select('user_id').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle()).data
-      : false;
+    const req = v.user
+      ? (await v.db.from('join_requests').select('*').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle()).data as { declined_at?: string | null } | null
+      : null;
+    const asked = !!req && !req.declined_at;
+    // Turned down (0027): say so, rather than the first-time "Ask to join".
+    const declined = !!req?.declined_at;
     if (asked) return (
       <div className="animate-pop">
         <BrandBand>
@@ -43,16 +46,17 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
       <div className="animate-pop">
         <BrandBand>
           <BandTag>{title}</BandTag>
-          <BandTitle>{v.user ? 'Ask to join' : 'Sign in'}</BandTitle>
+          <BandTitle>{declined ? 'Not let in' : v.user ? 'Ask to join' : 'Sign in'}</BandTitle>
           <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
-            {v.user ? `Your sessions from ${v.academy.name} appear here once you’re in.`
+            {declined ? `${v.academy.name} didn’t let this account in. If that was a mistake, check with them and ask again.`
+              : v.user ? `Your sessions from ${v.academy.name} appear here once you’re in.`
                     : `Your sessions from ${v.academy.name} are here once you sign in.`}
           </p>
         </BrandBand>
         {!v.user && <div className="mt-5"><SignIn next={next} /></div>}
         <p className="mt-5 text-center text-body text-on-surface-variant">
           {v.user ? 'Got a link from your trainer? Open it. ' : 'New here? '}
-          <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">Ask to join</Link>
+          <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">{declined ? 'Ask again' : 'Ask to join'}</Link>
         </p>
       </div>
     );

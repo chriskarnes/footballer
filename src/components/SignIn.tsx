@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase/client';
 import { pendingPlan, pendingWorkout } from '@/lib/pending';
+import { safeNext } from '@/lib/safe-next';
 
 /**
  * Email in, magic link out. One card, both states: the form, then "check your
@@ -22,6 +23,13 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
   // Read after mount: localStorage doesn't exist on the server, and a line that
   // appears only after hydration is better than a hydration mismatch.
   const [waiting, setWaiting] = useState<string | null>(null);
+  // On the home-screen app the email's link opens in Safari, signs in there,
+  // and uses up the code with it: here it's the code or nothing.
+  const [installed, setInstalled] = useState(false);
+  useEffect(() => {
+    setInstalled(window.matchMedia('(display-mode: standalone)').matches
+      || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+  }, []);
   useEffect(() => {
     const session = !!pendingWorkout.peek(), week = !!pendingPlan.peek();
     setWaiting(session && week ? 'Your last session and your week are waiting. Sign in and they’re saved.'
@@ -29,8 +37,8 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
       : week ? 'Your week is waiting. Sign in and it’s saved as your active plan.' : null);
   }, []);
 
-  async function send() {
-    if (!email.trim()) return setErr('Enter your email first.');
+  async function send(): Promise<boolean> {
+    if (!email.trim()) { setErr('Enter your email first.'); return false; }
     setErr(''); setBusy(true);
     try {
       const db = browserClient();
@@ -44,14 +52,19 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
         setErr(error.status === 429 || /rate|seconds/i.test(error.message)
           ? 'A link was just sent. Wait a minute, then try again.'
           : 'Couldn’t send the link. Check the address and try again.');
-      } else setSent(true);
+        return false;
+      }
+      setSent(true);
+      return true;
     } catch (e) {
       console.error(e);
       setErr('Couldn’t send the link. Try again in a moment.');
+      return false;
     } finally {
       setBusy(false);
     }
   }
+  const [resent, setResent] = useState(false);
 
   // The code in the same email signs in right here. The link can't always:
   // it opens in the mail app's browser, or Safari, never in the installed
@@ -64,7 +77,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
       const { error } = await browserClient().auth.verifyOtp({ email: email.trim(), token, type: 'email' });
       if (error) { setErr('That code didn’t work. Check it, or send a new one.'); setBusy(false); return; }
       // A full load, so every page reads the new account from the start.
-      window.location.assign(next);
+      window.location.assign(safeNext(next, '/me'));
     } catch {
       setErr('Couldn’t reach us. Check your signal and try again.');
       setBusy(false);
@@ -77,7 +90,9 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
         <div className="h-card">Check your email</div>
         <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
           We sent a sign-in email to <b className="font-semibold text-on-surface">{email.trim()}</b>.
-          {' '}Type the code from it here, or open its link on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.
+          {installed
+            ? <>{' '}Type the 6-digit code from it here. <b className="font-semibold text-on-surface">Don&rsquo;t tap its link</b>: it opens in another browser and uses up the code.</>
+            : <>{' '}Type the code from it here, or open its link on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.</>}
         </p>
       </div>
       <label className="text-field mt-4">
@@ -90,10 +105,18 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
         {busy ? 'Signing in…' : 'Sign in'}
       </button>
       {err && <p id="signin-error" role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
-      <button type="button" onClick={() => { setSent(false); setErr(''); setCode(''); }}
-              className="mt-4 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
-        Use a different email
-      </button>
+      {resent && !err && <p role="status" className="mt-3 text-body-sm font-semibold text-on-surface">New code sent. Use the newest email.</p>}
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        {/* A wrong or old code: a new one to the same address, no retyping. */}
+        <button type="button" disabled={busy} onClick={() => { setCode(''); setResent(false); send().then(setResent); }}
+                className="min-h-11 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
+          Send a new code
+        </button>
+        <button type="button" onClick={() => { setSent(false); setErr(''); setCode(''); }}
+                className="min-h-11 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
+          Use a different email
+        </button>
+      </div>
     </form>
   );
 

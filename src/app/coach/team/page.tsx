@@ -9,6 +9,7 @@ import { loadDefaults } from '@/lib/academy-data';
 import { usage } from '@/lib/ai';
 import { readSetup } from '@/lib/setup';
 import { ListedSwitch } from '@/components/coach/Setup';
+import { RemoveTrainer } from '@/components/coach/RemovePlayer';
 
 export const metadata = { title: 'Academy', robots: { index: false } };
 
@@ -47,7 +48,10 @@ export default async function TeamPage() {
                 <span className="block truncate text-body font-semibold text-on-surface">{s.display_name || s.email}</span>
                 {s.display_name && <span className="mt-0.5 block truncate text-body-sm text-on-surface-variant">{s.email}</span>}
               </span>
-              <span className="shrink-0 text-body-sm font-semibold text-on-surface-variant">{s.role === 'owner' ? 'Owner' : 'Trainer'}</span>
+              <span className="flex shrink-0 items-center gap-2">
+                <span className="text-body-sm font-semibold text-on-surface-variant">{s.role === 'owner' ? 'Owner' : 'Trainer'}</span>
+                {owner && s.role === 'trainer' && <RemoveTrainer userId={s.user_id} name={s.display_name || s.email || 'this trainer'} />}
+              </span>
             </li>
           ))}
         </ul>

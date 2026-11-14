@@ -39,9 +39,10 @@ async function freshSession(req: NextRequest): Promise<Fresh[]> {
       },
     },
   });
-  // getUser renews an expired token (and checks it); a failure here is the
-  // page's to deal with, as before.
-  try { await db.auth.getUser(); } catch { /* offline, or auth down */ }
+  // getSession renews a token that has run out (or is about to), and is a
+  // local read otherwise: no trip to Supabase on every page, prefetch and
+  // action. It doesn't vouch for the token; the page's own getUser does.
+  try { await db.auth.getSession(); } catch { /* offline, or auth down */ }
   return out;
 }
 

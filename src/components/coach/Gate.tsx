@@ -2,6 +2,8 @@ import { SignIn } from '@/components/SignIn';
 import { getViewer } from '@/lib/viewer';
 import { SignOut } from '@/components/SignOut';
 import { rootHref } from '@/lib/root-link';
+import { headers } from 'next/headers';
+import { academyOrigin } from '@/lib/tenant';
 
 /**
  * The trainer area's front door. Returns the viewer when they're staff here,
@@ -10,6 +12,21 @@ import { rootHref } from '@/lib/root-link';
 export async function staffOnly(next: string) {
   const v = await getViewer();
   if (!v.academy) {
+    // Signed in: their own academies, by name. One not set up yet isn't
+    // listed in Find your academy, so that link alone left a new owner stuck.
+    const mine = v.user
+      ? ((await v.db.from('academy_members').select('role, academies(slug, name)').eq('user_id', v.user.id).in('role', ['owner', 'trainer'])).data ?? [])
+          .map((m) => (m as unknown as { academies: { slug: string; name: string } | null }).academies).filter((a): a is { slug: string; name: string } => !!a)
+      : [];
+    if (mine.length) {
+      const h = await headers();
+      const here = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('x-forwarded-host') ?? h.get('host')}`;
+      return { page: <Note title="Open your academy">The trainer area lives at your academy&rsquo;s own address.
+        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+          {mine.map((a) => <a key={a.slug} href={`${academyOrigin(a.slug, here)}${next}`} className="btn-primary pressable">Open {a.name}</a>)}
+        </div>
+        <p className="mt-4 text-body-sm">You&rsquo;ll sign in there once: each academy&rsquo;s address keeps its own sign-in.</p></Note> };
+    }
     return { page: <Note title="Open your academy">The trainer area lives at your academy&rsquo;s own address, like <b>yourname.train.futbol/coach</b>.
       <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
         <a href={await rootHref('/players')} className="btn-ghost pressable">Find your academy</a>

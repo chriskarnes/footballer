@@ -37,14 +37,17 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
     loadPlayers(db, academy, { content }),
     db.from('academy_invites').select('code').eq('academy_id', academy.id).eq('role', 'player').maybeSingle(),
     // Before 0006 runs the table isn't there; that's an error, read as none.
-    db.from('join_requests').select('user_id, name, message, created_at').eq('academy_id', academy.id)
+    db.from('join_requests').select('*').eq('academy_id', academy.id)
       .order('created_at', { ascending: true }),
     user ? db.from('profiles').select('display_name').eq('id', user.id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   // A trainer invited in has no name yet; the owner gives theirs in setup.
   const askName = !steps && !me?.display_name;
   all.sort(byAttention);
-  const waiting = ((asking ?? []) as Omit<JoinRequest, 'when'>[]).filter((r) => !all.some((p) => p.user_id === r.user_id));
+  // Declined ones are kept (0027) so the asker is told; they aren't asking.
+  // A trainer already here who asked through the trainer link still is.
+  const waiting = ((asking ?? []) as (Omit<JoinRequest, 'when'> & { declined_at?: string | null })[])
+    .filter((r) => !r.declined_at && (r.role === 'trainer' || !all.some((p) => p.user_id === r.user_id)));
   // A group narrows the list (and the headline) to its players.
   const groups = content.groups.filter((g) => !g.archived);
   const inGroup = groups.find((g) => g.id === group);
@@ -53,7 +56,8 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
     : all;
 
   const needs = players.filter((p) => p.progress.status !== 'good').length;
-  const trained = players.filter((p) => p.progress.done > 0).length;
+  // Trained at all this week (Speed, their own sessions too), as the minutes beside it count.
+  const trained = players.filter((p) => p.progress.done > 0 || p.progress.minutesThisWeek > 0).length;
   const sessions = players.reduce((a, p) => a + p.progress.done, 0);
   const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
@@ -73,7 +77,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   return (
     <NoteProvider players={notePlayers} groups={noteGroups}>
     <div className="animate-pop">
-      <ViewTabs tabs={PLAYER_VIEWS} on="/coach" />
+      <ViewTabs tabs={PLAYER_VIEWS} on="/coach" query={inGroup ? `group=${inGroup.id}` : undefined} />
       <PageHead title={headline}
                 action={<>
                   {!!players.length && (
@@ -110,7 +114,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
       {/* Anyone who has since joined by link isn't asking any more (0022 clears
           these; this covers a database that hasn't run it). */}
-      {!!waiting.length && <JoinRequests requests={waiting.map((r) => ({ ...r, when: ago(r.created_at, academy.timeZone) }))} />}
+      {!!waiting.length && <JoinRequests owner={role === 'owner'} requests={waiting.map((r) => ({ ...r, when: ago(r.created_at, academy.timeZone) }))} />}
 
       {!!groups.length && (
         <nav className="scroll-x -mx-5 mt-6 flex gap-2 px-5 lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Filter by group">

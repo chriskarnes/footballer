@@ -16,6 +16,10 @@ import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
 import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection';
 import { NoteBanner } from '@/components/NoteBanner';
 import { getViewer } from '@/lib/viewer';
+import { safeNext } from '@/lib/safe-next';
+import { SignOut } from '@/components/SignOut';
+import { rootHref } from '@/lib/root-link';
+import { getAcademy } from '@/lib/branding-server';
 import { avatarSrc } from '@/lib/avatar';
 import { libraryAllowed } from '@/lib/library-gate';
 import { speedAllowed } from '@/lib/speed-gate';
@@ -80,7 +84,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   const sp = await searchParams;
   // Back from a sign-in link that didn't work (see auth/callback).
   const linkFailed = sp.auth === 'error';
-  const next = sp.next && /^\/(?!\/)/.test(sp.next) && !sp.next.includes('\\') ? sp.next : '/me';
+  const next = safeNext(sp.next, '/me');
   let signedUpBy: string | null = null;
   let user = null as null | { id: string; email?: string };
   let workouts: WorkoutRaw[] = [];
@@ -93,6 +97,10 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   let plans: SavedPlan[] = [];
   let canBrand = false;
   let admin = false;
+  // On an academy's address (not the bare domain), and staff anywhere.
+  let onAcademy = false;
+  let timeZone = 'UTC';
+  let staffAnywhere = false;
   let role: string | null = null;
   // undefined: the calendar table doesn't exist yet (migration 0003), so no
   // section. null: it does, and this player hasn't turned it on.
@@ -125,6 +133,10 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         avatarAt = photoAt;
         canBrand = viewer.canBrand;
         admin = viewer.isAdmin;
+        onAcademy = !!viewer.academy;
+        timeZone = viewer.academy?.timeZone ?? 'UTC';
+        const { data: staffRows } = await db.from('academy_members').select('role').eq('user_id', user.id).in('role', ['owner', 'trainer']).limit(1);
+        staffAnywhere = !!staffRows?.length;
         role = viewer.role;
         if (!cal.error) calendar = cal.data ?? null;
         workouts = rows;
@@ -135,22 +147,34 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   }
 
   if (!user) {
+    // The bare domain has no academy: signing in there doesn't sign you in at one.
+    const onAcademyHost = !!(await getAcademy().catch(() => ({ academy: null }))).academy;
     return (
       <div>
         <BrandBand>
           {/* A failed link from the trainer area lands here too: say so in its words. */}
-          <BandTag>{next.startsWith('/coach') ? 'Trainer' : 'Me'}</BandTag>
+          <BandTag>{next.startsWith('/coach') ? 'Trainer' : next.startsWith('/join') ? 'Joining' : next.startsWith('/claim') ? 'Your academy' : 'Me'}</BandTag>
           <BandTitle>Sign in</BandTitle>
           <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
-            {next.startsWith('/coach') ? 'Sign in with your trainer account.' : 'Save your sessions and see your week.'}
+            {next.startsWith('/coach') ? 'Sign in with your trainer account.'
+              : next.startsWith('/join') ? 'Sign in, then you’re one tap from joining.'
+              : next.startsWith('/claim') ? 'Sign in with the email you asked with, then set your academy up.'
+              : 'Save your sessions and see your week.'}
           </p>
         </BrandBand>
         {linkFailed && (
           <div className="card mt-5 p-5" role="alert">
             <div className="h-card">That link didn’t work</div>
             <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
-              Sign-in links work once, for an hour, in the browser you asked from. Send yourself a new one.
+              Sign-in links work once, for an hour, in the browser you asked from. Asked in the app on your
+              home screen? Go back there and type the 6-digit code from the email instead. Or send yourself a new one here.
             </p>
+            {!onAcademyHost && (
+              <p className="mt-2 text-body leading-relaxed text-on-surface-variant">
+                Signing in here won&rsquo;t sign you in at your academy.{' '}
+                <a href={await rootHref()} className="font-semibold text-on-surface underline underline-offset-4">Find your trainer&rsquo;s address</a> and sign in there.
+              </p>
+            )}
           </div>
         )}
         <div className="mt-5"><SignIn next={next} /></div>
@@ -164,7 +188,10 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   // Train sends an unanswered player here, and Me has to be where it's asked.
   // Trainers aren't asked these: their name is asked on the trainer side.
   const staff = role === 'owner' || role === 'trainer';
-  if (needsProfile(profile) && !staff) {
+  // Not on the bare domain (there's no academy to set up for), and not for
+  // someone who is a trainer anywhere: the profile is the account's, and the
+  // name their players know them by isn't to be replaced with a child's.
+  if (needsProfile(profile) && !staff && onAcademy && !staffAnywhere) {
     return (
       <div>
         <BrandBand>
@@ -173,6 +200,10 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
             : !signedUpBy && !profile?.age_band && profile?.display_name?.trim() ? `Set ${profile.display_name.trim().split(/\s+/)[0]} up` : 'Let’s set you up'}</BandTitle>
         </BrandBand>
         <ProfileSetup email={user.email} initial={profile ?? undefined} next="/" parent={signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} heading={false} />
+        {/* A shared phone: someone else's half-made account isn't a trap. */}
+        <p className="mt-6 text-center text-body text-on-surface-variant">
+          Signed in as {user.email}. Not you? <SignOut to="/me" className="pressable font-semibold text-on-surface underline underline-offset-4" />
+        </p>
       </div>
     );
   }
@@ -216,7 +247,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       )}
 
       {/* Every saved week, the active one first. */}
-      {library && !!plans.length && <SavedPlans plans={plans} />}
+      {library && !!plans.length && <SavedPlans plans={plans} timeZone={timeZone} />}
 
       {/* The invitation to a plan, once there's enough history to build one
           from. An ordinary card and a ghost button, like every other
@@ -244,7 +275,9 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <p className="pl-1 text-body-lg font-medium text-on-surface-variant">Nothing yet. {waitingLine(waiting)}</p>
         ) : (
           <p className="pl-1 text-body-lg font-medium text-on-surface-variant">
-            Nothing yet. <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>
+            Nothing yet. {onAcademy
+              ? <Link href="/" className="font-bold text-primary underline underline-offset-4">Go train</Link>
+              : <a href={await rootHref()} className="font-bold text-primary underline underline-offset-4">Find your trainer</a>}
           </p>
         )}
       </section>

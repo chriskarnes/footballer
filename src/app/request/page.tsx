@@ -24,11 +24,13 @@ export default async function RequestPage() {
     );
   }
 
-  let pending = false;
+  let pending = false, declined = false;
   if (v.user && !v.role) {
-    const { data } = await v.db.from('join_requests').select('user_id')
+    const { data } = await v.db.from('join_requests').select('*')
       .eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle();
-    pending = !!data;
+    // Turned down (0027): said so, with the form to ask again.
+    declined = !!(data as { declined_at?: string | null } | null)?.declined_at;
+    pending = !!data && !declined;
   }
 
   return (
@@ -60,7 +62,7 @@ export default async function RequestPage() {
             </Link>
           </div>
         ) : (
-          <AskToJoin academy={v.academy.name} email={v.user.email ?? ''} pending={pending} />
+          <AskToJoin academy={v.academy.name} email={v.user.email ?? ''} pending={pending} declined={declined} />
         )}
       </div>
       <p className="mt-6 text-center text-body text-on-surface-variant">

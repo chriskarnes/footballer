@@ -21,8 +21,15 @@ export async function joinAcademy(code: string, who?: 'player' | 'parent') {
       : /not signed in/i.test(error.message) ? 'You’ve been signed out. Sign in again, then tap Join.'
       : 'Couldn’t join just now. Try again.' };
   }
+  // A trainer link asks the owner (0027): it isn't a key to every player's data.
+  if ((data as { role: string }).role === 'asked') return { ok: true as const, asked: true };
   const { data: { user } } = await db.auth.getUser();
-  if (user && (who === 'player' || who === 'parent')) await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
+  // Whose email this is belongs to the account. A trainer joining another
+  // academy for their own child keeps theirs: their players know them by it.
+  if (user && (who === 'player' || who === 'parent')) {
+    const { data: staffSomewhere } = await db.from('academy_members').select('role').eq('user_id', user.id).in('role', ['owner', 'trainer']).limit(1);
+    if (!staffSomewhere?.length) await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
+  }
   if ((data as { role: string }).role !== 'player') redirect('/coach');
   // A new player is asked their name (and the rest) first, on Me; their
   // trainer sees that name, not an email address. A name alone isn't enough:

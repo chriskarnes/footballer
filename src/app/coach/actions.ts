@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { plain } from '@/lib/plain-error';
+import { localDate, mondayOf } from '@/lib/progress';
 
 /**
  * The trainer area's writes. Each goes through a database function that
@@ -48,11 +49,17 @@ export async function removeMember(userId: string) {
     .delete({ count: 'exact' }).eq('academy_id', v.academy.id).eq('user_id', userId);
   if (error) return { ok: false as const, error: plain(error) };
   if (!count) return { ok: false as const, error: 'You can’t remove that person.' };
-  // Out of their groups and programs too, so they stop counting in them.
-  // Best effort: the counts below also look only at current players.
+  // Out of their groups and programs too, so they stop counting in them, and
+  // their plan settings and the weeks still to come: someone let back in
+  // later starts fresh, not on a week built before they left. Past weeks
+  // stay, as their history. Best effort: the counts look only at current players.
+  const from = mondayOf(localDate(new Date(), v.academy.timeZone));
   await Promise.all([
     v.db.from('group_members').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
     v.db.from('player_programs').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
+    v.db.from('player_plans').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
+    v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from),
+    v.db.from('addons').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from),
   ]);
   revalidatePath('/coach', 'layout');
   return { ok: true as const };
@@ -66,6 +73,7 @@ export async function answerJoinRequest(userId: string, approve: boolean) {
   // Another trainer answered it first: nothing left to do, and nothing wrong,
   // but say so rather than claim this tap let them in.
   const already = !!error && /no such request/i.test(error.message);
+  if (error && /owner/i.test(error.message)) return { ok: false as const, error: 'Only the academy’s owner lets trainers in.' };
   if (error && !already) return { ok: false as const, error: plain(error) };
   revalidatePath('/coach', 'layout');
   return { ok: true as const, already };

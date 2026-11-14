@@ -17,15 +17,21 @@ export function SignOut({
 }: { className?: string; /** Where to go after: Me, or back to the page that asked. */ to?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
 
   async function out() {
-    setBusy(true);
+    setBusy(true); setErr('');
     try {
       // This phone only: "Not you?" on the family iPad mustn't sign the parent's own phone out too.
-      await browserClient().auth.signOut({ scope: 'local' });
+      const { error } = await browserClient().auth.signOut({ scope: 'local' });
+      // With no signal and an old sign-in, it can fail before forgetting the
+      // account: say so, rather than look signed out and not be.
+      if (error) { console.error(error); setErr('No signal, so you’re still signed in. Try again with signal.'); return; }
       await notePageCacheUser(null);
       router.replace(to);
       router.refresh();
+    } catch {
+      setErr('No signal, so you’re still signed in. Try again with signal.');
     } finally {
       setBusy(false);
     }
@@ -35,6 +41,7 @@ export function SignOut({
     <button type="button" onClick={out} disabled={busy}
             className={className}>
       {busy ? 'Signing out…' : 'Sign out'}
+      {err && <span role="alert" className="block text-body-sm font-semibold text-on-surface">{err}</span>}
     </button>
   );
 }
