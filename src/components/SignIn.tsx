@@ -11,11 +11,12 @@ import { pendingPlan, pendingWorkout } from '@/lib/pending';
  * heads the card when the page around it doesn't already say what this is
  * for — the join page uses it for "Join as a player".
  */
-export function SignIn({ next = '/me', title, button = 'Email me a sign-in link', note }: {
+export function SignIn({ next = '/me', title, button = 'Email me a sign-in code', note }: {
   next?: string; title?: string; button?: string; note?: string;
 }) {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   // Read after mount: localStorage doesn't exist on the server, and a line that
@@ -52,20 +53,48 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
     }
   }
 
+  // The code in the same email signs in right here. The link can't always:
+  // it opens in the mail app's browser, or Safari, never in the installed
+  // app, which keeps its own sign-in apart from Safari's.
+  async function verify() {
+    const token = code.replace(/\D/g, '');
+    if (token.length < 6) return setErr('Type the code from the email.');
+    setErr(''); setBusy(true);
+    try {
+      const { error } = await browserClient().auth.verifyOtp({ email: email.trim(), token, type: 'email' });
+      if (error) { setErr('That code didn’t work. Check it, or send a new one.'); setBusy(false); return; }
+      // A full load, so every page reads the new account from the start.
+      window.location.assign(next);
+    } catch {
+      setErr('Couldn’t reach us. Check your signal and try again.');
+      setBusy(false);
+    }
+  }
+
   if (sent) return (
-    <div className="card p-5" role="status">
-      <div className="h-card">Check your email</div>
-      <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
-        We sent a sign-in link to <b className="font-semibold text-on-surface">{email.trim()}</b>.
-        {/* The link has to open in this browser to find the session — say so,
-            since a mail app's own browser is where it usually opens. */}
-        {' '}Open it on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.
-      </p>
-      <button type="button" onClick={() => { setSent(false); setErr(''); }}
+    <form className="card p-5" onSubmit={(e) => { e.preventDefault(); verify(); }}>
+      <div role="status">
+        <div className="h-card">Check your email</div>
+        <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
+          We sent a sign-in email to <b className="font-semibold text-on-surface">{email.trim()}</b>.
+          {' '}Type the code from it here, or open its link on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.
+        </p>
+      </div>
+      <label className="text-field mt-4">
+        <span>Code</span>
+        <input value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" autoComplete="one-time-code"
+               pattern="[0-9 ]*" maxLength={12} enterKeyHint="go" aria-invalid={err ? true : undefined}
+               aria-describedby={err ? 'signin-error' : undefined} />
+      </label>
+      <button type="submit" disabled={busy} className="btn-primary pressable mt-3 w-full">
+        {busy ? 'Signing in…' : 'Sign in'}
+      </button>
+      {err && <p id="signin-error" role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
+      <button type="button" onClick={() => { setSent(false); setErr(''); setCode(''); }}
               className="mt-4 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
         Use a different email
       </button>
-    </div>
+    </form>
   );
 
   return (
@@ -74,7 +103,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in link'
       {/* The reason most people are here: they just finished a session. */}
       {waiting && <p className="mb-1 text-body font-medium leading-snug text-on-surface">{waiting}</p>}
       <p className="mb-4 text-body leading-snug text-on-surface-variant">
-        {note ?? 'No password. We’ll email you a link.'}
+        {note ?? 'No password. We’ll email you a code and a link.'}
       </p>
       <label className="text-field">
         <input

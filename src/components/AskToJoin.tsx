@@ -32,6 +32,14 @@ export function AskToJoin({ academy, email, pending: wasPending }: { academy: st
         <p className="mt-1 text-body leading-relaxed text-on-surface-variant">
           {academy} will see your request next time they open their players. Once they let you in, your sessions are here.
         </p>
+        {/* A family phone: say whose request this is, and give the way out. */}
+        <p className="mt-3 text-body text-on-surface-variant">
+          Signed in as {email}. Not you? <SignOut to="/request" className="pressable font-semibold text-on-surface underline underline-offset-4" />
+        </p>
+        <button type="button" onClick={() => setSent(false)}
+                className="mt-3 text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
+          Change the name or note
+        </button>
       </div>
     );
   }

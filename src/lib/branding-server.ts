@@ -45,20 +45,26 @@ export function toAcademy(row: AcademyRow): Academy {
  * `undefined` is "couldn't ask" (no keys, no migration); `null` is "asked,
  * and there's no academy by that name".
  */
-const fetchAcademy = (slug: string) => unstable_cache(
-  async (): Promise<Academy | null | undefined> => {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return undefined;
-    try {
-      const { data, error } = await anon().from('academies').select(ACADEMY_COLUMNS).eq('slug', slug).maybeSingle();
-      if (error) return undefined;
-      return data ? toAcademy(data as AcademyRow) : null;
-    } catch {
-      return undefined;
-    }
-  },
-  ['academy', slug],
-  { tags: [academyTag(slug)], revalidate: 300 },
-)();
+// A failed read throws, so it isn't kept: one hiccup used to leave everyone on
+// that address with no academy for the five minutes it was cached.
+const fetchAcademy = async (slug: string): Promise<Academy | null | undefined> => {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return undefined;
+  try {
+    return await unstable_cache(
+      async (): Promise<Academy | null> => {
+        const { data, error } = await anon().from('academies').select(ACADEMY_COLUMNS).eq('slug', slug).maybeSingle();
+        if (error) throw error;
+        return data ? toAcademy(data as AcademyRow) : null;
+      },
+      ['academy', slug],
+      // Approving and claiming clear it (academyTag), so a new academy is
+      // there at once; this is only the backstop.
+      { tags: [academyTag(slug)], revalidate: 300 },
+    )();
+  } catch {
+    return undefined;
+  }
+};
 
 /** The subdomain this request came in on, if it names one. */
 export async function currentSlug(): Promise<string | null> {

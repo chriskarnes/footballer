@@ -3,6 +3,8 @@ import { serverClient } from '@/lib/supabase/server';
 import { BackLink } from '@/components/BackLink';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 import { AvatarPicker } from '@/components/AvatarPicker';
+import { YourName } from '@/components/coach/YourName';
+import { getViewer } from '@/lib/viewer';
 
 /**
  * The profile, reachable at any time.
@@ -40,6 +42,20 @@ export default async function ProfilePage() {
   // Joined as a parent (0009): the questions are about their player.
   const { data: by } = await db.from('profiles').select('signed_up_by').eq('id', user.id).maybeSingle() as
     { data: { signed_up_by: string | null } | null };
+
+  // A trainer's profile is their name and photo: the player questions (age,
+  // position, foot) were required to save, and aren't theirs to answer.
+  const viewer = await getViewer().catch(() => null);
+  if (viewer?.staff) {
+    return (
+      <div>
+        <BackLink href="/me" label="Me" />
+        <h1 className="h-page">My profile</h1>
+        <AvatarPicker name={initial.display_name} email={user.email} updatedAt={avatarAt?.avatar_updated_at ?? null} />
+        <YourName initial={initial.display_name ?? ''} />
+      </div>
+    );
+  }
 
   return (
     <div>

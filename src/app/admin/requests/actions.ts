@@ -1,5 +1,6 @@
 'use server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
+import { academyTag } from '@/lib/branding-server';
 import { serverClient } from '@/lib/supabase/server';
 
 export type Approved = { ok: true; slug: string; code: string } | { ok: false; error: string };
@@ -31,5 +32,7 @@ export async function approveRequest(id: string, slug: string, name: string): Pr
   }
   revalidatePath('/admin/requests');
   const r = data as { slug: string; code: string };
+  // Someone may have opened the address before it existed: forget that "no academy".
+  updateTag(academyTag(r.slug));
   return { ok: true, slug: r.slug, code: r.code };
 }

@@ -21,7 +21,8 @@ export function SignOut({
   async function out() {
     setBusy(true);
     try {
-      await browserClient().auth.signOut();
+      // This phone only: "Not you?" on the family iPad mustn't sign the parent's own phone out too.
+      await browserClient().auth.signOut({ scope: 'local' });
       await notePageCacheUser(null);
       router.replace(to);
       router.refresh();
