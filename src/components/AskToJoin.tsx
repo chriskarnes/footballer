@@ -6,17 +6,19 @@ import { offline } from '@/lib/plain-error';
 import { CheckIcon } from '@/components/Chip';
 
 /** Who you are, in words the trainer will recognise, and one button. */
-export function AskToJoin({ academy, email, pending: wasPending, declined }: {
+export function AskToJoin({ academy, email, pending: wasPending, declined, initial }: {
   academy: string; email: string; pending: boolean;
+  /** What they asked with, so changing it starts from there. */
+  initial?: { name: string; message: string; who: 'player' | 'parent' | null };
   /** Asked before and turned down (0027): said, not silently a fresh form. */
   declined?: boolean;
 }) {
   const [sent, setSent] = useState(wasPending);
   const [member, setMember] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initial?.name ?? '');
   // Whose email this is: the questions after are worded for them (0027).
-  const [who, setWho] = useState<'player' | 'parent' | null>(null);
-  const [message, setMessage] = useState('');
+  const [who, setWho] = useState<'player' | 'parent' | null>(initial?.who ?? null);
+  const [message, setMessage] = useState(initial?.message ?? '');
   const [err, setErr] = useState('');
   const [busy, start] = useTransition();
 
@@ -37,7 +39,7 @@ export function AskToJoin({ academy, email, pending: wasPending, declined }: {
       <div className="card p-5" role="status">
         <div className="h-card">Asked</div>
         <p className="mt-1 text-body leading-relaxed text-on-surface-variant">
-          {academy} will see your request next time they open their players. Once they let you in, your sessions are here.
+          {academy} will see your request next time they open their players, and decides. Once you&rsquo;re in, your sessions are here.
         </p>
         {/* A family phone: say whose request this is, and give the way out. */}
         <p className="mt-3 text-body text-on-surface-variant">

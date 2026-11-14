@@ -12,9 +12,21 @@ import { safeNext } from '@/lib/safe-next';
  * heads the card when the page around it doesn't already say what this is
  * for — the join page uses it for "Join as a player".
  */
-export function SignIn({ next = '/me', title, button = 'Email me a sign-in code', note }: {
+const ASKED_FOR = 'signin-next';
+
+export function SignIn({ next: given = '/me', title, button = 'Email me a sign-in code', note, recall = false }: {
   next?: string; title?: string; button?: string; note?: string;
+  /** A link that failed: go where the first one was going (a claim, the trainer area), if this browser asked for it. */
+  recall?: boolean;
 }) {
+  const [next, setNext] = useState(given);
+  useEffect(() => {
+    if (!recall) return;
+    try {
+      const kept = JSON.parse(localStorage.getItem(ASKED_FOR) ?? 'null') as { next: string; at: number } | null;
+      if (kept && Date.now() - kept.at < 24 * 3600_000) setNext(safeNext(kept.next, given));
+    } catch { /* storage off */ }
+  }, [recall, given]);
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState('');
@@ -46,6 +58,7 @@ export function SignIn({ next = '/me', title, button = 'Email me a sign-in code'
         email: email.trim(),
         options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
       });
+      if (!error) { try { localStorage.setItem(ASKED_FOR, JSON.stringify({ next, at: Date.now() })); } catch { /* storage off */ } }
       if (error) {
         console.error(error);
         // Supabase allows one link a minute per address; anything else is ours.

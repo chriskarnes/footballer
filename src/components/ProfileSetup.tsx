@@ -35,7 +35,7 @@ export type ProfileValues = {
 
 const SIGNED_OUT = 'signed-out';
 
-export function ProfileSetup({ email, initial, photo, next = '/', parent = false, heading = true }: {
+export function ProfileSetup({ email, initial, photo, next = '/', parent = false, heading = true, keepName = false }: {
   email?: string; initial?: ProfileValues;
   /** The optional photo picker, on the profile screen; not part of first-time setup. */
   photo?: React.ReactNode;
@@ -48,6 +48,8 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   parent?: boolean | null;
   /** False where the page's brand band already says what this is (first-time setup on Me). */
   heading?: boolean;
+  /** A trainer elsewhere, here as a player: no name asked, and theirs isn't replaced. */
+  keepName?: boolean;
 }) {
   // Someone who has answered before is correcting, not starting. Same four
   // questions either way — only the framing around them changes, because
@@ -80,7 +82,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   // The four that count are the four that change a drill. Region and club are
   // deliberately not in this number — showing "4 of 6" would make skippable
   // fields look like unfinished work.
-  const answered = [!!name.trim(), !!ageBand, positions.length > 0, !!foot].filter(Boolean).length;
+  const answered = [keepName || !!name.trim(), !!ageBand, positions.length > 0, !!foot].filter(Boolean).length;
   const complete = answered === 4;
 
   const togglePosition = (p: string) =>
@@ -108,7 +110,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
       const r = await fetch('/api/profile', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          display_name: name.trim(), age_band: ageBand, positions,
+          ...(keepName ? { keep_name: true } : { display_name: name.trim() }), age_band: ageBand, positions,
           dominant_foot: foot,
           region: region.trim() || null, club: club.trim() || null,
         }),
@@ -135,14 +137,14 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
       {/* Name is required now the profile is about someone else, but a first
           name or nickname is all the app ever needs. A full legal name adds
           nothing to a drill plan and a great deal to the blast radius. */}
-      <div className="mt-9">
+      {!keepName && <div className="mt-9">
         <p className="h-sec mb-3">{q.name}</p>
         <label className="text-field">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={60}
                  placeholder="e.g. Sam" autoComplete="off"
                  aria-label={q.name} />
         </label>
-      </div>
+      </div>}
 
       {/* The address the account signs in with, shown as a field because that
           is where someone looks for it — but read-only, because changing it is

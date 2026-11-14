@@ -9,6 +9,7 @@ import { getMyWeek, getPlayerState, getTrainer } from '@/lib/player-week';
 import { speedAllowed } from '@/lib/speed-gate';
 import { Waiting } from './Waiting';
 import { SpeedInvite } from './SpeedInvite';
+import { SignOut } from './SignOut';
 
 /**
  * What Train, Library and Plan show in an academy that doesn't have the drill
@@ -26,7 +27,7 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
   if (v?.academy && (!v.user || !v.role)) {
     // Asked already: they're waiting on the trainer, not being told to ask.
     const req = v.user
-      ? (await v.db.from('join_requests').select('*').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle()).data as { declined_at?: string | null } | null
+      ? (await v.db.from('join_requests').select('*').eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle()).data as { declined_at?: string | null; role?: string } | null
       : null;
     const asked = !!req && !req.declined_at;
     // Turned down (0027): say so, rather than the first-time "Ask to join".
@@ -37,9 +38,15 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
           <BandTag>{title}</BandTag>
           <BandTitle>Asked</BandTitle>
           <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
-            {v.academy.name} will let you in. Then your sessions are here.
+            {req.role === 'trainer'
+              ? `${v.academy.name}’s owner lets trainers in. Once they do, you’ll see every player here.`
+              : `${v.academy.name} decides. Once you’re in, your sessions are here.`}
           </p>
         </BrandBand>
+        {/* A family phone: whose request this is, and the way out. */}
+        <p className="mt-5 text-center text-body text-on-surface-variant">
+          Signed in as {v.user?.email}. Not you? <SignOut to={next} className="pressable font-semibold text-on-surface underline underline-offset-4" />
+        </p>
       </div>
     );
     return (

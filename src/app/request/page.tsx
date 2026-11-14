@@ -25,13 +25,16 @@ export default async function RequestPage() {
   }
 
   let pending = false, declined = false;
+  let asked: { name: string; message: string | null; as_who?: string | null; role?: string } | null = null;
   if (v.user && !v.role) {
     const { data } = await v.db.from('join_requests').select('*')
       .eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle();
     // Turned down (0027): said so, with the form to ask again.
     declined = !!(data as { declined_at?: string | null } | null)?.declined_at;
     pending = !!data && !declined;
+    asked = data;
   }
+  const asTrainer = pending && asked?.role === 'trainer';
 
   return (
     <div className="animate-pop">
@@ -61,8 +64,20 @@ export default async function RequestPage() {
               {v.staff ? 'Go to your players' : 'Start training'}
             </Link>
           </div>
+        ) : asTrainer ? (
+          <div className="card p-5" role="status">
+            <div className="h-card">Asked to train here</div>
+            <p className="mt-1 text-body leading-relaxed text-on-surface-variant">
+              {v.academy.name}&rsquo;s owner lets trainers in. Once they do, you&rsquo;ll see every player here.
+            </p>
+            <p className="mt-3 text-body text-on-surface-variant">
+              Signed in as {v.user.email}. Not you? <SignOut to="/request" className="pressable font-semibold text-on-surface underline underline-offset-4" />
+            </p>
+          </div>
         ) : (
-          <AskToJoin academy={v.academy.name} email={v.user.email ?? ''} pending={pending} declined={declined} />
+          <AskToJoin academy={v.academy.name} email={v.user.email ?? ''} pending={pending} declined={declined}
+            initial={asked && !declined ? { name: asked.name, message: asked.message ?? '',
+              who: asked.as_who === 'player' || asked.as_who === 'parent' ? asked.as_who : null } : undefined} />
         )}
       </div>
       <p className="mt-6 text-center text-body text-on-surface-variant">

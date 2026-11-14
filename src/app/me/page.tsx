@@ -159,7 +159,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
             {next.startsWith('/coach') ? 'Sign in with your trainer account.'
               : next.startsWith('/join') ? 'Sign in, then you’re one tap from joining.'
               : next.startsWith('/claim') ? 'Sign in with the email you asked with, then set your academy up.'
-              : 'Save your sessions and see your week.'}
+              : onAcademyHost ? 'Save your sessions and see your week.' : 'Sign in to your account.'}
           </p>
         </BrandBand>
         {linkFailed && (
@@ -169,15 +169,16 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
               Sign-in links work once, for an hour, in the browser you asked from. Asked in the app on your
               home screen? Go back there and type the 6-digit code from the email instead. Or send yourself a new one here.
             </p>
-            {!onAcademyHost && (
-              <p className="mt-2 text-body leading-relaxed text-on-surface-variant">
-                Signing in here won&rsquo;t sign you in at your academy.{' '}
-                <a href={await rootHref()} className="font-semibold text-on-surface underline underline-offset-4">Find your trainer&rsquo;s address</a> and sign in there.
-              </p>
-            )}
           </div>
         )}
-        <div className="mt-5"><SignIn next={next} /></div>
+        {/* The bare domain has no week to see: say where training is, every time. */}
+        {!onAcademyHost && (
+          <p className="card mt-5 p-5 text-body leading-relaxed text-on-surface-variant">
+            Training happens on your trainer&rsquo;s own address, and signing in here won&rsquo;t sign you in there.{' '}
+            <a href={await rootHref()} className="font-semibold text-on-surface underline underline-offset-4">Find your trainer&rsquo;s address</a>.
+          </p>
+        )}
+        <div className="mt-5"><SignIn next={next} recall={linkFailed} /></div>
       </div>
     );
   }
@@ -188,18 +189,19 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   // Train sends an unanswered player here, and Me has to be where it's asked.
   // Trainers aren't asked these: their name is asked on the trainer side.
   const staff = role === 'owner' || role === 'trainer';
-  // Not on the bare domain (there's no academy to set up for), and not for
-  // someone who is a trainer anywhere: the profile is the account's, and the
-  // name their players know them by isn't to be replaced with a child's.
-  if (needsProfile(profile) && !staff && onAcademy && !staffAnywhere) {
+  // Not on the bare domain (there's no academy to set up for). A trainer elsewhere, here as a player (for their own child, say): asked
+  // about their player, without the name, so Train's "answer these first"
+  // has somewhere to land.
+  if (needsProfile(profile) && !staff && onAcademy) {
     return (
       <div>
         <BrandBand>
           <BandTag>Welcome</BandTag>
-          <BandTitle>{signedUpBy === 'parent' ? 'Set your player up'
+          <BandTitle>{signedUpBy === 'parent' || staffAnywhere ? 'Set your player up'
             : !signedUpBy && !profile?.age_band && profile?.display_name?.trim() ? `Set ${profile.display_name.trim().split(/\s+/)[0]} up` : 'Let’s set you up'}</BandTitle>
         </BrandBand>
-        <ProfileSetup email={user.email} initial={profile ?? undefined} next="/" parent={signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} heading={false} />
+        <ProfileSetup email={user.email} initial={profile ?? undefined} next="/" heading={false} keepName={staffAnywhere}
+          parent={staffAnywhere || signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} />
         {/* A shared phone: someone else's half-made account isn't a trap. */}
         <p className="mt-6 text-center text-body text-on-surface-variant">
           Signed in as {user.email}. Not you? <SignOut to="/me" className="pressable font-semibold text-on-surface underline underline-offset-4" />

@@ -38,14 +38,16 @@ export async function POST(req: Request) {
 
   // The four required answers are validated; the two optional ones are text the
   // player typed about themselves and are stored as given.
-  if (!name) return NextResponse.json({ error: 'a name is required' }, { status: 400 });
+  // keep_name: a trainer here as a player keeps the name their own players know.
+  const keepName = body.keep_name === true;
+  if (!name && !keepName) return NextResponse.json({ error: 'a name is required' }, { status: 400 });
   if (!AGE_BANDS.includes(ageBand)) return NextResponse.json({ error: 'invalid age band' }, { status: 400 });
   if (!FEET.includes(foot)) return NextResponse.json({ error: 'invalid dominant foot' }, { status: 400 });
   if (!positions.length) return NextResponse.json({ error: 'at least one position is required' }, { status: 400 });
 
   const full = {
     id: user.id,
-    display_name: name,
+    ...(keepName ? {} : { display_name: name }),
     dominant_foot: foot,
     // The singular column predates this form and still has callers. The first
     // position keeps it meaningful rather than leaving it to drift out of date.
