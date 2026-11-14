@@ -171,9 +171,12 @@ function WeekStrip({ items, today, nextDay }: { items: MyWeek['items']; today: n
         const isToday = i === today;
         const label = `${DAYS[i]}${isToday ? ' (today)' : ''}: ${todo.length ? `${todo.length} to do` : doneHere ? 'done' : 'rest'}`;
         return (
-          <li key={i} aria-label={label} aria-current={isToday ? 'date' : undefined}
+          <li key={i} aria-current={isToday ? 'date' : undefined}
               className={`flex w-10 flex-col items-center gap-1 rounded-full pb-1 pt-1 ${isToday ? 'bg-[color-mix(in_srgb,var(--app-on-surface-brand)_18%,transparent)]' : ''}`}>
-            <span className={`text-body-sm font-extrabold text-on-surface-brand ${isToday ? '' : 'opacity-70'}`}>{d}</span>
+            {/* Read as words: a label on a list item is often skipped, which
+                left "M, T, W" and nothing about the day. */}
+            <span className="sr-only">{label}</span>
+            <span aria-hidden="true" className={`text-body-sm font-extrabold text-on-surface-brand ${isToday ? '' : 'opacity-70'}`}>{d}</span>
             <span className="flex h-6 w-6 items-center justify-center">
               {!todo.length && doneHere ? (
                 <span className="flex h-6 w-6 items-center justify-center rounded-full accent-badge">

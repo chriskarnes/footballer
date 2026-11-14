@@ -25,17 +25,20 @@
  */
 
 // A new name clears every older cache on activate, the forge-v1 ones included.
-const VERSION = 'train-v3';
+const VERSION = 'train-v4';
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 const PAGES = `${VERSION}-pages`;
 const MAX_PAGES = 40;
+// Build files from every deploy used to stay for good. Enough for a few
+// deploys' worth; the oldest go first.
+const MAX_ASSETS = 300;
 
-/** Keep the newest MAX_PAGES: Cache keys come back oldest first. */
-async function trim() {
-  const c = await caches.open(PAGES);
+/** Keep the newest `max` in a cache: Cache keys come back oldest first. */
+async function trim(name = PAGES, max = MAX_PAGES) {
+  const c = await caches.open(name);
   const keys = await c.keys();
-  await Promise.all(keys.slice(0, Math.max(0, keys.length - MAX_PAGES)).map((k) => c.delete(k)));
+  await Promise.all(keys.slice(0, Math.max(0, keys.length - max)).map((k) => c.delete(k)));
 }
 const OFFLINE_URL = '/offline';
 
@@ -73,7 +76,7 @@ self.addEventListener('fetch', (event) => {
         hit || fetch(request).then((res) => {
           if (res.ok) {
             const copy = res.clone();
-            caches.open(ASSETS).then((c) => c.put(request, copy));
+            caches.open(ASSETS).then((c) => c.put(request, copy)).then(() => trim(ASSETS, MAX_ASSETS));
           }
           return res;
         })

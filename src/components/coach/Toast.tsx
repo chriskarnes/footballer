@@ -26,12 +26,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <Ctx.Provider value={show}>
       {children}
       <Suspense fallback={null}><Flash /></Suspense>
-      {text && (
-        <p key={n} role="status"
-           className="sheet-in fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] mx-auto w-fit max-w-[90vw] rounded-full bg-inverse-surface px-5 py-3 text-body font-semibold text-inverse-on-surface shadow-level3 lg:bottom-8">
-          {text}
-        </p>
-      )}
+      {/* Always there, empty: a live region added with its text already in
+          it usually isn't read out, so "Saved." went unheard. Only the line
+          inside comes and goes. */}
+      <div role="status" className="fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] flex justify-center lg:bottom-8 pointer-events-none">
+        {text && (
+          <p key={n}
+             className="sheet-in pointer-events-auto mx-auto w-fit max-w-[90vw] rounded-full bg-inverse-surface px-5 py-3 text-body font-semibold text-inverse-on-surface shadow-level3">
+            {text}
+          </p>
+        )}
+      </div>
     </Ctx.Provider>
   );
 }

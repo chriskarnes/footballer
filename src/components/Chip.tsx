@@ -21,16 +21,18 @@ export function CheckIcon({ className = 'chip-check' }: { className?: string }) 
 }
 
 export function Chip({
-  on, onClick, children, label,
+  on, onClick, children, label, disabled,
 }: {
   on: boolean;
+  /** While its change is saving: a second tap would send it again from the old value. */
+  disabled?: boolean;
   onClick: () => void;
   children: React.ReactNode;
   /** Accessible name, when the visible label reads oddly out of context. */
   label?: string;
 }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={on} aria-label={label}
+    <button type="button" onClick={onClick} aria-pressed={on} aria-label={label} disabled={disabled}
             className={`chip pressable ${on ? 'chip-on' : ''}`}>
       <CheckIcon />
       {children}

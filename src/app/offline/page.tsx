@@ -1,5 +1,4 @@
 import { Brand } from '@/components/Brand';
-import { Reload } from './Reload';
 
 /**
  * Served by the service worker when a navigation fails with no connection.
@@ -14,7 +13,10 @@ export default function Offline() {
         The app needs a connection to load a new session. Anything already open keeps
         working — including the drill you&rsquo;re in the middle of.
       </p>
-      <Reload />
+      {/* A plain link to this same address, not a script: this page is served
+          from the cache, and its scripts may not be, so a button that needed
+          them did nothing. */}
+      <a href="" className="btn-primary pressable mt-7">Try again</a>
     </div>
   );
 }

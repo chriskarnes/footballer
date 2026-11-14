@@ -75,7 +75,7 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
         {groups.length ? (
           <div className="flex flex-wrap gap-2">
             {groups.map((g) => (
-              <Chip key={g.id} on={g.member} onClick={() => run(() => setMembership(g.id, userId, !g.member), undefined,
+              <Chip key={g.id} on={g.member} disabled={busy} onClick={() => run(() => setMembership(g.id, userId, !g.member), undefined,
                 g.member ? `${first} is out of ${g.name}.` : `${first} is in ${g.name}.`)}>{g.name}</Chip>
             ))}
           </div>

@@ -22,6 +22,15 @@ async function staff() {
   return v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> };
 }
 
+/** The player is one of this academy's: plans and weeks are written for an id
+ *  from the page, and the database only checks the caller is staff. */
+async function ownPlayer(v: Awaited<ReturnType<typeof staff>>, userId: string) {
+  const { data, error } = await v.db.from('academy_members').select('user_id')
+    .eq('academy_id', v.academy.id).eq('user_id', userId).eq('role', 'player').maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Said('They aren’t one of your players any more. Reload and try again.');
+}
+
 type Result = { ok: true; by?: 'ai' | 'rules'; why?: string } | { ok: false; error: string };
 const fail = (e: unknown): Result => ({ ok: false, error: plain(e) });
 const done = () => revalidatePath('/', 'layout');
@@ -37,6 +46,7 @@ const clamp = (n: unknown, lo: number, hi: number) => {
 export async function savePlan(userId: string, plan: { sessions: number | null; minutes: number | null; focus: string[]; progress?: boolean | null }): Promise<Result> {
   try {
     const v = await staff();
+    await ownPlayer(v, userId);
     const focus = [...new Set(plan.focus)].filter((t) => t in FOCUS_LABELS).slice(0, 3);
     const row: Record<string, unknown> = {
       academy_id: v.academy.id, user_id: userId, focus,
@@ -60,6 +70,7 @@ export async function savePlan(userId: string, plan: { sessions: number | null; 
 export async function setMode(userId: string, mode: 'program' | 'custom'): Promise<Result> {
   try {
     const v = await staff();
+    await ownPlayer(v, userId);
     const { error } = await v.db.from('player_plans').upsert({
       academy_id: v.academy.id, user_id: userId, mode, autopilot: false, updated_at: new Date().toISOString(),
     });
@@ -127,6 +138,7 @@ export async function saveDefaults(sessions: number, minutes: number, progress: 
 export async function buildWeekFor(userId: string, which: 'this' | 'next'): Promise<Result> {
   try {
     const v = await staff();
+    await ownPlayer(v, userId);
     const today = localDate(new Date(), v.academy.timeZone);
     // Five weeks back: enough to see a block of three before either week.
     const c = await loadContent(v.db, v.academy.id, { addonsSince: addDays(today, -35) });
