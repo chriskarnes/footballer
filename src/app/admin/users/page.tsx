@@ -1,41 +1,33 @@
 import Link from 'next/link';
-import { adminViewer, day, loadUsers, n, type UserRow } from '@/lib/admin-data';
+import { adminViewer, day, loadUsers, n, USER_FILTERS, USERS_PER_PAGE, type UserFilter } from '@/lib/admin-data';
 import { ago } from '@/lib/notes';
 import { AdminGate, Failed, RoleTag, Table, Td, Th } from '@/components/admin/ui';
 import { CheckIcon } from '@/components/Chip';
 
 export const metadata = { title: 'People · Admin', robots: { index: false } };
 
-const FILTERS = [
+const FILTERS: { id: UserFilter; label: string }[] = [
   { id: 'all', label: 'Everyone' },
   { id: 'players', label: 'Players' },
   { id: 'staff', label: 'Trainers' },
   { id: 'none', label: 'No academy' },
   { id: 'quiet', label: 'Not trained in 30 days' },
-] as const;
-type Filter = typeof FILTERS[number]['id'];
+];
 
-const keep: Record<Filter, (u: UserRow) => boolean> = {
-  all: () => true,
-  players: (u) => !!u.academies?.some((m) => m.role === 'player'),
-  staff: (u) => !!u.academies?.some((m) => m.role !== 'player'),
-  none: (u) => !u.academies?.length,
-  quiet: (u) => !!u.academies?.some((m) => m.role === 'player') && u.sessions_30d === 0,
-};
-
-/** Every account, newest first. A plain form, so it works before scripts load. */
-export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ q?: string; in?: string }> }) {
+/** Every account, newest first, a page at a time. A plain form, so it works before scripts load. */
+export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ q?: string; in?: string; page?: string }> }) {
   const a = await adminViewer();
   if (a.gate) return <AdminGate gate={a.gate} next="/admin/users" />;
   const sp = await searchParams;
   const q = (sp.q ?? '').trim().toLowerCase().slice(0, 80);
-  const filter: Filter = FILTERS.some((f) => f.id === sp.in) ? sp.in as Filter : 'all';
-  const { data, error } = await loadUsers();
-  const all = data ?? [];
-  const rows = all.filter(keep[filter]).filter((u) => !q
-    || u.email.toLowerCase().includes(q) || (u.name ?? '').toLowerCase().includes(q)
-    || !!u.academies?.some((m) => m.name.toLowerCase().includes(q) || m.slug.includes(q)));
-  const href = (id: Filter) => `/admin/users?${new URLSearchParams({ ...(id !== 'all' && { in: id }), ...(q && { q }) })}`;
+  const filter: UserFilter = (USER_FILTERS as readonly string[]).includes(sp.in ?? '') ? sp.in as UserFilter : 'all';
+  const page = Math.max(0, Math.min(1000, Math.floor(Number(sp.page) || 0)));
+  const { data, error } = await loadUsers(q, filter, page);
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const pages = Math.max(1, Math.ceil(total / USERS_PER_PAGE));
+  const href = (id: UserFilter, p = 0) =>
+    `/admin/users?${new URLSearchParams({ ...(id !== 'all' && { in: id }), ...(q && { q }), ...(p > 0 && { page: String(p) }) })}`;
 
   return (
     <div className="animate-pop">
@@ -55,7 +47,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
             {FILTERS.map((f) => (
               <Link key={f.id} href={href(f.id)} aria-current={f.id === filter ? 'page' : undefined}
                     className={`chip ${f.id === filter ? 'chip-on' : ''}`}>
-                {f.id === filter && <CheckIcon />}{f.label} <span className="tabular-nums opacity-70">{n(all.filter(keep[f.id]).length)}</span>
+                {f.id === filter && <CheckIcon />}{f.label} <span className="tabular-nums opacity-70">{n(data?.counts[f.id])}</span>
               </Link>
             ))}
           </nav>
@@ -82,6 +74,15 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                 </tr>
               ))}
             </Table>
+          )}
+          {pages > 1 && (
+            <nav className="mt-4 flex items-center gap-4 text-body" aria-label="Pages">
+              {page > 0 && <Link href={href(filter, page - 1)} className="font-semibold underline underline-offset-4">Newer</Link>}
+              <span className="text-on-surface-variant tabular-nums">
+                {n(page * USERS_PER_PAGE + 1)}–{n(Math.min(total, (page + 1) * USERS_PER_PAGE))} of {n(total)}
+              </span>
+              {page + 1 < pages && <Link href={href(filter, page + 1)} className="font-semibold underline underline-offset-4">Older</Link>}
+            </nav>
           )}
         </>
       )}

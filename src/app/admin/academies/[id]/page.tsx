@@ -31,7 +31,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
       <p className="mt-2 text-body text-on-surface-variant">
         <a href={site} className="font-semibold text-on-surface underline underline-offset-4">{site.replace(/^https?:\/\//, '')}</a>
         {x.city && ` · ${x.city}`} · started {day(x.created_at)} · {x.time_zone}
-        {!x.set_up && ' · still setting up'}{x.library_access && ' · Forge library on'}{!x.listed && ' · unlisted'}
+        {x.unclaimed ? ' · approved, not yet claimed by its owner' : !x.set_up && ' · still setting up'}{x.library_access && ' · Forge library on'}{!x.listed && ' · unlisted'}
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -42,7 +42,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
         <Stat label="Programs" value={n(x.programs.length)} sub={`${n(x.groups.length)} ${x.groups.length === 1 ? 'group' : 'groups'} · ${n(x.drills)} own ${x.drills === 1 ? 'drill' : 'drills'}`} />
       </div>
       <p className="mt-3 text-body-sm text-on-surface-variant">
-        {n(x.notes_30d)} notes sent in 30 days · AI: {n(x.ai_30d.calls)} builds{x.ai_30d.failed ? ` (${n(x.ai_30d.failed)} failed)` : ''}, {n(x.ai_30d.tokens)} tokens in 30 days
+        {n(x.notes_30d)} notes sent in 30 days · AI week builds: {n(x.ai_30d.calls)}{x.ai_30d.failed ? ` (${n(x.ai_30d.failed)} failed)` : ''}, {n(x.ai_30d.tokens)} tokens in 30 days
       </p>
 
       {!!x.waiting.length && (
@@ -50,7 +50,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
           <ul className="card mt-4 divide-y divide-outline-variant">
             {x.waiting.map((w) => (
               <li key={w.id} className="flex items-baseline justify-between gap-3 px-4 py-3">
-                <Link href={`/admin/users/${w.id}`} className="truncate font-bold text-on-surface hover:underline">{w.name} <span className="font-normal text-on-surface-variant">{w.email}</span></Link>
+                <Link href={`/admin/users/${w.id}`} className="truncate font-bold text-on-surface hover:underline">{w.name} <span className="font-normal text-on-surface-variant">{w.role === 'trainer' ? 'as a trainer · ' : ''}{w.email}</span></Link>
                 <span className="shrink-0 text-body-sm text-on-surface-variant">{ago(w.created_at)}</span>
               </li>
             ))}

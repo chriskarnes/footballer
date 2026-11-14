@@ -61,7 +61,7 @@ function Body({ o }: { o: Overview }) {
                 <tr key={w.id} className="hover:bg-surface-container-low">
                   <Td strong><Link href={`/admin/users/${w.user_id}`} className="hover:underline">{w.name || w.email}</Link></Td>
                   <Td><span className="text-on-surface">{w.title}</span><span className="block text-body-sm">{sourceLabel(w.source)}{w.feel ? ` · felt ${w.feel}` : ''}</span></Td>
-                  <Td className="max-w-[12rem] truncate">{w.academies ?? '—'}</Td>
+                  <Td className="max-w-[12rem] truncate">{(w.academy !== undefined ? w.academy : w.academies) ?? 'Own'}</Td>
                   <Td right>{w.minutes != null ? Math.round(w.minutes) : '—'}</Td>
                   <Td className="whitespace-nowrap">{ago(w.at)}</Td>
                 </tr>

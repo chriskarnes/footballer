@@ -30,7 +30,7 @@ export default async function AdminAcademies() {
                   <Link href={`/admin/academies/${r.id}`} className="after:absolute after:inset-0 hover:underline">{r.name}</Link>
                   <span className="block text-body-sm font-normal text-on-surface-variant">
                     {r.slug}{r.city ? ` · ${r.city}` : ''}
-                    {!r.set_up && ' · setting up'}{r.library_access && ' · Forge library'}{r.waiting > 0 && ` · ${r.waiting} waiting`}
+                    {r.unclaimed ? ' · waiting to be claimed' : !r.set_up && ' · setting up'}{r.library_access && ' · Forge library'}{r.waiting > 0 && ` · ${r.waiting} waiting`}
                   </span>
                 </Td>
                 <Td className="max-w-[14rem] truncate">{r.owner ? (r.owner.name || r.owner.email) : '—'}</Td>

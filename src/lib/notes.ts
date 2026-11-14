@@ -39,6 +39,10 @@ export function ago(at: string, tz = 'UTC', now = Date.now()) {
   const day = localDate(at, tz), today = localDate(new Date(now), tz);
   if (day === today) return `${Math.round(mins / 60)} h ago`;
   if (day === addDays(today, -1)) return 'yesterday';
+  // Another year: say which, or last November reads like this month.
+  if (day.slice(0, 4) !== today.slice(0, 4)) {
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: tz }).format(new Date(at));
+  }
   return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz }).format(new Date(at));
 }
 

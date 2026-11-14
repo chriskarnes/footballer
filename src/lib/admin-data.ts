@@ -15,7 +15,9 @@ export type Overview = {
   ai_30d: { calls: number; failed: number; tokens: number };
   weeks: { week: string; signups: number; sessions: number; active: number }[];
   recent: { id: string; user_id: string; title: string; source: string; feel: string | null; at: string;
-            minutes: number | null; email: string; name: string | null; academies: string | null }[];
+            minutes: number | null; email: string; name: string | null;
+            /** The academy the session was for (0027); before it, every academy the player is in. */
+            academy?: string | null; academies?: string | null }[];
   signups: { id: string; email: string; name: string | null; created_at: string; last_sign_in_at: string | null;
              academies: { slug: string; name: string; role: string }[] | null }[];
 };
@@ -23,6 +25,8 @@ export type Overview = {
 export type AcademyRow = {
   id: string; slug: string; name: string; city: string | null; created_at: string;
   library_access: boolean; listed: boolean; set_up: boolean;
+  /** Approved, but no owner has claimed it yet (0027). */
+  unclaimed?: boolean;
   owner: { id: string; email: string; name: string | null } | null;
   trainers: number; players: number; active_7d: number; sessions_7d: number; sessions_30d: number;
   last_done: string | null; programs: number; groups: number; drills: number; notes_30d: number;
@@ -31,13 +35,13 @@ export type AcademyRow = {
 
 export type AcademyDetail = {
   id: string; slug: string; name: string; city: string | null; time_zone: string; created_at: string;
-  library_access: boolean; listed: boolean; set_up: boolean; billing_mode: string; price_cents: number | null;
+  library_access: boolean; listed: boolean; set_up: boolean; unclaimed?: boolean; billing_mode: string; price_cents: number | null;
   members: { id: string; role: 'owner' | 'trainer' | 'player'; joined_at: string; email: string; name: string | null;
              last_sign_in_at: string | null; sessions_7d: number; sessions_30d: number; last_done: string | null;
              groups: string | null }[];
   programs: { id: string; name: string; weeks: number; created_at: string; sessions: number }[];
   groups: { id: string; name: string; program: string | null; starts_on: string | null; members: number }[];
-  waiting: { id: string; name: string; email: string; created_at: string }[];
+  waiting: { id: string; name: string; email: string; created_at: string; role?: 'player' | 'trainer' }[];
   drills: number; notes_30d: number;
   ai_30d: { calls: number; failed: number; tokens: number };
   recent: { id: string; user_id: string; title: string; source: string; feel: string | null; at: string;
@@ -56,13 +60,19 @@ export type UserDetail = {
              dominant_foot: string | null; club: string | null; region: string | null; signed_up_by: string | null;
              speed_tests: number } | null;
   academies: { id: string; slug: string; name: string; role: string; joined_at: string }[];
-  asking: { id: string; slug: string; name: string; created_at: string }[];
+  asking: { id: string; slug: string; name: string; created_at: string; role?: 'player' | 'trainer'; declined?: boolean }[];
   plan: { name: string | null; created_at: string; days: number } | null;
   sessions_all: number; minutes_all: number;
+  /** 0027: the last session finished, and how many were started and left. */
+  last_done?: string | null; unfinished?: number;
   notes: { received: number; unread: number }; notes_sent: number;
   workouts: { id: string; title: string; source: string; status: string; feel: string | null; at: string;
-              minutes: number | null; touches: number | null }[];
+              minutes: number | null; touches: number | null; academy?: string | null }[];
 };
+
+export const USER_FILTERS = ['all', 'players', 'staff', 'none', 'quiet'] as const;
+export type UserFilter = typeof USER_FILTERS[number];
+export type UsersPage = { total: number; counts: Record<UserFilter, number>; rows: UserRow[] };
 
 /** The signed-in admin, or what to show instead (sign in, or not allowed). */
 export async function adminViewer() {
@@ -88,7 +98,34 @@ const UUID = /^[0-9a-f-]{36}$/i;
 
 export const loadOverview = () => call<Overview>('admin_overview');
 export const loadAcademies = () => call<AcademyRow[]>('admin_academies');
-export const loadUsers = () => call<UserRow[]>('admin_users');
+export const USERS_PER_PAGE = 100;
+
+/** One page of people, searched and filtered in the database (0027). */
+export async function loadUsers(q: string, filter: UserFilter, page: number): Promise<Got<UsersPage>> {
+  const v = await getViewer();
+  const args = { p_query: q || null, p_filter: filter, p_limit: USERS_PER_PAGE, p_offset: page * USERS_PER_PAGE };
+  const { data, error } = await v.db.rpc('admin_users', args);
+  if (!error) return { data: data as UsersPage, error: null };
+  if (error.code !== 'PGRST202') { console.error('[admin] admin_users', error); return { data: null, error: 'Couldn’t load this. Try again.' }; }
+  // Before 0027: every account at once, filtered here.
+  const old = await call<UserRow[]>('admin_users');
+  if (!old.data) return { data: null, error: old.error };
+  const keep: Record<UserFilter, (u: UserRow) => boolean> = {
+    all: () => true,
+    players: (u) => !!u.academies?.some((m) => m.role === 'player'),
+    staff: (u) => !!u.academies?.some((m) => m.role !== 'player'),
+    none: (u) => !u.academies?.length,
+    quiet: (u) => !!u.academies?.some((m) => m.role === 'player') && u.sessions_30d === 0,
+  };
+  const found = old.data.filter((u) => !q || u.email.toLowerCase().includes(q) || (u.name ?? '').toLowerCase().includes(q)
+    || !!u.academies?.some((m) => m.name.toLowerCase().includes(q) || m.slug.includes(q)));
+  const picked = found.filter(keep[filter]);
+  return { data: {
+    total: picked.length,
+    counts: Object.fromEntries(USER_FILTERS.map((f) => [f, found.filter(keep[f]).length])) as Record<UserFilter, number>,
+    rows: picked.slice(page * USERS_PER_PAGE, (page + 1) * USERS_PER_PAGE),
+  }, error: null };
+}
 export const loadAcademy = (id: string) =>
   UUID.test(id) ? call<AcademyDetail | null>('admin_academy', { p_id: id }) : Promise.resolve({ data: null, error: null });
 export const loadUser = (id: string) =>
