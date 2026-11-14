@@ -28,7 +28,7 @@ type Mode = 'program' | 'custom' | 'auto';
  *     its day moved.
  */
 export function PlayerPlan({ userId, first, mode, program, target, defaults, own, focus: savedFocus, progress: savedProgress, ownProgress,
-  drills, thisWeek, nextWeek, weeks, busy, runs = {} }: {
+  drills, thisWeek, nextWeek, weeks, busy, runs = {}, todayWeekday = 0 }: {
   userId: string; first: string;
   mode: Mode;
   /** What Program shows: this week, groups and their own programs. */
@@ -38,6 +38,8 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
   progress: boolean; ownProgress: boolean | null;
   drills: DrillRow[];
   thisWeek: CustomRow[]; nextWeek: CustomRow[];
+  /** Today, 0 = Monday: this week's days before it can't take a session. */
+  todayWeekday?: number;
   /** The Mondays: this week's and next. */
   weeks: { this: string; next: string };
   busy: TeamDays & { meets: number[] };
@@ -252,7 +254,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
                     <select aria-label={`Day for ${s.name}`} value={day} disabled={pending}
                             onChange={(e) => run(() => saveBuiltSession(s.id, { weekday: Number(e.target.value) }), undefined, 'Saved.', undefined, s.id)}
                             className="h-11 rounded-small border border-outline bg-surface px-3 text-body font-semibold">
-                      {DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+                      {DAYS.map((d, i) => (
+                        <option key={d} value={i} disabled={which === 'this' && i < todayWeekday && i !== day}>
+                          {d}{busy.games.includes(i) ? ' (game)' : ''}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <ul className="mt-2.5 divide-y divide-outline-variant">

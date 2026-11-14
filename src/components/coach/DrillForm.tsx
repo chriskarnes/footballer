@@ -105,7 +105,7 @@ export function DrillForm({ drill, back, onSaved, onCancel, others }: {
           <button type="button" className="w-full text-center text-body font-semibold text-on-surface-variant underline underline-offset-4"
                   onClick={() => setConfirm(true)}>Delete this drill</button>
           <ConfirmSheet open={confirm} busy={deleting} title="Delete this drill?" confirmLabel="Delete"
-            body="It comes out of every session that uses it, players’ built weeks included, and any “Just for you” extra of it goes. A built session left with no drills is removed."
+            body="It comes out of every session that uses it and of players’ weeks from this one on, and any “Just for you” extra of it goes. A built session left with no drills is removed. Past weeks and what players have done keep it in their history."
             onCancel={() => setConfirm(false)}
             onConfirm={async () => {
               setDeleting(true);

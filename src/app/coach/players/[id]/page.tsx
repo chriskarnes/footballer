@@ -5,7 +5,7 @@ import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { RemovePlayer } from '@/components/coach/RemovePlayer';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
-import { addDays, localDate, mondayOf, sinceLabel } from '@/lib/progress';
+import { addDays, localDate, mondayOf, sinceLabel, weekdayOf } from '@/lib/progress';
 import { loadContent, targetFor } from '@/lib/academy-data';
 import { PlayerPlan } from '@/components/coach/PlayerPlan';
 import { Extras, ProgramSetup, WeekList } from '@/components/coach/PlayerTraining';
@@ -17,11 +17,11 @@ import { nudgeDraft } from '@/lib/nudge';
 import { PageHead } from '@/components/coach/PageHead';
 import { TESTS, fmtTest } from '@/lib/speed';
 import { shortDate } from '@/lib/dates';
+// The bands the profile form offers (ProfileSetup).
+import { AGE_LABEL as AGE } from '@/lib/positions';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
-// The bands the profile form offers (ProfileSetup).
-const AGE: Record<string, string> = { u10: 'Under 10', '10_12': 'Age 10–12', '13_15': 'Age 13–15', '16_18': 'Age 16–17', '18_plus': '18+' };
 
 /**
  * One player, for the trainer: this week day by day, the last four weeks,
@@ -89,7 +89,9 @@ export default async function PlayerPage({ params }: {
         const mine = content.custom.filter((x) => x.user_id === p.user_id && x.made_by !== 'player');
         const added = content.custom.filter((x) => x.user_id === p.user_id && x.made_by === 'player' && x.week_of === weeks.this)
           .map((x) => ({ id: x.id, name: x.name, done: !!runs[x.id], weekday: x.weekday }));
-        const thisWeek = mine.filter((x) => x.week_of === weeks.this);
+        // On the day the player sees it: their own move counts.
+        const thisWeek = mine.filter((x) => x.week_of === weeks.this)
+          .map((x) => ({ ...x, weekday: p.week.find((i) => i.key === `c:${x.id}`)?.weekday ?? x.weekday }));
         const nextWeek = mine.filter((x) => x.week_of === weeks.next);
         // Never chosen (before 0014, or never touched): custom if they have a custom week.
         const mode = t.mode ?? (thisWeek.length || nextWeek.length ? 'custom' : 'program');
@@ -112,7 +114,7 @@ export default async function PlayerPage({ params }: {
                   </div>
                 }
                 target={t} defaults={content.defaults} own={t.own} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
-                drills={content.drills} weeks={weeks} thisWeek={thisWeek} nextWeek={nextWeek} runs={runs}
+                drills={content.drills} weeks={weeks} thisWeek={thisWeek} todayWeekday={weekdayOf(localDate(new Date(), tz))} nextWeek={nextWeek} runs={runs}
                 busy={{ ...teamDays(soccer),
                   meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
                     && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />

@@ -28,10 +28,14 @@ type Staff = Awaited<ReturnType<typeof staff>>;
  * what it points at, so a program or drill from another academy could be
  * linked in.
  */
-async function ownProgram(v: Staff, id: string) {
-  const { data, error } = await v.db.from('academy_programs').select('id').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+async function ownProgram(v: Staff, id: string, week?: number) {
+  const { data, error } = await v.db.from('academy_programs').select('id, weeks').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
   if (error) throw error;
   if (!data) throw new Said('That program isn’t in your academy any more.');
+  // A week the program doesn't have would save and never show.
+  if (week !== undefined && !(Number.isInteger(week) && week >= 1 && week <= (data as { weeks: number }).weeks)) {
+    throw new Said(`Pick a week from 1 to ${(data as { weeks: number }).weeks}.`);
+  }
 }
 async function ownDrills(v: Staff, ids: string[]) {
   const unique = [...new Set(ids)];
@@ -192,7 +196,7 @@ export async function saveSession(input: { id?: string; programId: string; week:
     const name = input.name.trim().slice(0, 60);
     if (!name) return { ok: false, error: 'Give the session a name.' };
     if (!input.drillIds.length) return { ok: false, error: 'Add at least one drill.' };
-    await ownProgram(v, input.programId);
+    await ownProgram(v, input.programId, input.week);
     await ownDrills(v, input.drillIds.slice(0, 30));
     const row = { academy_id: v.academy.id, program_id: input.programId, week: input.week, name, drill_ids: input.drillIds.slice(0, 30) };
     let error;
@@ -284,6 +288,7 @@ export async function placeSession(libraryId: string, programId: string, week: n
     const { data } = await v.db.from('library_sessions').select('id, name, drill_ids')
       .eq('id', libraryId).eq('academy_id', v.academy.id).maybeSingle();
     if (!data) return { ok: false, error: 'That session isn’t in your library any more.' };
+    await ownProgram(v, programId, week);
     const r = await place(v, data, programId, week);
     if (r) return { ok: false, error: r };
     done();

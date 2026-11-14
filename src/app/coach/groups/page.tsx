@@ -60,7 +60,7 @@ export default async function GroupsPage() {
                   {!!members.length && (
                     <p className="mt-2.5 flex items-center gap-2 text-body font-semibold text-on-surface">
                       <StatusDot status={behind ? 'warn' : 'good'} />
-                      {behind ? `${behind} behind this week` : 'All on track'}
+                      {behind ? `${behind} ${behind === 1 ? 'needs' : 'need'} a nudge` : 'All on track'}
                     </p>
                   )}
                 </Link>

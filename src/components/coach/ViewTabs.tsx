@@ -6,11 +6,15 @@ import Link from 'next/link';
  * chips are the filters below it (the groups), and a switch that looks like
  * a filter read as one.
  */
-export function ViewTabs({ tabs, on }: { tabs: { href: string; label: string }[]; on: string }) {
+export function ViewTabs({ tabs, on, query }: {
+  tabs: { href: string; label: string }[]; on: string;
+  /** Kept across the switch, e.g. ?group=: the list narrowed to a group stays narrowed. */
+  query?: string;
+}) {
   return (
     <nav className="segmented mt-4 max-w-md lg:mb-6 lg:mt-0" aria-label="Views">
       {tabs.map((t) => (
-        <Link key={t.href} href={t.href} aria-current={t.href === on ? 'page' : undefined}
+        <Link key={t.href} href={query ? `${t.href}?${query}` : t.href} aria-current={t.href === on ? 'page' : undefined}
               className={`segment pressable ${t.href === on ? 'segment-on' : ''}`}>{t.label}</Link>
       ))}
     </nav>

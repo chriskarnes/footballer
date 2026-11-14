@@ -20,14 +20,14 @@ export function StatusDot({ status, className = '' }: { status: Status; classNam
 export function WeekDots({ week, large }: { week: Progress['week']; large?: boolean }) {
   const size = large ? 'h-7 w-7' : 'h-2.5 w-2.5';
   // Read aloud as one line: the count, then any day planned and missed.
-  const missed = week.map((d, i) => d.planned > d.done && !d.future && !d.today ? SPOKEN[i] : null).filter(Boolean);
+  const missed = week.map((d, i) => d.planned > d.covered && !d.future && !d.today ? SPOKEN[i] : null).filter(Boolean);
   const trained = week.filter((d) => d.done).length;
   const said = `This week: trained ${trained} ${trained === 1 ? 'day' : 'days'}`
     + (missed.length ? `, missed ${missed.join(', ')}` : '');
   return (
     <div role="img" aria-label={said} className={`flex ${large ? 'justify-between' : 'gap-1.5'}`}>
       {week.map((d, i) => {
-        const missed = d.planned > d.done && !d.future && !d.today;
+        const missed = d.planned > d.covered && !d.future && !d.today;
         const cls = d.done ? 'bg-on-surface border-on-surface'
           : missed ? 'border-status-bad border-2'
           : d.planned ? 'border-outline border-dashed'

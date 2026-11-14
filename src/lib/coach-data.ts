@@ -56,6 +56,7 @@ export async function loadPlayers(db: any, academy: Academy, opts: { player?: st
       progress: progress({
         planDays: asPlanDays(week), done: r.done ?? [], lastDone: r.last_done, tz: academy.timeZone,
         setDone: setItems(week).filter((i) => i.done).map((i) => i.doneOn ?? i.weekday),
+        setCovered: setItems(week).filter((i) => i.done).map((i) => i.weekday),
         since: localDate(since, academy.timeZone),
       }),
     };

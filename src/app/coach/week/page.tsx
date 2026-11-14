@@ -4,11 +4,11 @@ import { PageHead } from '@/components/coach/PageHead';
 import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { StatusDot } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
-import { teamDays } from '@/lib/academy-week';
+import { setItems, teamDays } from '@/lib/academy-week';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
 import { Empty } from '@/components/coach/Empty';
-import { byAttention, localDate, weekdayOf } from '@/lib/progress';
+import { byAttention, detailOf, localDate, weekdayOf } from '@/lib/progress';
 
 export const metadata = { title: 'This week', robots: { index: false } };
 
@@ -39,7 +39,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="animate-pop">
-      <ViewTabs tabs={PLAYER_VIEWS} on="/coach/week" />
+      <ViewTabs tabs={PLAYER_VIEWS} on="/coach/week" query={inGroup ? `group=${inGroup.id}` : undefined} />
       <PageHead title="This week">Sessions sit on the days that fit each player&rsquo;s soccer.</PageHead>
 
       {!!groups.length && (
@@ -97,7 +97,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                       <StatusDot status={p.progress.status} /><span className="truncate">{p.name}</span>
                     </Link>
                     <span className="mt-0.5 block text-caption text-on-surface-variant">
-                      {p.progress.done} of {p.progress.planned} done
+                      {p.progress.hasPlan ? `${p.progress.done} of ${p.progress.planned} done` : detailOf(p.progress) ?? 'Nothing set'}
                     </span>
                   </th>
                   {DAYS.map((_, d) => {
@@ -108,7 +108,8 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                         tag ? (d === today ? 'bg-surface-container-high' : 'bg-surface-container') : d === today ? 'bg-surface-container-low' : ''}`}>
                         {tag && <span className="eyebrow block px-1">{tag}</span>}
                         {items.map((it) => {
-                          const missed = !it.done && d < today;
+                          // Only what was set can be missed: a "just for you" drill or an extra isn't due.
+                          const missed = !it.done && d < today && setItems([it]).length > 0;
                           return (
                             <span key={it.key} title={`${it.title} · ${it.minutes} min${it.moved ? ' · moved by player' : ''}`}
                                   className={`mt-1 block truncate rounded-small px-1.5 py-1 text-caption font-semibold

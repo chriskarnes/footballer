@@ -22,7 +22,9 @@ export type Progress = {
   /** Weeks in a row, up to this one, with at least one session. */
   streak: number;
   /** Monday to Sunday: how many were planned and how many done on each day. */
-  week: { date: string; planned: number; done: number; today: boolean; future: boolean }[];
+  /** `covered`: that day's set sessions done, whichever day they were done
+   *  on. A day is missed only when some of its sessions still aren't. */
+  week: { date: string; planned: number; done: number; covered: number; today: boolean; future: boolean }[];
   /** The last four weeks, oldest first, this week last: sessions of any kind.
    *  Planned for this week only: what was set for past weeks isn't kept. */
   weeks: { monday: string; done: number; planned: number | null }[];
@@ -50,6 +52,8 @@ export function progress(input: {
   /** This week's set sessions done, by the weekday each was done: the same
    *  count the player's Train shows. Without it, every finished workout. */
   setDone?: number[];
+  /** The same sessions, by the weekday each was set for. */
+  setCovered?: number[];
   /** Where `done` starts (YYYY-MM-DD), so a streak that reaches it reads "at least". */
   since?: string;
 }): Progress {
@@ -69,7 +73,9 @@ export function progress(input: {
   const set = input.setDone;
   const week = Array.from({ length: 7 }, (_, i) => {
     const date = addDays(monday, i);
-    return { date, planned: perWeekday[i], done: set ? set.filter((d) => d === i).length : count(date, date), today: date === today, future: date > today };
+    const done = set ? set.filter((d) => d === i).length : count(date, date);
+    const covered = input.setCovered ? input.setCovered.filter((d) => d === i).length : done;
+    return { date, planned: perWeekday[i], done, covered, today: date === today, future: date > today };
   });
   const done = set ? set.length : count(monday, addDays(monday, 6));
   const due = week.filter((d) => !d.future).reduce((a, d) => a + d.planned, 0);

@@ -302,7 +302,16 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
       if (change.steps) row.steps = change.steps.slice(0, 20).map((n) => clamp(n, 0, 9) ?? 0);
       if (change.changes) row.changes = change.changes.slice(0, 20).map((c) => ['new', 'same', 'up', 'harder', 'hold'].includes(c) ? c : 'new');
     }
-    if (change.weekday !== undefined) row.weekday = clamp(change.weekday, 0, 6);
+    if (change.weekday !== undefined) {
+      const day = clamp(change.weekday, 0, 6) ?? 0;
+      // This week, a day already gone would be missed the moment it's set.
+      const { data: cur } = await v.db.from('player_week_sessions').select('week_of, weekday').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+      const today = localDate(new Date(), v.academy.timeZone);
+      if (cur && cur.week_of === mondayOf(today) && day < weekdayOf(today) && day !== cur.weekday) {
+        return { ok: false, error: 'That day has gone. Pick today or a day still to come.' };
+      }
+      row.weekday = day;
+    }
     let { data: hit, error } = await v.db.from('player_week_sessions').update(row).eq('id', id).eq('academy_id', v.academy.id).select('id');
     // Before 0012: just the drills and the day.
     if (error && /steps|changes/.test(error.message)) {
@@ -312,6 +321,9 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
     if (error) return { ok: false, error: missing(error.message) };
     // Nothing matched: the week was rebuilt or taken away since this page loaded.
     if (!hit?.length) return { ok: false, error: 'That session isn’t in their week any more. Reload and try again.' };
+    // The trainer's day wins over a move the player made: otherwise "Saved"
+    // and the player still sees it on their day (staff may clear it, 0027).
+    if (change.weekday !== undefined) await v.db.from('session_moves').delete().eq('academy_id', v.academy.id).eq('item_key', `c:${id}`);
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }

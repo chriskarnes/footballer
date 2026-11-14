@@ -41,7 +41,7 @@ export function WeekList({ first, week }: { first: string; week: WeekItem[] }) {
           <span className="min-w-0">
             <span className={`block truncate text-body-lg font-semibold ${it.done ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>{it.title}</span>
             <span className="block truncate text-body-sm text-on-surface-variant">
-              {DAYS[it.weekday]}{it.practice && ' (practice day)'} · {it.kind === 'addon' ? 'Extra' : it.kind === 'custom' ? 'Custom week' : [it.groups.join(' & ') || 'Own program', it.from].join(' · ')}
+              {DAYS[it.weekday]}{it.practice && ' (practice day)'} · {it.kind === 'addon' ? 'Extra' : it.extra ? 'Added by them' : it.kind === 'custom' ? 'Custom week' : [it.groups.join(' & ') || 'Own program', it.from].join(' · ')}
             </span>
           </span>
           <span className="shrink-0 text-body-sm font-semibold text-on-surface-variant">{it.done ? 'Done' : `${it.minutes} min`}</span>
