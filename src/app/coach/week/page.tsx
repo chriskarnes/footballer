@@ -97,7 +97,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                       <StatusDot status={p.progress.status} /><span className="truncate">{p.name}</span>
                     </Link>
                     <span className="mt-0.5 block text-caption text-on-surface-variant">
-                      {p.week.filter((w) => w.done).length} of {p.week.length} done
+                      {p.progress.done} of {p.progress.planned} done
                     </span>
                   </th>
                   {DAYS.map((_, d) => {

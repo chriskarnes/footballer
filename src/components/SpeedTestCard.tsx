@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { BackButton, BackLink } from './BackLink';
 import { ConfirmSheet } from './ConfirmSheet';
 import { haptic } from '@/lib/haptics';
-import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS } from '@/lib/speed';
+import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS, fmtTest } from '@/lib/speed';
 import { bests, heightGain, localDay, useSpeedCard, type TestEntry } from '@/lib/speed-card';
 import { position } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
@@ -16,7 +16,7 @@ const dayName = shortDate;
 type Screen = 'card' | 'entry';
 
 const today = () => localDay();
-const fmt = (v: number, unit: string) => unit === 's' ? v.toFixed(2) : String(Math.round(v));
+const fmt = fmtTest;
 
 /**
  * The athlete's card. Reads top to bottom: personal bests, then every test day

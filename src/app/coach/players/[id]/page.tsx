@@ -15,7 +15,7 @@ import { teamDays } from '@/lib/academy-week';
 import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
 import { nudgeDraft } from '@/lib/nudge';
 import { PageHead } from '@/components/coach/PageHead';
-import { TESTS } from '@/lib/speed';
+import { TESTS, fmtTest } from '@/lib/speed';
 import { shortDate } from '@/lib/dates';
 
 export const metadata = { title: 'Player', robots: { index: false } };
@@ -57,7 +57,7 @@ export default async function PlayerPage({ params }: {
   const pr = p.progress;
   const soccer = content.schedules.find((x) => x.user_id === p.user_id);
   const tz = academy.timeZone;
-  const max = Math.max(1, ...pr.weeks.map((w) => Math.max(w.done, w.planned)));
+  const max = Math.max(1, ...pr.weeks.map((w) => Math.max(w.done, w.planned ?? 0)));
   const sentNotes = ((notes ?? []) as unknown as { seen_at: string | null; notes: { id: string; body: string; kind: string; author_name: string; created_at: string } }[])
     .sort((a, b) => b.notes.created_at.localeCompare(a.notes.created_at));
   const about = [p.positions?.map(positionName).join(', '), p.age_band && (AGE[p.age_band] ?? p.age_band)].filter(Boolean).join(' · ');
@@ -142,10 +142,10 @@ export default async function PlayerPage({ params }: {
 
         <div className="mt-6 flex items-baseline justify-between border-t border-outline-variant pt-5">
           <div className="text-body font-semibold text-on-surface">Last four weeks</div>
-          <div className="text-body text-on-surface-variant">{pr.streak} {pr.streak === 1 ? 'week' : 'weeks'} in a row</div>
+          <div className="text-body text-on-surface-variant">{pr.streak}{pr.streakAtLeast ? '+' : ''} {pr.streak === 1 && !pr.streakAtLeast ? 'week' : 'weeks'} in a row</div>
         </div>
         <div className="mt-3 flex h-24 gap-3" role="img"
-             aria-label={pr.weeks.map((w, i) => `${weekName(i)}: ${w.done} of ${w.planned} done`).join(', ')}>
+             aria-label={pr.weeks.map((w, i) => `${weekName(i)}: ${w.done} ${w.done === 1 ? 'session' : 'sessions'}`).join(', ')}>
           {pr.weeks.map((w, i) => (
             <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
               <span className="text-caption font-bold text-on-surface">{w.done}</span>
@@ -186,8 +186,8 @@ export default async function PlayerPage({ params }: {
                   <div key={t.id} className="flex items-baseline justify-between gap-4 py-2">
                     <dt className="text-body text-on-surface">{t.name}</dt>
                     <dd className="text-body font-semibold text-on-surface">
-                      {typeof last.values?.[t.id] === 'number' ? `${last.values[t.id]} ${t.unit}` : '—'}
-                      <span className="ml-2 font-normal text-on-surface-variant">best {best} {t.unit}</span>
+                      {typeof last.values?.[t.id] === 'number' ? `${fmtTest(last.values[t.id], t.unit)} ${t.unit}` : '—'}
+                      <span className="ml-2 font-normal text-on-surface-variant">best {fmtTest(best, t.unit)} {t.unit}</span>
                     </dd>
                   </div>
                 );

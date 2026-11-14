@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getTrainer, type MyWeek } from '@/lib/player-week';
 import { getUnread } from '@/lib/notes';
 import { MoveDay } from './MoveDay';
+import { setItems } from '@/lib/academy-week';
 import { SoccerDaysPanel } from './SoccerDays';
 import { AddSession } from './AddSession';
 import { Avatar } from './Avatar';
@@ -38,7 +39,8 @@ const Tick = ({ className }: { className: string }) => (
 export async function TrainerWeek({ week }: { week: MyWeek }) {
   const { items, today, schedule } = week;
   const [trainer, unread, speed] = await Promise.all([getTrainer().catch(() => null), getUnread(), speedAllowed().catch(() => true)]);
-  const set = items.filter((i) => !i.extra);
+  // The set sessions, as the trainer's pages count them: not extras.
+  const set = setItems(items);
   const done = set.filter((i) => i.done).length;
   const next = items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);

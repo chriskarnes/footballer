@@ -278,10 +278,13 @@ export function buildWeek(input: {
 }
 
 /** The week as progress() wants it: one planned slot per item, on its day. */
-// Not extras, the player's or the trainer's ("Just for you"): they're on top
-// of the week, so giving one never makes an on-track player "behind".
+/** The week's set sessions: not extras, the player's or the trainer's ("Just
+ *  for you"), which are on top of the week. What "x of y done" counts,
+ *  everywhere, so giving an extra never makes an on-track player "behind". */
+export const setItems = (items: WeekItem[]) => items.filter((it) => !it.extra && it.kind !== 'addon');
+
 export const asPlanDays = (items: WeekItem[]) =>
-  items.filter((it) => !it.extra && it.kind !== 'addon').map((it, i) => ({ weekday: it.weekday, slot: 10 + i, kind: 'technical' }));
+  setItems(items).map((it, i) => ({ weekday: it.weekday, slot: 10 + i, kind: 'technical' }));
 
 /** "Tue 5:00 pm" */
 export function meetingLabel(g: Pick<GroupRow, 'meets_weekday' | 'meets_time'>): string | null {

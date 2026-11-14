@@ -623,3 +623,7 @@ export const CAVEATS = [
   'Plyometric certainty: the 2023 meta-analysis rates its own evidence low to very low (GRADE). The direction is consistent; the size is not settled.',
   'No study has tested this exact 12-month structure. Academy programs rest on the same component evidence plus practice; the block tests are the trial.',
 ];
+
+/** A test's number as shown everywhere, the player's card and the trainer's:
+ *  seconds to hundredths, centimetres and the rest whole. */
+export const fmtTest = (v: number, unit: string) => unit === 's' ? v.toFixed(2) : String(Math.round(v));

@@ -2,7 +2,7 @@ import 'server-only';
 import type { Academy } from './branding-server';
 import { localDate, progress, type Done, type PlanDay, type Progress } from './progress';
 import { loadContent, type AcademyContent } from './academy-data';
-import { asPlanDays, buildWeek, type WeekItem } from './academy-week';
+import { asPlanDays, buildWeek, setItems, type WeekItem } from './academy-week';
 import { plain } from '@/lib/plain-error';
 
 /** One player as academy_players() returns them. */
@@ -50,7 +50,14 @@ export async function loadPlayers(db: any, academy: Academy, opts: { player?: st
       && content.memberships.some((m) => m.group_id === g.id && m.user_id === r.user_id)).map((g) => g.name);
     return {
       ...r, name, first: name.split(/\s+/)[0], week, groups,
-      progress: progress({ planDays: [...(r.plan_days ?? []), ...asPlanDays(week)], done: r.done ?? [], lastDone: r.last_done, tz: academy.timeZone }),
+      // "x of y" is the trainer's week, counted as the player's Train counts
+      // it: their own library plan and their Speed or free sessions are
+      // training (last trained, minutes, history), not what was set.
+      progress: progress({
+        planDays: asPlanDays(week), done: r.done ?? [], lastDone: r.last_done, tz: academy.timeZone,
+        setDone: setItems(week).filter((i) => i.done).map((i) => i.doneOn ?? i.weekday),
+        since: localDate(since, academy.timeZone),
+      }),
     };
   });
   return { players, error: null };

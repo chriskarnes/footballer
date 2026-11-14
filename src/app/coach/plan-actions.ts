@@ -158,10 +158,13 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       const { players } = await loadPlayers(v.db, v.academy, { player: userId, days: 21, content: c });
       const p = players[0];
       const last = p?.progress.weeks[p.progress.weeks.length - 2];
+      // What was set the week before, and how much of it was done: from the
+      // week built then, when there was one (past weeks' plans aren't kept).
+      const before = past[0]?.week_of === addDays(week_of, -7) ? past[0] : null;
       const res = await proposeWeek({
         first: p?.first ?? 'Player', age: p?.age_band ?? null, positions: p?.positions ?? null,
         target: { ...t, sessions: fit }, focus: t.focus, drills: c.drills, recent, week: rules,
-        lately: { done: last?.done ?? 0, planned: last?.planned ?? 0, titles: (p?.done ?? []).flatMap((d) => d.title ? [d.title] : []) },
+        lately: { done: before ? before.sessions.filter((x) => x.done).length : last?.done ?? 0, planned: before ? before.sessions.length : last?.planned ?? 0, titles: (p?.done ?? []).flatMap((d) => d.title ? [d.title] : []) },
       });
       await logCall(v.db, {
         academyId: v.academy.id, actorId: v.user.id, playerId: userId, kind: 'week', ok: !!res.sessions, usage: res.usage,

@@ -23,8 +23,11 @@ export type Progress = {
   streak: number;
   /** Monday to Sunday: how many were planned and how many done on each day. */
   week: { date: string; planned: number; done: number; today: boolean; future: boolean }[];
-  /** The last four weeks, oldest first, this week last. */
-  weeks: { monday: string; done: number; planned: number }[];
+  /** The last four weeks, oldest first, this week last: sessions of any kind.
+   *  Planned for this week only: what was set for past weeks isn't kept. */
+  weeks: { monday: string; done: number; planned: number | null }[];
+  /** The streak reached the start of what was read: it may be longer. */
+  streakAtLeast: boolean;
   minutesThisWeek: number;
 };
 
@@ -44,6 +47,11 @@ const daysBetween = (a: string, b: string) => Math.round((toUtc(b) - toUtc(a)) /
 
 export function progress(input: {
   planDays: PlanDay[]; done: Done[]; lastDone: string | null; now?: Date; tz: string;
+  /** This week's set sessions done, by the weekday each was done: the same
+   *  count the player's Train shows. Without it, every finished workout. */
+  setDone?: number[];
+  /** Where `done` starts (YYYY-MM-DD), so a streak that reaches it reads "at least". */
+  since?: string;
 }): Progress {
   const { tz } = input;
   const today = localDate(input.now ?? new Date(), tz);
@@ -56,11 +64,14 @@ export function progress(input: {
   const doneDates = input.done.map((d) => localDate(d.at, tz));
   const count = (from: string, to: string) => doneDates.filter((d) => d >= from && d <= to).length;
 
+  // "x of y" counts the week's set sessions, as the player sees them: Speed,
+  // free sessions and extras are training, but not what was set.
+  const set = input.setDone;
   const week = Array.from({ length: 7 }, (_, i) => {
     const date = addDays(monday, i);
-    return { date, planned: perWeekday[i], done: count(date, date), today: date === today, future: date > today };
+    return { date, planned: perWeekday[i], done: set ? set.filter((d) => d === i).length : count(date, date), today: date === today, future: date > today };
   });
-  const done = count(monday, addDays(monday, 6));
+  const done = set ? set.length : count(monday, addDays(monday, 6));
   const due = week.filter((d) => !d.future).reduce((a, d) => a + d.planned, 0);
   const minutesThisWeek = Math.round(input.done
     .filter((d) => localDate(d.at, tz) >= monday)
@@ -68,12 +79,14 @@ export function progress(input: {
 
   const weeks = [3, 2, 1, 0].map((back) => {
     const m = addDays(monday, -7 * back);
-    return { monday: m, done: count(m, addDays(m, 6)), planned };
+    return { monday: m, done: count(m, addDays(m, 6)), planned: back === 0 ? planned : null };
   });
 
-  let streak = 0;
+  let streak = 0, streakAtLeast = false;
   for (let back = 0; ; back++) {
     const m = addDays(monday, -7 * back);
+    // Read back to the start of what we have: past it, unknown, not a gap.
+    if (input.since && m < input.since) { streakAtLeast = true; break; }
     if (count(m, addDays(m, 6))) streak++;
     else if (back === 0) continue; // this week isn't over; don't break the streak for it yet
     else break;
@@ -96,7 +109,7 @@ export function progress(input: {
   } else if (daysSince <= 3) { status = 'good'; reason = 'Active'; }
   else { status = 'warn'; reason = `Quiet ${daysSince} days`; }
 
-  return { status, reason, hasPlan, done, planned, due, daysSince, streak, week, weeks, minutesThisWeek };
+  return { status, reason, hasPlan, done, planned, due, daysSince, streak, streakAtLeast, week, weeks, minutesThisWeek };
 }
 
 /** "today", "yesterday", "3 days ago", "never". */
