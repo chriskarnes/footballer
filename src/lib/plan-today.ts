@@ -29,20 +29,20 @@ export function weekState<T extends DayRow>(days: T[], completions: Completion[]
   const today = (now.getDay() + 6) % 7;
   const since = weekStart(now).getTime();
 
-  // How many times each session was finished this week. A session the plan
-  // repeats needs doing twice to tick both days, and they tick in order.
-  const finished = new Map<string, number>();
-  for (const c of completions) {
-    if (!c.source_ref || !c.completed_at) continue;
-    if (new Date(c.completed_at).getTime() < since) continue;
-    finished.set(c.source_ref, (finished.get(c.source_ref) ?? 0) + 1);
-  }
-
+  // Each finish this week ticks one day with that session. A session the plan
+  // repeats needs doing twice to tick both. A finish ticks its own day first
+  // (done on Thursday, Thursday's card is done), else the earliest one before
+  // it still undone (catching up), else the next one.
   const done = new Set<string>();
   const training = days.filter((d) => d.kind !== 'rest' && d.session_id);
-  for (const d of training) {
-    const left = finished.get(d.session_id!) ?? 0;
-    if (left > 0) { done.add(dayKey(d)); finished.set(d.session_id!, left - 1); }
+  const finishes = completions
+    .filter((c) => c.source_ref && c.completed_at && new Date(c.completed_at).getTime() >= since)
+    .map((c) => ({ ref: c.source_ref!, weekday: (new Date(c.completed_at!).getDay() + 6) % 7 }))
+    .sort((a, b) => a.weekday - b.weekday);
+  for (const f of finishes) {
+    const open = training.filter((d) => d.session_id === f.ref && !done.has(dayKey(d)));
+    const pick = open.find((d) => d.weekday === f.weekday) ?? open.find((d) => d.weekday < f.weekday) ?? open[0];
+    if (pick) done.add(dayKey(pick));
   }
 
   const todays = training.filter((d) => d.weekday === today);

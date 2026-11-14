@@ -4,6 +4,7 @@ import { Avatar } from './Avatar';
 import { AddSession } from './AddSession';
 import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { NoteBanner } from './NoteBanner';
+import { nextMeeting } from '@/lib/next-meeting';
 import { SoccerDaysPanel } from './SoccerDays';
 
 type Wait = Extract<PlayerState, { kind: 'new' | 'waiting' }>;
@@ -23,7 +24,7 @@ export function waitingLine(s: Wait) {
  */
 export function Waiting({ state }: { state: Wait }) {
   const { week, trainer } = state;
-  const meets = week.groups.find((g) => g.when)?.when ?? null;
+  const meets = nextMeeting(week.groups, week.today);
   return (
     <div className="animate-pop">
       <BrandBand>

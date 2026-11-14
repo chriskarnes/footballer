@@ -10,6 +10,7 @@ import { BandTag, BandTitle, BrandBand } from './BrandBand';
 import { StartLink } from './StartLink';
 import { TickMark } from './TickMark';
 import { SpeedInvite } from './SpeedInvite';
+import { nextMeeting } from '@/lib/next-meeting';
 import { speedAllowed } from '@/lib/speed-gate';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -65,9 +66,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
   const author = note ? note.author : trainer?.name ?? null;
   const theirs = !note || (!!trainer?.name && note.author.split(' ')[0] === trainer.name);
   // When they next see their trainer, from their group's meeting day.
-  const meet = week.groups.filter((g) => g.when && g.day !== null)
-    .sort((a, b) => ((a.day! - today + 7) % 7) - ((b.day! - today + 7) % 7))[0];
-  const meetLabel = meet ? (meet.day === today ? meet.when!.replace(/^\w{3}/, 'today') : meet.when) : null;
+  const meetLabel = nextMeeting(week.groups, today);
 
   return (
     <section>

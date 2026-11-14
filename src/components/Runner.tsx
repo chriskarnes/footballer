@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Exercise } from '@/lib/types';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
-import { PENDING_SENT, pendingFinish, pendingWorkout } from '@/lib/pending';
+import { PENDING_FLUSH, PENDING_SENT, pendingFinish, pendingWorkout } from '@/lib/pending';
 import { browserClient } from '@/lib/supabase/client';
 import { EFFORT } from '@/lib/speed-guide';
 import { isYoutubeShort, youtubeId } from '@/lib/video';
@@ -132,6 +132,10 @@ export function Runner({
     () => (completedDay === null && showable(drills[0]) ? drills[0].id : null));
   const rows = useRef(new Map<string, HTMLLIElement>());
   const finishRef = useRef<HTMLButtonElement>(null);
+  // Finish and "Do it again" swap the whole screen: focus goes with it, so a
+  // keyboard or screen reader isn't left on nothing.
+  const finishedHeading = useRef<HTMLHeadingElement>(null);
+  const focusFirst = useRef(false);
 
   // Ticks outlive a refresh, the phone dropping the app in a bag, or a trip
   // to another tab and back: kept on the phone until Finish, for half a day.
@@ -177,6 +181,12 @@ export function Runner({
   const pct = drills.length ? Math.round((done.size / drills.length) * 100) : 0;
   const allDone = drills.length > 0 && done.size === drills.length;
   const finished = phase === 'finished';
+  useEffect(() => { if (finished) finishedHeading.current?.focus(); }, [finished]);
+  useEffect(() => {
+    if (!focusFirst.current || done.size) return;
+    focusFirst.current = false;
+    rows.current.get(drills[0]?.id)?.querySelector<HTMLElement>('button, [role="checkbox"]')?.focus();
+  });
   // The drill to tick next: its circle breathes.
   const current = review ? null : drills.find((d) => !done.has(d.id))?.id ?? null;
 
@@ -211,11 +221,22 @@ export function Runner({
     setDoneDay(null);
     setDone(new Set());
     setHowOpen(showable(drills[0]) ? drills[0].id : null);
+    focusFirst.current = true;
     window.scrollTo({ top: 0 });
   };
 
-  async function send(minutes: number) {
+  // One finish, one body: "Try again" resends the same one (same client_id,
+  // same time), so a save whose answer was lost isn't made twice.
+  const attempt = useRef<{ fresh: Record<string, unknown>; patch: Record<string, unknown> | null } | null>(null);
+
+  async function send(minutes: number, retry = false) {
     setSave('saving');
+    if (!retry || !attempt.current) attempt.current = build(minutes);
+    const { fresh } = attempt.current;
+    await deliver(fresh, attempt.current.patch ?? fresh);
+  }
+
+  function build(minutes: number) {
     const completed_at = new Date().toISOString();
     const doneIds = drills.filter((d) => done.has(d.id)).map((d) => d.id);
     // The whole session as a new one: a fresh finish, or a saved-for-later one
@@ -227,12 +248,17 @@ export function Runner({
           ...(spec ? { spec } : {}),
           actual_minutes: minutes, actual_touches: doneTouches,
           status: 'completed', completed_at, client_id: newId() };
-    let body: Record<string, unknown> = workoutId
+    const patch = workoutId
       ? { id: workoutId, doneIds, actual_minutes: minutes, actual_touches: doneTouches, completed_at }
-      : fresh;
+      : null;
+    return { fresh, patch };
+  }
+
+  async function deliver(fresh: Record<string, unknown>, first: Record<string, unknown>) {
+    let body = first;
     const post = (b: Record<string, unknown>, method: 'POST' | 'PATCH') =>
       fetch('/api/workouts', { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
-    let patched = !!workoutId;
+    let patched = body !== fresh;
     try {
       let res = await post(body, patched ? 'PATCH' : 'POST');
       if (res.status === 404 && patched) { body = fresh; patched = false; res = await post(body, 'POST'); }
@@ -249,6 +275,8 @@ export function Runner({
         queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
         setSave('signin');
       }
+      // The server or the host failing (5xx) is like no signal: keep it and send later.
+      else if (res.status >= 500) throw new Error(String(res.status));
       else {
         setSave(res.ok ? 'saved' : 'error');
         if (res.ok && !patched) {
@@ -266,6 +294,8 @@ export function Runner({
       try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
       if (!uid && patched) { setSave('error'); return; }
       const q = patched ? pendingFinish : pendingWorkout;
+      // A saved-for-later session may be deleted before this goes: then it's sent whole.
+      if (patched) body = { ...body, fallback: fresh };
       queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
       setSave(uid ? 'queued' : 'signin');
     }
@@ -323,7 +353,7 @@ export function Runner({
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full accent-badge">
             <Tick className="h-8 w-8" draw />
           </span>
-          <h1 className="site-wide mt-5 text-headline-lg uppercase leading-none text-on-surface-brand">
+          <h1 ref={finishedHeading} tabIndex={-1} className="site-wide mt-5 text-headline-lg uppercase leading-none text-on-surface-brand outline-none">
             {allDone ? 'Nice work!' : 'Good effort!'}
           </h1>
           <p className="mt-3 text-title font-semibold text-on-surface-brand-variant">
@@ -345,12 +375,15 @@ export function Runner({
           {(save === 'signin' || save === 'error' || save === 'queued') && (
             <p role="status" className="mt-4 text-body font-medium text-on-surface-brand-variant">
               {save === 'queued' ? (
-                <>No signal. It&rsquo;s kept on this phone and saves when you&rsquo;re back online.</>
+                <>No signal. It&rsquo;s kept on this phone and saves when you&rsquo;re back online.{' '}
+                  <button type="button" onClick={() => window.dispatchEvent(new Event(PENDING_FLUSH))}
+                          className="font-bold text-on-surface-brand underline underline-offset-4">Try now</button>
+                </>
               ) : save === 'signin' ? (
                 <><Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> to keep this session.</>
               ) : (
                 <>Couldn&rsquo;t save.{' '}
-                  <button type="button" onClick={() => send(played)}
+                  <button type="button" onClick={() => send(played, true)}
                           className="font-bold text-on-surface-brand underline underline-offset-4">Try again</button>
                 </>
               )}
@@ -378,7 +411,7 @@ export function Runner({
         <Link href={doneHref ?? back?.href ?? '/'} aria-disabled={save === 'saving' || undefined}
               onClick={(e) => { if (save === 'saving') e.preventDefault(); }}
               className={`btn-primary btn-big pressable mt-7 w-full ${save === 'saving' ? 'opacity-60' : ''}`}>
-          {save === 'saving' ? 'Saving…' : !doneHref && back?.label ? `Back to ${back.label}` : 'Done'}
+          {save === 'saving' ? 'Saving…' : save === 'error' ? 'Leave without saving' : !doneHref && back?.label ? `Back to ${back.label}` : 'Done'}
         </Link>
       </div>
     );

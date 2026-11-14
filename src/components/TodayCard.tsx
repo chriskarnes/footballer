@@ -23,6 +23,8 @@ export function TodayCard({
 
   const byId = new Map(sessions.map((s) => [s.id, s]));
   const state = weekState(days, completions, now);
+  // Counted as Plan counts it: a session gone from the library isn't one to do.
+  const counted = weekState(days.map((d) => ({ ...d, session_id: d.session_id && byId.has(d.session_id) ? d.session_id : null })), completions, now);
   const todo = state.todays.find((d) => !state.done.has(dayKey(d)));
   const session = todo?.session_id ? byId.get(todo.session_id) : null;
   const next = state.next && state.next.weekday !== state.today && state.next.session_id
@@ -41,7 +43,7 @@ export function TodayCard({
           {session
             ? `${Math.round(session.total_minutes)} min`
             : todo?.session_id ? 'It left the library. Rebuild your week on Plan.'
-            : next?.s ? `Next: ${next.day}` : `${state.doneCount} of ${state.trainingCount} done this week`}
+            : next?.s ? `Next: ${next.day}` : `${counted.doneCount} of ${counted.trainingCount} done this week`}
         </div>
       </div>
       {/* The whole card is the link; this is what it does, said as a button. */}

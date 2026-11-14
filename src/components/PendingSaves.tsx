@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { PENDING_SENT, pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
+import { PENDING_FLUSH, PENDING_SENT, pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
 import { browserClient } from '@/lib/supabase/client';
 import { notePageCacheUser } from '@/lib/page-cache';
 
@@ -31,16 +31,28 @@ export function PendingSaves() {
       } catch { return; }   // Supabase not configured
       if (!uid) return;
       if (!pendingWorkout.peek(uid) && !pendingPlan.peek(uid) && !pendingFinish.peek(uid)) return;
-      const saved = await Promise.all([pendingWorkout.flush(uid), pendingPlan.flush(uid), pendingFinish.flush(uid)]);
-      if (saved.some(Boolean)) {
-        window.dispatchEvent(new Event(PENDING_SENT));
-        if (live) router.refresh();
-      }
+      const done = await Promise.all([pendingWorkout.flush(uid), pendingPlan.flush(uid), pendingFinish.flush(uid)]);
+      // Settled (saved, or turned down): a finish screen still open says which.
+      if (done.some((d) => d.settled)) window.dispatchEvent(new Event(PENDING_SENT));
+      if (done.some((d) => d.saved) && live) router.refresh();
     };
     run();
-    // A session finished on a field with no signal goes as soon as there is one.
+    // A session finished on a field with no signal goes as soon as there is
+    // one. "online" often doesn't fire on a weak signal, so also when the app
+    // comes back to the front, every half minute while anything waits, and
+    // when asked ("Try now").
+    const visible = () => { if (document.visibilityState === 'visible') run(); };
+    const tick = window.setInterval(() => {
+      if (pendingWorkout.any() || pendingPlan.any() || pendingFinish.any()) run();
+    }, 30_000);
     window.addEventListener('online', run);
-    return () => { live = false; window.removeEventListener('online', run); };
+    window.addEventListener(PENDING_FLUSH, run);
+    document.addEventListener('visibilitychange', visible);
+    return () => {
+      live = false; window.clearInterval(tick);
+      window.removeEventListener('online', run); window.removeEventListener(PENDING_FLUSH, run);
+      document.removeEventListener('visibilitychange', visible);
+    };
   }, [router]);
   return null;
 }

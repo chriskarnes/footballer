@@ -59,6 +59,8 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
   const has = (id: string) => read().some((e) => e.id === id);
   /** Anything waiting that this account (or nobody signed in) would send. */
   const peek = (uid: string | null = null) => read().some((e) => e.uid === null || e.uid === uid);
+  /** Anything at all waiting, whoever's. */
+  const any = () => read().length > 0;
   const clear = () => write([]);
 
   // What happened to each entry sent from this page: saved (with the new
@@ -67,42 +69,47 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
   const results = new Map<string, { ok: boolean; id?: string }>();
   const result = (id: string) => results.get(id);
 
-  async function send(uid: string): Promise<boolean> {
-    let sent = false;
+  /** Sends what's waiting; says whether anything was saved, and whether anything was settled (saved or turned down). */
+  async function send(uid: string): Promise<{ saved: boolean; settled: boolean }> {
+    let saved = false, settled = false;
+    const post = (body: Payload, how: string) =>
+      fetch(endpoint, { method: how, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     for (const e of read()) {
       if (e.uid !== null && e.uid !== uid) continue;   // someone else's: waits for them
       try {
-        const res = await fetch(endpoint, {
-          method, headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(e.payload),
-        });
+        const { fallback, ...payload } = e.payload as Payload & { fallback?: Payload };
+        let res = await post(payload, method);
+        // A saved-for-later session deleted since (on another phone): send it whole.
+        if (res.status === 404 && method === 'PATCH' && fallback) {
+          res = await post({ ...fallback, ...(payload.feel ? { feel: payload.feel } : {}) }, 'POST');
+        }
         // A 4xx other than sign-in won't get better by sending again.
         if (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 401)) {
           const j = res.ok ? await res.json().catch(() => null) as { id?: string } | null : null;
-          results.set(e.id, { ok: res.ok, id: j?.id ?? (typeof e.payload.id === 'string' ? e.payload.id : undefined) });
+          results.set(e.id, { ok: res.ok, id: j?.id ?? (typeof payload.id === 'string' ? payload.id : undefined) });
           write(read().filter((x) => x.id !== e.id));
-          sent ||= res.ok;
+          saved ||= res.ok;
+          settled = true;
         }
-      } catch { return sent; }                         // offline again: try later
+      } catch { break; }                               // offline again: try later
     }
-    return sent;
+    return { saved, settled };
   }
 
-  let inflight: Promise<boolean> | null = null;
+  let inflight: Promise<{ saved: boolean; settled: boolean }> | null = null;
 
   /**
-   * Sends what's waiting for this account, oldest first. Resolves true when
-   * anything was saved. A failure leaves it waiting, so a flaky connection
-   * doesn't throw it away.
+   * Sends what's waiting for this account, oldest first. A failure leaves it
+   * waiting, so a flaky connection doesn't throw it away.
    */
-  function flush(uid: string): Promise<boolean> {
+  function flush(uid: string): Promise<{ saved: boolean; settled: boolean }> {
     // One send at a time: React mounting an effect twice in development would
     // otherwise save it twice.
     inflight ??= send(uid).finally(() => { inflight = null; });
     return inflight;
   }
 
-  return { stash, update, has, peek, clear, flush, result };
+  return { stash, update, has, peek, any, clear, flush, result };
 }
 
 /** A session finished in the runner. */
@@ -116,3 +123,6 @@ export const pendingPlan = slot('forge.pendingPlan', '/api/plans');
 /** Fired on window when PendingSaves has sent something: a finish screen still
  *  saying "No signal" can say it's saved. */
 export const PENDING_SENT = 'forge:pending-sent';
+
+/** Fired on window to ask PendingSaves to try now ("Try now" on a finish screen). */
+export const PENDING_FLUSH = 'forge:pending-flush';

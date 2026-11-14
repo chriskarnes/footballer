@@ -40,15 +40,18 @@ export function feedEvents(data: FeedData, sessions: SessionRow[], origin: strin
   const today = todayIn(tz, now);
   const from = addDays(today, -PAST_DAYS), to = addDays(today, FUTURE_DAYS);
 
-  // "library:<id>" or "speed:<id>" → the local dates it was finished on.
+  // "library:<id>" or "speed:<id>" → the weeks (their Mondays) it was
+  // finished in. Plan and Speed count a session done any day of its week, so
+  // the calendar ticks it the same way, not only on the day it was planned.
+  const mondayOfDate = (d: string) => addDays(d, -((parseDate(d).getDay() + 6) % 7));
   const done = new Map<string, Set<string>>();
   for (const w of data.completed) {
     if (!w.source_ref || !w.completed_at) continue;
     const key = `${w.source}:${w.source_ref}`;
     if (!done.has(key)) done.set(key, new Set());
-    done.get(key)!.add(todayIn(tz, new Date(w.completed_at)));
+    done.get(key)!.add(mondayOfDate(todayIn(tz, new Date(w.completed_at))));
   }
-  const finished = (key: string, date: string) => !!done.get(key)?.has(date);
+  const finished = (key: string, date: string) => !!done.get(key)?.has(mondayOfDate(date));
 
   const timed = (minutes: number, offset = 0) =>
     data.start_time ? { start: shift(data.start_time, offset), minutes, timeZone: tz } : undefined;
