@@ -68,22 +68,32 @@ export function client(): GoogleGenAI | null {
  * that gap on one server; across servers it stays open until the check and
  * the log are one step in the database (an RPC, which needs a migration).
  * A reservation lapses after two minutes in case its call never logs.
+ *
+ * Each call's hold has its own id, and only that call's log lets it go: after
+ * one hold has lapsed, the next log mustn't take another call's live one.
  */
-const inFlight = new Map<string, number[]>();
+const inFlight = new Map<string, { id: number; at: number }[]>();
 const HOLD_MS = 120_000;
+let nextHold = 0;
 function held(key: string) {
   const now = Date.now();
-  const live = (inFlight.get(key) ?? []).filter((t) => now - t < HOLD_MS);
+  const live = (inFlight.get(key) ?? []).filter((h) => now - h.at < HOLD_MS);
   if (live.length) inFlight.set(key, live); else inFlight.delete(key);
   return live.length;
 }
-const hold = (key: string) => inFlight.set(key, [...(inFlight.get(key) ?? []), Date.now()]);
-const release = (key: string) => { const l = inFlight.get(key); if (l?.length) l.shift(); };
+const hold = (key: string, id: number) => inFlight.set(key, [...(inFlight.get(key) ?? []), { id, at: Date.now() }]);
+const release = (key: string, id: number) => {
+  const live = (inFlight.get(key) ?? []).filter((h) => h.id !== id);
+  if (live.length) inFlight.set(key, live); else inFlight.delete(key);
+};
 const playerKey = (academyId: string, playerId: string, kind: AiKind) => `${academyId}:${playerId}:${kind}`;
 
-/** May this call go to the AI? Counts what the log already holds, and calls still out. */
+/**
+ * May this call go to the AI? Counts what the log already holds, and calls
+ * still out. Allowed, it comes with a hold to hand back to logCall.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function allowed(db: any, a: { academyId: string; timeZone: string; playerId: string | null; kind: AiKind }): Promise<{ ok: true } | { ok: false; why: Denied }> {
+export async function allowed(db: any, a: { academyId: string; timeZone: string; playerId: string | null; kind: AiKind }): Promise<{ ok: true; hold: number } | { ok: false; why: Denied }> {
   if (!process.env.GEMINI_API_KEY) return { ok: false, why: 'no_key' };
   const today = localDate(new Date(), a.timeZone);
   const monthStart = zoneMidnight(`${today.slice(0, 7)}-01`, a.timeZone);
@@ -100,31 +110,44 @@ export async function allowed(db: any, a: { academyId: string; timeZone: string;
   if ((month.count ?? 0) + held(a.academyId) >= PER_ACADEMY_MONTH) return { ok: false, why: 'academy_limit' };
   const pk = a.playerId ? playerKey(a.academyId, a.playerId, a.kind) : null;
   if ((player.count ?? 0) + (pk ? held(pk) : 0) >= PER_PLAYER_WEEK) return { ok: false, why: 'player_limit' };
-  hold(a.academyId);
-  if (pk) hold(pk);
-  return { ok: true };
+  const id = ++nextHold;
+  hold(a.academyId, id);
+  if (pk) hold(pk, id);
+  return { ok: true, hold: id };
 }
 
-/** Writes one call to the log. Never throws: a log that fails mustn't fail the build. */
+/**
+ * Writes one call to the log. Never throws: a log that fails mustn't fail the
+ * build. `hold` is what allowed() gave this call.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function logCall(db: any, row: {
-  academyId: string; actorId: string | null; playerId: string | null; kind: AiKind; ok: boolean;
+  academyId: string; actorId: string | null; playerId: string | null; kind: AiKind; ok: boolean; hold: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   usage?: any; inputHash?: string;
 }) {
+  let logged = false;
   try {
     const u = row.usage ?? {};
-    await db.from('ai_usage').insert({
+    const { error } = await db.from('ai_usage').insert({
       academy_id: row.academyId, actor_id: row.actorId, player_id: row.playerId, kind: row.kind, model: MODEL, ok: row.ok,
       input_tokens: u.promptTokenCount ?? 0,
       // Thinking is billed as output.
       output_tokens: (u.candidatesTokenCount ?? 0) + (u.thoughtsTokenCount ?? 0),
       input_hash: row.inputHash ?? null,
     });
-  } catch { /* logged or not, carry on */ } finally {
-    // In the log now (or never will be): its count takes over from the hold.
-    release(row.academyId);
-    if (row.playerId) release(playerKey(row.academyId, row.playerId, row.kind));
+    // The client hands back a refused insert rather than throwing it.
+    if (error) console.error('logCall: ai_usage insert failed', error.message);
+    else logged = true;
+  } catch (e) {
+    console.error('logCall: ai_usage insert failed', e instanceof Error ? e.message : e);
+  } finally {
+    // In the log now: its count takes over from the hold. Not logged, the
+    // hold stays until it lapses, so the call still counts here a while.
+    if (logged) {
+      release(row.academyId, row.hold);
+      if (row.playerId) release(playerKey(row.academyId, row.playerId, row.kind), row.hold);
+    }
   }
 }
 

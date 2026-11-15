@@ -33,11 +33,13 @@ function published(slug: string) {
 type Auth = Exclude<Awaited<ReturnType<typeof brandDb>>, { error: string }>;
 
 async function write(auth: Auth, patch: Record<string, unknown>): Promise<Result> {
-  const { error } = await auth.db.from('academies')
+  const { data, error } = await auth.db.from('academies')
     .update({ ...patch, updated_at: new Date().toISOString(), updated_by: auth.user.id })
-    .eq('id', auth.academy.id);
+    .eq('id', auth.academy.id).select('id');
   // The database's own words go to the log; the owner gets a sentence.
   if (error) return { ok: false, error: plain(error) };
+  // RLS turns a write it won't allow into one that changes nothing, without an error.
+  if (!data?.length) return { ok: false, error: 'Only the academy’s owner can change its brand.' };
   published(auth.academy.slug);
   return { ok: true };
 }

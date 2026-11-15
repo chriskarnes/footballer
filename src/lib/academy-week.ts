@@ -39,7 +39,10 @@ export type TeamDays = { trainer: number[]; practice: number[]; games: number[] 
 /** What placeDays keeps sessions off: their soccer, and their groups' meeting days. */
 export type Busy = Partial<TeamDays> & { meets?: number[];
   /** First day that can be used: today, for a week built mid-week. */
-  from?: number };
+  from?: number;
+  /** Days that already have a session done, rebuilding mid-week: never used,
+   *  not even as a last resort, or the new one would sit beside the done one. */
+  done?: number[] };
 
 /** A schedule row as its days; none set, without one. A day marked twice counts as the game, then the trainer. */
 export function teamDays(s?: Pick<ScheduleRow, 'club_days' | 'game_day' | 'game_days' | 'trainer_days'> | null): TeamDays {
@@ -118,7 +121,7 @@ export function placeDays(count: number, busy: Busy = {}): number[] {
   const games = busy.games ?? [];
   const taken = new Set([...(busy.practice ?? []), ...(busy.trainer ?? []), ...(busy.meets ?? []), ...games]);
   const afterGame = new Set(games.map((g) => (g + 1) % 7));
-  const left = WEEK.filter((d) => d >= (busy.from ?? 0));
+  const left = WEEK.filter((d) => d >= (busy.from ?? 0) && !busy.done?.includes(d));
   const tiers = [
     left.filter((d) => !taken.has(d) && !afterGame.has(d)),
     left.filter((d) => !taken.has(d)),
@@ -167,6 +170,17 @@ export function buildWeek(input: {
   // Drills that still exist: a deleted one shouldn't count toward "4 drills".
   const countOf = (ids: string[]) => (drills.size ? ids.filter((id) => drills.has(id)).length : ids.length);
   const items: WeekItem[] = [];
+  // What was finished this week, by item key, and on which days.
+  const finished = new Map<string, number[]>();
+  for (const c of input.completions) {
+    if (!c.source_ref || !c.completed_at) continue;
+    if (c.source !== 'academy' && c.source !== 'addon') continue;
+    const day = localDate(c.completed_at, input.tz ?? 'UTC');
+    if (day < monday || day > addDays(monday, 6)) continue;
+    // A built-week session runs as 'academy' too; its id says which it is.
+    const keys = c.source === 'addon' ? [`a:${c.source_ref}`] : [`s:${c.source_ref}`, `c:${c.source_ref}`];
+    for (const k of keys) finished.set(k, [...(finished.get(k) ?? []), weekdayOf(day)]);
+  }
   // The same sessions reached two ways (two groups, or a group and on their
   // own) appear once, under every group that set them.
   const seen = new Map<string, WeekItem[]>();
@@ -210,6 +224,15 @@ export function buildWeek(input: {
   const built = mineCustom.filter((c) => c.made_by !== 'player');
   const own = mineCustom.filter((c) => c.made_by === 'player');
   if (built.length) {
+    // Program sessions already done this week stay, on the day they were
+    // done: a week built mid-week fills what's left, and "2 of 3" mustn't
+    // drop back to "0 of 3" when it comes in.
+    for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);
+    for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null);
+    for (const it of runs.flat()) {
+      const on = finished.get(it.key)?.[0];
+      if (on !== undefined) items.push({ ...it, weekday: on });
+    }
     for (const c of built) items.push({
       key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
       weekday: c.weekday, minutes: minutesOf(c.drill_ids), drills: countOf(c.drill_ids), note: c.note ?? null, done: false,
@@ -255,16 +278,6 @@ export function buildWeek(input: {
   }
 
   // Ticks: each finished run this week ticks one matching item.
-  const finished = new Map<string, number[]>();
-  for (const c of input.completions) {
-    if (!c.source_ref || !c.completed_at) continue;
-    if (c.source !== 'academy' && c.source !== 'addon') continue;
-    const day = localDate(c.completed_at, input.tz ?? 'UTC');
-    if (day < monday || day > addDays(monday, 6)) continue;
-    // A built-week session runs as 'academy' too; its id says which it is.
-    const keys = c.source === 'addon' ? [`a:${c.source_ref}`] : [`s:${c.source_ref}`, `c:${c.source_ref}`];
-    for (const k of keys) finished.set(k, [...(finished.get(k) ?? []), weekdayOf(day)]);
-  }
   for (const it of items) {
     const on = finished.get(it.key)?.shift();
     if (on !== undefined) { it.done = true; it.doneOn = on; }

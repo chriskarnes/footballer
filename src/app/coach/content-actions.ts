@@ -389,8 +389,10 @@ export async function saveGroup(_: unknown, f: FormData): Promise<Result> {
 export async function archiveGroup(id: string, archived: boolean): Promise<Result> {
   try {
     const v = await staff();
-    const { error } = await v.db.from('groups').update({ archived }).eq('id', id).eq('academy_id', v.academy.id);
+    const { data, error } = await v.db.from('groups').update({ archived }).eq('id', id).eq('academy_id', v.academy.id).select('id');
     if (error) return { ok: false, error: plain(error) };
+    // No row changed: the group's gone, or isn't this academy's. Don't say it worked.
+    if (!data?.length) return { ok: false, error: 'That group isn’t there any more. Reload and try again.' };
     done(); return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -402,7 +404,7 @@ export async function setMembership(groupId: string, userId: string, member: boo
     // A finished group gives no one anything: adding to it would look like it did.
     if (member) {
       const { data: grp } = await v.db.from('groups').select('archived').eq('id', groupId).eq('academy_id', v.academy.id).maybeSingle();
-      if (grp?.archived) return { ok: false, error: 'This group is finished. Reopen it to add players.' };
+      if (grp?.archived) return { ok: false, error: 'This group is finished. Bring it back in Group settings to add players.' };
     }
     const { error } = member
       ? await v.db.from('group_members').upsert({ group_id: groupId, user_id: userId, academy_id: v.academy.id }, { onConflict: 'group_id,user_id', ignoreDuplicates: true })

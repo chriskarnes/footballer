@@ -36,7 +36,8 @@ export default async function GroupPage({ params }: {
   const today = localDate(new Date(), academy.timeZone);
   const program = c.programs.find((p) => p.id === g.program_id);
   const n = program && g.starts_on ? programWeek(g.starts_on, program.weeks, today) : null;
-  const homework = program && n ? sessionsForWeek(c.sessions, program.id, n) : [];
+  // A finished group gives no one its sessions, so it has no week at home to show.
+  const homework = program && n && !g.archived ? sessionsForWeek(c.sessions, program.id, n) : [];
   const ids = new Set(c.memberships.filter((m) => m.group_id === g.id).map((m) => m.user_id));
   const members = players.filter((p) => ids.has(p.user_id)).sort(byAttention);
   const others = players.filter((p) => !ids.has(p.user_id)).sort((a, b) => a.name.localeCompare(b.name));
@@ -114,7 +115,7 @@ export default async function GroupPage({ params }: {
         {players.length ? (
           <div className="mt-3">
             {g.archived ? (
-              <p className="pl-1 text-body text-on-surface-variant">Finished, so no one gets its sessions. Reopen it in Group settings to add players.</p>
+              <p className="pl-1 text-body text-on-surface-variant">Finished, so no one gets its sessions. Bring it back in Group settings to add players.</p>
             ) : (
             <Disclose label="Add or remove players" startOpen={!members.length}>
             <div className="card divide-y divide-outline-variant">

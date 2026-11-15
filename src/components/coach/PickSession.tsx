@@ -22,6 +22,7 @@ export function PickSession({ programId, week, sessions }: { programId: string; 
               </span>
             </span>
             <button type="button" disabled={busy} className="btn-ghost btn-sm pressable shrink-0"
+                    aria-label={busy && picked === s.id ? `Adding ${s.name}…` : `Add ${s.name} to week ${week}${s.here ? ' again' : ''}`}
                     onClick={() => { setPicked(s.id); setErr(''); start(async () => {
                       // On success the action redirects back to the program.
                       const r = await placeSession(s.id, programId, week).catch(offline);

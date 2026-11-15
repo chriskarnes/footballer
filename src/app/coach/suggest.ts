@@ -51,7 +51,7 @@ async function suggest(userId: string): Promise<Suggestion> {
   // Within the AI's limits (see lib/ai.ts), or straight to the rule.
   const gate = await allowed(v.db, { academyId: v.academy.id, timeZone: v.academy.timeZone, playerId: userId, kind: 'suggest' });
   const ai = gate.ok ? client() : null;
-  if (ai) {
+  if (ai && gate.ok) {
     let usage: unknown = null, ok = false;
     try {
       const facts = {
@@ -84,7 +84,7 @@ async function suggest(userId: string): Promise<Suggestion> {
     } catch (e) {
       console.error('suggestAddon: Gemini failed, using the rule', e instanceof Error ? e.message : e);
     } finally {
-      await logCall(v.db, { academyId: v.academy.id, actorId: v.user?.id ?? null, playerId: userId, kind: 'suggest', ok, usage });
+      await logCall(v.db, { academyId: v.academy.id, actorId: v.user?.id ?? null, playerId: userId, kind: 'suggest', ok, usage, hold: gate.hold });
     }
   }
 
