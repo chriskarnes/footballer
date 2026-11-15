@@ -33,7 +33,15 @@ export async function joinAcademy(code: string, who?: 'player' | 'parent') {
   // academy for their own child keeps theirs: their players know them by it.
   if (user && (who === 'player' || who === 'parent')) {
     const { data: staffSomewhere } = await db.from('academy_members').select('role').eq('user_id', user.id).in('role', ['owner', 'trainer']).limit(1);
-    if (!staffSomewhere?.length) await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
+    // It's said once, for the account: a child who joined one academy as the
+    // player stays the player when a parent's link to another is opened on
+    // the same account. Only an empty one is filled in.
+    if (!staffSomewhere?.length) {
+      const { data: p, error: pe } = await db.from('profiles').select('signed_up_by').eq('id', user.id).maybeSingle();
+      if (!pe && !(p as { signed_up_by: string | null } | null)?.signed_up_by) {
+        await db.from('profiles').upsert({ id: user.id, signed_up_by: who });
+      }
+    }
   }
   if ((data as { role: string }).role !== 'player') redirect('/coach');
   // A new player is asked their name (and the rest) first, on Me; their

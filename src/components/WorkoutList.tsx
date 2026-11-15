@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { formatTouches } from '@/lib/session-builder';
 import { relativeDay } from '@/lib/training-stats';
@@ -36,6 +37,7 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
   // arrives with a refresh, and a list copied once into state never showed
   // it. What this list deleted stays gone, even before the refresh catches up.
   const [removed, setRemoved] = useState<ReadonlySet<string>>(() => new Set());
+  const router = useRouter();
   const rows = initial.filter((w) => !removed.has(w.id));
   const [confirm, setConfirm] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,9 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
     setBusy(true); setErr('');
     const res = await fetch(`/api/workouts?id=${id}`, { method: 'DELETE' }).catch(() => null);
     setBusy(false); setConfirm(null);
-    if (res?.ok) setRemoved((r) => new Set(r).add(id));
+    // And the page follows: deleting the last one takes the "Saved for later"
+    // heading with it, rather than leaving it over nothing.
+    if (res?.ok) { setRemoved((r) => new Set(r).add(id)); router.refresh(); }
     else setErr('Couldn’t delete it. Check your connection and try again.');
   }
   const asking = rows.find((w) => w.id === confirm);

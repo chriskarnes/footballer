@@ -73,7 +73,7 @@ function newId(): string {
 
 export function Runner({
   title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
-  completedDay = null, completedAt, trainer, spec,
+  completedDay = null, completedAt, trainer, spec, owner,
 }: {
   title: string; drills: Exercise[];
   /** One line under the title, when there's something to say: the trainer's
@@ -106,6 +106,11 @@ export function Runner({
   /** What the session was built from (focus, length, rounds), for a session
    *  built on Train. Saved with it, so Plan can learn what they actually train. */
   spec?: Record<string, unknown>;
+  /** Who's signed in, as the server saw it. A finish that can't go now is
+   *  kept as theirs: offline, or with the sign-in lapsed, the phone's own
+   *  session can be gone (an expired one can't refresh without signal), and
+   *  a saved-for-later session can't be kept with nobody to say whose. */
+  owner?: string | null;
 }) {
   const [done, setDone] = useState<Set<string>>(new Set());
   const [phase, setPhase] = useState<Phase>('running');
@@ -254,6 +259,14 @@ export function Runner({
     return { fresh, patch };
   }
 
+  // Whose a finish is that can't go now: the session on the phone, or failing
+  // that the player the page was opened for. Only with neither is it nobody's.
+  async function whose(): Promise<string | null> {
+    let uid: string | null = null;
+    try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
+    return uid ?? owner ?? null;
+  }
+
   async function deliver(fresh: Record<string, unknown>, first: Record<string, unknown>) {
     let body = first;
     const post = (b: Record<string, unknown>, method: 'POST' | 'PATCH') =>
@@ -269,8 +282,7 @@ export function Runner({
       if (res.status === 401) {
         // Whose it was: the lapsed sign-in is still on the phone. Without it,
         // the next account to sign in (a sibling) would get it.
-        let uid: string | null = null;
-        try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
+        const uid = await whose();
         // A saved-for-later session is someone's row: with nobody to say whose,
         // marking it done could go to whoever signs in next. Not kept, as
         // with no signal below.
@@ -297,8 +309,7 @@ export function Runner({
       // No signal (a field, a basement gym): keep it on the phone, marked as
       // this account's, and send it when the signal's back. Signed out, it
       // waits for a sign-in instead, and says so.
-      let uid: string | null = null;
-      try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
+      const uid = await whose();
       if (!uid && patched) { setSave('error'); return; }
       const q = patched ? pendingFinish : pendingWorkout;
       // A saved-for-later session may be deleted before this goes: then it's sent whole.

@@ -4,8 +4,11 @@
  * (TrainerWeek) and the wait for one (Waiting), so the two never disagree.
  *
  * With the academy's time zone, a meeting already over today counts from
- * next week: at 7 pm, "today 5:00 pm" is the one just missed, not the next.
- * Without it there's no telling the hour there, so today's still reads as today.
+ * next week, said "Tue 5:00 pm, next week": on a Tuesday evening, a bare "Tue
+ * 5:00 pm" reads as tonight's. It's over an hour and a half after it starts
+ * (MEETING_MINUTES), not the minute it starts: at 5:30 the player's still
+ * there, and "next week" would be wrong. Without the time zone there's no
+ * telling the hour there, so today's still reads as today.
  */
 export function nextMeeting(groups: { when: string | null; day: number | null }[], today: number, timeZone?: string): string | null {
   const now = timeZone ? minutesNow(timeZone) : null;
@@ -13,13 +16,19 @@ export function nextMeeting(groups: { when: string | null; day: number | null }[
   const until = (g: { when: string | null; day: number | null }) => {
     const d = (g.day! - today + 7) % 7;
     const at = d === 0 && now !== null ? minutesOf(g.when!) : null;
-    return at !== null && at < now! ? 7 : d;
+    return at !== null && at + MEETING_MINUTES <= now! ? 7 : d;
   };
   const meet = groups.filter((g) => g.when && g.day !== null).sort((a, b) => until(a) - until(b))[0];
-  if (meet) return until(meet) === 0 ? meet.when!.replace(/^\w{3}/, 'today') : meet.when;
+  if (meet) {
+    const d = until(meet);
+    return d === 0 ? meet.when!.replace(/^\w{3}/, 'today') : d === 7 ? `${meet.when}, next week` : meet.when;
+  }
   // A time with no day known: still worth saying.
   return groups.find((g) => g.when)?.when ?? null;
 }
+
+/** How long a meeting counts as still on after it starts. */
+const MEETING_MINUTES = 90;
 
 /** Minutes past midnight in a label's "5:00 pm", or null when it has no time. */
 function minutesOf(when: string): number | null {

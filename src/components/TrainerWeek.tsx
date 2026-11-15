@@ -46,9 +46,11 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
   // A set session first (a missed one is "Missed Monday"); a "Just for you"
   // drill or an extra isn't due, so it's only ever next, never missed.
   // Last, one placed on an earlier day and still undone: the week isn't done
-  // while a "Just for you" from Monday waits.
+  // while a "Just for you" from Monday waits. Only the trainer's: an extra of
+  // their own from an earlier day, never done, was theirs to skip, and the
+  // week is done without it.
   const next = set.find((i) => !i.done && i.weekday >= today) ?? set.find((i) => !i.done)
-    ?? items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
+    ?? items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done && i.kind === 'addon') ?? null;
   // Only a set session is missed; an extra from an earlier day is just this week's.
   const extraLate = !!next && next.weekday < today && !set.includes(next);
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);

@@ -60,7 +60,10 @@ export default async function TrainerSessionPage({ params, searchParams }: {
           <BandTag>Your session</BandTag>
           <BandTitle>Sign in to see this session</BandTitle>
           <p className="mt-4 text-title-sm leading-relaxed text-on-surface-brand-variant">
-            It&rsquo;s from your trainer. Sign in with the email you train with and it opens.
+            {/* The self-serve space has no trainer to say it's from. */}
+            {v.academy.selfServe
+              ? <>It&rsquo;s saved to your account. Sign in with the email you train with and it opens.</>
+              : <>It&rsquo;s from your trainer. Sign in with the email you train with and it opens.</>}
           </p>
         </BrandBand>
         <div className="relative -mt-12">
@@ -81,13 +84,15 @@ export default async function TrainerSessionPage({ params, searchParams }: {
   const item = week?.items.find((i) => i.kind === kind && i.ref === id);
   const completedDay = item?.done && !history ? item.doneOn ?? item.weekday : null;
   // What the trainer said about this session, said once at the top of it.
-  const mine = { trainer, completedDay, note: item?.note ?? null };
+  // Who's signed in goes with it: a finish kept on the phone (no signal, or
+  // the sign-in lapsed) is theirs even when the phone's own session is gone.
+  const mine = { trainer, completedDay, note: item?.note ?? null, owner: v.user.id };
 
   // Not in this academy. A player in two academies sees both in their
   // history, and "Do it again" lands here on whichever address they're on:
   // if it's the other academy's, say so and send them there, not a 404.
   // RLS lets a member read their academy's content, and any academy's slug.
-  const elsewhere = async (table: 'academy_sessions' | 'player_week_sessions' | 'drills') => {
+  const elsewhere = async (table: 'academy_sessions' | 'player_week_sessions' | 'drills' | 'addons') => {
     const { data: row } = await v.db.from(table).select('academy_id').eq('id', id).maybeSingle();
     const other = (row as { academy_id: string } | null)?.academy_id;
     if (!other || other === v.academy!.id) notFound();
@@ -138,14 +143,17 @@ export default async function TrainerSessionPage({ params, searchParams }: {
     const { data: d } = await v.db.from('drills').select('id, name, amount, minutes, focus, video_url, how').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
     if (!d) return elsewhere('drills');
     return <Runner title={d.name} drills={[asExercise(d as DrillRow, d.id, 0)]}
-                   sessionRef={d.id} source="academy" back={history ? back : { href: '/library', label: 'Library' }} trainer={trainer} />;
+                   sessionRef={d.id} source="academy" back={history ? back : { href: '/library', label: 'Library' }} trainer={trainer} owner={v.user.id} />;
   }
 
   if (kind === 'addon') {
     const { data: a } = await v.db.from('addons').select('id, note, drills(id, name, amount, minutes, focus, video_url, how)')
-      .eq('id', id).eq('user_id', v.user.id).maybeSingle();
-    const d = a?.drills as unknown as DrillRow | null;
-    if (!a || !d) notFound();
+      .eq('id', id).eq('user_id', v.user.id).eq('academy_id', v.academy.id).maybeSingle();
+    // Set by another academy's trainer (a player in two): run it on theirs,
+    // so the finish names the trainer who set it.
+    if (!a) return elsewhere('addons');
+    const d = a.drills as unknown as DrillRow | null;
+    if (!d) notFound();
     return <Runner title={d.name} drills={[asExercise(d, a.id, 0)]}
                    sessionRef={a.id} source="addon" back={back} {...mine} note={a.note} />;
   }

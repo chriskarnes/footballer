@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { libraryAllowed } from '@/lib/library-gate';
+import { speedAllowed } from '@/lib/speed-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { getExercises, getPrograms, getSessions } from '@/lib/library';
 import { Runner } from '@/components/Runner';
@@ -30,7 +32,8 @@ export default async function SessionPage({
   // this academy shows the library.
   if (from === 'history') {
     const again = await fromHistory(id);
-    if (again) redirect(again);
+    if (again && 'off' in again) return <NotHere what={again.off} />;
+    if (again) redirect(again.go);
   }
 
   if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
@@ -58,6 +61,9 @@ export default async function SessionPage({
                        drills={drills} rounds={rounds}
                        note={rounds > 1 ? `Do the list ${rounds} times.` : null}
                        workoutId={again ? undefined : w.id}
+                       // Whose it is: finishing a saved one offline, or once the
+                       // sign-in has lapsed, keeps it on the phone as theirs.
+                       owner={w.user_id ?? null}
                        sessionRef={again && w.source === 'library' ? w.source_ref ?? undefined : undefined}
                        back={again ? { href: '/me', label: 'Your training' } : { href: '/me#saved', label: 'Saved for later' }}
                        // Once finished it's in Your training, not Saved for later.
@@ -99,29 +105,55 @@ export default async function SessionPage({
  * /train. The workout row only keeps the id (source_ref), so which of the
  * trainer's tables it came from is found by looking.
  */
-async function fromHistory(id: string): Promise<string | null> {
+async function fromHistory(id: string): Promise<{ go: string } | { off: 'library' | 'speed' } | null> {
+  const go = (to: string | null) => (to ? { go: to } : null);
   try {
     const db = await serverClient();
     const { data: w } = await db.from('workouts').select('source, source_ref, exercise_ids').eq('id', id).maybeSingle();
-    const ref = w?.source_ref as string | null | undefined;
-    if (!w || !ref) return null;
-    if (w.source === 'speed') return `/speed/session/${ref}?from=history`;
+    if (!w) return null;
+    // Me lists sessions from every academy the player is in, and this one
+    // may not open them: Speed turned off here, or no drill library. Its own
+    // page would send them on to a locked week that has nothing to do with
+    // the session, so it's said plainly instead.
+    const library = !w.source || w.source === 'library' || w.source === 'coach';
+    if (library && !(await libraryAllowed())) return { off: 'library' };
+    if (w.source === 'speed' && !(await speedAllowed().catch(() => true))) return { off: 'speed' };
+    const ref = w.source_ref as string | null | undefined;
+    if (!ref) return null;
+    if (w.source === 'speed') return go(`/speed/session/${ref}?from=history`);
     if (w.source === 'addon') {
       // The trainer may have taken the "just for you" back since: the drill
       // itself is still theirs to do again.
       const { data: x } = await db.from('addons').select('id').eq('id', ref).maybeSingle();
-      if (x) return `/train/addon/${ref}?from=history`;
+      if (x) return go(`/train/addon/${ref}?from=history`);
       // A trainer's drill is saved as `<drill id>:<place in the list>` (the
       // runner's row id): the drill is the part before the colon.
       const drill = (w.exercise_ids as string[] | null)?.[0]?.split(':')[0];
       const { data: d } = drill ? await db.from('drills').select('id').eq('id', drill).maybeSingle() : { data: null };
-      return d ? `/train/drill/${drill}?from=history` : null;
+      return go(d ? `/train/drill/${drill}?from=history` : null);
     }
     if (w.source !== 'academy') return null;
     for (const [table, kind] of [['academy_sessions', 'session'], ['player_week_sessions', 'custom'], ['drills', 'drill']] as const) {
       const { data } = await db.from(table).select('id').eq('id', ref).maybeSingle();
-      if (data) return `/train/${kind}/${ref}?from=history`;
+      if (data) return go(`/train/${kind}/${ref}?from=history`);
     }
   } catch { /* the library lookup below decides */ }
   return null;
+}
+
+/** A session from history that this academy can't open, said plainly, with the way back. */
+function NotHere({ what }: { what: 'library' | 'speed' }) {
+  return (
+    <div className="animate-pop pt-10">
+      <h1 className="h-page">
+        {what === 'speed' ? 'Speed is off here' : 'This session is from somewhere with the drill library'}
+      </h1>
+      <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">
+        {what === 'speed'
+          ? 'Speed & Stamina is turned off on this page, so it can’t run here. It’s still in your training.'
+          : 'It’s built from drills this page doesn’t have, so it can’t run here. It’s still in your training.'}
+      </p>
+      <Link href="/me" className="btn-primary pressable mt-6 w-full">Back to Your training</Link>
+    </div>
+  );
 }
