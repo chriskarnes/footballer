@@ -8,6 +8,7 @@ import { Runner } from '@/components/Runner';
 import { serverClient } from '@/lib/supabase/server';
 import type { Exercise } from '@/lib/types';
 import { splitSessionName } from '@/lib/program-copy';
+import { getViewer } from '@/lib/viewer';
 
 /**
  * One route serves both a library session and a saved workout ("do it again"),
@@ -94,8 +95,10 @@ export default async function SessionPage({
     : program ? { href: `/library/${program.id}`, label: program.name }
     : { href: '/library', label: 'Library' };
 
+  // Who's signed in, so a finish with no signal is kept as theirs.
+  const owner = (await getViewer().catch(() => null))?.user?.id ?? null;
   return <Runner title={splitSessionName(s.name).title} drills={drills}
-                 sessionRef={s.id} back={back} />;
+                 sessionRef={s.id} back={back} owner={owner} />;
 }
 
 /**

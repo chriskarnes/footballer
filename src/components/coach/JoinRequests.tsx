@@ -24,7 +24,8 @@ export function JoinRequests({ requests, owner }: { requests: JoinRequest[]; own
   if (!left.length) return null;
 
   const answer = (id: string, yes: boolean) => start(async () => {
-    const r = await answerJoinRequest(id, yes).catch(offline);
+    const shown = requests.find((x) => x.user_id === id)?.role === 'trainer' ? 'trainer' : 'player';
+    const r = await answerJoinRequest(id, yes, shown).catch(offline);
     if (r.ok) { setGone((g) => [...g, id]); toast(r.already ? 'Someone already answered that one.' : yes ? 'Let in.' : 'Declined.'); }
     else setErr(r.error);
   });

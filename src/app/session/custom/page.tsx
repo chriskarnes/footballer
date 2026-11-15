@@ -4,6 +4,7 @@ import { LibraryLocked } from '@/components/LibraryLocked';
 import { getExercises } from '@/lib/library';
 import { Runner } from '@/components/Runner';
 import { decodeSession, sessionTitle } from '@/lib/session-url';
+import { getViewer } from '@/lib/viewer';
 
 /**
  * Runs a session built on Train. It has no id — the drills are in the query
@@ -27,7 +28,9 @@ export default async function CustomSessionPage({
   if (!decoded) redirect('/');
 
   const { built } = decoded;
-  return <Runner title={sessionTitle(built.spec)}
+  // Who's signed in, so a finish with no signal is kept as theirs.
+  const owner = (await getViewer().catch(() => null))?.user?.id ?? null;
+  return <Runner title={sessionTitle(built.spec)} owner={owner}
                  note={built.rounds > 1 ? `Do the list ${built.rounds} times.` : null}
                  drills={built.drills} rounds={built.rounds}
                  spec={{ ...built.spec, rounds: built.rounds }}

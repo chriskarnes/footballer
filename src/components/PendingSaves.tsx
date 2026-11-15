@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PENDING_FLUSH, PENDING_SENT, pendingFinish, pendingPlan, pendingWorkout } from '@/lib/pending';
-import { browserClient } from '@/lib/supabase/client';
+import { whoIsHere } from '@/lib/phone-session';
 import { notePageCacheUser } from '@/lib/page-cache';
 
 /**
@@ -19,16 +19,18 @@ export function PendingSaves() {
   const router = useRouter();
   useEffect(() => {
     let live = true;
-    // getSession reads the stored session without a request, so a signed-out
-    // visitor with something waiting doesn't fire a 401 on every page load.
+    // The stored session is read without a request, so a signed-out visitor
+    // with something waiting doesn't fire a 401 on every page load.
     const run = async () => {
-      let uid: string | null = null;
-      try {
-        const { data } = await browserClient().auth.getSession();
-        uid = data.session?.user.id ?? null;
-        // A different account on this phone than the cached pages were for.
-        await notePageCacheUser(uid);
-      } catch { return; }   // Supabase not configured
+      // Couldn't tell (no signal and a sign-in due for renewal, or accounts
+      // not set up): nothing is sent, and nothing on the phone is cleared.
+      // Read as a sign-out, this used to empty the offline pages and the
+      // player's unsent Speed results at a field with no signal.
+      const here = await whoIsHere();
+      if (here.state === 'unknown') return;
+      const uid = here.state === 'in' ? here.uid : null;
+      // A different account on this phone than the cached pages were for.
+      await notePageCacheUser(uid);
       if (!uid) return;
       if (!pendingWorkout.peek(uid) && !pendingPlan.peek(uid) && !pendingFinish.peek(uid)) return;
       const done = await Promise.all([pendingWorkout.flush(uid), pendingPlan.flush(uid), pendingFinish.flush(uid)]);

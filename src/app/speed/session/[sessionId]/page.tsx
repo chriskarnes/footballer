@@ -24,10 +24,13 @@ export default async function SpeedSessionPage({
   // When it was finished lately, the way the Speed page reads it. Whether
   // that's this week is the player's own week, so the runner decides.
   let completedAt: string[] = [];
+  // Who's signed in, so a finish with no signal is kept as theirs.
+  let owner: string | null = null;
   if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
     try {
       const db = await serverClient();
       const { data: auth } = await db.auth.getUser();
+      owner = auth.user?.id ?? null;
       if (auth.user) {
         const { data } = await db.from('workouts').select('completed_at')
           .eq('status', 'completed').eq('source', 'speed').eq('source_ref', s.id)
@@ -51,6 +54,7 @@ export default async function SpeedSessionPage({
       sessionRef={s.id}
       source="speed"
       back={back}
+      owner={owner}
       // From history it's "do it again": open ready to start, not on Completed.
       completedAt={from === 'history' ? [] : completedAt}
     />

@@ -6,7 +6,8 @@ import type { Exercise } from '@/lib/types';
 import { haptic } from '@/lib/haptics';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { PENDING_FLUSH, PENDING_SENT, pendingFinish, pendingWorkout } from '@/lib/pending';
-import { browserClient } from '@/lib/supabase/client';
+import { lastUser, ownerOf, whoIsHere } from '@/lib/phone-session';
+import { newId } from '@/lib/new-id';
 import { EFFORT } from '@/lib/speed-guide';
 import { isYoutubeShort, youtubeId } from '@/lib/video';
 import { Avatar } from './Avatar';
@@ -60,15 +61,6 @@ function glide(el: () => Element | null | undefined, block: ScrollLogicalPositio
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     el()?.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block });
   });
-}
-
-/** A fresh id for one finish. randomUUID needs a secure page; a local address over plain http hasn't one. */
-function newId(): string {
-  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-  const h = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0'));
-  h[6] = '4' + h[6][1]; h[8] = ((parseInt(h[8], 16) & 0x3f) | 0x80).toString(16);
-  const x = h.join('');
-  return `${x.slice(0, 8)}-${x.slice(8, 12)}-${x.slice(12, 16)}-${x.slice(16, 20)}-${x.slice(20)}`;
 }
 
 export function Runner({
@@ -260,11 +252,10 @@ export function Runner({
   }
 
   // Whose a finish is that can't go now: the session on the phone, or failing
-  // that the player the page was opened for. Only with neither is it nobody's.
+  // that the player the page was opened for, or (the phone's sign-in only out
+  // of reach) the account last signed in here. Only with none is it nobody's.
   async function whose(): Promise<string | null> {
-    let uid: string | null = null;
-    try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
-    return uid ?? owner ?? null;
+    return ownerOf(await whoIsHere(), owner, lastUser());
   }
 
   async function deliver(fresh: Record<string, unknown>, first: Record<string, unknown>) {
@@ -272,6 +263,42 @@ export function Runner({
     const post = (b: Record<string, unknown>, method: 'POST' | 'PATCH') =>
       fetch('/api/workouts', { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
     let patched = body !== fresh;
+    const q = patched ? pendingFinish : pendingWorkout;
+    // What waits on the phone. A saved-for-later session may be deleted
+    // (on another phone) before it goes: then it's sent whole, rather than
+    // a 404 that drops it.
+    const waiting = patched ? { ...first, fallback: fresh } : fresh;
+    const withFeel = () => (feelRef.current ? { ...waiting, feel: feelRef.current } : waiting);
+    // Kept on the phone first, and only then sent. On a weak signal the send
+    // can hang for a long while with the phone back in a bag; kept only once
+    // it had failed, a finish was lost if the page was closed before then.
+    // This runs before the first await, so it's done by the time Finish
+    // returns. (A saved-for-later session with nobody to say whose isn't
+    // kept yet: it could go to whoever signs in next. See below.)
+    let w = queued.current && queued.current.q === q && q.has(queued.current.id) ? queued.current : null;
+    if (!w && (owner || !patched)) {
+      w = { q, id: q.stash(withFeel(), owner ?? null), body: waiting };
+      queued.current = w;
+    }
+    // It couldn't go now. Still on the phone, it waits for signal or a
+    // sign-in; if PendingSaves got it through meanwhile, it's saved.
+    const wait = async (lapsed: boolean) => {
+      if (w && !w.q.has(w.id)) {
+        const r = w.q.result(w.id);
+        if (r?.id) setSavedId(r.id);
+        queued.current = null;
+        setSave(r && !r.ok ? 'error' : 'saved');
+        return;
+      }
+      const uid = await whose();
+      // A saved-for-later session is someone's row: with nobody to say whose,
+      // marking it done could go to whoever signs in next. Not kept.
+      if (!uid && patched) { w?.q.drop(w.id); queued.current = null; setSave('error'); return; }
+      if (!w) { w = { q, id: q.stash(withFeel(), uid), body: waiting }; queued.current = w; }
+      else if (uid !== (owner ?? null)) w.q.reown(w.id, uid);
+      // Signed out, or the sign-in has lapsed: it waits for a sign-in, and says so.
+      setSave(lapsed || !uid ? 'signin' : 'queued');
+    };
     try {
       let res = await post(body, patched ? 'PATCH' : 'POST');
       if (res.status === 404 && patched) { body = fresh; patched = false; res = await post(body, 'POST'); }
@@ -279,24 +306,13 @@ export function Runner({
       // needs no account — so most first sessions were reported saved and
       // weren't. A signed-out finish (or one whose sign-in has lapsed) is kept
       // in this browser until sign-in.
-      if (res.status === 401) {
-        // Whose it was: the lapsed sign-in is still on the phone. Without it,
-        // the next account to sign in (a sibling) would get it.
-        const uid = await whose();
-        // A saved-for-later session is someone's row: with nobody to say whose,
-        // marking it done could go to whoever signs in next. Not kept, as
-        // with no signal below.
-        if (!uid && patched) { setSave('error'); return; }
-        const q = patched ? pendingFinish : pendingWorkout;
-        // The row may be gone by the time it's sent (deleted on another
-        // phone): then it goes whole, rather than a 404 that drops it.
-        if (patched) body = { ...body, fallback: fresh };
-        queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
-        setSave('signin');
-      }
+      if (res.status === 401) await wait(true);
       // The server or the host failing (5xx) is like no signal: keep it and send later.
       else if (res.status >= 500) throw new Error(String(res.status));
       else {
+        // Answered: saved, or turned down for good. Either way it's no longer waiting.
+        w?.q.drop(w.id);
+        queued.current = null;
         setSave(res.ok ? 'saved' : 'error');
         if (res.ok && !patched) {
           const j = await res.json().catch(() => null);
@@ -306,16 +322,9 @@ export function Runner({
         if (res.ok) router.refresh();
       }
     } catch {
-      // No signal (a field, a basement gym): keep it on the phone, marked as
-      // this account's, and send it when the signal's back. Signed out, it
-      // waits for a sign-in instead, and says so.
-      const uid = await whose();
-      if (!uid && patched) { setSave('error'); return; }
-      const q = patched ? pendingFinish : pendingWorkout;
-      // A saved-for-later session may be deleted before this goes: then it's sent whole.
-      if (patched) body = { ...body, fallback: fresh };
-      queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
-      setSave(uid ? 'queued' : 'signin');
+      // No signal (a field, a basement gym): it's on the phone, marked as
+      // this account's, and goes when the signal's back.
+      await wait(false);
     }
   }
 
@@ -353,8 +362,10 @@ export function Runner({
     // afterthought.
     haptic('success');
     window.scrollTo({ top: 0 });
-    keepTicks(new Set());
+    // Kept before the ticks go: send() puts the finish on the phone before
+    // its first await, so there's no moment with neither.
     send(minutes);
+    keepTicks(new Set());
   }
 
   // Their trainer, by name where it's known: "Mike will see this".

@@ -24,7 +24,9 @@ export async function POST(req: Request) {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
-  const body = await req.json();
+  // Not JSON: a 400, which the phone's queue takes as final. A 500 it sends again for ever.
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'bad request' }, { status: 400 });
   // Capped like the trainer's own name (60), and positions only from the list
   // the form offers (old names read as today's), each once.
   const text = (v: unknown, max: number) => typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, max) : '';

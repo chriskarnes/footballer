@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Academy } from './branding-server';
 import { localDate, progress, type Done, type PlanDay, type Progress } from './progress';
-import { loadContent, type AcademyContent } from './academy-data';
+import { loadCompletions, loadContent, type AcademyContent } from './academy-data';
 import { asPlanDays, buildWeek, setItems, type WeekItem } from './academy-week';
 import { plain } from '@/lib/plain-error';
 
@@ -35,7 +35,7 @@ export async function loadPlayers(db: any, academy: Academy, opts: { player?: st
   const ids = ((data ?? []) as Raw[]).map((r) => r.user_id);
   // What each player finished from their trainer's week, to tick its items.
   const { data: ticks } = ids.length && content.ready
-    ? await db.rpc('academy_completions', { p_academy: academy.id, p_since: new Date(Date.now() - 8 * 86400000).toISOString() })
+    ? await loadCompletions(db, academy.id, new Date(Date.now() - 8 * 86400000).toISOString(), opts.player)
     : { data: [] };
   const players: Player[] = ((data ?? []) as Raw[]).map((r) => {
     const name = nameOf(r);

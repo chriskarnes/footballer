@@ -24,7 +24,7 @@ export type AcademyContent = {
   libraryReady: boolean;
   drills: DrillRow[];
   groups: GroupRow[];
-  memberships: { group_id: string; user_id: string }[];
+  memberships: { group_id: string; user_id: string; added_at?: string | null }[];
   playerPrograms: PlayerProgramRow[];
   addons: AddonRow[];
   /** Players' soccer days and this fortnight's moves; empty before 0008 runs. */
@@ -44,20 +44,24 @@ export type AcademyContent = {
  * add-ons (and the content, which every member reads).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function loadContent(db: any, academyId: string, opts: { addonsSince?: string } = {}): Promise<AcademyContent> {
+export async function loadContent(db: any, academyId: string, opts: { addonsSince?: string;
+  /** Building for one player: only their weeks, moves and add-ons are read,
+   *  so a big academy's rows don't crowd theirs out past the row limit. */
+  player?: string } = {}): Promise<AcademyContent> {
+  const only = <Q extends { eq: (c: string, v: string) => Q }>(q: Q): Q => (opts.player ? q.eq('user_id', opts.player) : q);
   const since = opts.addonsSince ?? new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
   const [programs, sessions, drills, groups, memberships, playerPrograms, addons, schedules, moves, custom, plans, defaults, library] = await Promise.all([
     db.from('academy_programs').select('id, name, description, weeks').eq('academy_id', academyId).order('created_at'),
     withFallback((c) => db.from('academy_sessions').select(c).eq('academy_id', academyId), 'id, program_id, week, position, name, drill_ids', ', library_id'),
     drillsQuery(db, academyId),
     db.from('groups').select('id, name, meets_weekday, meets_time, program_id, starts_on, archived').eq('academy_id', academyId).order('name'),
-    db.from('group_members').select('group_id, user_id').eq('academy_id', academyId),
+    db.from('group_members').select('group_id, user_id, added_at').eq('academy_id', academyId),
     db.from('player_programs').select('user_id, program_id, starts_on').eq('academy_id', academyId),
-    db.from('addons').select('id, user_id, drill_id, note, week_of, created_at').eq('academy_id', academyId).gte('week_of', since),
+    only(db.from('addons').select('id, user_id, drill_id, note, week_of, created_at').eq('academy_id', academyId).gte('week_of', since)),
     // RLS: a player gets their own row; a trainer gets their players'.
     withFallback((c) => db.from('player_schedules').select(c), 'user_id, club_days, game_day', ', game_days, trainer_days'),
-    db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since),
-    customQuery(db, academyId, since),
+    only(db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since)),
+    customQuery(db, academyId, since, opts.player),
     withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress, mode', ', progress'),
     loadDefaults(db, academyId),
     db.from('library_sessions').select('id, name, drill_ids').eq('academy_id', academyId).order('name'),
@@ -96,9 +100,12 @@ export async function loadDefaults(db: any, academyId: string): Promise<Defaults
 
 /** Built-week sessions with their notes; without them before migration 0011 adds the column. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function customQuery(db: any, academyId: string, since: string) {
+async function customQuery(db: any, academyId: string, since: string, player?: string) {
   const cols = 'id, user_id, week_of, position, name, drill_ids, weekday, made_by';
-  const q = (c: string) => db.from('player_week_sessions').select(c).eq('academy_id', academyId).gte('week_of', since);
+  const q = (c: string) => {
+    const all = db.from('player_week_sessions').select(c).eq('academy_id', academyId).gte('week_of', since);
+    return player ? all.eq('user_id', player) : all;
+  };
   for (const extra of [', note, steps, light, changes', ', note']) {
     const r = await q(cols + extra);
     if (!r.error) return r;
@@ -131,4 +138,20 @@ export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId:
     focus: p?.focus ?? [], autopilot: p?.autopilot ?? false, own: !!(p && (p.sessions || p.minutes)),
     progress: p?.progress ?? c.defaults.progress, ownProgress: p?.progress ?? null, mode: p?.mode ?? null,
   };
+}
+
+export type CompletionRun = { user_id: string; source: string; source_ref: string | null; completed_at: string | null; feel?: 'easy' | 'right' | 'hard' | null; done_ids?: string[] | null };
+
+/**
+ * Finished trainer sessions since `since`: the academy's, or one player's.
+ * For one player the database is asked for just theirs (0035), so the rest
+ * of the academy's can't push the newest of theirs past the row limit;
+ * before that migration, everyone's, narrowed here.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadCompletions(db: any, academyId: string, since: string, player?: string): Promise<{ data: CompletionRun[]; error: { message: string } | null }> {
+  let r = await db.rpc('academy_completions', { p_academy: academyId, p_since: since, ...(player ? { p_player: player } : {}) });
+  if (r.error?.code === 'PGRST202' && player) r = await db.rpc('academy_completions', { p_academy: academyId, p_since: since });
+  const rows = (r.data ?? []) as CompletionRun[];
+  return { data: player ? rows.filter((x) => x.user_id === player) : rows, error: r.error ?? null };
 }

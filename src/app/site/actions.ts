@@ -3,6 +3,7 @@ import { createHmac } from 'node:crypto';
 import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { serverClient } from '@/lib/supabase/server';
+import { addrKey } from '@/lib/sender-addr';
 
 export type Found = { slug: string; name: string; city: string | null };
 
@@ -18,7 +19,7 @@ export async function findAcademies(q: string): Promise<Found[]> {
 
 const pick = (v: FormDataEntryValue | null, max: number) => String(v ?? '').trim().slice(0, max);
 
-/** A few requests an hour from one address, per server instance. The database caps the total. */
+/** A few requests an hour from one address, per server instance: a quick first no. The limit that lasts is the database's (0034). */
 const sent = new Map<string, number[]>();
 function tooMany(ip: string) {
   const now = Date.now(), hour = 3600_000;
@@ -47,24 +48,26 @@ export async function requestAcademy(_: unknown, form: FormData): Promise<{ ok: 
   // so it can't be worked out from the address alone.
   // Without a server secret there's no telling who sent it: no fixing then.
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const from = secret ? createHmac('sha256', secret).update(`${ip}|${h.get('user-agent') ?? ''}`).digest('hex').slice(0, 32) : null;
+  const keyed = (v: string) => (secret ? createHmac('sha256', secret).update(v).digest('hex').slice(0, 32) : null);
+  const from = keyed(`${ip}|${h.get('user-agent') ?? ''}`);
+  // The address alone, for the limit the database keeps (0034): the browser's
+  // name is whatever a script says it is, so it can't be part of that.
+  const addr = ip === 'unknown' ? null : keyed(`addr|${addrKey(ip)}`);
   // Only the server may store a request (0031), so the limits here hold.
   const db = secret
     ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, secret, { auth: { persistSession: false } })
     : await serverClient();
-  let { error } = await db.rpc('request_academy', {
-    p_name: name, p_email: email, p_academy_name: academy, p_slug: slug,
-    p_city: pick(form.get('city'), 60), p_players: pick(form.get('players'), 20),
-    p_trainers: pick(form.get('trainers'), 20), p_content: pick(form.get('content'), 40),
-    p_message: pick(form.get('message'), 2000), p_from: from,
-  });
-  // Before 0029 there's no p_from.
-  if (error?.code === 'PGRST202') ({ error } = await db.rpc('request_academy', {
+  const args = {
     p_name: name, p_email: email, p_academy_name: academy, p_slug: slug,
     p_city: pick(form.get('city'), 60), p_players: pick(form.get('players'), 20),
     p_trainers: pick(form.get('trainers'), 20), p_content: pick(form.get('content'), 40),
     p_message: pick(form.get('message'), 2000),
-  }));
+  };
+  let { error } = await db.rpc('request_academy', { ...args, p_from: from, p_addr: addr });
+  // Before 0034 there's no p_addr; before 0029, no p_from.
+  if (error?.code === 'PGRST202') ({ error } = await db.rpc('request_academy', { ...args, p_from: from }));
+  if (error?.code === 'PGRST202') ({ error } = await db.rpc('request_academy', args));
+  if (error && /too many from here/.test(error.message)) return { ok: false, error: 'That’s a lot of requests from here. Try again in an hour.' };
   if (error && /too many requests/.test(error.message)) return { ok: false, error: 'We’re getting a lot of requests right now. Try again in an hour.' };
   if (error) return { ok: false, error: 'Couldn’t send that. Try again in a minute.' };
   return { ok: true };

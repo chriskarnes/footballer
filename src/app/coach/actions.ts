@@ -20,6 +20,8 @@ export async function sendNote(input: { body: string; to: string[] | null; kind:
   if (!v) return { ok: false as const, error: 'Only trainers can send notes.' };
   const body = input.body.trim();
   if (!body) return { ok: false as const, error: 'Write something first.' };
+  // Nobody picked isn't everybody: only an explicit null sends to all.
+  if (input.to && !input.to.length) return { ok: false as const, error: 'Pick who it’s for.' };
   if (body.length > 1000) return { ok: false as const, error: 'Keep it under 1,000 characters.' };
 
   const { error } = await v.db.rpc('send_note', {
@@ -66,10 +68,18 @@ export async function removeMember(userId: string) {
 }
 
 /** Let a player in who asked to join, or turn them away. */
-export async function answerJoinRequest(userId: string, approve: boolean) {
+export async function answerJoinRequest(userId: string, approve: boolean, shown: 'player' | 'trainer' = 'player') {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
-  const { error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve });
+  const role = shown === 'trainer' ? 'trainer' : 'player';
+  // With the kind of request the card showed (0035): if it has changed since
+  // (a player request that's become a trainer one), it isn't the one answered.
+  let { error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve, p_role: role });
+  if (error?.code === 'PGRST202') ({ error } = await v.db.rpc('answer_join_request', { p_academy: v.academy.id, p_user: userId, p_approve: approve }));
+  if (error && /request changed/i.test(error.message)) {
+    revalidatePath('/coach', 'layout');
+    return { ok: false as const, error: 'That request has changed since this page loaded. Have another look before answering.' };
+  }
   // Another trainer answered it first: nothing left to do, and nothing wrong,
   // but say so rather than claim this tap let them in.
   const already = !!error && /no such request/i.test(error.message);

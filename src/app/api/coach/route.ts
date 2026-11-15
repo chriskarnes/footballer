@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import type { SessionSpec } from '@/lib/types';
 import { serverClient } from '@/lib/supabase/server';
+import { libraryAllowed } from '@/lib/library-gate';
 
 export const runtime = 'nodejs';
 
@@ -55,6 +56,8 @@ Keep the reply field to one warm, short sentence. Never invent drill names — y
 // it); signing in is the real gate.
 const RECENT = new Map<string, number[]>();
 const PER_MINUTE = 6;
+/** Typed sessions a day per account. */
+const PER_DAY = Number(process.env.COACH_DAILY_LIMIT) || 40;
 
 function tooMany(user: string) {
   const now = Date.now();
@@ -80,6 +83,11 @@ export async function POST(req: Request) {
   if (!user) {
     return NextResponse.json({ reply: 'Sign in to describe a session in your own words. The buttons above work without it.' }, { status: 401 });
   }
+  // Only where the session builder is: it builds from the drill library, so
+  // anywhere without it there's nothing for a description to become.
+  if (!(await libraryAllowed().catch(() => false))) {
+    return NextResponse.json({ reply: 'The session builder isn’t on here.' }, { status: 403 });
+  }
   if (tooMany(user.id)) {
     return NextResponse.json({ reply: 'That’s a lot at once. Give it a minute, or use the buttons above.' }, { status: 429 });
   }
@@ -92,6 +100,15 @@ export async function POST(req: Request) {
       spec: {},
       reply: 'Free-text is off until an API key is set. Use the buttons above and I’ll build it.',
     });
+  }
+
+  // The limit that lasts (0035): so many a day per account, counted in the
+  // database, where every server instance sees the same number. Before the
+  // migration runs there's only the counter above.
+  const gate = await db.rpc('coach_allow', { p_per_day: PER_DAY });
+  if (gate.error ? gate.error.code !== 'PGRST202' : gate.data !== true) {
+    if (gate.error) console.error('[coach] coach_allow', gate.error.message);
+    return NextResponse.json({ reply: 'That’s all the typed sessions for today. The buttons above still build one.' }, { status: 429 });
   }
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -130,7 +147,7 @@ export async function POST(req: Request) {
   const raw = block.input as Record<string, unknown>;
   // strip nulls so the caller can tell "not mentioned" from "chosen"
   const spec: Partial<SessionSpec> = {};
-  if (typeof raw.minutes === 'number') spec.minutes = raw.minutes;
+  if (typeof raw.minutes === 'number' && Number.isFinite(raw.minutes)) spec.minutes = Math.max(5, Math.min(180, Math.round(raw.minutes)));
   if (Array.isArray(raw.focus) && raw.focus.length) spec.focus = raw.focus as SessionSpec['focus'];
   if (typeof raw.place === 'string') spec.place = raw.place as SessionSpec['place'];
   if (typeof raw.level === 'string') spec.level = raw.level;

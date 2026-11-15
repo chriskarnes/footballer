@@ -6,7 +6,7 @@ import { RemovePlayer } from '@/components/coach/RemovePlayer';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
 import { addDays, localDate, mondayOf, sinceLabel, weekdayOf } from '@/lib/progress';
-import { loadContent, targetFor } from '@/lib/academy-data';
+import { loadCompletions, loadContent, targetFor } from '@/lib/academy-data';
 import { PlayerPlan } from '@/components/coach/PlayerPlan';
 import { Extras, ProgramSetup, WeekList } from '@/components/coach/PlayerTraining';
 import { SoccerDays } from '@/components/SoccerDays';
@@ -43,7 +43,7 @@ export default async function PlayerPage({ params }: {
       .select('seen_at, notes!inner(id, body, kind, author_name, created_at, academy_id)')
       .eq('user_id', id).eq('notes.academy_id', academy.id),
     // This fortnight's finished trainer sessions, with how they felt.
-    db.rpc('academy_completions', { p_academy: academy.id, p_since: new Date(Date.now() - 15 * 86400000).toISOString() }),
+    loadCompletions(db, academy.id, new Date(Date.now() - 15 * 86400000).toISOString(), id),
     // Their Speed test days, from their account (0024). Before that, nothing.
     db.rpc('academy_player_speed_tests', { p_academy: academy.id, p_player: id }).then((r) => r, () => ({ data: null })),
   ]);

@@ -9,7 +9,7 @@ import { todayIn, type IcsEvent } from './ics';
 
 export type AcademyFeed = {
   user_id: string; time_zone: string;
-  groups: GroupRow[]; memberships: { group_id: string; user_id: string }[];
+  groups: GroupRow[]; memberships: { group_id: string; user_id: string; added_at?: string | null }[];
   player_programs: PlayerProgramRow[]; programs: ProgramRow[]; sessions: SessionRow[];
   drills: DrillRow[]; addons: AddonRow[];
   /** Added in 0008; absent from a feed function that predates it. */

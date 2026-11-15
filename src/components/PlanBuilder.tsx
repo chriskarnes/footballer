@@ -6,6 +6,7 @@ import { buildPlan, defaultPlanName, planDayRows, swapPlanDay, type Prefill } fr
 import { decodePlan, encodePlan, PLAN_KEYS } from '@/lib/plan-url';
 import { formatTouches } from '@/lib/session-builder';
 import { pendingPlan } from '@/lib/pending';
+import { newId } from '@/lib/new-id';
 import { PlanWeek } from './PlanWeek';
 import { Chip } from './Chip';
 import { BackButton } from './BackLink';
@@ -165,8 +166,14 @@ function Builder({
     window.scrollTo({ top: 0 });
   }
 
+  // One id per built week: saving the same week again (the answer lost to
+  // the signal, a second press after an error) is the same save, not a copy.
+  const saveId = useRef<{ week: BuiltPlan; id: string } | null>(null);
+
   async function saveWeek(week: BuiltPlan) {
     const days = planDayRows(week, '');
+    if (saveId.current?.week !== week) saveId.current = { week, id: newId() };
+    const client_id = saveId.current.id;
     // Signed out, the week is kept in this browser and saved — as the active
     // week — once you sign in. It used to say it "won't be here
     // tomorrow", which was true and the end of it.
@@ -174,7 +181,7 @@ function Builder({
       // The latest week only: saving again replaces it, rather than making
       // every version a plan at sign-in.
       pendingPlan.clear();
-      pendingPlan.stash({ intake: week.intake, days, name: defaultPlanName(week.intake) });
+      pendingPlan.stash({ intake: week.intake, days, name: defaultPlanName(week.intake), client_id });
       setSave('signin');
       return;
     }
@@ -184,7 +191,7 @@ function Builder({
         method: editing ? 'PUT' : 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify(editing
           ? { id: editing.id, intake: week.intake, days }
-          : { intake: week.intake, days, name: defaultPlanName(week.intake) }),
+          : { intake: week.intake, days, name: defaultPlanName(week.intake), client_id }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

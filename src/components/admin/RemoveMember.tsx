@@ -12,7 +12,7 @@ export function RemoveMember({ academyId, userId, name }: { academyId: string; u
       <button type="button" disabled={busy} aria-label={`Remove ${name}`}
               className="btn-ghost btn-sm pressable"
               onClick={() => {
-                if (!confirm(`Remove ${name}? They lose the library here, and need the invite link to come back. Their training history stays theirs.`)) return;
+                if (!confirm(`Remove ${name}? They lose the library here. The invite link is replaced, so the one they have stops working; if this space is open to all, close it first or they can tap back in. Their training history stays theirs.`)) return;
                 start(async () => {
                   setErr('');
                   const r = await removeSelfServeMember(academyId, userId).catch(offline);

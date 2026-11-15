@@ -43,7 +43,8 @@ export async function replaceSelfServeInvite(id: string): Promise<{ ok: true; co
 
 /**
  * Takes a player out of a self-serve space (0033): it has no owner to do
- * it. Their training stays theirs; they need the link to come back.
+ * it. Their training stays theirs. The invite link is replaced with it
+ * (0035), so the one they joined with doesn't let them back in.
  */
 export async function removeSelfServeMember(academyId: string, userId: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const db = await serverClient();

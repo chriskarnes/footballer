@@ -1,4 +1,5 @@
 'use server';
+import { putName } from '@/lib/ai-name';
 import { drillTags } from '@/lib/academy-week';
 import { allowed, client, logCall, MODEL } from '@/lib/ai';
 import { plain } from '@/lib/plain-error';
@@ -14,7 +15,7 @@ const PICK_SCHEMA = {
   type: 'object',
   properties: {
     drill_id: { type: 'string', description: 'The id of a drill from the list. Must be one of the given ids.' },
-    note: { type: 'string', description: 'One or two short sentences to the player, in the trainer\'s voice. Name them. No emoji.' },
+    note: { type: 'string', description: 'One or two short sentences to the player, in the trainer\'s voice. You aren\'t told their name: write {name} exactly where it goes. No emoji.' },
     why: { type: 'string', description: 'A few words for the trainer on why this drill.' },
   },
   required: ['drill_id', 'note', 'why'],
@@ -55,7 +56,7 @@ async function suggest(userId: string): Promise<Suggestion> {
     let usage: unknown = null, ok = false;
     try {
       const facts = {
-        name: p.first,
+        // No name: it's put into the note here, afterwards (ai-name.ts).
         positions: p.positions, age: p.age_band,
         groups: p.groups,
         this_week: { status: p.progress.reason, done: p.progress.done, planned: p.progress.planned, sessions: p.week.map((w) => `${w.title}${w.done ? ' (done)' : ''}`) },
@@ -79,7 +80,7 @@ async function suggest(userId: string): Promise<Suggestion> {
       const input = JSON.parse(res.text ?? '{}') as { drill_id?: string; note?: string; why?: string };
       if (input.drill_id && pool.some((d) => d.id === input.drill_id)) {
         ok = true;
-        return { ok: true, drillId: input.drill_id, note: String(input.note ?? '').slice(0, 200), why: String(input.why ?? ''), by: 'ai' };
+        return { ok: true, drillId: input.drill_id, note: putName(String(input.note ?? ''), p.first).slice(0, 200), why: String(input.why ?? ''), by: 'ai' };
       }
     } catch (e) {
       console.error('suggestAddon: Gemini failed, using the rule', e instanceof Error ? e.message : e);

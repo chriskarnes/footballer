@@ -19,7 +19,9 @@ export async function POST(req: Request) {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
-  const body = await req.json();
+  // Not JSON: a 400, which the phone's queue takes as final. A 500 it sends again for ever.
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'bad request' }, { status: 400 });
   const row: Record<string, unknown> = {
       user_id: user.id,
       title: String(body.title ?? '').trim().slice(0, 120) || 'Session',
@@ -90,7 +92,9 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
 
-  const body = await req.json();
+  // Not JSON: a 400, which the phone's queue takes as final. A 500 it sends again for ever.
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'bad request' }, { status: 400 });
   // How it felt, after the fact: just that, on a finished session. (A queued
   // finish carries its feel too, with the rest: that's the branch below.)
   if (body.feel !== undefined && body.id && body.actual_minutes === undefined) {

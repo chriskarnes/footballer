@@ -47,7 +47,9 @@ export type Change = 'new' | 'same' | 'up' | 'harder' | 'hold';
 /** A week built before, and what came of each session. */
 export type PastWeek = {
   week_of: string; light: boolean;
-  sessions: { drill_ids: string[]; steps: number[]; done: boolean; feel: Feel | null; ticked: string[] | null }[];
+  /** `open`: not done, and its day hasn't passed: a week still running.
+   *  Not a session they skipped, so it says nothing about how the week went. */
+  sessions: { drill_ids: string[]; steps: number[]; done: boolean; feel: Feel | null; ticked: string[] | null; open?: boolean }[];
 };
 
 export type BuiltSession = {
@@ -105,7 +107,12 @@ export function buildPlayerWeek(input: {
   // Last week, if it was the week before this one.
   const prev = input.weekOf && history[0]?.week_of === minusWeek(input.weekOf) ? history[0] : null;
   const light = !!input.weekOf && blockRun(input.weekOf, history) >= BLOCK;
-  const doneShare = prev && prev.sessions.length ? prev.sessions.filter((s) => s.done).length / prev.sessions.length : null;
+  // How last week went, from the sessions that have had their day. Next week
+  // built on a Tuesday used to read this week's Thursday session as skipped:
+  // one of three done was "struggling", nothing stepped up, and the week
+  // stayed that way. Sessions still to come aren't counted either way.
+  const judged = prev ? prev.sessions.filter((s) => s.done || !s.open) : [];
+  const doneShare = judged.length ? judged.filter((s) => s.done).length / judged.length : null;
   const struggling = doneShare !== null && doneShare < 0.5;
   const minutes = light ? Math.max(5, Math.round(target.minutes * LIGHT)) : target.minutes;
 
@@ -133,7 +140,9 @@ export function buildPlayerWeek(input: {
     if (m.step + 1 <= MAX_STEP) return { id, step: m.step + 1, change: 'up' };
     const harder = byId.get(id)?.harder_id;
     if (harder && byId.has(harder)) return { id: harder, step: 0, change: 'harder' };
-    return { id, step: MAX_STEP, change: 'same' };
+    // At the top, it stays where it is: a level the trainer set by hand above
+    // the last step isn't taken back down for doing the drill well.
+    return { id, step: Math.max(m.step, MAX_STEP), change: 'same' };
   };
 
   // How well a new drill fits a session that leans on `lean`.

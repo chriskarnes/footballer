@@ -36,6 +36,9 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
       const v = JSON.parse(raw);
       // Before the list: one { at, payload }, signed out.
       const list: Entry[] = Array.isArray(v) ? v : v?.payload ? [{ id: newId(), at: v.at, uid: null, payload: v.payload }] : [];
+      // Kept as a list from here on: read again, the old shape would get a
+      // new id each time, never match the one just sent, and be sent twice.
+      if (!Array.isArray(v) && list.length) { try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* not kept */ } }
       return list.filter((e) => typeof e?.at === 'number' && Date.now() - e.at <= MAX_AGE_MS && e.payload);
     } catch { return []; }
   }
@@ -57,6 +60,12 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
     write(read().map((e) => (e.id === id ? { ...e, payload } : e)));
   }
   const has = (id: string) => read().some((e) => e.id === id);
+  /** Takes one out: it was sent from the page that made it. */
+  const drop = (id: string): void => write(read().filter((e) => e.id !== id));
+  /** Says whose a waiting entry is, once that's known. */
+  function reown(id: string, uid: string | null): void {
+    write(read().map((e) => (e.id === id ? { ...e, uid } : e)));
+  }
   /** Anything waiting that this account (or nobody signed in) would send. */
   const peek = (uid: string | null = null) => read().some((e) => e.uid === null || e.uid === uid);
   /** Anything at all waiting, whoever's. */
@@ -109,7 +118,7 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
     return inflight;
   }
 
-  return { stash, update, has, peek, any, clear, flush, result };
+  return { stash, update, has, drop, reown, peek, any, clear, flush, result };
 }
 
 /** A session finished in the runner. */

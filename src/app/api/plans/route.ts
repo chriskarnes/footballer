@@ -14,6 +14,8 @@ import { plain } from '@/lib/plain-error';
  *   DELETE  one week, by ?id=
  */
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 type Day = { weekday: number; slot: number; kind: string; session_id: string | null };
 
 async function signedIn() {
@@ -64,16 +66,38 @@ export async function POST(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
 
-  const { intake, days, name, follow = true } = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'intake and days are required' }, { status: 400 });
+  const { intake, days, follow = true } = body;
+  const name = typeof body.name === 'string' ? body.name : '';
   const bad = invalid(intake, days);
   if (bad) return bad;
+  // The phone's own id for this save (0035): one whose answer was lost to
+  // the signal, or sent from two tabs, is sent again and must be one week.
+  const clientId = typeof body.client_id === 'string' && UUID.test(body.client_id) ? body.client_id : null;
+  const finish = async (id: string) => {
+    if (follow) {
+      const made = await activate(db, user.id, id);
+      if (made !== true) return NextResponse.json({ error: 'Saved, but couldn’t make it your active week. Try again.' }, { status: 400 });
+    }
+    return NextResponse.json({ id });
+  };
 
   // Written inactive, days and all, and only then made the active one: a
   // failure part-way leaves the old week active, not none.
-  const { data: plan, error } = await db.from('plans')
-    .insert({ user_id: user.id, name: (name || 'My weekly schedule').slice(0, 60), active: false, intake })
-    .select('id').single();
-  if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
+  const row: Record<string, unknown> = { user_id: user.id, name: (name || 'My weekly schedule').slice(0, 60), active: false, intake };
+  let { data: plan, error } = await db.from('plans').insert(clientId ? { ...row, client_id: clientId } : row).select('id').single();
+  // Before 0035 there's no client_id column: saved without it.
+  if (error && clientId && error.code !== '23505' && /client_id/.test(error.message)) {
+    ({ data: plan, error } = await db.from('plans').insert(row).select('id').single());
+  }
+  // Already saved, the first time it was sent: that one stands. Made active
+  // again in case that was the step that failed.
+  if (error && clientId && error.code === '23505') {
+    const { data: was } = await db.from('plans').select('id').eq('user_id', user.id).eq('client_id', clientId).maybeSingle();
+    if (was) return finish(was.id);
+  }
+  if (error || !plan) return NextResponse.json({ error: error ? plain(error) : 'not saved' }, { status: 400 });
 
   // Checked: a plan whose days silently failed to write is an empty week that
   // still reports success. Roll the header back so the player is asked again.
@@ -84,11 +108,7 @@ export async function POST(req: Request) {
   }
   // Making a new week active makes the old one inactive. It's kept — an
   // inactive plan, not a retired one.
-  if (follow) {
-    const made = await activate(db, user.id, plan.id);
-    if (made !== true) return NextResponse.json({ error: 'Saved, but couldn’t make it your active week. Try Follow this week.' }, { status: 400 });
-  }
-  return NextResponse.json({ id: plan.id });
+  return finish(plan.id);
 }
 
 /** Rebuild in place. The plan keeps its id, name and active state, so a week
@@ -97,7 +117,7 @@ export async function PUT(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
 
-  const { id, intake, days } = await req.json();
+  const { id, intake, days } = (await req.json().catch(() => null)) ?? {};
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
   const bad = invalid(intake, days);
   if (bad) return bad;
@@ -109,10 +129,20 @@ export async function PUT(req: Request) {
 
   // Insert the new days before deleting the old, so a failed write leaves the
   // week as it was rather than empty.
-  const { data: old } = await db.from('plan_days').select('id').eq('plan_id', id);
-  const { error: dayError } = await db.from('plan_days').insert(dayRows(id, days));
+  const { data: old, error: oldError } = await db.from('plan_days').select('id').eq('plan_id', id);
+  // Not known which days are the old ones: adding the new would double the week.
+  if (oldError) return NextResponse.json({ error: plain(oldError) }, { status: 400 });
+  const { data: added, error: dayError } = await db.from('plan_days').insert(dayRows(id, days)).select('id');
   if (dayError) return NextResponse.json({ error: dayError.message }, { status: 400 });
-  if (old?.length) await db.from('plan_days').delete().in('id', old.map((d) => d.id));
+  if (old?.length) {
+    const { error: delError } = await db.from('plan_days').delete().in('id', old.map((d) => d.id));
+    // The old days are still there: take the new ones back out, so the week
+    // is as it was rather than doubled, and say it didn't save.
+    if (delError) {
+      if (added?.length) await db.from('plan_days').delete().in('id', added.map((d) => d.id));
+      return NextResponse.json({ error: plain(delError) }, { status: 400 });
+    }
+  }
 
   return NextResponse.json({ id });
 }
@@ -121,7 +151,7 @@ export async function PATCH(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
 
-  const { id, name, follow } = await req.json();
+  const { id, name, follow } = (await req.json().catch(() => null)) ?? {};
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
   if (typeof name === 'string') {

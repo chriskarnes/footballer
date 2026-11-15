@@ -121,7 +121,11 @@ export function placeDays(count: number, busy: Busy = {}): number[] {
   const games = busy.games ?? [];
   const taken = new Set([...(busy.practice ?? []), ...(busy.trainer ?? []), ...(busy.meets ?? []), ...games]);
   const afterGame = new Set(games.map((g) => (g + 1) % 7));
-  const left = WEEK.filter((d) => d >= (busy.from ?? 0) && !busy.done?.includes(d));
+  // The days still open. Never none: with every day left already holding a
+  // done session, they double up there rather than land on nothing.
+  const open = WEEK.filter((d) => d >= (busy.from ?? 0));
+  const free = open.filter((d) => !busy.done?.includes(d));
+  const left = free.length ? free : open.length ? open : WEEK;
   const tiers = [
     left.filter((d) => !taken.has(d) && !afterGame.has(d)),
     left.filter((d) => !taken.has(d)),
@@ -150,7 +154,9 @@ export function buildWeek(input: {
   userId: string;
   today: string;
   groups: GroupRow[];
-  memberships: { group_id: string; user_id: string }[];
+  /** `added_at`: when the player was put in the group. Their first week
+   *  there starts that day, not on the Monday before it. */
+  memberships: { group_id: string; user_id: string; added_at?: string | null }[];
   playerPrograms: PlayerProgramRow[];
   programs: ProgramRow[];
   sessions: SessionRow[];
@@ -191,7 +197,13 @@ export function buildWeek(input: {
   // Each program's sessions, kept apart until every program is in, so the
   // days are chosen for the whole week at once rather than program by program.
   const runs: WeekItem[][] = [];
-  const addProgram = (programId: string, startsOn: string, label: string | null) => {
+  // The first weekday each run's sessions may land on. A program started, or
+  // a player put in its group, part-way through this week has its sessions
+  // on the days from then: on days already gone they'd read as missed, and
+  // the player as behind, the moment they were added. The day is fixed (the
+  // start date, not today), so the week doesn't shift as it goes on.
+  const startDay = new Map<WeekItem[], number>();
+  const addProgram = (programId: string, startsOn: string, label: string | null, since: string = startsOn) => {
     const p = programs.get(programId);
     if (!p) return;
     const n = programWeek(startsOn, p.weeks, today);
@@ -201,8 +213,12 @@ export function buildWeek(input: {
     const list = sessionsForWeek(input.sessions, programId, n);
     const sig = list.map((s) => s.id).join(',');
     if (!sig) return;
+    const from = since > monday && since <= addDays(monday, 6) ? weekdayOf(since) : 0;
     if (seen.has(sig)) {
-      if (label) for (const it of seen.get(sig)!) if (!it.groups.includes(label)) it.groups.push(label);
+      const had = seen.get(sig)!;
+      if (label) for (const it of had) if (!it.groups.includes(label)) it.groups.push(label);
+      // Reached two ways: whichever had them first decides the days.
+      startDay.set(had, Math.min(startDay.get(had) ?? 0, from));
       return;
     }
     const made = list.map((s) => ({
@@ -212,6 +228,15 @@ export function buildWeek(input: {
     }));
     seen.set(sig, made);
     runs.push(made);
+    startDay.set(made, from);
+  };
+  /** A group's program for this player: from the later of its start and the day they were added. */
+  const addGroups = () => {
+    for (const g of myGroups) if (g.program_id && g.starts_on) {
+      const at = input.memberships.find((m) => m.group_id === g.id && m.user_id === userId)?.added_at;
+      const added = at ? localDate(at, input.tz ?? 'UTC') : g.starts_on;
+      addProgram(g.program_id, g.starts_on, g.name, added > g.starts_on ? added : g.starts_on);
+    }
   };
 
   const mine = teamDays(input.schedules?.find((x) => x.user_id === userId));
@@ -227,7 +252,7 @@ export function buildWeek(input: {
     // Program sessions already done this week stay, on the day they were
     // done: a week built mid-week fills what's left, and "2 of 3" mustn't
     // drop back to "0 of 3" when it comes in.
-    for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);
+    addGroups();
     for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null);
     for (const it of runs.flat()) {
       const on = finished.get(it.key)?.[0];
@@ -239,15 +264,24 @@ export function buildWeek(input: {
       light: !!c.light, ups: (c.changes ?? []).filter((x) => x === 'up' || x === 'harder').length,
     });
   } else {
-    for (const g of myGroups) if (g.program_id && g.starts_on) addProgram(g.program_id, g.starts_on, g.name);
+    addGroups();
     for (const pp of input.playerPrograms.filter((x) => x.user_id === userId)) addProgram(pp.program_id, pp.starts_on, null);
 
     // Programs take turns, so two programs share the week instead of one
     // taking the early days; then the turns go on the days that fit.
     const order: WeekItem[] = [];
+    const fromOf = new Map<WeekItem, number>();
+    for (const r of runs) for (const it of r) fromOf.set(it, startDay.get(r) ?? 0);
     for (let i = 0; runs.some((r) => i < r.length); i++) for (const r of runs) if (i < r.length) order.push(r[i]);
-    const days = placeDays(order.length, { ...mine, meets });
-    order.forEach((it, i) => { it.weekday = days[i]; });
+    // Whole-week runs first, across the week; then each run that starts
+    // part-way through, on the days from its start, beside what's placed.
+    const taken: number[] = [];
+    for (const from of [...new Set(order.map((it) => fromOf.get(it) ?? 0))].sort((a, b) => a - b)) {
+      const part = order.filter((it) => (fromOf.get(it) ?? 0) === from);
+      const days = placeDays(part.length, from ? { ...mine, meets, from, done: taken } : { ...mine, meets });
+      part.forEach((it, i) => { it.weekday = days[i]; });
+      taken.push(...days);
+    }
     items.push(...order);
   }
 

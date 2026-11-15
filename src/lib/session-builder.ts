@@ -99,7 +99,9 @@ export function buildSession(all: Exercise[], spec: SessionSpec, seed = Math.ran
 /** Swap one drill for another that still fits the remaining budget. */
 export function swapDrill(all: Exercise[], built: BuiltSession, index: number): BuiltSession {
   const others = built.drills.reduce((a, d, i) => (i === index ? a : a + d.total_seconds), 0);
-  const room = built.spec.minutes * 60 - others;
+  // One pass's share of the time: a short list is done `rounds` times over,
+  // so a drill that filled the whole session's minutes tripled its length.
+  const room = (built.spec.minutes * 60) / Math.max(1, built.rounds) - others;
   const chosen = new Set(built.drills.map((d) => d.id));
   let candidates = all.filter(
     (d) => fits(d, built.spec) && !chosen.has(d.id) && d.total_seconds <= room

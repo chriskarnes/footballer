@@ -1,6 +1,7 @@
 import 'server-only';
 import { drillTags, type DrillRow } from './academy-week';
 import { client, MODEL } from './ai';
+import { putName } from './ai-name';
 import { candidates, progressAmount, type BuiltSession, type Proposed, type Target } from './week-builder';
 import { FOCUS_LABELS, type FocusArea } from './types';
 
@@ -11,7 +12,7 @@ Each session already has kept drills, chosen to build on last week: some step up
 For each session, in the same order:
 - new_drill_ids: pick the new drills to go with the kept ones, from the candidate list only, so the session's total minutes land close to its target (within 3). Lean on the session's focus. Avoid drills they did recently; don't repeat a drill in the week.
 - name: one to three words, after what the session works on.
-- note: one plain sentence to the player, under 15 words. If a kept drill stepped up or got harder, say so simply ("Wall passes go up to 60 each foot"). In a lighter week, say it's a lighter one. Use their first name at most once in the week. No emoji, no hype.`;
+- note: one plain sentence to the player, under 15 words. If a kept drill stepped up or got harder, say so simply ("Wall passes go up to 60 each foot"). In a lighter week, say it's a lighter one. You aren't told the player's name: where a note should use it, write {name} exactly, at most once in the week. No emoji, no hype.`;
 
 /**
  * Asks the AI for a week. Returns what it proposed and the token usage, or
@@ -53,7 +54,8 @@ export async function proposeWeek(input: {
     required: ['sessions'],
   };
   const facts = {
-    player: { first_name: input.first, age: input.age, positions: input.positions },
+    // No name: it's put into the notes here, afterwards (ai-name.ts).
+    player: { age: input.age, positions: input.positions },
     focus: input.focus.map(label),
     lighter_week: input.week.some((s) => s.light),
     sessions: input.week.map((s) => ({
@@ -80,7 +82,10 @@ export async function proposeWeek(input: {
       },
     });
     const out = JSON.parse(res.text ?? '{}') as { sessions?: Proposed[] };
-    return { sessions: Array.isArray(out.sessions) ? out.sessions : null, usage: res.usageMetadata ?? null };
+    const sessions = Array.isArray(out.sessions)
+      ? out.sessions.map((x) => (x && typeof x.note === 'string' ? { ...x, note: putName(x.note, input.first) } : x))
+      : null;
+    return { sessions, usage: res.usageMetadata ?? null };
   } catch (e) {
     console.error('proposeWeek: AI failed, using the rules', e instanceof Error ? e.message : e);
     return { sessions: null, usage: null };
