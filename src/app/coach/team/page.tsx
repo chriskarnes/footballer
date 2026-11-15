@@ -10,6 +10,7 @@ import { usage } from '@/lib/ai';
 import { readSetup } from '@/lib/setup';
 import { ListedSwitch } from '@/components/coach/Setup';
 import { RemoveTrainer } from '@/components/coach/RemovePlayer';
+import { billingOn } from '@/lib/billing-server';
 
 export const metadata = { title: 'Academy', robots: { index: false } };
 
@@ -100,6 +101,13 @@ export default async function TeamPage() {
             <span className="text-body text-on-surface-variant">{setup.done ? 'Done ›' : 'Continue ›'}</span>
           </Link>
         </section>
+      )}
+
+      {owner && billingOn() && (
+        <Link href="/coach/billing" className="card pressable mt-9 flex min-h-14 items-center justify-between px-4">
+          <span className="text-body font-semibold text-on-surface">Billing</span>
+          <span className="text-body text-on-surface-variant">$5 a player a month ›</span>
+        </Link>
       )}
 
       {canBrand && (

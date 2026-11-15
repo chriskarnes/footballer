@@ -26,6 +26,11 @@ their trainer sees how the week is going.
   (`GEMINI_API_KEY`), Claude turns a typed request into a session spec
   (`ANTHROPIC_API_KEY`). Both have limits kept in the database, and neither is
   sent a player's name.
+- **Billing** is optional: with `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and the
+  service key set, and migration 0037 run, an academy's owner pays $5 a player a
+  month by card from `/coach/billing`. Stripe is told the owner's email, the
+  academy's name and a number of players, nothing about a player. Nothing is
+  locked when an academy hasn't paid; a platform admin sees where each stands.
 - **Privacy and terms** are at `/privacy` and `/terms`; set
   `NEXT_PUBLIC_CONTACT_EMAIL` so they give an inbox.
 

@@ -59,3 +59,21 @@ export async function removeSelfServeMember(academyId: string, userId: string): 
   revalidatePath(`/admin/academies/${academyId}`);
   return { ok: true };
 }
+
+/**
+ * Gives an academy free time (0037), or takes it away: the owner's card isn't
+ * charged until after that day. Read when they add the card; a card already
+ * added keeps the date it was given.
+ */
+export async function setFreeUntil(id: string, until: string | null): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (until !== null && !/^\d{4}-\d{2}-\d{2}$/.test(until)) return { ok: false, error: 'Pick a date.' };
+  const db = await serverClient();
+  const { error } = await db.rpc('admin_set_free_until', { p_academy: id, p_until: until });
+  if (error) {
+    console.error('admin_set_free_until', error);
+    return { ok: false, error: error.code === 'PGRST202' ? 'Run migration 0037 first.'
+      : /admins only/i.test(error.message) ? 'Only platform admins can do that.' : 'Couldn’t save that. Try again.' };
+  }
+  revalidatePath(`/admin/academies/${id}`);
+  return { ok: true };
+}

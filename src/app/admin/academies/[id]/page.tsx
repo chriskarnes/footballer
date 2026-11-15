@@ -10,6 +10,8 @@ import { headers } from 'next/headers';
 import { academyOrigin } from '@/lib/tenant';
 import { BackLink } from '@/components/BackLink';
 import { AdminGate, Failed, RoleTag, Section, Stat, Table, Td, Th } from '@/components/admin/ui';
+import { FreeUntil } from '@/components/admin/FreeUntil';
+import { BILLING_COLUMNS, billingState, type BillingRow } from '@/lib/billing';
 
 export const metadata = { title: 'Academy · Admin', robots: { index: false } };
 
@@ -34,6 +36,11 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
     ? await a.viewer.db.rpc('admin_invite', { p_academy: x.id })
         .then((r) => (r.error ? undefined : typeof r.data === 'string' ? r.data : null), () => undefined)
     : null;
+
+  // Billing (0037): undefined before the migration, null with nothing yet.
+  const billing = kind?.selfServe ? undefined
+    : await a.viewer.db.from('academy_billing').select(BILLING_COLUMNS).eq('academy_id', x.id).maybeSingle()
+        .then((r) => (r.error ? undefined : (r.data as BillingRow | null)), () => undefined);
 
   return (
     <div className="animate-pop">
@@ -73,6 +80,18 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
               </li>
             ))}
           </ul>
+        </Section>
+      )}
+
+      {billing !== undefined && (
+        <Section title="Billing">
+          <div className="card mt-4 p-5">
+            <p className="text-body text-on-surface">
+              {billing?.status ? `Stripe: ${billing.status.replace(/_/g, ' ')}${billing.quantity != null ? `, ${n(billing.quantity)} players` : ''}. ` : ''}
+              {billingState(billing, players.length, Date.now()).line}
+            </p>
+            <FreeUntil id={x.id} until={billing?.free_until ?? null} />
+          </div>
         </Section>
       )}
 
