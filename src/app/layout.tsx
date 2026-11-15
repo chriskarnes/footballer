@@ -23,7 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
   // The marketing pages name themselves.
   if ((await headers()).get('x-site')) return metadata;
   // The academy's own icon (brand/icon), versioned so a new upload is a new URL.
-  const { name, own, v } = appOf((await getAcademy()).academy);
+  const { academy } = await getAcademy();
+  const { name, own, v } = appOf(academy);
+  // A closed self-serve space (0030) is unlisted: kept out of search too.
+  const robots = academy?.selfServe && !academy.open ? { index: false, follow: false } : undefined;
   const icons = own ? {
     icon: [{ url: `/brand/icon?size=32&v=${v}`, type: 'image/png', sizes: '32x32' },
            { url: `/brand/icon?size=192&v=${v}`, type: 'image/png', sizes: '192x192' }],
@@ -31,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   } : metadata.icons;
   // "Week · Forge Training": a tab, a bookmark or the app switcher says whose.
   return { ...metadata, title: { default: name, template: `%s · ${name}` }, applicationName: name, icons,
-           appleWebApp: { ...metadata.appleWebApp, title: name } };
+           appleWebApp: { ...metadata.appleWebApp, title: name }, ...(robots ? { robots } : {}) };
 }
 
 const metadata = {

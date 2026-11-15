@@ -15,7 +15,7 @@ export function OpenSwitch({ id, slug, open, licensed }: { id: string; slug: str
           ? 'Anyone signed in can start with one tap, and the main site’s players page links here.'
           : licensed
             ? 'Players join with its invite link. It can’t open while it has the Forge library, which is for private use. Opening it takes your own drills in its library and the Forge library switched off; both are done in the database for now.'
-            : 'Players join with its invite link. Open it and anyone can start with one tap, and the main site links here. Check its library has sessions in it first: Train is built from them.'}
+            : 'Players join with its invite link. Open it and anyone can start with one tap, and the main site links here. Today Train and Plan are built from the Forge library alone, so without it members get Speed and this space’s own Library, and Train says “Coming soon”.'}
       </p>
       {!(licensed && !open) && <button type="button" disabled={busy} className={`${open ? 'btn-ghost' : 'btn-primary'} btn-sm pressable mt-4`}
               onClick={() => start(async () => {

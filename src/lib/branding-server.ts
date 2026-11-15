@@ -61,8 +61,13 @@ const fetchAcademy = async (slug: string): Promise<Academy | null | undefined> =
   try {
     return await unstable_cache(
       async (): Promise<Academy | null> => {
+        // Its face, by address (0033): unlisted academies aren't listable,
+        // but their own pages still show them.
+        const pub = await anon().rpc('academy_public', { p_slug: slug });
+        if (!pub.error) return pub.data ? toAcademy(pub.data as AcademyRow) : null;
+        if (pub.error.code !== 'PGRST202') throw pub.error;
+        // Before 0033, from the table; before 0030, without kind or open.
         let { data, error } = await anon().from('academies').select(ACADEMY_COLUMNS_30).eq('slug', slug).maybeSingle();
-        // Before 0030: no kind or open column.
         if (error?.code === '42703') ({ data, error } = await anon().from('academies').select(ACADEMY_COLUMNS).eq('slug', slug).maybeSingle());
         if (error) throw error;
         return data ? toAcademy(data as AcademyRow) : null;
@@ -106,6 +111,9 @@ export async function getLogo(): Promise<{ type: string; data: string } | null> 
   if (!slug || !process.env.NEXT_PUBLIC_SUPABASE_URL) return null;
   return unstable_cache(
     async () => {
+      const pub = await anon().rpc('academy_logo', { p_slug: slug });
+      if (!pub.error) return (pub.data as { type: string; data: string } | null) ?? null;
+      // Before 0033, from the table.
       const { data } = await anon().from('academies').select('logo_type, logo_data').eq('slug', slug).maybeSingle();
       if (!data?.logo_type || !data.logo_data) return null;
       return { type: data.logo_type as string, data: data.logo_data as string };

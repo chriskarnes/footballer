@@ -40,3 +40,21 @@ export async function replaceSelfServeInvite(id: string): Promise<{ ok: true; co
   revalidatePath(`/admin/academies/${id}`);
   return { ok: true, code: data };
 }
+
+/**
+ * Takes a player out of a self-serve space (0033): it has no owner to do
+ * it. Their training stays theirs; they need the link to come back.
+ */
+export async function removeSelfServeMember(academyId: string, userId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const db = await serverClient();
+  const { error } = await db.rpc('admin_remove_member', { p_academy: academyId, p_user: userId });
+  if (error) {
+    console.error('admin_remove_member', error);
+    return { ok: false, error: error.code === 'PGRST202' ? 'Run migration 0033 first.'
+      : /not an admin/i.test(error.message) ? 'Only platform admins can do that.'
+      : /not a member/i.test(error.message) ? 'They’re not in it any more.'
+      : 'Couldn’t remove them. Try again.' };
+  }
+  revalidatePath(`/admin/academies/${academyId}`);
+  return { ok: true };
+}

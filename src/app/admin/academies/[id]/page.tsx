@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { adminViewer, aiLine, day, loadAcademy, loadKinds, n, sourceLabel } from '@/lib/admin-data';
 import { OpenSwitch } from '@/components/admin/OpenSwitch';
 import { SelfServeInvite } from '@/components/admin/SelfServeInvite';
+import { RemoveMember } from '@/components/admin/RemoveMember';
 import { aiMonthlyLimit } from '@/lib/ai';
 import { ago } from '@/lib/notes';
 import { headers } from 'next/headers';
@@ -77,7 +78,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
 
       <Section title={`People (${x.members.length})`}>
         {!x.members.length ? <p className="mt-3 text-body text-on-surface-variant">No one yet.</p> : (
-          <Table head={<><Th>Name</Th><Th>Role</Th><Th>Groups</Th><Th right>7d</Th><Th right>30d</Th><Th>Last session</Th><Th>Last sign-in</Th><Th>Joined</Th></>}>
+          <Table head={<><Th>Name</Th><Th>Role</Th><Th>Groups</Th><Th right>7d</Th><Th right>30d</Th><Th>Last session</Th><Th>Last sign-in</Th><Th>Joined</Th>{kind?.selfServe && <Th right><span className="sr-only">Remove</span></Th>}</>}>
             {x.members.map((m) => (
               <tr key={m.id} className="relative hover:bg-surface-container-low">
                 <Td strong className="max-w-[15rem]">
@@ -91,6 +92,9 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
                 <Td className="whitespace-nowrap">{m.role !== 'player' ? '—' : m.last_done ? ago(m.last_done) : 'Never'}</Td>
                 <Td className="whitespace-nowrap">{m.last_sign_in_at ? ago(m.last_sign_in_at) : 'Never'}</Td>
                 <Td className="whitespace-nowrap">{day(m.joined_at)}</Td>
+                {kind?.selfServe && (
+                  <Td right>{m.role === 'player' && <RemoveMember academyId={x.id} userId={m.id} name={m.name || m.email} />}</Td>
+                )}
               </tr>
             ))}
           </Table>

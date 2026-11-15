@@ -36,7 +36,7 @@ export function AdminFrame({ brand, children }: { brand: React.ReactNode; childr
             );
           })}
         </nav>
-        <Link href="/" className="mt-auto flex min-h-11 items-center gap-3 rounded-full px-4 text-body font-semibold text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
+        <Link href="/me" className="mt-auto flex min-h-11 items-center gap-3 rounded-full px-4 text-body font-semibold text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
           <Icon d="M15 18l-6-6 6-6" />Back to the app
         </Link>
       </aside>
@@ -45,7 +45,7 @@ export function AdminFrame({ brand, children }: { brand: React.ReactNode; childr
         <header className="safe-t safe-x px-5 pt-3 lg:hidden">
           <div className="flex items-center justify-between">
             {brand}
-            <Link href="/" className="text-body font-semibold text-on-surface-variant underline underline-offset-4">Back to the app</Link>
+            <Link href="/me" className="text-body font-semibold text-on-surface-variant underline underline-offset-4">Back to the app</Link>
           </div>
           <nav className="-mx-5 mt-3 flex gap-1.5 overflow-x-auto px-5 pb-1" aria-label="Admin">
             {PLACES.map((p) => {
