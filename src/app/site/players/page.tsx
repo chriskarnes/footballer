@@ -53,15 +53,6 @@ export default async function PlayersPage() {
       </section>
 
       <section className="mt-24 card-flat p-8">
-        <h2 className="h-card text-on-surface">What it costs</h2>
-        <p className="mt-2 max-w-[36rem] text-[15px] leading-relaxed text-on-surface-variant">
-          The first 14 days are free. After that it&rsquo;s $10 a month for each player, paid by card by a parent or guardian,
-          and you can cancel any time. Some trainers cover it themselves, and then there&rsquo;s nothing to pay.
-          Your trainer will tell you which.
-        </p>
-      </section>
-
-      <section className="mt-6 card-flat p-8">
         <h2 className="h-card text-on-surface">Don&rsquo;t have a trainer here yet?</h2>
         <p className="mt-2 max-w-[36rem] text-[15px] leading-relaxed text-on-surface-variant">
           We&rsquo;re new, so there aren&rsquo;t many trainers here yet. If you work with a private trainer,
