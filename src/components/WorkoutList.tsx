@@ -32,7 +32,11 @@ export type WorkoutRow = {
  * said nothing about which one mattered.
  */
 export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind: 'saved' | 'history' }) {
-  const [rows, setRows] = useState(initial);
+  // The rows follow the page: a session PendingSaves sent from the phone
+  // arrives with a refresh, and a list copied once into state never showed
+  // it. What this list deleted stays gone, even before the refresh catches up.
+  const [removed, setRemoved] = useState<ReadonlySet<string>>(() => new Set());
+  const rows = initial.filter((w) => !removed.has(w.id));
   const [confirm, setConfirm] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -45,7 +49,7 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
     setBusy(true); setErr('');
     const res = await fetch(`/api/workouts?id=${id}`, { method: 'DELETE' }).catch(() => null);
     setBusy(false); setConfirm(null);
-    if (res?.ok) setRows((r) => r.filter((x) => x.id !== id));
+    if (res?.ok) setRemoved((r) => new Set(r).add(id));
     else setErr('Couldn’t delete it. Check your connection and try again.');
   }
   const asking = rows.find((w) => w.id === confirm);

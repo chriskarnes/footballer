@@ -111,7 +111,9 @@ async function fromHistory(id: string): Promise<string | null> {
       // itself is still theirs to do again.
       const { data: x } = await db.from('addons').select('id').eq('id', ref).maybeSingle();
       if (x) return `/train/addon/${ref}?from=history`;
-      const drill = (w.exercise_ids as string[] | null)?.[0];
+      // A trainer's drill is saved as `<drill id>:<place in the list>` (the
+      // runner's row id): the drill is the part before the colon.
+      const drill = (w.exercise_ids as string[] | null)?.[0]?.split(':')[0];
       const { data: d } = drill ? await db.from('drills').select('id').eq('id', drill).maybeSingle() : { data: null };
       return d ? `/train/drill/${drill}?from=history` : null;
     }

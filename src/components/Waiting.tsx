@@ -24,7 +24,7 @@ export function waitingLine(s: Wait) {
  */
 export function Waiting({ state }: { state: Wait }) {
   const { week, trainer } = state;
-  const meets = nextMeeting(week.groups, week.today);
+  const meets = nextMeeting(week.groups, week.today, week.timeZone);
   return (
     <div className="animate-pop">
       <BrandBand>

@@ -47,7 +47,12 @@ const isIOS = () => {
 
 /** Pages that are one decision (an invite, asking to join, claiming): no prompt over them. */
 const QUIET = ['/join', '/claim', '/request'];
-const quietPath = (p: string) => QUIET.some((q) => p === q || p.startsWith(`${q}/`));
+const under = (list: string[], p: string) => list.some((q) => p === q || p.startsWith(`${q}/`));
+const quietPath = (p: string) => under(QUIET, p);
+/** A session being run: the phone's against a cone and the player is mid-drill.
+ *  It's still a visit to the app, so it counts; nothing slides over it. */
+const RUNNING = ['/train', '/session', '/speed/session'];
+const busyPath = (p: string) => quietPath(p) || under(RUNNING, p);
 /** A page that's mid-setup marks itself (ProfileSetup does): nothing slides over a form being filled in. */
 const quietPage = () => !!document.querySelector('[data-install-quiet]');
 
@@ -92,7 +97,7 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
       } catch { /* storage off: never counts, never opens by itself */ }
       // Let the page settle before anything slides over it.
       t = setTimeout(() => {
-        if (visits >= SHOW_AFTER_VISITS && !quietPath(window.location.pathname) && !quietPage()) setOpen(true);
+        if (visits >= SHOW_AFTER_VISITS && !busyPath(window.location.pathname) && !quietPage()) setOpen(true);
       }, 1800);
     }
     return () => {
@@ -121,7 +126,7 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
     setOpen(false);
   };
 
-  if (!open || !platform || hushed || quietPath(path)) return null;
+  if (!open || !platform || hushed || busyPath(path)) return null;
 
   return (
     <div className="safe-x fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">

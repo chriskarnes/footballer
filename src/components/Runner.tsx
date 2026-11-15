@@ -271,7 +271,14 @@ export function Runner({
         // the next account to sign in (a sibling) would get it.
         let uid: string | null = null;
         try { uid = (await browserClient().auth.getSession()).data.session?.user.id ?? null; } catch { /* not configured */ }
+        // A saved-for-later session is someone's row: with nobody to say whose,
+        // marking it done could go to whoever signs in next. Not kept, as
+        // with no signal below.
+        if (!uid && patched) { setSave('error'); return; }
         const q = patched ? pendingFinish : pendingWorkout;
+        // The row may be gone by the time it's sent (deleted on another
+        // phone): then it goes whole, rather than a 404 that drops it.
+        if (patched) body = { ...body, fallback: fresh };
         queued.current = { q, id: q.stash(feelRef.current ? { ...body, feel: feelRef.current } : body, uid), body };
         setSave('signin');
       }
@@ -371,9 +378,12 @@ export function Runner({
             </div>
           )}
 
-          {/* Said only when there's something to do about it. */}
+          {/* Said only when there's something to do about it. The live region
+              is always there, so a change in it is read out; one that arrives
+              already filled often isn't. */}
+          <div role="status">
           {(save === 'signin' || save === 'error' || save === 'queued') && (
-            <p role="status" className="mt-4 text-body font-medium text-on-surface-brand-variant">
+            <p className="mt-4 text-body font-medium text-on-surface-brand-variant">
               {save === 'queued' ? (
                 <>No signal. It&rsquo;s kept on this phone and saves when you&rsquo;re back online.{' '}
                   <button type="button" onClick={() => window.dispatchEvent(new Event(PENDING_FLUSH))}
@@ -389,6 +399,7 @@ export function Runner({
               )}
             </p>
           )}
+          </div>
         </div>
 
         {/* Asked straight away, above the button: not after the save is back. */}

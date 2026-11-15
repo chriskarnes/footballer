@@ -45,14 +45,18 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
   const done = set.filter((i) => i.done).length;
   // A set session first (a missed one is "Missed Monday"); a "Just for you"
   // drill or an extra isn't due, so it's only ever next, never missed.
+  // Last, one placed on an earlier day and still undone: the week isn't done
+  // while a "Just for you" from Monday waits.
   const next = set.find((i) => !i.done && i.weekday >= today) ?? set.find((i) => !i.done)
-    ?? items.find((i) => !i.done && i.weekday >= today) ?? null;
+    ?? items.find((i) => !i.done && i.weekday >= today) ?? items.find((i) => !i.done) ?? null;
+  // Only a set session is missed; an extra from an earlier day is just this week's.
+  const extraLate = !!next && next.weekday < today && !set.includes(next);
   const doneToday = items.some((i) => i.done && (i.doneOn ?? i.weekday) === today);
   const weekDone = !next && items.length > 0;
   const gameDay = !!schedule?.games.includes(today);
 
   // One or two words on which day the headline is about.
-  const when = !next ? 'This week'
+  const when = !next || extraLate ? 'This week'
     : next.weekday === today ? 'Today'
     : next.weekday < today ? `Missed ${DAYS[next.weekday]}`
     : doneToday ? `Today’s done · Next ${DAYS[next.weekday]}`
@@ -66,7 +70,7 @@ export async function TrainerWeek({ week }: { week: MyWeek }) {
   const author = note ? note.author : trainer?.name ?? null;
   const theirs = !note || (!!trainer?.name && note.author.split(' ')[0] === trainer.name);
   // When they next see their trainer, from their group's meeting day.
-  const meetLabel = nextMeeting(week.groups, today);
+  const meetLabel = nextMeeting(week.groups, today, week.timeZone);
 
   return (
     <section>
