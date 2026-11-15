@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getSessions } from '@/lib/library';
+import { feedSessions } from '@/lib/library';
 import { getAcademy, getBranding } from '@/lib/branding-server';
 import { calendar } from '@/lib/ics';
 import { feedEvents, type FeedData } from '@/lib/calendar-feed';
@@ -32,14 +32,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ file: st
 
   const feed = data as FeedData;
   const { academy } = await getAcademy();
-  const [sessions, brand, trainer, speed] = await Promise.all([
-    getSessions(), getBranding(),
+  const [brand, trainer, speed] = await Promise.all([
+    getBranding(),
     // The trainer's week: group training times and the sessions they set.
     // Missing (no academy, or before migration 0007) just means none.
     academy ? Promise.resolve(db.rpc('calendar_academy', { p_token: token, p_slug: academy.slug })).then((r) => r.data as AcademyFeed | null, () => null) : null,
     // Speed & Stamina, unless their trainer has it off (0019; on before it).
     academy ? Promise.resolve(db.rpc('calendar_speed_on', { p_token: token, p_slug: academy.slug })).then((r) => r.error ? true : r.data !== false, () => true) : true,
   ]);
+  // The plan's library sessions: only where the library is, and in a
+  // self-serve space only for a member (calendar_academy answers for members).
+  const sessions = await feedSessions(!!trainer);
   const origin = new URL(req.url).origin;
   const events = feedEvents({ ...feed, include_speed: feed.include_speed && speed }, sessions, origin);
   if (trainer) events.push(...academyEvents(trainer, feed.completed, origin, trainer.time_zone || feed.time_zone));

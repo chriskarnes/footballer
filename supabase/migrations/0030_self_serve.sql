@@ -33,12 +33,12 @@ on conflict (slug) do nothing;
 
 -- Players browse the library and have Speed; there's no trainer to set either.
 insert into academy_plan_defaults (academy_id, player_library, player_speed)
-select id, true, true from academies where slug = 'play'
+select id, true, true from academies where slug = 'play' and kind = 'self_serve'
 on conflict (academy_id) do update set player_library = true, player_speed = true;
 
 -- Its invite link, for sharing while it's closed.
 insert into academy_invites (code, academy_id, role)
-select public.new_invite_code(), id, 'player' from academies where slug = 'play'
+select public.new_invite_code(), id, 'player' from academies where slug = 'play' and kind = 'self_serve'
 on conflict (academy_id, role) do nothing;
 
 -- ------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 'use server';
 import { createHmac } from 'node:crypto';
 import { headers } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { serverClient } from '@/lib/supabase/server';
 
 export type Found = { slug: string; name: string; city: string | null };
@@ -44,9 +45,13 @@ export async function requestAcademy(_: unknown, form: FormData): Promise<{ ok: 
   if (tooMany(ip)) return { ok: false, error: 'That’s a lot of requests from here. Try again in an hour.' };
   // Who sent it, so only they can fix a typo in it within the hour: keyed,
   // so it can't be worked out from the address alone.
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-  const from = createHmac('sha256', secret).update(`${ip}|${h.get('user-agent') ?? ''}`).digest('hex').slice(0, 32);
-  const db = await serverClient();
+  // Without a server secret there's no telling who sent it: no fixing then.
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const from = secret ? createHmac('sha256', secret).update(`${ip}|${h.get('user-agent') ?? ''}`).digest('hex').slice(0, 32) : null;
+  // Only the server may store a request (0031), so the limits here hold.
+  const db = secret
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, secret, { auth: { persistSession: false } })
+    : await serverClient();
   let { error } = await db.rpc('request_academy', {
     p_name: name, p_email: email, p_academy_name: academy, p_slug: slug,
     p_city: pick(form.get('city'), 60), p_players: pick(form.get('players'), 20),
