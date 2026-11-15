@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { adminViewer, aiLine, day, loadAcademy, loadKinds, n, sourceLabel } from '@/lib/admin-data';
 import { OpenSwitch } from '@/components/admin/OpenSwitch';
+import { SelfServeInvite } from '@/components/admin/SelfServeInvite';
 import { aiMonthlyLimit } from '@/lib/ai';
 import { ago } from '@/lib/notes';
 import { headers } from 'next/headers';
@@ -27,6 +28,11 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
   const active = players.filter((m) => m.sessions_7d > 0).length;
   // The self-serve space (0030): no owner or trainers, and an open switch.
   const kind = kinds.get(x.id);
+  // Its invite link (0031): undefined when it can't be read (before 0031), null with none made.
+  const invite = kind?.selfServe
+    ? await a.viewer.db.rpc('admin_invite', { p_academy: x.id })
+        .then((r) => (r.error ? undefined : typeof r.data === 'string' ? r.data : null), () => undefined)
+    : null;
 
   return (
     <div className="animate-pop">
@@ -38,7 +44,12 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
         {kind?.selfServe ? ` · self-serve, ${kind.open ? 'open to everyone' : 'invite only'}` : x.unclaimed ? ' · approved, not yet claimed by its owner' : !x.set_up && ' · still setting up'}{x.library_access && ' · Forge library on'}{!x.listed && ' · unlisted'}
       </p>
 
-      {kind?.selfServe && <OpenSwitch id={x.id} slug={x.slug} open={kind.open} licensed={x.library_access} />}
+      {kind?.selfServe && (
+        <>
+          <OpenSwitch id={x.id} slug={x.slug} open={kind.open} licensed={x.library_access} />
+          <SelfServeInvite id={x.id} site={site} code={invite} />
+        </>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Players" value={n(players.length)} sub={`${n(staff.length)} staff`} />

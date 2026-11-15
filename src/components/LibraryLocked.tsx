@@ -116,6 +116,22 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
       </div>
     );
   }
+  // A member of a self-serve space with no library in it yet (0030): no
+  // trainer to wait on. Speed is the platform's own, so it's there now.
+  if (v?.academy?.selfServe) {
+    return (
+      <div className="animate-pop">
+        <BrandBand>
+          <BandTag>{title}</BandTag>
+          <BandTitle>Coming soon</BandTitle>
+          <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
+            Sessions to build your week from are on their way. Speed is ready now.
+          </p>
+        </BrandBand>
+        <Link href="/speed" className="btn-primary pressable mt-6 w-full">Go to Speed</Link>
+      </div>
+    );
+  }
   // A player with nothing set this week hears from their trainer, not Speed.
   const state = await getPlayerState().catch(() => ({ kind: 'none' }) as const);
   if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;

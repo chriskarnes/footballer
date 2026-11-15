@@ -18,7 +18,9 @@ export async function joinAcademy(code: string, who?: 'player' | 'parent') {
   if (error) {
     console.error('join_academy', error);
     return { ok: false as const, error: /not found|invalid/i.test(error.message)
-      ? 'This invite link has changed. Ask your trainer for the current one.'
+      ? ((await getAcademy().catch(() => null))?.academy?.selfServe
+        ? 'This invite link has changed. Ask whoever sent it for the current one.'
+        : 'This invite link has changed. Ask your trainer for the current one.')
       : /not signed in/i.test(error.message) ? 'You’ve been signed out. Sign in again, then tap Join.'
       // 0029: one account is one person here, and this one has asked to play.
       : /asked as a player/i.test(error.message) ? 'This account has asked to join as a player. To train here too, open this link signed in with your own email.'

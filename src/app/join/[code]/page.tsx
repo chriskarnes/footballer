@@ -35,7 +35,7 @@ export default async function JoinPage({ params, searchParams }: {
       <Shell eyebrow="Invite">
         <h1 className="h-page">This link doesn&rsquo;t work</h1>
         <p className="mt-2 text-body-lg leading-relaxed text-on-surface-variant">
-          It may have been replaced with a new one. Ask your trainer to send it again.
+          It may have been replaced with a new one. {v.academy?.selfServe ? 'Ask whoever sent it for the current one.' : 'Ask your trainer to send it again.'}
         </p>
         <Link href="/" className="btn-ghost pressable mt-6 min-h-13 w-full">Go to Train</Link>
       </Shell>

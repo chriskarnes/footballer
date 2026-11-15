@@ -195,16 +195,20 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   // Not on the bare domain (there's no academy to set up for). A trainer elsewhere, here as a player (for their own child, say): asked
   // about their player, without the name, so Train's "answer these first"
   // has somewhere to land.
-  if (needsProfile(profile) && !staff && onAcademy) {
+  // A trainer elsewhere who joins the self-serve space (0030) trains
+  // themselves there: their own questions, not a child's.
+  const forChild = staffAnywhere && !selfServe;
+  // Members only: someone not in this academy yet is told how in first.
+  if (needsProfile(profile) && !staff && onAcademy && role) {
     return (
       <div>
         <BrandBand>
           <BandTag>Welcome</BandTag>
-          <BandTitle>{signedUpBy === 'parent' || staffAnywhere ? 'Set your player up'
+          <BandTitle>{signedUpBy === 'parent' || forChild ? 'Set your player up'
             : !signedUpBy && !profile?.age_band && profile?.display_name?.trim() ? `Set ${profile.display_name.trim().split(/\s+/)[0]} up` : 'Let’s set you up'}</BandTitle>
         </BrandBand>
         <ProfileSetup email={user.email} initial={profile ?? undefined} next="/" heading={false} keepName={staffAnywhere}
-          parent={staffAnywhere || signedUpBy === 'parent' ? true : signedUpBy === 'player' ? false : null} />
+          parent={forChild || signedUpBy === 'parent' ? true : selfServe && staffAnywhere ? false : signedUpBy === 'player' ? false : null} />
         {/* A shared phone: someone else's half-made account isn't a trap. */}
         <p className="mt-6 text-center text-body text-on-surface-variant">
           Signed in as {user.email}. Not you? <SignOut to="/me" className="pressable font-semibold text-on-surface underline underline-offset-4" />

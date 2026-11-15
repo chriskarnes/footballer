@@ -5,6 +5,8 @@ import { getViewer } from '@/lib/viewer';
 export async function askToJoin(name: string, message: string, who?: 'player' | 'parent') {
   const v = await getViewer();
   if (!v.academy || !v.user) return { ok: false as const, error: 'Sign in first.' };
+  // A self-serve space (0030) has no one to ask.
+  if (v.academy.selfServe) return { ok: false as const, error: 'There’s no one to ask here. Open the invite link you were sent.' };
   const n = name.trim().slice(0, 80);
   if (!n) return { ok: false as const, error: 'Add the player’s name, so your trainer knows who it is.' };
   const as = who === 'player' || who === 'parent' ? who : null;

@@ -1,7 +1,8 @@
 import { BackLink } from '@/components/BackLink';
-import { MarkSeen } from '@/components/MarkSeen';
+import { MarkSeen, NewDot } from '@/components/MarkSeen';
 import { getViewer } from '@/lib/viewer';
 import { readInbox, ago } from '@/lib/notes';
+import { redirect } from 'next/navigation';
 
 export const metadata = { title: 'Notes from your trainer' };
 
@@ -13,6 +14,8 @@ export const metadata = { title: 'Notes from your trainer' };
  */
 export default async function NotesPage() {
   const v = await getViewer();
+  // The self-serve space (0030) has no trainer to send notes.
+  if (v.academy?.selfServe) redirect('/me');
   const notes = v.user && v.academy ? await readInbox(v.db, v.user.id, v.academy.id) : [];
   const unread = notes.filter((n) => !n.seen).map((n) => n.id);
 
@@ -25,7 +28,7 @@ export default async function NotesPage() {
           {notes.map((n) => (
             <li key={n.id} className="card p-5">
               <p className="flex items-center gap-2 text-body font-bold text-on-surface-variant">
-                {!n.seen && <><span className="h-2 w-2 rounded-full bg-on-surface" aria-hidden="true" /><span className="sr-only">New:</span></>}
+                <NewDot fresh={!n.seen} />
                 {n.author} · {ago(n.at, v.academy?.timeZone)}
               </p>
               <p className="mt-1.5 whitespace-pre-line text-title-sm leading-snug text-on-surface">{n.body}</p>

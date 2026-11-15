@@ -27,7 +27,9 @@ export default async function TrainNowPage({ searchParams }: { searchParams: Pro
   // joining with the link does, in every academy: this comes before the
   // library gate, which most academies stop at. One let in from a join
   // request arrives here with only the name they asked with.
-  if (state.kind !== 'none' && await unanswered()) redirect('/me');
+  // A self-serve member (0030) is always 'none': asked all the same.
+  const sv = await getViewer().catch(() => null);
+  if ((state.kind !== 'none' || (sv?.academy?.selfServe && sv.role === 'player')) && await unanswered()) redirect('/me');
   if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
   if (state.kind === 'new' || state.kind === 'waiting') return <Waiting state={state} />;
   // Only what the session builder reads goes to the phone: this is the front
