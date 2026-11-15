@@ -1,4 +1,5 @@
 'use client';
+import { useNow } from '@/lib/use-now';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -31,8 +32,7 @@ export function SavedWeek({
   const router = useRouter();
   // The local day is only known in the browser, so today and the ticks
   // arrive after mount. See plan-today.ts.
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => { setNow(new Date()); }, []);
+  const now = useNow();
   const [confirming, setConfirming] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [err, setErr] = useState('');

@@ -32,8 +32,7 @@ export async function POST(req: Request) {
   const { data, error } = body.reset
     ? await db.from('calendar_feeds').update({ token: newToken(), updated_at: new Date().toISOString() })
         .eq('user_id', user.id).select().single()
-    : await db.from('calendar_feeds').upsert({ user_id: user.id, token: newToken(), time_zone: zone })
-        .select().single();
+    : await turnOn(db, user.id, zone);
   if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json(data);
 }
@@ -62,4 +61,18 @@ export async function DELETE() {
   const { error } = await db.from('calendar_feeds').delete().eq('user_id', user.id);
   if (error) return NextResponse.json({ error: plain(error) }, { status: 400 });
   return NextResponse.json({ ok: true });
+}
+
+/**
+ * Turns the feed on, or hands back the one already on. It used to write a
+ * new link every time: "Add to my calendar" tapped on a second phone (or a
+ * page still showing the button) quietly emptied every calendar already
+ * subscribed to the first.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function turnOn(db: any, userId: string, zone: string) {
+  const made = await db.from('calendar_feeds')
+    .upsert({ user_id: userId, token: newToken(), time_zone: zone }, { onConflict: 'user_id', ignoreDuplicates: true });
+  if (made.error) return made;
+  return db.from('calendar_feeds').select().eq('user_id', userId).single();
 }

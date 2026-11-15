@@ -77,7 +77,7 @@ function Bar({ academyId, library = true, plan = true, speed = true, from }: Pro
             // under its name.
             // It had been a filled black blob, about as wide as it was tall, so
             // it read as a circle stamped on the bar.
-            <Link key={t.href} href={t.href} aria-current={on ? (path === t.href ? 'page' : 'true') : undefined}
+            <Tab key={t.href} href={t.href} plain={t.href === '/' && !academyId} aria-current={on ? (path === t.href ? 'page' : 'true') : undefined}
               onClick={() => { if (!on) haptic('tap'); }}
               className={`tab flex min-h-13 min-w-[54px] flex-col items-center justify-center rounded-medium px-3 pt-1
                           text-caption font-bold tracking-tight transition-colors duration-300
@@ -92,10 +92,22 @@ function Bar({ academyId, library = true, plan = true, speed = true, from }: Pro
               <span aria-hidden="true"
                     className={`mt-[3px] h-[3px] w-4 rounded-full bg-current transition-[opacity,transform] duration-300
                                 ${on ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`} />
-            </Link>
+            </Tab>
           );
         })}
       </div>
     </nav>
   );
+}
+
+/**
+ * A tab. With no academy (the bare domain), Train is a full page load, not
+ * a client-side one: `/` there is the marketing site, which has its own
+ * frame, and arriving without a load drew it inside the app's column with
+ * the tab bar still under it.
+ */
+function Tab({ plain, href, children, ...rest }: { plain: boolean; href: string; children: React.ReactNode } & Omit<React.ComponentProps<typeof Link>, 'href'>) {
+  return plain
+    ? <a href={href} {...(rest as React.AnchorHTMLAttributes<HTMLAnchorElement>)}>{children}</a>
+    : <Link href={href} {...rest}>{children}</Link>;
 }

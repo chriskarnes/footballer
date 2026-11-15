@@ -20,13 +20,16 @@ export type Academy = {
   selfServe: boolean;
   /** A self-serve space anyone can join with a tap; closed, it's invite-only. */
   open: boolean;
+  /** Findable on the main site. False: by its link only, and kept out of
+   *  search engines. Unknown (before 0036) reads as listed. */
+  listed: boolean;
 };
 
 type AcademyRow = {
   id: string; slug: string; name: string; time_zone: string; palette_id: string | null;
   primary_color: string | null; accent_color: string | null; logo_type: string | null; updated_at: string;
   library_access: boolean;
-  kind?: string | null; open?: boolean | null;
+  kind?: string | null; open?: boolean | null; listed?: boolean | null;
 };
 
 /**
@@ -45,6 +48,7 @@ export function toAcademy(row: AcademyRow): Academy {
     libraryAccess: row.library_access === true,
     selfServe: row.kind === 'self_serve',
     open: row.kind === 'self_serve' && row.open === true,
+    listed: row.listed !== false,
   };
 }
 
@@ -113,14 +117,18 @@ export async function getLogo(): Promise<{ type: string; data: string } | null> 
     async () => {
       const pub = await anon().rpc('academy_logo', { p_slug: slug });
       if (!pub.error) return (pub.data as { type: string; data: string } | null) ?? null;
+      // A failed read throws, so "no logo" isn't kept for five minutes on
+      // the strength of one hiccup (as fetchAcademy, above).
+      if (pub.error.code !== 'PGRST202') throw pub.error;
       // Before 0033, from the table.
-      const { data } = await anon().from('academies').select('logo_type, logo_data').eq('slug', slug).maybeSingle();
+      const { data, error } = await anon().from('academies').select('logo_type, logo_data').eq('slug', slug).maybeSingle();
+      if (error) throw error;
       if (!data?.logo_type || !data.logo_data) return null;
       return { type: data.logo_type as string, data: data.logo_data as string };
     },
     ['academy-logo', slug],
     { tags: [academyTag(slug)], revalidate: 300 },
-  )();
+  )().catch(() => null);
 }
 
 /**

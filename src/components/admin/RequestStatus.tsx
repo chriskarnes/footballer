@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { setRequestStatus } from '@/app/admin/requests/actions';
+import { offline } from '@/lib/plain-error';
 
 /** Contacted, declined, or back to new: so the open count means what's left to do. */
 export function RequestStatus({ id, status }: { id: string; status: string }) {
@@ -10,7 +11,7 @@ export function RequestStatus({ id, status }: { id: string; status: string }) {
   const router = useRouter();
   const go = async (to: 'new' | 'contacted' | 'declined') => {
     setBusy(true); setErr('');
-    const r = await setRequestStatus(id, to);
+    const r = await setRequestStatus(id, to).catch(offline);
     setBusy(false);
     if (r.ok) router.refresh(); else setErr(r.error);
   };

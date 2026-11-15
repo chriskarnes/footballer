@@ -1,4 +1,5 @@
 'use client';
+import { useNow } from '@/lib/use-now';
 import Link from 'next/link';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { PHASES, sessionSeconds, KIND_LABELS } from '@/lib/speed';
@@ -30,8 +31,7 @@ const SpeedContext = createContext<Shared | null>(null);
 export function SpeedYearProvider({ completions, children }: { completions: Completion[]; children: React.ReactNode }) {
   const { start, ready, save } = useYearStart();
   // The date after mount: the server's clock isn't the player's.
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => { setNow(new Date()); }, []);
+  const now = useNow();
   return (
     <SpeedContext.Provider value={{ ready: ready && !!now, start, now, save, completions }}>
       {children}

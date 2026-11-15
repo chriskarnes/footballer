@@ -341,7 +341,8 @@ export function Runner({
       if (r && !r.ok) { setSave('error'); return; }
       setSave('saved');
       // A feel picked once it had gone goes straight to the saved row.
-      if (r?.id) { setSavedId(r.id); queued.current = null; }
+      // And one picked while it was on its way (too late to ride along).
+      if (r?.id) { setSavedId(r.id); queued.current = null; if (feelRef.current) sendFeel(r.id, feelRef.current); }
     };
     window.addEventListener(PENDING_SENT, sent);
     return () => window.removeEventListener(PENDING_SENT, sent);

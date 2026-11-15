@@ -193,8 +193,17 @@ function Builder({
           ? { id: editing.id, intake: week.intake, days }
           : { intake: week.intake, days, name: defaultPlanName(week.intake), client_id }),
       });
+      // The sign-in has lapsed since the page was drawn: kept on the phone
+      // and saved at sign-in, as a week built signed out is.
+      if (res.status === 401 && !editing) {
+        pendingPlan.clear();
+        pendingPlan.stash({ intake: week.intake, days, name: defaultPlanName(week.intake), client_id });
+        setSave('signin');
+        return;
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        if (res.status === 401) throw new Error('You’ve been signed out. Sign in under Me, then save again.');
         throw new Error(body.error ?? 'Couldn’t save your week. Try again.');
       }
       // To the saved week, which is where a week is trained from.

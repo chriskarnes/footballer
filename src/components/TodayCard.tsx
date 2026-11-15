@@ -1,4 +1,5 @@
 'use client';
+import { useNow } from '@/lib/use-now';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { WEEKDAYS } from '@/lib/types';
@@ -17,8 +18,7 @@ type Brief = { id: string; name: string; total_minutes: number };
 export function TodayCard({
   planName, days, completions, sessions,
 }: { planName: string; days: DayRow[]; completions: Completion[]; sessions: Brief[] }) {
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => { setNow(new Date()); }, []);
+  const now = useNow();
   if (!now) return null;
 
   const byId = new Map(sessions.map((s) => [s.id, s]));

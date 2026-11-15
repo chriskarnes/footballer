@@ -9,6 +9,7 @@ import { speedAllowed } from '@/lib/speed-gate';
 import { AreaFrame } from '@/components/AreaFrame';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { PendingSaves } from '@/components/PendingSaves';
+import { DayTurn } from '@/components/DayTurn';
 import { getAcademy } from '@/lib/branding-server';
 import { appOf } from '@/lib/app-identity';
 import { libraryFor } from '@/lib/library-gate';
@@ -26,14 +27,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const { academy } = await getAcademy();
   const { name, own, v } = appOf(academy);
   // A closed self-serve space (0030) is unlisted: kept out of search too.
-  const robots = academy?.selfServe && !academy.open ? { index: false, follow: false } : undefined;
+  // So is an academy whose owner keeps it to their invite link (0036).
+  const robots = academy && ((academy.selfServe && !academy.open) || !academy.listed) ? { index: false, follow: false } : undefined;
+  // The drill count is the licensed library's: only where that is.
+  const description = !academy || academy.libraryAccess ? metadata.description
+    : `Training from ${name}: sessions to do between practices.`;
   const icons = own ? {
     icon: [{ url: `/brand/icon?size=32&v=${v}`, type: 'image/png', sizes: '32x32' },
            { url: `/brand/icon?size=192&v=${v}`, type: 'image/png', sizes: '192x192' }],
     apple: [{ url: `/brand/icon?size=180&v=${v}`, sizes: '180x180' }],
   } : metadata.icons;
   // "Week · Forge Training": a tab, a bookmark or the app switcher says whose.
-  return { ...metadata, title: { default: name, template: `%s · ${name}` }, applicationName: name, icons,
+  return { ...metadata, description, title: { default: name, template: `%s · ${name}` }, applicationName: name, icons,
            appleWebApp: { ...metadata.appleWebApp, title: name }, ...(robots ? { robots } : {}) };
 }
 
@@ -140,6 +145,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                    library={lib.drills || lib.own} plan={lib.drills} speed={speed}>{children}</AreaFrame>
         <ServiceWorker />
         <PendingSaves />
+        <DayTurn />
       </body>
     </html>
   );

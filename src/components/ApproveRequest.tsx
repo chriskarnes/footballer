@@ -1,7 +1,9 @@
 'use client';
+import { mailtoAddr } from '@/lib/mailto';
 import { useEffect, useState } from 'react';
 import { approveRequest } from '@/app/admin/requests/actions';
 import { academyOrigin } from '@/lib/tenant';
+import { offline } from '@/lib/plain-error';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 
 /**
@@ -52,7 +54,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <a href={`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}
+            <a href={`mailto:${mailtoAddr(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}
                className="btn-primary btn-sm pressable mt-2.5 inline-flex">
               Email it to {first}
             </a>
@@ -74,7 +76,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
         onCancel={() => setConfirming(false)}
         onConfirm={async () => {
           setBusy(true);
-          const r = await approveRequest(id, address, name);
+          const r = await approveRequest(id, address, name).catch(offline);
           setBusy(false); setConfirming(false);
           if (r.ok) setDone({ slug: r.slug, code: r.code, claimed: false }); else setErr(r.error);
         }} />

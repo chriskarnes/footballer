@@ -1,7 +1,7 @@
 import 'server-only';
 import { drillTags, type DrillRow } from './academy-week';
 import { client, MODEL } from './ai';
-import { putName } from './ai-name';
+import { cleanProposed } from './ai-name';
 import { candidates, progressAmount, type BuiltSession, type Proposed, type Target } from './week-builder';
 import { FOCUS_LABELS, type FocusArea } from './types';
 
@@ -82,9 +82,9 @@ export async function proposeWeek(input: {
       },
     });
     const out = JSON.parse(res.text ?? '{}') as { sessions?: Proposed[] };
-    const sessions = Array.isArray(out.sessions)
-      ? out.sessions.map((x) => (x && typeof x.note === 'string' ? { ...x, note: putName(x.note, input.first) } : x))
-      : null;
+    // Checked piece by piece: a session that isn't the shape asked for is
+    // left out (the rules' session stands), not passed on to break the build.
+    const sessions = Array.isArray(out.sessions) ? out.sessions.map((x) => cleanProposed(x, input.first)) : null;
     return { sessions, usage: res.usageMetadata ?? null };
   } catch (e) {
     console.error('proposeWeek: AI failed, using the rules', e instanceof Error ? e.message : e);

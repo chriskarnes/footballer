@@ -4,6 +4,11 @@ import { plain } from '@/lib/plain-error';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FEELS = ['easy', 'right', 'hard'];
+/** Where a session can come from, and what it can be: anything else is stored as the default. */
+const SOURCES = ['coach', 'library', 'plan', 'speed', 'academy', 'addon'];
+const STATUSES = ['planned', 'in_progress', 'completed'];
+const ids = (v: unknown, max: number): string[] =>
+  (Array.isArray(v) ? v : []).filter((x): x is string => typeof x === 'string' && x.length <= 100).slice(0, max);
 /** A finish time from the phone: kept when it's a real time, not in the future. */
 const playedAt = (v: unknown) =>
   typeof v === 'string' && !Number.isNaN(Date.parse(v)) && Date.parse(v) <= Date.now() + 60_000 ? v : new Date().toISOString();
@@ -25,13 +30,13 @@ export async function POST(req: Request) {
   const row: Record<string, unknown> = {
       user_id: user.id,
       title: String(body.title ?? '').trim().slice(0, 120) || 'Session',
-      source: body.source ?? 'coach',
-      source_ref: body.source_ref ?? null,
+      source: SOURCES.includes(body.source) ? body.source : 'coach',
+      source_ref: typeof body.source_ref === 'string' ? body.source_ref.slice(0, 100) : null,
       spec: body.spec && JSON.stringify(body.spec).length <= 10000 ? body.spec : null,
-      exercise_ids: Array.isArray(body.exercise_ids) ? body.exercise_ids.slice(0, 60).map(String) : [],
+      exercise_ids: ids(body.exercise_ids, 60),
       planned_minutes: amount(body.planned_minutes, MIN),
       planned_touches: amount(body.planned_touches, TOUCHES),
-      status: body.status ?? 'planned',
+      status: STATUSES.includes(body.status) ? body.status : 'planned',
       // A session finished in the runner arrives already completed, with what
       // was actually done. completed_at comes from the client because a session
       // finished signed out is sent later, after sign-in — the time it was
@@ -46,8 +51,11 @@ export async function POST(req: Request) {
   // (0012): progression reads it. Without the column yet, save without it.
   // Speed keeps them too: its drills aren't library rows either, and History
   // needs them to tell a session stopped early from one done in full.
-  const ticked = (body.source === 'academy' || body.source === 'addon' || body.source === 'speed') && Array.isArray(body.done_ids)
-    ? body.done_ids.filter((x: unknown) => typeof x === 'string').slice(0, 40) : null;
+  // A library or built session keeps them on the row as well as in its
+  // per-drill items: if those don't write, History still knows a session
+  // stopped early from one done in full.
+  const ticked = Array.isArray(body.done_ids) && (row.status === 'completed' || body.source === 'academy' || body.source === 'addon' || body.source === 'speed')
+    ? ids(body.done_ids, 60) : null;
   // The phone's own id for this finish (0025): a save that reached us but
   // whose answer was lost to the signal is sent again, and must not count twice.
   const clientId = typeof body.client_id === 'string' && UUID.test(body.client_id) ? body.client_id : null;
@@ -72,16 +80,19 @@ export async function POST(req: Request) {
   // Speed and trainer drills are not library rows, and workout_items.exercise_id
   // is a foreign key to exercises — so those sessions keep their ids on the
   // workout row (text[], no FK) and skip the per-drill ticks.
-  if ((body.source === 'library' || body.source === 'coach' || !body.source) && Array.isArray(body.exercise_ids) && body.exercise_ids.length) {
+  const served = row.exercise_ids as string[];
+  if ((row.source === 'library' || row.source === 'coach') && served.length) {
     // Every drill as served, with the ones ticked off marked done — a session
     // ended early still records what it was meant to be.
-    const done = new Set<string>(Array.isArray(body.done_ids) ? body.done_ids : []);
-    await db.from('workout_items').insert(
-      body.exercise_ids.map((id: string, i: number) => ({
+    const done = new Set<string>(ids(body.done_ids, 60));
+    const items = await db.from('workout_items').insert(
+      served.map((id: string, i: number) => ({
         workout_id: data.id, exercise_id: id, position: i,
         done: done.has(id), done_at: done.has(id) ? row.completed_at : null,
       }))
     );
+    // The session is saved, and its ticks are on the row; the per-drill rows are extra.
+    if (items.error) console.error('[workouts] workout_items', items.error.message);
   }
   return NextResponse.json({ id: data.id });
 }
@@ -120,10 +131,15 @@ export async function PATCH(req: Request) {
   // Not "saved": the runner saves it as a new session instead.
   if (!updated?.length) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
-  if (Array.isArray(doneIds) && doneIds.length) {
-    await db.from('workout_items')
-      .update({ done: true, done_at: at })
-      .eq('workout_id', id).in('exercise_id', doneIds);
+  if (Array.isArray(doneIds)) {
+    const ticked = ids(doneIds, 60);
+    // On the row too (see POST), so a finish reads right if the items don't write.
+    const kept = await db.from('workouts').update({ done_ids: ticked }).eq('id', id).eq('user_id', user.id);
+    if (kept.error) console.error('[workouts] done_ids', kept.error.message);
+    if (ticked.length) {
+      const items = await db.from('workout_items').update({ done: true, done_at: at }).eq('workout_id', id).in('exercise_id', ticked);
+      if (items.error) console.error('[workouts] workout_items', items.error.message);
+    }
   }
   return NextResponse.json({ ok: true });
 }

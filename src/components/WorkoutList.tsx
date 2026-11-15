@@ -1,4 +1,5 @@
 'use client';
+import { useNow } from '@/lib/use-now';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -42,10 +43,7 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
   const [confirm, setConfirm] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [now, setNow] = useState<Date | null>(null);
-  // Relative days need the player's clock; the server's would call a
-  // Sunday-evening session Monday's.
-  useEffect(() => { setNow(new Date()); }, []);
+  const now = useNow();
 
   async function remove(id: string) {
     setBusy(true); setErr('');

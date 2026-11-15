@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { serverClient } from '@/lib/supabase/server';
 import { addrKey } from '@/lib/sender-addr';
+import { RESERVED_SLUGS } from '@/lib/tenant';
 
 export type Found = { slug: string; name: string; city: string | null };
 
@@ -41,6 +42,7 @@ export async function requestAcademy(_: unknown, form: FormData): Promise<{ ok: 
   if (slug && !/^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$/.test(slug)) {
     return { ok: false, error: 'The address can use letters, numbers and dashes, 3 to 30 long.' };
   }
+  if (slug && RESERVED_SLUGS.has(slug)) return { ok: false, error: `“${slug}” is kept for the site itself. Pick another address.` };
   const h = await headers();
   const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || 'unknown';
   if (tooMany(ip)) return { ok: false, error: 'That’s a lot of requests from here. Try again in an hour.' };

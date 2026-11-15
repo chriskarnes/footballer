@@ -25,6 +25,22 @@ function weekStart(now: Date): Date {
   return d;
 }
 
+/**
+ * Which of a session's days in one week its finishes tick. One finish, one
+ * day: its own day first (done on Thursday, Thursday's is done), else the
+ * earliest one before it still undone (catching up), else the next one.
+ * `days` and `finishes` are weekdays (Monday 0); the answer is indexes into `days`.
+ */
+export function tickDays(days: number[], finishes: number[]): Set<number> {
+  const done = new Set<number>();
+  for (const f of [...finishes].sort((a, b) => a - b)) {
+    const open = days.map((d, i) => ({ d, i })).filter((x) => !done.has(x.i));
+    const pick = open.find((x) => x.d === f) ?? open.find((x) => x.d < f) ?? open[0];
+    if (pick) done.add(pick.i);
+  }
+  return done;
+}
+
 export function weekState<T extends DayRow>(days: T[], completions: Completion[], now = new Date()) {
   const today = (now.getDay() + 6) % 7;
   const since = weekStart(now).getTime();

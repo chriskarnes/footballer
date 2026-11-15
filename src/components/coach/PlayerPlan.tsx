@@ -27,7 +27,7 @@ type Mode = 'program' | 'custom' | 'auto';
  *     Each session's drills can be swapped, removed or set to a level, and
  *     its day moved.
  */
-export function PlayerPlan({ userId, first, mode, program, target, defaults, own, focus: savedFocus, progress: savedProgress, ownProgress,
+export function PlayerPlan({ userId, first, mode, program, target, defaults, own, ownSessions = own, ownMinutes = own, focus: savedFocus, progress: savedProgress, ownProgress,
   drills, thisWeek, nextWeek, weeks, busy, runs = {}, todayWeekday = 0, fallback = null }: {
   userId: string; first: string;
   /** What they get in a week not built: their group's or own program, by name. Null: nothing. */
@@ -36,6 +36,9 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
   /** What Program shows: this week, groups and their own programs. */
   program: React.ReactNode;
   target: Target; defaults: Target & { progress: boolean }; own: boolean; focus: string[];
+  /** Which number is their own. One set by hand doesn't pin the other to
+   *  today's default: it keeps following the academy's. */
+  ownSessions?: boolean; ownMinutes?: boolean;
   /** Whether their custom weeks level up, and their own setting (null: the academy's). */
   progress: boolean; ownProgress: boolean | null;
   drills: DrillRow[];
@@ -90,8 +93,8 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
 
   const save = () => run(() => savePlan(userId, {
     // Same as the academy default and never set: keep following the default.
-    sessions: !own && sessions === defaults.sessions ? null : sessions,
-    minutes: !own && minutes === defaults.minutes ? null : minutes,
+    sessions: !ownSessions && sessions === defaults.sessions ? null : sessions,
+    minutes: !ownMinutes && minutes === defaults.minutes ? null : minutes,
     focus,
     // Sent only when changed; back to the academy's setting when it matches it.
     ...(progress !== savedProgress ? { progress: progress === defaults.progress ? null : progress } : {}),
@@ -295,8 +298,11 @@ export function PlayerPlan({ userId, first, mode, program, target, defaults, own
     const isOpen = open === key;
     const step = s.steps?.[i] ?? 0;
     const change = CHANGE[s.changes?.[i] ?? ''];
-    const save = (drill_ids: string[], steps: number[], changes: string[]) =>
+    const save = (drill_ids: string[], steps: number[], changes: string[]) => {
+      // Done already: what they did stays as it was.
+      if (runs?.[s.id]) { fault('They’ve done this session, so its drills stay as they were.', s.id); return; }
       run(() => saveBuiltSession(s.id, { drill_ids, steps, changes }), undefined, 'Saved.', undefined, s.id);
+    };
     const steps = s.drill_ids.map((_, k) => s.steps?.[k] ?? 0);
     const changes = s.drill_ids.map((_, k) => s.changes?.[k] ?? 'new');
     // Set by hand: the trainer's level, no label.

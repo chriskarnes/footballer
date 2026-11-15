@@ -62,6 +62,8 @@ export default async function SessionPage({
                        drills={drills} rounds={rounds}
                        note={rounds > 1 ? `Do the list ${rounds} times.` : null}
                        workoutId={again ? undefined : w.id}
+                       // What it was built from goes with a repeat too: Plan reads it.
+                       spec={w.spec && typeof w.spec === 'object' ? w.spec : undefined}
                        // Whose it is: finishing a saved one offline, or once the
                        // sign-in has lapsed, keeps it on the phone as theirs.
                        owner={w.user_id ?? null}

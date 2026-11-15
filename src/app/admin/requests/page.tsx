@@ -1,3 +1,4 @@
+import { mailtoAddr } from '@/lib/mailto';
 import { AdminGate } from '@/components/admin/ui';
 import { getViewer } from '@/lib/viewer';
 import { ago } from '@/lib/notes';
@@ -70,7 +71,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
               <span className="shrink-0 text-body-sm text-on-surface-variant">{r.status === 'contacted' ? 'Contacted · ' : ''}{ago(r.created_at)}</span>
             </div>
             <p className="mt-1 text-body text-on-surface-variant">
-              {r.name} · <a href={`mailto:${r.email}`} className="font-semibold text-on-surface underline underline-offset-2">{r.email}</a>
+              {r.name} · <a href={`mailto:${mailtoAddr(r.email)}`} className="font-semibold text-on-surface underline underline-offset-2">{r.email}</a>
             </p>
             <p className="mt-2 text-body-sm leading-relaxed text-on-surface-variant">
               {[r.slug && `${r.slug}.train.futbol`, r.city, r.players && `${r.players} players`,

@@ -206,9 +206,7 @@ export async function saveSession(input: { id?: string; programId: string; week:
       error = u.error;
       if (!error && !u.data?.length) return { ok: false, error: 'That session isn’t here any more. Reload and try again.' };
     } else {
-      const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
-        .eq('program_id', input.programId).eq('week', input.week);
-      ({ error } = await v.db.from('academy_sessions').insert({ ...row, position: count ?? 0 }));
+      ({ error } = await v.db.from('academy_sessions').insert({ ...row, position: await nextPosition(v, input.programId, input.week) }));
     }
     if (error) return { ok: false, error: plain(error) };
     done();
@@ -271,14 +269,26 @@ export async function saveLibrarySession(input: {
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
 }
 
+/**
+ * Where a new session goes in its week: after the last one. It was the
+ * number of sessions there, which after a delete is a position already
+ * taken, and two sessions at one position have no fixed order.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function nextPosition(v: any, programId: string, week: number): Promise<number> {
+  const { data } = await v.db.from('academy_sessions').select('position')
+    .eq('academy_id', v.academy.id).eq('program_id', programId).eq('week', week)
+    .order('position', { ascending: false }).limit(1);
+  const last = (data as { position: number }[] | null)?.[0]?.position;
+  return typeof last === 'number' ? last + 1 : 0;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function place(v: any, s: { id: string; name: string; drill_ids: string[] }, programId: string, week: number): Promise<string | null> {
   // With the week: one the program doesn't have would save and never show.
   await ownProgram(v, programId, week);
-  const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
-    .eq('academy_id', v.academy.id).eq('program_id', programId).eq('week', week);
   const { error } = await v.db.from('academy_sessions').insert({
-    academy_id: v.academy.id, program_id: programId, week, position: count ?? 0,
+    academy_id: v.academy.id, program_id: programId, week, position: await nextPosition(v, programId, week),
     name: s.name, drill_ids: s.drill_ids, library_id: s.id,
   });
   return error ? plain(error) : null;

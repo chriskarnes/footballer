@@ -1,4 +1,5 @@
 'use client';
+import { lastUser } from './phone-session';
 import { useEffect, useState } from 'react';
 import { browserClient } from './supabase/client';
 import { PHASES } from './speed';
@@ -39,7 +40,12 @@ export function useYearStart() {
         if (!user) return;
         const { data, error } = await db.from('profiles').select('speed_year').eq('id', user.id).maybeSingle();
         if (error) return;
-        if (valid(data?.speed_year)) {
+        if (unsent()) {
+          // Changed on this phone and not sent yet (no signal then): the
+          // phone's is the newer one. Send it; don't put the old one back.
+          const { error: e } = await db.from('profiles').update({ speed_year: local }).eq('id', user.id);
+          if (!e) mark(false);
+        } else if (valid(data?.speed_year)) {
           setStart(data.speed_year);
           try { localStorage.setItem(YEAR_KEY, JSON.stringify(data.speed_year)); } catch { /* fine */ }
         } else if (local) {
@@ -55,13 +61,26 @@ export function useYearStart() {
       if (next) localStorage.setItem(YEAR_KEY, JSON.stringify(next));
       else localStorage.removeItem(YEAR_KEY);
     } catch { /* private mode: it lasts this visit */ }
+    // Marked until the account has it: a change made with no signal used to
+    // be undone on the next visit, when the account's older one came back.
+    // (Only with an account on this phone: a year set signed out is the
+    // first-meeting case, where the account's own start wins.)
+    if (lastUser()) mark(true);
     (async () => {
       try {
         const db = browserClient();
         const { data: { user } } = await db.auth.getUser();
-        if (user) await db.from('profiles').update({ speed_year: next }).eq('id', user.id);
-      } catch { /* signed out or not configured */ }
+        if (!user) return;
+        const { error } = await db.from('profiles').update({ speed_year: next }).eq('id', user.id);
+        if (!error) mark(false);
+      } catch { /* signed out, no signal or not configured: it stays marked */ }
     })();
   };
   return { start, ready, save };
 }
+
+/** Set while this phone has a year start the account hasn't got yet. Cleared
+ *  with the rest of a player's things when the account here changes (page-cache.ts). */
+const UNSENT = `${YEAR_KEY}.unsent`;
+const mark = (on: boolean) => { try { if (on) localStorage.setItem(UNSENT, '1'); else localStorage.removeItem(UNSENT); } catch { /* fine */ } };
+const unsent = () => { try { return localStorage.getItem(UNSENT) === '1'; } catch { return false; } };

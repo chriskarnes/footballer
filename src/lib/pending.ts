@@ -28,6 +28,22 @@ type Entry = { id: string; at: number; uid: string | null; payload: Payload };
 
 const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
+/**
+ * The newest few for each owner, in order. The cap used to be on the whole
+ * list, so on a shared phone one player's sixth finish pushed out a
+ * sibling's that was still waiting.
+ */
+function capped(list: Entry[]): Entry[] {
+  const seen = new Map<string | null, number>();
+  const keep = new Set<Entry>();
+  for (let i = list.length - 1; i >= 0; i--) {
+    const n = seen.get(list[i].uid) ?? 0;
+    if (n < MAX_ENTRIES) keep.add(list[i]);
+    seen.set(list[i].uid, n + 1);
+  }
+  return list.filter((e) => keep.has(e));
+}
+
 function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') {
   function read(): Entry[] {
     try {
@@ -44,7 +60,7 @@ function slot(key: string, endpoint: string, method: 'POST' | 'PATCH' = 'POST') 
   }
   function write(list: Entry[]): void {
     try {
-      if (list.length) localStorage.setItem(key, JSON.stringify(list.slice(-MAX_ENTRIES)));
+      if (list.length) localStorage.setItem(key, JSON.stringify(capped(list)));
       else localStorage.removeItem(key);
     } catch { /* private mode or storage blocked: it just isn't kept */ }
   }

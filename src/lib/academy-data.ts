@@ -3,7 +3,9 @@ import type { AddonRow, CustomRow, DrillRow, GroupRow, LibrarySession, MoveRow, 
 import { DEFAULT_TARGET, sessionMinutes, type Target } from './week-builder';
 
 /** A player's targets and focus, as the trainer set them (0010). */
-export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean; progress?: boolean | null; mode?: PlanMode | null };
+export type PlanRow = { user_id: string; sessions: number | null; minutes: number | null; focus: string[]; autopilot: boolean; progress?: boolean | null; mode?: PlanMode | null;
+  /** The day their week last went back to their program (0036). */
+  program_from?: string | null };
 /** How a player's week is set (0014): their program, or custom weeks. */
 export type PlanMode = 'program' | 'custom' | 'auto';
 /** The academy's default target, and whether built weeks step drills up (0013). */
@@ -62,7 +64,7 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
     withFallback((c) => db.from('player_schedules').select(c), 'user_id, club_days, game_day', ', game_days, trainer_days'),
     only(db.from('session_moves').select('user_id, week_of, item_key, weekday').eq('academy_id', academyId).gte('week_of', since)),
     customQuery(db, academyId, since, opts.player),
-    withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress, mode', ', progress'),
+    withFallback((c) => db.from('player_plans').select(c).eq('academy_id', academyId), 'user_id, sessions, minutes, focus, autopilot', ', progress, mode, program_from', ', progress, mode', ', progress'),
     loadDefaults(db, academyId),
     db.from('library_sessions').select('id, name, drill_ids').eq('academy_id', academyId).order('name'),
   ]);
@@ -83,10 +85,18 @@ export async function loadContent(db: any, academyId: string, opts: { addonsSinc
 async function withFallback(q: (cols: string) => any, cols: string, ...extras: string[]) {
   for (const extra of extras) {
     const r = await q(cols + extra);
-    if (!r.error) return r;
+    // Only a column that isn't there yet sends it down a tier. Any other
+    // failure (a hiccup) is handed back as it is: read again without the
+    // newer columns, a built week came back with no levels on it.
+    if (!r.error || !noColumn(r.error)) return r;
   }
   return q(cols);
 }
+
+/** The database saying a column (or the table) isn't there: a migration not run yet. */
+export const noColumn = (e: { code?: string; message?: string } | null | undefined) =>
+  !!e && (e.code === '42703' || e.code === '42P01' || e.code === 'PGRST204' || e.code === 'PGRST205'
+    || /column .* does not exist|could not find the .* column/i.test(e.message ?? ''));
 
 /** The academy's default target and step-up setting; the built-in ones when unset. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,7 +118,7 @@ async function customQuery(db: any, academyId: string, since: string, player?: s
   };
   for (const extra of [', note, steps, light, changes', ', note']) {
     const r = await q(cols + extra);
-    if (!r.error) return r;
+    if (!r.error || !noColumn(r.error)) return r;
   }
   return q(cols);
 }
@@ -120,13 +130,15 @@ async function drillsQuery(db: any, academyId: string) {
   // Newest columns first: harder versions (0012), tags (0008).
   for (const extra of [', focus_areas, harder_id', ', focus_areas']) {
     const r = await db.from('drills').select(cols + extra).eq('academy_id', academyId).order('name');
-    if (!r.error) return r;
+    if (!r.error || !noColumn(r.error)) return r;
   }
   return db.from('drills').select(cols).eq('academy_id', academyId).order('name');
 }
 /** A player's target: their own numbers where set, the academy's where not. */
 export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId: string): Target & {
   focus: string[]; autopilot: boolean; own: boolean;
+  /** Which of the two numbers are their own, each by itself. */
+  ownSessions: boolean; ownMinutes: boolean;
   /** Whether their weeks step up, and their own setting (null: the academy's). */
   progress: boolean; ownProgress: boolean | null;
   /** As chosen; null when never chosen (see modeOf). */
@@ -136,6 +148,7 @@ export function targetFor(c: Pick<AcademyContent, 'plans' | 'defaults'>, userId:
   return {
     sessions: p?.sessions ?? c.defaults.sessions, minutes: sessionMinutes(p?.minutes ?? c.defaults.minutes),
     focus: p?.focus ?? [], autopilot: p?.autopilot ?? false, own: !!(p && (p.sessions || p.minutes)),
+    ownSessions: p?.sessions != null, ownMinutes: p?.minutes != null,
     progress: p?.progress ?? c.defaults.progress, ownProgress: p?.progress ?? null, mode: p?.mode ?? null,
   };
 }

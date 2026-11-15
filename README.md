@@ -1,10 +1,44 @@
-# Forge — Elite Accelerator
+# Train.futbol
 
-Individual soccer training built on a parsed library of **786 drills, 161 sessions,
-17 programs**, each with estimated minutes, estimated ball touches, and a demo video.
+Where a private soccer trainer gives players drills and sessions to do between
+practices. Each trainer has their own page (an "academy") on its own address,
+`name.train.futbol`; the bare domain is the marketing site. Players train, and
+their trainer sees how the week is going.
 
-The product thesis in one line: **most youth players get a few hundred touches at a team
-practice; a focused 20 minutes alone can clear 1,000.**
+> Much of what follows below was written for the first version ("Forge", one
+> unbranded app with a bundled drill library and no accounts needed). It is kept
+> for the reasoning behind the session builder and the native-feel details, which
+> still hold. Where it and this section disagree, this section is right.
+
+## Where things stand
+
+- **Academies.** A trainer asks for a page (`/start`), a platform admin approves
+  it, the trainer claims it and sets it up, and players join by invite link or by
+  asking. Trainer area under `/coach`; platform admin under `/admin`.
+- **The drill library** in `data/forge-library.json` is licensed content. It shows
+  only in academies switched on for it in the database (`library_access`), never
+  on the bare domain. Other academies run on the trainer's own drills.
+- **Database.** `supabase/schema.sql` is only the starting point. Run it, then
+  every file in `supabase/migrations` in number order. The app reads newer columns
+  and functions when they are there and falls back when they are not, so deploy
+  the app first and run its migrations after.
+- **AI** is optional: Gemini helps a trainer build a player's week
+  (`GEMINI_API_KEY`), Claude turns a typed request into a session spec
+  (`ANTHROPIC_API_KEY`). Both have limits kept in the database, and neither is
+  sent a player's name.
+- **Privacy and terms** are at `/privacy` and `/terms`; set
+  `NEXT_PUBLIC_CONTACT_EMAIL` so they give an inbox.
+
+## Checks
+
+```bash
+npm test          # unit tests (node:test, through tsx)
+npm run typecheck
+npm run check     # typecheck, tests and a production build
+```
+
+There is no linter configured: `npm run lint` is left over from an older Next.js
+and does not run.
 
 ---
 

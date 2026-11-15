@@ -92,6 +92,9 @@ export function buildPlayerWeek(input: {
   /** The Monday being built, and the built weeks before it, newest first. */
   weekOf?: string;
   history?: PastWeek[];
+  /** Drills in sessions of this same week that stay as they are (done
+   *  already, in a week rebuilt part-way through): not picked again. */
+  taken?: string[];
 }): BuiltSession[] {
   const { target } = input;
   const pool = input.drills.filter((d) => d.minutes > 0);
@@ -102,7 +105,7 @@ export function buildPlayerWeek(input: {
   const seed = input.seed ?? '';
   const history = input.history ?? [];
   const recent = new Set([...(input.recent ?? []), ...history.slice(0, 2).flatMap((w) => w.sessions.flatMap((s) => s.drill_ids))]);
-  const used = new Map<string, number>();
+  const used = new Map<string, number>((input.taken ?? []).map((id) => [id, 1]));
 
   // Last week, if it was the week before this one.
   const prev = input.weekOf && history[0]?.week_of === minusWeek(input.weekOf) ? history[0] : null;

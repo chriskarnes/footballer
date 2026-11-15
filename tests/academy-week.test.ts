@@ -59,3 +59,31 @@ test('placeDays always hands back real days, however little room there is', () =
     }
   }
 });
+
+// Back to their program on Thursday, with two of the week's built sessions
+// already done. They were deleted, and "2 of 3" dropped to "0 of 3".
+test('going back to the program keeps what was done, and gives the rest from that day', () => {
+  const custom = [0, 1, 2].map((i) => ({ id: `c${i}`, user_id: 'u1', week_of: MON, position: i, name: `Built ${i}`, drill_ids: ['d1'], weekday: i, made_by: 'rules' as const }));
+  const completions = [
+    { source: 'academy', source_ref: 'c0', completed_at: '2026-11-09T20:00:00Z' },
+    { source: 'academy', source_ref: 'c1', completed_at: '2026-11-10T20:00:00Z' },
+  ];
+  const w = buildWeek({
+    ...base, today: THU, groups: group('2026-10-26'), memberships: [{ group_id: 'g1', user_id: 'u1', added_at: '2026-10-26T15:00:00Z' }],
+    // Only the done two are left once it goes back.
+    custom: custom.slice(0, 2), completions,
+    plans: [{ user_id: 'u1', mode: 'program', program_from: THU }],
+  });
+  const built = w.filter((i) => i.kind === 'custom'), program = w.filter((i) => i.kind === 'session');
+  assert.equal(built.length, 2);
+  assert.ok(built.every((i) => i.done), 'the built sessions still read done');
+  assert.equal(program.length, 1, 'the program gives the one still owed');
+  assert.ok(program.every((i) => i.weekday >= 3), `on a day still to come, got ${days(program)}`);
+  assert.equal(w.filter((i) => i.done).length, 2);
+});
+
+test('a custom week still takes the program’s place', () => {
+  const custom = [0, 1].map((i) => ({ id: `c${i}`, user_id: 'u1', week_of: MON, position: i, name: `Built ${i}`, drill_ids: ['d1'], weekday: i + 3, made_by: 'rules' as const }));
+  const w = buildWeek({ ...base, today: THU, groups: group('2026-10-26'), memberships: [{ group_id: 'g1', user_id: 'u1' }], custom, plans: [{ user_id: 'u1', mode: 'custom' }] });
+  assert.deepEqual(w.map((i) => i.kind), ['custom', 'custom']);
+});

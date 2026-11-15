@@ -102,7 +102,9 @@ export function sessionsForWeek(all: SessionRow[], programId: string, n: number)
   const mine = all.filter((s) => s.program_id === programId && s.week <= n);
   if (!mine.length) return [];
   const week = Math.max(...mine.map((s) => s.week));
-  return mine.filter((s) => s.week === week).sort((a, b) => a.position - b.position);
+  // By id after position: two at the same position keep one order, whatever
+  // order the database hands them back in.
+  return mine.filter((s) => s.week === week).sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
 }
 
 const WEEK = [0, 1, 2, 3, 4, 5, 6];
@@ -166,6 +168,9 @@ export function buildWeek(input: {
   schedules?: ScheduleRow[];
   moves?: MoveRow[];
   custom?: CustomRow[];
+  /** How each player's week is set, and when it last went back to their
+   *  program: sessions built before then and already done stay in the week. */
+  plans?: { user_id: string; mode?: string | null; program_from?: string | null }[];
   tz?: string;
 }): WeekItem[] {
   const { userId, today } = input;
@@ -248,7 +253,17 @@ export function buildWeek(input: {
   // The player's own extra sessions sit on top of whatever the week is.
   const built = mineCustom.filter((c) => c.made_by !== 'player');
   const own = mineCustom.filter((c) => c.made_by === 'player');
-  if (built.length) {
+  // Back on their program (the trainer's choice): the program is the week
+  // again, even with built sessions left in it. Those are the ones already
+  // done when it went back; they stay, so "2 of 3" doesn't drop to "0 of 3".
+  const plan = input.plans?.find((p) => p.user_id === userId);
+  const backOnProgram = plan?.mode === 'program';
+  const keptBuilt = backOnProgram ? built.filter((c) => finished.has(`c:${c.id}`)) : [];
+  // The day it went back, when that was this week: the program's sessions
+  // go on the days from then, not on days already gone.
+  const backDay = backOnProgram && plan?.program_from && plan.program_from > monday && plan.program_from <= addDays(monday, 6)
+    ? weekdayOf(plan.program_from) : 0;
+  if (built.length && !backOnProgram) {
     // Program sessions already done this week stay, on the day they were
     // done: a week built mid-week fills what's left, and "2 of 3" mustn't
     // drop back to "0 of 3" when it comes in.
@@ -271,18 +286,27 @@ export function buildWeek(input: {
     // taking the early days; then the turns go on the days that fit.
     const order: WeekItem[] = [];
     const fromOf = new Map<WeekItem, number>();
-    for (const r of runs) for (const it of r) fromOf.set(it, startDay.get(r) ?? 0);
+    for (const r of runs) for (const it of r) fromOf.set(it, Math.max(startDay.get(r) ?? 0, backDay));
     for (let i = 0; runs.some((r) => i < r.length); i++) for (const r of runs) if (i < r.length) order.push(r[i]);
+    // What was done before going back counts toward the week: the program
+    // gives the rest, as a week built mid-week gives only what's owed.
+    if (keptBuilt.length) order.length = Math.max(0, order.length - keptBuilt.length);
     // Whole-week runs first, across the week; then each run that starts
     // part-way through, on the days from its start, beside what's placed.
     const taken: number[] = [];
+    const keptDays = keptBuilt.map((c) => finished.get(`c:${c.id}`)![0]);
     for (const from of [...new Set(order.map((it) => fromOf.get(it) ?? 0))].sort((a, b) => a - b)) {
       const part = order.filter((it) => (fromOf.get(it) ?? 0) === from);
-      const days = placeDays(part.length, from ? { ...mine, meets, from, done: taken } : { ...mine, meets });
+      const days = placeDays(part.length, from ? { ...mine, meets, from, done: [...taken, ...keptDays] } : { ...mine, meets });
       part.forEach((it, i) => { it.weekday = days[i]; });
       taken.push(...days);
     }
     items.push(...order);
+    for (const c of keptBuilt) items.push({
+      key: `c:${c.id}`, kind: 'custom', ref: c.id, title: c.name, from: 'Built for you', groups: [],
+      weekday: finished.get(`c:${c.id}`)![0], minutes: minutesOf(c.drill_ids), drills: countOf(c.drill_ids), note: c.note ?? null, done: false,
+      light: !!c.light, ups: (c.changes ?? []).filter((x) => x === 'up' || x === 'harder').length,
+    });
   }
 
   for (const c of own) items.push({

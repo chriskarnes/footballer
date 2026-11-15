@@ -16,6 +16,8 @@ export type AcademyFeed = {
   schedules?: ScheduleRow[]; moves?: MoveRow[];
   /** Added in 0010. */
   custom?: CustomRow[];
+  /** Added in 0036: how the week is set, and when it went back to the program. */
+  plans?: { user_id: string; mode?: string | null; program_from?: string | null }[];
 };
 
 const PAST = 14, FUTURE = 42;
@@ -45,7 +47,7 @@ export function academyEvents(feed: AcademyFeed, completed: CompletionRow[], ori
       userId: feed.user_id, today: monday, tz, groups: feed.groups, memberships: feed.memberships,
       playerPrograms: feed.player_programs, programs: feed.programs, sessions: feed.sessions,
       drills: feed.drills, addons: feed.addons, completions: completed,
-      schedules: feed.schedules ?? [], moves: feed.moves ?? [], custom: feed.custom ?? [],
+      schedules: feed.schedules ?? [], moves: feed.moves ?? [], custom: feed.custom ?? [], plans: feed.plans ?? [],
     });
     for (const it of items) {
       const date = addDays(monday, it.weekday);

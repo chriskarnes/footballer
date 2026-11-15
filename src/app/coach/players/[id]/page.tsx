@@ -123,7 +123,7 @@ export default async function PlayerPage({ params }: {
                     </div>
                   </div>
                 }
-                target={t} defaults={content.defaults} own={t.own} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
+                target={t} defaults={content.defaults} own={t.own} ownSessions={t.ownSessions} ownMinutes={t.ownMinutes} focus={t.focus} progress={t.progress} ownProgress={t.ownProgress}
                 drills={content.drills} weeks={weeks} thisWeek={thisWeek} todayWeekday={weekdayOf(localDate(new Date(), tz))} nextWeek={nextWeek} runs={runs}
                 busy={{ ...teamDays(soccer),
                   meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null

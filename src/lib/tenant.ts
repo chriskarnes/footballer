@@ -10,6 +10,20 @@ export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'train.futbol'
 
 const SLUG = /^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$/;
 
+/**
+ * Addresses the platform keeps for itself: the same list the database
+ * refuses (0004), plus `play`, the self-serve space's (0031). Checked here
+ * too, so an address isn't offered as available, or taken on the form, and
+ * then refused when an admin goes to approve it.
+ */
+export const RESERVED_SLUGS = new Set(['www', 'app', 'api', 'admin', 'auth', 'mail', 'email', 'help', 'support',
+  'status', 'blog', 'docs', 'static', 'cdn', 'assets', 'dashboard', 'login', 'signup',
+  'join', 'coach', 'trainer', 'billing', 'stripe', 'ns1', 'ns2', 'ftp', 'smtp',
+  'test', 'staging', 'dev', 'preview', 'play']);
+
+/** An address a trainer could ask for: the right shape, and not one that's kept. */
+export const slugFree = (slug: string) => SLUG.test(slug) && !RESERVED_SLUGS.has(slug);
+
 export function slugFromHost(host: string): string | null {
   const name = host.toLowerCase().replace(/:\d+$/, '');
   const sub = name.endsWith(`.${ROOT_DOMAIN}`) ? name.slice(0, -ROOT_DOMAIN.length - 1)

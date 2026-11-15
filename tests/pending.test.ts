@@ -82,3 +82,14 @@ test('a finish kept in the old format is sent once', async () => {
   assert.equal(calls.length, 1);
   assert.equal(pendingWorkout.any(), false);
 });
+
+// The cap was on the whole list: one player's sixth finish pushed out a
+// sibling's that was still waiting.
+test('the cap is per owner', () => {
+  const theirs = pendingWorkout.stash({ title: 'Sibling' }, 'u2');
+  for (let i = 0; i < 7; i++) pendingWorkout.stash({ title: `Mine ${i}` }, 'u1');
+  assert.equal(pendingWorkout.has(theirs), true);
+  const kept = JSON.parse(store.get('forge.pendingWorkout')!) as { uid: string; payload: { title: string } }[];
+  assert.equal(kept.filter((e) => e.uid === 'u1').length, 5);
+  assert.equal(kept.filter((e) => e.uid === 'u1')[0].payload.title, 'Mine 2');
+});

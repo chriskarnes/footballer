@@ -34,7 +34,10 @@ async function ownPlayer(v: Awaited<ReturnType<typeof staff>>, userId: string) {
 type Result = { ok: true; by?: 'ai' | 'rules'; why?: string } | { ok: false; error: string };
 const fail = (e: unknown): Result => ({ ok: false, error: plain(e) });
 const done = () => revalidatePath('/', 'layout');
-const missing = (m: string) => /player_plans|player_week_sessions|academy_plan_defaults|schema cache/.test(m)
+// Only the database saying the tables aren't there yet (the migration not
+// run). Any error that merely names a plan table (a refused write, say) used
+// to be told to the trainer as "not switched on yet".
+const missing = (m: string) => /schema cache|relation "?[\w.]*(player_plans|player_week_sessions|academy_plan_defaults)"? does not exist/i.test(m)
   ? notReady(m, '0010') : plain(m);
 
 const clamp = (n: unknown, lo: number, hi: number) => {
@@ -71,17 +74,32 @@ export async function setMode(userId: string, mode: 'program' | 'custom'): Promi
   try {
     const v = await staff();
     await ownPlayer(v, userId);
-    const { error } = await v.db.from('player_plans').upsert({
-      academy_id: v.academy.id, user_id: userId, mode, autopilot: false, updated_at: new Date().toISOString(),
-    });
+    const today = localDate(new Date(), v.academy.timeZone);
+    const row: Record<string, unknown> = { academy_id: v.academy.id, user_id: userId, mode, autopilot: false, updated_at: new Date().toISOString() };
+    // Back to the program: from today (0036), so its sessions this week go
+    // on the days left, not on days already gone.
+    let { error } = await v.db.from('player_plans').upsert(mode === 'program' ? { ...row, program_from: today } : row);
+    if (error && mode === 'program' && /program_from/.test(error.message)) ({ error } = await v.db.from('player_plans').upsert(row));
     if (error) return { ok: false, error: /mode/.test(error.message) ? notReady(error, '0014') : missing(error.message) };
     if (mode === 'program') {
-      const from = mondayOf(localDate(new Date(), v.academy.timeZone));
-      // All of them, done ones too: any built session left in a week takes
-      // the program's place that week (buildWeek). What they did stays in
-      // their history either way.
-      const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
-      if (del.error) return { ok: false, error: missing(del.error.message) };
+      const from = mondayOf(today);
+      // The built sessions go, from this week on, except this week's that
+      // are already done: those stay in the week beside the program
+      // (buildWeek), so what they've done still counts. It used to take
+      // them all, and "2 of 3" dropped to "0 of 3".
+      const had = await v.db.from('player_week_sessions').select('id, week_of')
+        .eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from).neq('made_by', 'player');
+      if (had.error) return { ok: false, error: missing(had.error.message) };
+      const rows = (had.data ?? []) as { id: string; week_of: string }[];
+      const runs = await loadCompletions(v.db, v.academy.id, zoneMidnight(from, v.academy.timeZone), userId);
+      // Can't tell what's done: nothing is taken away on a guess.
+      if (runs.error) return { ok: false, error: plain(runs.error, 'Couldn’t check what they’ve done this week. Try again.') };
+      const finished = doneOf(runs.data, rows.filter((x) => x.week_of === from).map((x) => x.id));
+      const gone = rows.filter((x) => !finished.has(x.id)).map((x) => x.id);
+      if (gone.length) {
+        const del = await v.db.from('player_week_sessions').delete().eq('academy_id', v.academy.id).in('id', gone);
+        if (del.error) return { ok: false, error: missing(del.error.message) };
+      }
     }
     done(); return { ok: true };
   } catch (e) { return fail(e); }
@@ -152,9 +170,9 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     // The week already built, and which of it is done. Sessions already done
     // stay as they are and count toward the target; the new week fills the
     // rest. Read first, so the rules build only what's still to do.
-    const old = await v.db.from('player_week_sessions').select('id, weekday, position').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
+    const old = await v.db.from('player_week_sessions').select('id, weekday, position, drill_ids').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
     if (old.error) return { ok: false, error: missing(old.error.message) };
-    const before = (old.data ?? []) as { id: string; weekday: number | null; position: number }[];
+    const before = (old.data ?? []) as { id: string; weekday: number | null; position: number; drill_ids?: string[] }[];
     // The week starts at Monday midnight where the academy is, not in UTC.
     const runs = await loadCompletions(v.db, v.academy.id, zoneMidnight(week_of, v.academy.timeZone), userId);
     if (runs.error) throw runs.error;
@@ -173,7 +191,10 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     // already has a session done. On days already gone they'd only read as
     // missed; beside a done one they'd read as a second session that day.
     const from = which === 'this' ? weekdayOf(today) : 0;
-    const doneDays = [...new Set([...kept.map((x) => x.weekday), ...programDone.flatMap((it) => [it.weekday, it.doneOn])])]
+    // The day each was actually done, and the day it's on now (the player
+    // may have moved it), not only the day it was first set for.
+    const builtDone = thisWeek.filter((it) => it.kind === 'custom' && it.done);
+    const doneDays = [...new Set([...kept.map((x) => x.weekday), ...[...programDone, ...builtDone].flatMap((it) => [it.weekday, it.doneOn])])]
       .filter((d): d is number => d !== null && d !== undefined && d >= from);
     const busy = { ...teamDays(sched), meets, from, done: doneDays };
     // No more sessions than there are days for.
@@ -185,7 +206,9 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     // nothing carries over; recent drills still give way to fresh ones.
     const history = t.progress ? past : [];
 
-    const rules = buildPlayerWeek({ drills: c.drills, target: { ...t, sessions: fit }, focus: t.focus, recent, busy, seed: `${userId}:${week_of}`, weekOf: week_of, history });
+    const rules = buildPlayerWeek({ drills: c.drills, target: { ...t, sessions: fit }, focus: t.focus, recent, busy, seed: `${userId}:${week_of}`, weekOf: week_of, history,
+      // What they've already done this week isn't given to them again.
+      taken: kept.flatMap((x) => x.drill_ids ?? []) });
     if (!rules.length) return { ok: false, error: 'Nothing to build from yet.' };
     let rows: (BuiltSession & { note: string | null; made_by: 'ai' | 'rules' })[] = rules.map((s) => ({ ...s, note: null, made_by: 'rules' }));
     let why: string | undefined;
@@ -208,8 +231,14 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
         inputHash: fingerprint({ week_of, t, busy, history, drills: c.drills.map((d) => d.id).sort() }),
       });
       if (res.sessions) {
-        rows = fitToTarget(res.sessions, rules, c.drills, t.minutes, t.focus)
-          .map((s) => ({ ...s, note: s.note ?? null, made_by: s.fromAi ? 'ai' : 'rules' }));
+        // An answer that can't be fitted leaves the rules' week, which is ready.
+        try {
+          rows = fitToTarget(res.sessions, rules, c.drills, t.minutes, t.focus)
+            .map((s) => ({ ...s, note: s.note ?? null, made_by: s.fromAi ? 'ai' : 'rules' }));
+        } catch (e) {
+          console.error('buildWeekFor: AI answer not usable, using the rules', e instanceof Error ? e.message : e);
+          why = 'AI’s answer couldn’t be used, so this is the rules’ week';
+        }
       } else why = 'AI didn’t answer, so this is the rules’ week';
     } else why = `${DENIED[gate.why]}, so this is built from their settings`;
 
@@ -322,6 +351,15 @@ export async function saveBuiltSession(id: string, change: { drill_ids?: string[
     if (change.drill_ids) {
       row.made_by = 'trainer';
       if (!change.drill_ids.length) return { ok: false, error: 'A session needs at least one drill.' };
+      // Done already: its drills are what they did. Changed after, next
+      // week's levels would be worked out from drills they never ticked.
+      const { data: was } = await v.db.from('player_week_sessions').select('user_id, week_of').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+      if (was) {
+        const runs = await loadCompletions(v.db, v.academy.id, zoneMidnight(was.week_of as string, v.academy.timeZone), was.user_id as string);
+        if (runs.data.some((r) => r.source_ref === id)) {
+          return { ok: false, error: 'They’ve done this session, so its drills stay as they were.' };
+        }
+      }
       // Written into the player's week as ids: they have to be this academy's.
       const unique = [...new Set(change.drill_ids)];
       const { data: mine, error: de } = await v.db.from('drills').select('id').eq('academy_id', v.academy.id).in('id', unique);

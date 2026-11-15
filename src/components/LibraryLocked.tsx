@@ -88,7 +88,8 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
           <BandTag>{title}</BandTag>
           <BandTitle>{declined ? 'Not let in' : v.user ? 'Ask to join' : 'Sign in'}</BandTitle>
           <p className="mt-3 text-title-sm font-semibold text-on-surface-brand-variant">
-            {declined ? `${v.academy.name} didn’t let this account in. If that was a mistake, check with them and ask again.`
+            {declined && req?.role === 'trainer' ? `${v.academy.name} didn’t let this account in as a trainer. If that was a mistake, check with them, then open your trainer link again.`
+              : declined ? `${v.academy.name} didn’t let this account in. If that was a mistake, check with them and ask again.`
               : v.user ? `Your sessions from ${v.academy.name} appear here once you’re in.`
                     : `Your sessions from ${v.academy.name} are here once you sign in.`}
           </p>
@@ -96,7 +97,10 @@ export async function LibraryLocked({ title, next = '/' }: { title: string; next
         {!v.user && <div className="mt-5"><SignIn next={next} /></div>}
         <p className="mt-5 text-center text-body text-on-surface-variant">
           {v.user ? 'Got a link from your trainer? Open it. ' : 'New here? '}
-          <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">{declined ? 'Ask again' : 'Ask to join'}</Link>
+          {/* A declined trainer asks again with the trainer link: this form asks as a player. */}
+          <Link href="/request" className="font-semibold text-on-surface underline underline-offset-4">
+            {declined && req?.role === 'trainer' ? 'Ask to join as a player' : declined ? 'Ask again' : 'Ask to join'}
+          </Link>
         </p>
       </div>
     );

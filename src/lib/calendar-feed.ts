@@ -1,3 +1,4 @@
+import { tickDays } from './plan-today';
 import { KIND_LABELS, PHASES, sessionSeconds } from './speed';
 import { isoDate, parseDate, position, weekPlan, type YearStart } from './speed-year';
 import { splitSessionName } from './program-copy';
@@ -44,14 +45,29 @@ export function feedEvents(data: FeedData, sessions: SessionRow[], origin: strin
   // finished in. Plan and Speed count a session done any day of its week, so
   // the calendar ticks it the same way, not only on the day it was planned.
   const mondayOfDate = (d: string) => addDays(d, -((parseDate(d).getDay() + 6) % 7));
-  const done = new Map<string, Set<string>>();
+  const done = new Map<string, Map<string, number[]>>();
   for (const w of data.completed) {
     if (!w.source_ref || !w.completed_at) continue;
     const key = `${w.source}:${w.source_ref}`;
-    if (!done.has(key)) done.set(key, new Set());
-    done.get(key)!.add(mondayOfDate(todayIn(tz, new Date(w.completed_at))));
+    const on = todayIn(tz, new Date(w.completed_at));
+    const weeks = done.get(key) ?? new Map<string, number[]>();
+    weeks.set(mondayOfDate(on), [...(weeks.get(mondayOfDate(on)) ?? []), (parseDate(on).getDay() + 6) % 7]);
+    done.set(key, weeks);
   }
   const finished = (key: string, date: string) => !!done.get(key)?.has(mondayOfDate(date));
+  // A plan session set for more than one day of the week: one finish ticks
+  // one of them, the same one Plan ticks (tickDays), not every one.
+  const planTicks = new Map<string, Set<string>>();
+  const planTick = (sessionId: string, date: string, weekday: number, slot: number) => {
+    const monday = mondayOfDate(date), at = `${monday}|${sessionId}`;
+    if (!planTicks.has(at)) {
+      const days = data.plan_days.filter((d) => d.kind !== 'rest' && d.session_id === sessionId)
+        .sort((a, b) => a.weekday - b.weekday || a.slot - b.slot);
+      const hit = tickDays(days.map((d) => d.weekday), done.get(`library:${sessionId}`)?.get(monday) ?? []);
+      planTicks.set(at, new Set(days.filter((_, i) => hit.has(i)).map((d) => `${d.weekday}-${d.slot}`)));
+    }
+    return planTicks.get(at)!.has(`${weekday}-${slot}`);
+  };
 
   const timed = (minutes: number, offset = 0) =>
     data.start_time ? { start: shift(data.start_time, offset), minutes, timeZone: tz } : undefined;
@@ -73,7 +89,7 @@ export function feedEvents(data: FeedData, sessions: SessionRow[], origin: strin
         const s = byId.get(d.session_id!);
         if (!s) continue;
         const minutes = Math.max(1, Math.round(s.total_minutes));
-        const tick = finished(`library:${s.id}`, date);
+        const tick = planTick(s.id, date, weekday, d.slot);
         events.push({
           uid: `plan-${date}-${d.slot}@train.futbol`, date,
           summary: summary(tick, splitSessionName(s.name).title, minutes),

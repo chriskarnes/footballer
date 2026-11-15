@@ -50,13 +50,18 @@ export async function removeMember(userId: string) {
   const { error, count } = await v.db.from('academy_members')
     .delete({ count: 'exact' }).eq('academy_id', v.academy.id).eq('user_id', userId);
   if (error) return { ok: false as const, error: plain(error) };
-  if (!count) return { ok: false as const, error: 'You can’t remove that person.' };
+  if (!count) {
+    // Still here: not theirs to remove. Gone already (a second tap, after a
+    // clean-up that didn't finish): carry on and finish it.
+    const { data: still } = await v.db.from('academy_members').select('user_id').eq('academy_id', v.academy.id).eq('user_id', userId).maybeSingle();
+    if (still) return { ok: false as const, error: 'You can’t remove that person.' };
+  }
   // Out of their groups and programs too, so they stop counting in them, and
   // their plan settings and the weeks still to come: someone let back in
   // later starts fresh, not on a week built before they left. Past weeks
-  // stay, as their history. Best effort: the counts look only at current players.
+  // stay, as their history.
   const from = mondayOf(localDate(new Date(), v.academy.timeZone));
-  await Promise.all([
+  const cleared = await Promise.all([
     v.db.from('group_members').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
     v.db.from('player_programs').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
     v.db.from('player_plans').delete().eq('academy_id', v.academy.id).eq('user_id', userId),
@@ -64,6 +69,13 @@ export async function removeMember(userId: string) {
     v.db.from('addons').delete().eq('academy_id', v.academy.id).eq('user_id', userId).gte('week_of', from),
   ]);
   revalidatePath('/coach', 'layout');
+  // Said, not swallowed: left behind, they'd be back in their old groups
+  // and week the day they were let in again.
+  const failed = cleared.find((r) => r.error);
+  if (failed) {
+    console.error('removeMember: clean-up', failed.error);
+    return { ok: false as const, error: 'They’re removed, but their groups and plan couldn’t all be cleared. Tap Remove again to finish.' };
+  }
   return { ok: true as const };
 }
 

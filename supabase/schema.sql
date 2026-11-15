@@ -1,7 +1,10 @@
 -- ============================================================================
 -- FORGE — schema
 -- Library tables are public read. Everything user-owned is protected by RLS.
--- Run this in the Supabase SQL editor, then `npm run seed`.
+-- Run this in the Supabase SQL editor, then every file in supabase/migrations
+-- in number order (0001 onward), then `npm run seed`. This file is only the
+-- starting point: academies, groups, built weeks, the admin panel and the
+-- rest all come from the migrations, and the app expects them.
 -- ============================================================================
 
 create extension if not exists "uuid-ossp";

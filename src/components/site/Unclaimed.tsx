@@ -1,3 +1,5 @@
+import { RESERVED_SLUGS } from '@/lib/tenant';
+
 /**
  * What an unclaimed subdomain shows. Most people who land here are a player
  * with a mistyped link, so that's the first door; the second is a trainer
@@ -38,11 +40,24 @@ export function Unclaimed({ slug, root, rootLabel }: { slug: string; root: strin
           </div>
           <div className="card flex flex-col p-6">
             <span className="eyebrow">I&rsquo;m a trainer</span>
-            <h2 className="h-card mt-3 text-on-surface">This address is available</h2>
-            <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Make it your page. Your players will open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.
-            </p>
-            <a href={`${root}/start?slug=${encodeURIComponent(slug)}`} className="btn-ghost pressable mt-5 w-full">Claim this address</a>
+            {RESERVED_SLUGS.has(slug) ? (
+              <>
+                {/* Kept for the site itself: not offered, since it would be refused. */}
+                <h2 className="h-card mt-3 text-on-surface">Pick your own address</h2>
+                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
+                  This one is kept for the site. Choose the address your players will open, and make it your page.
+                </p>
+                <a href={`${root}/start`} className="btn-ghost pressable mt-5 w-full">Get started</a>
+              </>
+            ) : (
+              <>
+                <h2 className="h-card mt-3 text-on-surface">This address is available</h2>
+                <p className="mt-2 flex-1 text-[14.5px] leading-relaxed text-on-surface-variant">
+                  Make it your page. Your players will open <b className="text-on-surface">{slug}.{rootLabel}</b> and see your sessions.
+                </p>
+                <a href={`${root}/start?slug=${encodeURIComponent(slug)}`} className="btn-ghost pressable mt-5 w-full">Claim this address</a>
+              </>
+            )}
           </div>
         </div>
       </main>
