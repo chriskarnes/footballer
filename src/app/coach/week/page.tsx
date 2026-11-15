@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GroupGone } from '@/components/coach/GroupGone';
 import { staffOnly } from '@/components/coach/Gate';
 import { PageHead } from '@/components/coach/PageHead';
 import { PLAYER_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
@@ -50,6 +51,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           ))}
         </nav>
       )}
+      <GroupGone group={group} groups={content.groups} />
 
       {!!unset && (
         <p className="mt-4 text-body-sm text-on-surface-variant">

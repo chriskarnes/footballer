@@ -18,10 +18,29 @@ const PER_ACADEMY_MONTH = Number(process.env.AI_ACADEMY_MONTHLY_LIMIT) || 600;
 /** Each academy's monthly ceiling, for the admin panel. */
 export const aiMonthlyLimit = () => PER_ACADEMY_MONTH;
 
+/**
+ * The instant a local day starts in `tz`, as a UTC timestamp. created_at is
+ * an instant, so a bare 'YYYY-MM-DD' would cut at UTC midnight: hours off the
+ * academy's own month or week, either side. Checked twice so a clock change
+ * between UTC midnight and the local one still lands on the hour.
+ */
+export function zoneMidnight(day: string, tz: string): string {
+  const wall = Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10));
+  const offset = (t: number) => {
+    const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - t;
+  };
+  let t = wall - offset(wall);
+  t = wall - offset(t);
+  return new Date(t).toISOString();
+}
+
 /** How much AI this academy has used this month, against its limit. Null when it can't say. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function usage(db: any, academyId: string, timeZone: string): Promise<{ used: number; limit: number; on: boolean } | null> {
-  const monthStart = `${localDate(new Date(), timeZone).slice(0, 7)}-01`;
+  const monthStart = zoneMidnight(`${localDate(new Date(), timeZone).slice(0, 7)}-01`, timeZone);
   const { count, error } = await db.from('ai_usage').select('id', { count: 'exact', head: true })
     .eq('academy_id', academyId).gte('created_at', monthStart);
   return error ? null : { used: count ?? 0, limit: PER_ACADEMY_MONTH, on: !!process.env.GEMINI_API_KEY };
@@ -42,23 +61,47 @@ export function client(): GoogleGenAI | null {
   return key ? new GoogleGenAI({ apiKey: key }) : null;
 }
 
-/** May this call go to the AI? Counts what the log already holds. */
+/**
+ * Calls let through but not logged yet, on this server. The log is only
+ * written once the AI answers, seconds later, so two builds started together
+ * would both read the same count and both go. Counting these as well closes
+ * that gap on one server; across servers it stays open until the check and
+ * the log are one step in the database (an RPC, which needs a migration).
+ * A reservation lapses after two minutes in case its call never logs.
+ */
+const inFlight = new Map<string, number[]>();
+const HOLD_MS = 120_000;
+function held(key: string) {
+  const now = Date.now();
+  const live = (inFlight.get(key) ?? []).filter((t) => now - t < HOLD_MS);
+  if (live.length) inFlight.set(key, live); else inFlight.delete(key);
+  return live.length;
+}
+const hold = (key: string) => inFlight.set(key, [...(inFlight.get(key) ?? []), Date.now()]);
+const release = (key: string) => { const l = inFlight.get(key); if (l?.length) l.shift(); };
+const playerKey = (academyId: string, playerId: string, kind: AiKind) => `${academyId}:${playerId}:${kind}`;
+
+/** May this call go to the AI? Counts what the log already holds, and calls still out. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function allowed(db: any, a: { academyId: string; timeZone: string; playerId: string | null; kind: AiKind }): Promise<{ ok: true } | { ok: false; why: Denied }> {
   if (!process.env.GEMINI_API_KEY) return { ok: false, why: 'no_key' };
   const today = localDate(new Date(), a.timeZone);
-  const monthStart = `${today.slice(0, 7)}-01`;
+  const monthStart = zoneMidnight(`${today.slice(0, 7)}-01`, a.timeZone);
+  const weekStart = zoneMidnight(mondayOf(today), a.timeZone);
   const [month, player] = await Promise.all([
     db.from('ai_usage').select('id', { count: 'exact', head: true }).eq('academy_id', a.academyId).gte('created_at', monthStart),
     a.playerId
       ? db.from('ai_usage').select('id', { count: 'exact', head: true })
-          .eq('academy_id', a.academyId).eq('player_id', a.playerId).eq('kind', a.kind).gte('created_at', mondayOf(today))
+          .eq('academy_id', a.academyId).eq('player_id', a.playerId).eq('kind', a.kind).gte('created_at', weekStart)
       : Promise.resolve({ count: 0, error: null }),
   ]);
   // Can't read the log, can't keep to the limits: don't spend.
   if (month.error || player.error) return { ok: false, why: 'no_log' };
-  if ((month.count ?? 0) >= PER_ACADEMY_MONTH) return { ok: false, why: 'academy_limit' };
-  if ((player.count ?? 0) >= PER_PLAYER_WEEK) return { ok: false, why: 'player_limit' };
+  if ((month.count ?? 0) + held(a.academyId) >= PER_ACADEMY_MONTH) return { ok: false, why: 'academy_limit' };
+  const pk = a.playerId ? playerKey(a.academyId, a.playerId, a.kind) : null;
+  if ((player.count ?? 0) + (pk ? held(pk) : 0) >= PER_PLAYER_WEEK) return { ok: false, why: 'player_limit' };
+  hold(a.academyId);
+  if (pk) hold(pk);
   return { ok: true };
 }
 
@@ -78,7 +121,11 @@ export async function logCall(db: any, row: {
       output_tokens: (u.candidatesTokenCount ?? 0) + (u.thoughtsTokenCount ?? 0),
       input_hash: row.inputHash ?? null,
     });
-  } catch { /* logged or not, carry on */ }
+  } catch { /* logged or not, carry on */ } finally {
+    // In the log now (or never will be): its count takes over from the hold.
+    release(row.academyId);
+    if (row.playerId) release(playerKey(row.academyId, row.playerId, row.kind));
+  }
 }
 
 /** A short stable fingerprint of what went in to a call. */

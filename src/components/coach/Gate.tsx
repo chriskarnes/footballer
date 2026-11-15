@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { SignIn } from '@/components/SignIn';
 import { getViewer } from '@/lib/viewer';
 import { SignOut } from '@/components/SignOut';
@@ -37,10 +38,14 @@ export async function staffOnly(next: string) {
     return { page: <Note title={`${v.academy.name} trainers`}>Sign in with your trainer account.<div className="mt-5"><SignIn next={next} /></div></Note> };
   }
   if (!v.staff) {
+    // A player who wandered in has somewhere to go back to: their own training.
     return { page: <Note title="Trainers only">
       This account ({v.user.email}) isn&rsquo;t a trainer at {v.academy.name}. Sign in with your trainer
       account, or ask the owner for the trainer invite link.
-      <div className="mt-5"><SignOut to={next} className="btn-ghost pressable" /></div>
+      <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+        {v.role === 'player' && <Link href="/" className="btn-primary pressable">Back to your training</Link>}
+        <SignOut to={next} className="btn-ghost pressable" />
+      </div>
     </Note> };
   }
   return { viewer: v as typeof v & { academy: NonNullable<typeof v.academy>; user: NonNullable<typeof v.user> } };

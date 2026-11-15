@@ -116,6 +116,7 @@ export default async function PlayerPage({ params }: {
                       <ProgramSetup userId={p.user_id} first={p.first}
                         groups={content.groups.filter((g) => !g.archived).map((g) => ({ id: g.id, name: g.name,
                           member: content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id) }))}
+                        finished={content.groups.filter((g) => g.archived).length}
                         programs={content.programs}
                         own={content.playerPrograms.filter((x) => x.user_id === p.user_id).map((x) => ({
                           ...x, label: content.programs.find((pr) => pr.id === x.program_id)?.name ?? 'Program' }))} />

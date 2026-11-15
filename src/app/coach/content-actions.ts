@@ -240,6 +240,8 @@ export async function saveLibrarySession(input: {
     if (!input.drillIds.length) return { ok: false, error: 'Add at least one drill.' };
     const drill_ids = input.drillIds.slice(0, 30);
     await ownDrills(v, drill_ids);
+    // Checked before the session is made, so a bad week doesn't make one only to take it back.
+    if (input.place) await ownProgram(v, input.place.programId, input.place.week);
 
     if (input.libraryId && !input.relink) {
       const { data: hit, error } = await v.db.from('library_sessions').update({ name, drill_ids })
@@ -271,7 +273,8 @@ export async function saveLibrarySession(input: {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function place(v: any, s: { id: string; name: string; drill_ids: string[] }, programId: string, week: number): Promise<string | null> {
-  await ownProgram(v, programId);
+  // With the week: one the program doesn't have would save and never show.
+  await ownProgram(v, programId, week);
   const { count } = await v.db.from('academy_sessions').select('id', { count: 'exact', head: true })
     .eq('academy_id', v.academy.id).eq('program_id', programId).eq('week', week);
   const { error } = await v.db.from('academy_sessions').insert({

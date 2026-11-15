@@ -47,10 +47,13 @@ export function JoinRequests({ requests, owner }: { requests: JoinRequest[]; own
               <p className="mt-3 text-body-sm text-on-surface-variant">The academy&rsquo;s owner lets trainers in.</p>
             ) : (
               <div className="mt-3 grid grid-cols-2 gap-2.5">
-                <button type="button" disabled={busy} className="btn-primary btn-sm pressable" onClick={() => answer(r.user_id, true)}>
+                {/* Named, so a list of them reads "Let Sam in", not "Let in, Let in". */}
+                <button type="button" disabled={busy} className="btn-primary btn-sm pressable" onClick={() => answer(r.user_id, true)}
+                        aria-label={r.role === 'trainer' ? `Let ${r.name} in as trainer` : `Let ${r.name} in`}>
                   {r.role === 'trainer' ? 'Let in as trainer' : 'Let in'}
                 </button>
-                <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => answer(r.user_id, false)}>Decline</button>
+                <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => answer(r.user_id, false)}
+                        aria-label={`Decline ${r.name}`}>Decline</button>
               </div>
             )}
           </li>

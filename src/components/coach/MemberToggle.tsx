@@ -1,6 +1,6 @@
 'use client';
 import { offline } from '@/lib/plain-error';
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { setMembership } from '@/app/coach/content-actions';
 import { useToast } from './Toast';
@@ -15,8 +15,13 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
   const router = useRouter();
   const toast = useToast();
   const first = name.split(' ')[0];
+  const errId = useId();
+  // The error sits after the switch, not in it: an alert inside a button is
+  // read as part of its name, and a switch's name is just who it's for.
+  // One element, so the roster's dividers stay between players, not under the switch.
   return (
-    <button type="button" role="switch" aria-checked={on} disabled={busy}
+    <div>
+    <button type="button" role="switch" aria-checked={on} disabled={busy} aria-describedby={err ? errId : undefined}
             onClick={() => start(async () => {
               const next = !on; setOn(next); setErr('');
               const r = await setMembership(groupId, userId, next).catch(offline);
@@ -30,8 +35,10 @@ export function MemberToggle({ groupId, userId, name, detail, initial }: {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-body-lg font-semibold text-on-surface">{name}</span>
-        {(detail || err) && <span role={err ? 'alert' : undefined} className={`block text-body-sm ${err ? '' : 'truncate'} ${err ? 'font-semibold text-on-surface' : 'text-on-surface-variant'}`}>{err || detail}</span>}
+        {detail && <span className="block truncate text-body-sm text-on-surface-variant">{detail}</span>}
       </span>
     </button>
+    {err && <p id={errId} role="alert" className="pb-3 pl-12 pr-4 text-body-sm font-semibold text-on-surface">{err}</p>}
+    </div>
   );
 }

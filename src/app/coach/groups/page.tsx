@@ -68,6 +68,11 @@ export default async function GroupsPage() {
             );
           })}
         </ul>
+      ) : archived.length ? (
+        // Every group has finished: "No groups yet" would read as if they'd gone.
+        <Empty title="No groups running" href="/coach/groups/new" cta="Make a group">
+          Every group has finished. They&rsquo;re under Finished groups below, with their players and history.
+        </Empty>
       ) : (
         <Empty title="No groups yet" href="/coach/groups/new" cta="Make a group">
           A group is players who train together, like &ldquo;U12 Tuesday&rdquo;. Give it a program and everyone in it gets that week&rsquo;s homework. A player can be in more than one.
@@ -81,7 +86,7 @@ export default async function GroupsPage() {
       )}
 
       {!!archived.length && (
-        <details className="mt-8">
+        <details id="finished" className="mt-8" open={!active.length}>
           <summary className="cursor-pointer text-body font-semibold text-on-surface-variant">Finished groups · {archived.length}</summary>
           <ul className="card mt-3 divide-y divide-outline-variant">
             {archived.map((g) => (

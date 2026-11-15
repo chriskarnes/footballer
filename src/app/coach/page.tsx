@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GroupGone } from '@/components/coach/GroupGone';
 import { staffOnly } from '@/components/coach/Gate';
 import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { InviteLink } from '@/components/coach/InviteLink';
@@ -126,6 +127,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           ))}
         </nav>
       )}
+      <GroupGone group={group} groups={content.groups} />
 
       {error && <p className="mt-4 text-body text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
 

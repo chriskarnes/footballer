@@ -5,7 +5,7 @@ import { addDays, localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import { loadContent, loadDefaults, targetFor } from '@/lib/academy-data';
 import { MAX_MINUTES, MIN_MINUTES, buildPlayerWeek, fitToTarget, type BuiltSession, type Feel, type PastWeek } from '@/lib/week-builder';
 import { teamDays, type CustomRow } from '@/lib/academy-week';
-import { allowed, DENIED, fingerprint, logCall } from '@/lib/ai';
+import { allowed, DENIED, fingerprint, logCall, zoneMidnight } from '@/lib/ai';
 import { proposeWeek } from '@/lib/ai-week';
 import { loadPlayers } from '@/lib/coach-data';
 import { FOCUS_LABELS } from '@/lib/types';
@@ -149,12 +149,23 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
     const sched = c.schedules.find((s) => s.user_id === userId);
     const meets = c.groups.filter((g) => !g.archived && g.meets_weekday !== null
       && c.memberships.some((m) => m.group_id === g.id && m.user_id === userId)).map((g) => g.meets_weekday as number);
+    // The week already built, and which of it is done. Sessions already done
+    // stay as they are and count toward the target; the new week fills the
+    // rest. Read first, so the rules build only what's still to do.
+    const old = await v.db.from('player_week_sessions').select('id, weekday, position').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
+    if (old.error) return { ok: false, error: missing(old.error.message) };
+    const before = (old.data ?? []) as { id: string; weekday: number | null; position: number }[];
+    const finished = await doneOf(v.db, v.academy.id, v.academy.timeZone, userId, week_of, before.map((x) => x.id));
+    const kept = before.filter((x) => finished.has(x.id));
+    const oldIds = before.filter((x) => !finished.has(x.id)).map((x) => x.id);
+    const owed = t.sessions - kept.length;
+    if (owed <= 0) return { ok: false, error: 'They’ve done every session that week already, so there’s nothing to rebuild.' };
     // This week, built mid-week: only the days left, and no more sessions
     // than there are days for. On days already gone they'd only read as missed.
     const from = which === 'this' ? weekdayOf(today) : 0;
     const busy = { ...teamDays(sched), meets, from };
-    const fit = Math.min(t.sessions, 7 - from);
-    const past = await pastWeeks(v.db, v.academy.id, c.custom, userId, week_of);
+    const fit = Math.min(owed, 7 - from);
+    const past = await pastWeeks(v.db, v.academy.id, v.academy.timeZone, c.custom, userId, week_of);
     const recent = past.slice(0, 2).flatMap((w) => w.sessions.flatMap((x) => x.drill_ids));
     // Step-ups off: no history, so every drill starts at its own amount and
     // nothing carries over; recent drills still give way to fresh ones.
@@ -190,20 +201,12 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
 
     // The new week goes in before the old one comes out, so a failed write
     // leaves the player the week they had, not none. Their own extras stay.
-    const old = await v.db.from('player_week_sessions').select('id, weekday, position').eq('academy_id', v.academy.id).eq('user_id', userId).eq('week_of', week_of).neq('made_by', 'player');
-    if (old.error) return { ok: false, error: missing(old.error.message) };
-    const before = (old.data ?? []) as { id: string; weekday: number | null; position: number }[];
-    // Sessions already done stay as they are; the new week fills the rest:
-    // fewer sessions, and off the days already done where it can.
-    const finished = await doneOf(v.db, v.academy.id, userId, week_of, before.map((x) => x.id));
-    const kept = before.filter((x) => finished.has(x.id));
-    const oldIds = before.filter((x) => !finished.has(x.id)).map((x) => x.id);
-    if (kept.length) {
-      const room = rows.length - kept.length;
-      if (room <= 0) return { ok: false, error: 'They’ve done every session that week already, so there’s nothing to rebuild.' };
+    // The rules built only what's owed; if the AI's picks came back with more,
+    // trim to it, off the days already done where it can.
+    if (rows.length > fit) {
       const doneDays = new Set(kept.map((x) => x.weekday));
       const order = [...rows.keys()].sort((a, b) => Number(doneDays.has(rows[a].weekday)) - Number(doneDays.has(rows[b].weekday)) || a - b);
-      const pick = new Set(order.slice(0, room));
+      const pick = new Set(order.slice(0, fit));
       rows = rows.filter((_, i) => pick.has(i));
     }
     const offset = kept.length ? Math.max(...kept.map((x) => x.position)) + 1 : 0;
@@ -240,7 +243,8 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
       const short = `Sessions come to about ${shortest} of ${t.minutes} min: add more drills${t.focus.length ? ` for ${t.focus.map((f) => FOCUS_LABELS[f as keyof typeof FOCUS_LABELS] ?? f).join(', ')}` : ''} to fill them`;
       why = why ? `${short}. ${why}` : short;
     }
-    if (fit < t.sessions) {
+    // Days ran out before the target did (sessions already done count toward it).
+    if (fit < owed) {
       const left = `${fit} ${fit === 1 ? 'session' : 'sessions'} for the ${fit === 1 ? 'day' : 'days'} left this week`;
       why = why ? `${left}. ${why}` : left;
     }
@@ -258,20 +262,21 @@ export async function buildWeekFor(userId: string, which: 'this' | 'next'): Prom
  * with its feel and ticks, and still counts for the next week's levels.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function doneOf(db: any, academyId: string, userId: string, since: string, ids: string[]): Promise<Set<string>> {
+async function doneOf(db: any, academyId: string, timeZone: string, userId: string, since: string, ids: string[]): Promise<Set<string>> {
   if (!ids.length) return new Set();
-  const { data, error } = await db.rpc('academy_completions', { p_academy: academyId, p_since: `${since}T00:00:00Z` });
+  // The week starts at Monday midnight where the academy is, not in UTC.
+  const { data, error } = await db.rpc('academy_completions', { p_academy: academyId, p_since: zoneMidnight(since, timeZone) });
   if (error) throw error;
   return new Set(((data ?? []) as { user_id: string; source_ref: string | null }[])
     .filter((r) => r.user_id === userId && r.source_ref && ids.includes(r.source_ref)).map((r) => r.source_ref as string));
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function pastWeeks(db: any, academyId: string, custom: CustomRow[], userId: string, weekOf: string): Promise<PastWeek[]> {
+async function pastWeeks(db: any, academyId: string, timeZone: string, custom: CustomRow[], userId: string, weekOf: string): Promise<PastWeek[]> {
   // The trainer's weeks only: a player's own extras don't set levels or blocks.
   const mine = custom.filter((x) => x.user_id === userId && x.week_of < weekOf && x.made_by !== 'player');
   if (!mine.length) return [];
-  const since = `${mine.map((x) => x.week_of).sort()[0]}T00:00:00Z`;
+  const since = zoneMidnight(mine.map((x) => x.week_of).sort()[0], timeZone);
   const { data } = await db.rpc('academy_completions', { p_academy: academyId, p_since: since });
   const runs = ((data ?? []) as { user_id: string; source: string; source_ref: string | null; feel?: Feel | null; done_ids?: string[] | null }[])
     .filter((r) => r.user_id === userId && r.source === 'academy' && r.source_ref);

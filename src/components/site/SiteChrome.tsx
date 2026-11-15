@@ -1,17 +1,24 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
+import { ROOT_DOMAIN } from '@/lib/tenant';
 
 /**
  * The marketing site's frame: wordmark, two links and the one action, then
  * the page, then a quiet footer. Wider than the app (which is a phone column),
  * but each page still sets its own measure for text.
  */
-export function SiteChrome({ children }: { children: React.ReactNode }) {
+export async function SiteChrome({ children }: { children: React.ReactNode }) {
+  // The site's home is / only on train.futbol itself; on localhost and
+  // preview addresses / is the app, and the site's home is /site.
+  const h = await headers();
+  const host = (h.get('x-forwarded-host') ?? h.get('host') ?? '').toLowerCase().replace(/:\d+$/, '');
+  const home = host === ROOT_DOMAIN || host === `www.${ROOT_DOMAIN}` ? '/' : '/site';
   return (
     <div className="safe-x flex min-h-dvh flex-col overflow-x-clip">
       {/* On the green: every page opens dark (see SiteHero). */}
       <div className="site-dark bg-site-ink">
         <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 pb-2 pt-6 sm:px-8">
-          <Link href="/" className="font-brand text-[20px] tracking-brand-snug text-white">
+          <Link href={home} className="font-brand text-[20px] tracking-brand-snug text-white">
             <span className="font-extrabold">Train</span><span className="font-medium text-site-lime">.futbol</span>
           </Link>
           <nav className="flex items-center gap-5 text-[14px] font-semibold text-white/85">

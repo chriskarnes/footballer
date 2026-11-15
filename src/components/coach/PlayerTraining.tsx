@@ -56,9 +56,11 @@ export function WeekList({ first, week }: { first: string; week: WeekItem[] }) {
 }
 
 /** Where a program comes from: their groups (tap to change), and programs of their own. */
-export function ProgramSetup({ userId, first, groups, programs, own }: {
+export function ProgramSetup({ userId, first, groups, finished = 0, programs, own }: {
   userId: string; first: string;
   groups: { id: string; name: string; member: boolean }[];
+  /** How many groups have finished: with none running, they're where to look. */
+  finished?: number;
   programs: { id: string; name: string; weeks: number }[];
   own: { program_id: string; starts_on: string; label: string }[];
 }) {
@@ -79,6 +81,10 @@ export function ProgramSetup({ userId, first, groups, programs, own }: {
                 g.member ? `${first} is out of ${g.name}.` : `${first} is in ${g.name}.`)}>{g.name}</Chip>
             ))}
           </div>
+        ) : finished ? (
+          <p className="text-body text-on-surface-variant">
+            Every group has finished. <Link href="/coach/groups#finished" className="font-semibold text-on-surface underline underline-offset-4">See finished groups</Link> or <Link href="/coach/groups/new" className="font-semibold text-on-surface underline underline-offset-4">make a new one</Link>.
+          </p>
         ) : <p className="text-body text-on-surface-variant">No groups yet. <Link href="/coach/groups/new" className="font-semibold text-on-surface underline underline-offset-4">Make one</Link>.</p>}
       </section>
 

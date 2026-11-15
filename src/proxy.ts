@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { ROOT_DOMAIN, slugFromHost } from '@/lib/tenant';
+import { ROOT_DOMAIN, rootOrigin, slugFromHost } from '@/lib/tenant';
 
 /**
  * The marketing site lives on the bare domain. Its pages are files under
@@ -61,7 +61,18 @@ function route(req: NextRequest): NextResponse {
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? '';
   // Carries any renewed sign-in on to the page (freshSession set it on req).
   const pass = () => NextResponse.next({ request: { headers: new Headers(req.headers) } });
-  if (slugFromHost(host)) return pass();
+  if (slugFromHost(host)) {
+    // The marketing pages are the main site's, not inside an academy's app.
+    if (pathname === '/site' || pathname.startsWith('/site/')) {
+      try {
+        const root = rootOrigin(`${req.nextUrl.protocol}//${host}`);
+        // Not in dev: Next reads demo.localhost and localhost as one host,
+        // so the redirect would come back here. On train.futbol they're two.
+        if (!new URL(root).hostname.endsWith('localhost')) return NextResponse.redirect(new URL(pathname, root));
+      } catch { /* fall through */ }
+    }
+    return pass();
+  }
 
   // A sign-in link that failed comes back from Supabase to the site's front
   // door with an error on it; on the bare domain that's the marketing page,
