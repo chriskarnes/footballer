@@ -4,7 +4,7 @@ import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'For trainers · Train.futbol',
-  description: 'For private soccer trainers. Give your players drills to do at home between sessions, see who did them, and stay in touch all week. Free for trainers.',
+  description: 'For private soccer trainers. Give your players drills to do at home between sessions, see who did them, and stay in touch all week. $10 a player a month.',
 };
 
 /**
@@ -59,36 +59,12 @@ export default function TrainersPage() {
       </section>
 
       <section id="pricing" className="mt-24 scroll-mt-8">
-        <SectionHead eyebrow="Pricing" title="Free for trainers.">
-          Your players&rsquo; families pay $10 a month for each player, after 14 days free. You pay nothing, and there&rsquo;s nothing for you to collect.
+        <SectionHead eyebrow="Pricing" title="$10 a player, per month.">
+          Or charge your players however you like, and it&rsquo;s $5 a player.
         </SectionHead>
-        <div className="mt-8 grid max-w-[44rem] gap-4 sm:grid-cols-2">
-          <div className="card p-6 sm:p-7">
-            <p className="eyebrow">Families pay</p>
-            <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-brand text-[56px] font-extrabold leading-none tracking-brand-snug text-site-ink">$0</span>
-              <span className="text-[16px] font-semibold text-on-surface-variant">for you</span>
-            </div>
-            <p className="mt-4 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Each player trains free for 14 days. Then their family adds a card and pays $10 a month to keep going.
-              You see who&rsquo;s paying, and a player who leaves stops being charged.
-            </p>
-          </div>
-          <div className="card-flat p-6 sm:p-7">
-            <p className="eyebrow">Or you cover it</p>
-            <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-brand text-[56px] font-extrabold leading-none tracking-brand-snug text-site-ink">$5</span>
-              <span className="text-[16px] font-semibold text-on-surface-variant">per player, per month</span>
-            </div>
-            <p className="mt-4 text-[14.5px] leading-relaxed text-on-surface-variant">
-              Include it in what families already pay you, or in a team&rsquo;s fees. You pay for the players on your page
-              and your families pay nothing.
-            </p>
-          </div>
-        </div>
-        <ul className="mt-5 max-w-[44rem] space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
-          <li>No setup fee and no contract, either way. Families can cancel any time.</li>
-          <li>Payments are by card, handled by Stripe.</li>
+        <ul className="mt-6 max-w-[40rem] space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
+          <li>Every player&rsquo;s first 14 days are free.</li>
+          <li>No setup fee and no contract. A player who leaves stops being charged.</li>
         </ul>
       </section>
 
@@ -103,10 +79,6 @@ export default function TrainersPage() {
           </Faq>
           <Faq q="Can I introduce myself to players first?">
             Yes. Make your first session an introduction: a short video of you, what you&rsquo;ll work on over the next few weeks, and one easy drill.
-          </Faq>
-          <Faq q="Will my players&rsquo; families pay $10 a month?">
-            They get 14 days free first, so they see their child using it before they&rsquo;re asked. It&rsquo;s a small part of what
-            a family spends on training, and it comes with your name on it. If you&rsquo;d rather they weren&rsquo;t asked, cover it yourself.
           </Faq>
           <Faq q="Who sees what?">
             You see all your players&rsquo; training. So does anyone you add to help you. Players see only their own training and the notes you send them. Other trainers and your players&rsquo; clubs see nothing.
