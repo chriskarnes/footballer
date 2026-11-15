@@ -8,7 +8,7 @@ not predictions. By day 90 you will have your own numbers for the ones that matt
 most, and you should replace mine with them.
 
 **Revised 15 November 2026 for the new price.** Trainers pay nothing. Families pay
-Train.futbol directly: $10 a month per player, by card, after 14 days free. A trainer
+Train.futbol directly: $10 a month per player, by card, after 7 days free. A trainer
 who would rather include it can cover it at $5 a player. The earlier versions of this
 document, built on trainers paying $5 a player, no longer apply.
 
@@ -61,7 +61,7 @@ Three cautions:
 
 In all three, the families of the three founding trainers pay nothing through month
 4, and a new trainer's families pay from halfway through their first month, after
-the 14 free days.
+the 7 free days.
 
 ### Where each ends up
 
@@ -301,6 +301,7 @@ Fractions are averages: 8.1 trainers whose families are paying means about eight
 
 How the model works: each active trainer has a steady number of paying families. The
 three founding trainers' families pay nothing through month 4. A new trainer's
-families count for half of their first month, because of the 14 free days. From
+families count for half of their first month. That was set for 14 free days; with 7
+it slightly understates a new trainer's first month. From
 month 4, the trainers you have shrink by the leaving rate and grow by the new
 trainers each month. Running costs include the card fee on every family's payment.

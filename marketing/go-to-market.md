@@ -39,13 +39,13 @@ Three reasons a trainer says yes, in the order they care:
 ## The offer
 
 **For trainers: free.** Families pay Train.futbol directly for their player: $10 a
-month by card, with the first 14 days free, and they can cancel any time.
+month by card, with the first 7 days free, and they can cancel any time.
 
 **If a trainer or club would rather include it,** they cover it themselves at $5 a
 player a month, and their families pay nothing.
 
 **Founding trainers:** the first 3 are set up by you personally, and their players'
-families get the first 3 months free instead of 14 days. In return the trainer gives
+families get the first 3 months free instead of 7 days. In return the trainer gives
 honest feedback and, if they're happy, a quote.
 
 Once the three places are taken, take the 3-months line out of the emails, the deck
@@ -120,7 +120,7 @@ the message before sending more.
   page, let other trainers' players ask their trainer for it.
 - **Ads.** Start the small test in `ads.md` once trainer zero is on camera.
 - **Watch the first payments.** For trainers four to ten, families reach the end of
-  their 14 free days during this stretch. The share who subscribe is the truest number
+  their 7 free days during this stretch. The share who subscribe is the truest number
   you will get. The founding trainers' families are free for 3 months, so their first
   payments fall after day 90.
 

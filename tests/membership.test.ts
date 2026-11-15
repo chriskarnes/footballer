@@ -10,12 +10,12 @@ const row = (patch: Partial<PlayerBillingRow> = {}): PlayerBillingRow => ({
   current_period_end: '2026-12-10T00:00:00Z', trial_end: null, cancel_at_period_end: false, ...patch,
 });
 
-test('terms read what the database gives, with $10 and 14 days when it gives nothing usable', () => {
+test('terms read what the database gives, with $10 and 7 days when it gives nothing usable', () => {
   assert.equal(toTerms(null), null);
   assert.deepEqual(toTerms({ mode: 'players_pay', price_cents: 1500, trial_days: 90, since: '2026-11-01T00:00:00Z' }),
     { mode: 'players_pay', priceCents: 1500, trialDays: 90, since: '2026-11-01T00:00:00Z' });
   assert.deepEqual(toTerms({ mode: 'anything', price_cents: null, trial_days: null }),
-    { mode: 'trainer_pays', priceCents: 1000, trialDays: 14, since: null });
+    { mode: 'trainer_pays', priceCents: 1000, trialDays: 7, since: null });
 });
 
 test('where the trainer pays, a player is never asked', () => {

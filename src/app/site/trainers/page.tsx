@@ -63,7 +63,7 @@ export default function TrainersPage() {
           Or charge your players however you like, and it&rsquo;s $5 a player.
         </SectionHead>
         <ul className="mt-6 max-w-[40rem] space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
-          <li>Every player&rsquo;s first 14 days are free.</li>
+          <li>Every player&rsquo;s first 7 days are free.</li>
           <li>No setup fee and no contract. A player who leaves stops being charged.</li>
         </ul>
       </section>

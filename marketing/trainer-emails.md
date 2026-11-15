@@ -35,7 +35,7 @@ with your videos, and you see who did them before the next session.
 Each trainer gets their own page (yourname.train.futbol) with their name and colors.
 Players join from a link, with no app to download.
 
-It's free for you. Families pay $10 a month for their player, after 14 days free.
+It's free for you. Families pay $10 a month for their player, after 7 days free.
 I'm setting up the first 3 trainers myself, and their families get the first 3
 months free. Could I show you in 15 minutes this week? Or look at what a player sees here:
 demo.train.futbol

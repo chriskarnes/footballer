@@ -19,7 +19,7 @@ The other things you'll need, in the order you'll reach for them.
 
 **Decide**
 
-- [x] The price: free for trainers. Families pay $10 a month after 14 days free. A
+- [x] The price: free for trainers. Families pay $10 a month after 7 days free. A
       trainer can cover it at $5 a player instead.
 - [x] The founding offer: families of the first 3 trainers get 3 months free
 - [ ] Check /trainers and /players state the new price
@@ -94,7 +94,7 @@ by text. This is that same video, here."
 
 - "What would you want in your first three sessions?"
 - "I'll set your page up myself, and it costs you nothing. Families pay $10 a month
-  for their player after 14 days free."
+  for their player after 7 days free."
 - "Would your families pay that, or would you rather cover it yourself at $5 a
   player?" Write down the answer; it's the most useful thing you'll learn.
 - "Can we do the setup on [day]? I need 20 minutes and your drill list."
@@ -130,7 +130,7 @@ players, and neither can your players' clubs.
 
 **"Will parents pay $10 a month?"**
 A family whose player trains with you weekly already pays you $320 to $500 a month.
-This is $10 on top, for a plan that makes those sessions count. The first 14 days are
+This is $10 on top, for a plan that makes those sessions count. The first 7 days are
 free, so they see their player using it before they pay, and they can cancel any time.
 
 **"I don't want my clients charged by someone else."**
@@ -193,7 +193,7 @@ Getting players on is where most trainers stall, so give them the words.
 >
 > Here's the link to join: [invite link]
 >
-> There's no app to download. It's free for the first 14 days. After that it's $10 a
+> There's no app to download. It's free for the first 7 days. After that it's $10 a
 > month, paid by card to Train.futbol, and you can cancel any time.
 >
 > For players under 13, please sign in with your own email. Tell me which days
@@ -201,7 +201,7 @@ Getting players on is where most trainers stall, so give them the words.
 >
 > [Trainer name]
 
-For a founding trainer, change "14 days" to "3 months". If the trainer is covering
+For a founding trainer, change "7 days" to "3 months". If the trainer is covering
 it, replace the two price sentences with "It's included in your training."
 
 ---
@@ -228,7 +228,7 @@ For printing, or pasting into a message when someone asks "what is it?"
 > - Nothing for players to download
 >
 > **Price:** free for trainers, with no setup fee and no contract. Families pay $10 a
-> month for their player after 14 days free, and can cancel any time. If you'd rather
+> month for their player after 7 days free, and can cancel any time. If you'd rather
 > include it, cover it yourself at $5 a player a month. Founding trainers: your
 > families get their first 3 months free.
 >

@@ -6,7 +6,7 @@
 import { dollars, isLive } from './billing';
 
 export const DEFAULT_PLAYER_PRICE_CENTS = 1000;
-export const DEFAULT_TRIAL_DAYS = 14;
+export const DEFAULT_TRIAL_DAYS = 7;
 
 /** What an academy charges, as academy_terms() gives it. */
 export type Terms = {
