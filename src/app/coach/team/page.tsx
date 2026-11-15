@@ -11,6 +11,8 @@ import { readSetup } from '@/lib/setup';
 import { ListedSwitch } from '@/components/coach/Setup';
 import { RemoveTrainer } from '@/components/coach/RemovePlayer';
 import { billingOn } from '@/lib/billing-server';
+import { readTerms } from '@/lib/membership-server';
+import { dollars } from '@/lib/billing';
 
 export const metadata = { title: 'Academy', robots: { index: false } };
 
@@ -35,6 +37,7 @@ export default async function TeamPage() {
   ]);
   const code = (r: string) => (invites ?? []).find((i: { role: string }) => i.role === r)?.code as string | undefined;
   const owner = role === 'owner';
+  const terms = owner ? await readTerms(db, academy.id) : null;
 
   return (
     <div className="animate-pop">
@@ -106,7 +109,7 @@ export default async function TeamPage() {
       {owner && billingOn() && (
         <Link href="/coach/billing" className="card pressable mt-9 flex min-h-14 items-center justify-between px-4">
           <span className="text-body font-semibold text-on-surface">Billing</span>
-          <span className="text-body text-on-surface-variant">$5 a player a month ›</span>
+          <span className="text-body text-on-surface-variant">{terms?.mode === 'players_pay' ? `Families pay ${dollars(terms.priceCents)} a month ›` : '$5 a player a month ›'}</span>
         </Link>
       )}
 

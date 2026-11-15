@@ -1,6 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
+import { cancelPlayerBilling } from '@/lib/billing-server';
 
 type Result = { ok: true } | { ok: false; error: string };
 const LATER = 'That isn’t switched on yet. Try again later.';
@@ -16,6 +17,8 @@ export async function leaveAcademy(): Promise<Result> {
   if (v.role === 'owner') return { ok: false, error: 'You own this academy, so you can’t leave it. Ask us to hand it over or close it.' };
   if (!v.role) return { ok: true };
   const { error } = await v.db.rpc('leave_academy', { p_academy: v.academy.id });
+  // Gone from here: their family stops paying for it (0038).
+  if (!error) await cancelPlayerBilling(v.user.id, v.academy.id);
   if (error) {
     console.error('leave_academy', error);
     return { ok: false, error: error.code === 'PGRST202' ? LATER
@@ -35,6 +38,11 @@ export async function leaveAcademy(): Promise<Result> {
 export async function deleteAccount(): Promise<Result> {
   const v = await getViewer();
   if (!v.user) return { ok: false, error: 'You’re not signed in.' };
+  // Before the account goes, while its memberships can still be found: a
+  // deleted account must not go on being charged (0038). An owner's delete
+  // is refused below, so theirs are left alone.
+  const { data: owns } = await v.db.from('academy_members').select('academy_id').eq('user_id', v.user.id).eq('role', 'owner').limit(1);
+  if (!owns?.length) await cancelPlayerBilling(v.user.id);
   const { error } = await v.db.rpc('delete_account');
   if (error) {
     console.error('delete_account', error);

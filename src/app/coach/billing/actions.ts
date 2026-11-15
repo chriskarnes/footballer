@@ -4,6 +4,7 @@ import { getViewer } from '@/lib/viewer';
 import { plain } from '@/lib/plain-error';
 import { isLive, trialEndFor } from '@/lib/billing';
 import { billingDb, ensurePrice, playerCount, readBilling, stripe } from '@/lib/billing-server';
+import { readTerms } from '@/lib/membership-server';
 
 type Go = { ok: true; url: string } | { ok: false; error: string };
 
@@ -31,6 +32,7 @@ export async function startCheckout(): Promise<Go> {
   if (!o) return { ok: false, error: 'Only the academy’s owner can set up billing.' };
   if (o.off) return { ok: false, error: NOT_ON };
   try {
+    if ((await readTerms(o.db, o.academy.id))?.mode === 'players_pay') return { ok: false, error: 'Your players’ families pay here, so there’s nothing for you to pay.' };
     const row = await readBilling(o.db, o.academy.id);
     // Already paying: the card is changed on Stripe's own page, not by starting again.
     if (row?.stripe_subscription_id && isLive(row.status)) return openPortal();

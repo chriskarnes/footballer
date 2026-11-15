@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { plain } from '@/lib/plain-error';
 import { localDate, mondayOf } from '@/lib/progress';
+import { cancelPlayerBilling } from '@/lib/billing-server';
 
 /**
  * The trainer area's writes. Each goes through a database function that
@@ -56,6 +57,8 @@ export async function removeMember(userId: string) {
     const { data: still } = await v.db.from('academy_members').select('user_id').eq('academy_id', v.academy.id).eq('user_id', userId).maybeSingle();
     if (still) return { ok: false as const, error: 'You can’t remove that person.' };
   }
+  // Removed by their trainer: their family stops paying for it (0038).
+  await cancelPlayerBilling(userId, v.academy.id);
   // Out of their groups and programs too, so they stop counting in them, and
   // their plan settings and the weeks still to come: someone let back in
   // later starts fresh, not on a week built before they left. Past weeks

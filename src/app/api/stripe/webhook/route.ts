@@ -5,7 +5,7 @@ import { billingDb, saveSubscription, stripe, syncSeats } from '@/lib/billing-se
 export const runtime = 'nodejs';
 
 /**
- * Stripe's messages about trainer billing. Each is checked against the
+ * Stripe's messages about billing: a trainer's (0037) and a family's (0038). Each is checked against the
  * signing secret before anything is believed, and none is trusted for its
  * contents: the subscription is read back from Stripe by id.
  *
@@ -32,9 +32,11 @@ export async function POST(req: Request) {
         const session = event.data.object;
         const id = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
         if (session.mode !== 'subscription' || !id) break;
-        const academyId = await saveSubscription(s, db, id, session.client_reference_id);
-        // Players may have joined while the card was being typed in.
-        await syncSeats(s, db, academyId);
+        // A family's checkout carries "academy:user" here; the subscription's own
+        // metadata says whose it is, so the hint only matters for an academy's.
+        const saved = await saveSubscription(s, db, id, session.client_reference_id?.split(':')[0]);
+        // Players may have joined while the trainer's card was being typed in.
+        if (saved.kind === 'academy') await syncSeats(s, db, saved.academyId);
         break;
       }
       case 'customer.subscription.created':

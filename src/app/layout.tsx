@@ -19,6 +19,9 @@ import { headers } from 'next/headers';
 import { SiteChrome } from '@/components/site/SiteChrome';
 import { Unclaimed } from '@/components/site/Unclaimed';
 import { Brand } from '@/components/Brand';
+import { myMembership } from '@/lib/membership-server';
+import { membershipLine } from '@/lib/membership';
+import { dollars } from '@/lib/billing';
 
 export async function generateMetadata(): Promise<Metadata> {
   // The marketing pages name themselves.
@@ -133,6 +136,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     libraryFor().catch(() => ({ drills: true, own: false })),
     speedAllowed().catch(() => true),
   ]);
+  // Families pay (0038): a player whose free days are over sees the way to
+  // pay in place of their training. Read here, once per full page load; the
+  // page they come back to from Stripe is one.
+  const m = await myMembership();
+  const membership = !m ? null : {
+    lock: m.access.state === 'locked'
+      ? { academy: m.academyName, price: dollars(m.terms.priceCents), line: membershipLine(m.terms, m.access, m.row) } : null,
+    note: m.access.state === 'past_due' ? 'Your last payment didn’t go through. Update your card.'
+      : m.access.state === 'trial' && m.access.daysLeft <= 5
+        ? `${m.access.daysLeft} free ${m.access.daysLeft === 1 ? 'day' : 'days'} left, then ${dollars(m.terms.priceCents)} a month. Add a card.`
+        : null,
+  };
   return (
     <html lang="en">
       <body className="min-h-dvh antialiased">
@@ -142,7 +157,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
         {/* The player app, or the trainer area's own frame under /coach. */}
         <AreaFrame brand={<Brand small />} app={appOf(academy)} academyId={academy?.id ?? null}
-                   library={lib.drills || lib.own} plan={lib.drills} speed={speed}>{children}</AreaFrame>
+                   library={lib.drills || lib.own} plan={lib.drills} speed={speed} membership={membership}>{children}</AreaFrame>
         <ServiceWorker />
         <PendingSaves />
         <DayTurn />

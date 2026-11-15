@@ -2,6 +2,7 @@
 import { revalidatePath, updateTag } from 'next/cache';
 import { academyTag } from '@/lib/branding-server';
 import { serverClient } from '@/lib/supabase/server';
+import { cancelPlayerBilling } from '@/lib/billing-server';
 
 /**
  * Opens or closes a self-serve space (0030): open, anyone signed in joins with
@@ -56,6 +57,7 @@ export async function removeSelfServeMember(academyId: string, userId: string): 
       : /not a member/i.test(error.message) ? 'They’re not in it any more.'
       : 'Couldn’t remove them. Try again.' };
   }
+  await cancelPlayerBilling(userId, academyId);
   revalidatePath(`/admin/academies/${academyId}`);
   return { ok: true };
 }
@@ -75,5 +77,25 @@ export async function setFreeUntil(id: string, until: string | null): Promise<{ 
       : /admins only/i.test(error.message) ? 'Only platform admins can do that.' : 'Couldn’t save that. Try again.' };
   }
   revalidatePath(`/admin/academies/${id}`);
+  return { ok: true };
+}
+
+/**
+ * Turns families-pay (0038) on or off for an academy, with its monthly price
+ * and how many days a player trains free first. On: each player's family pays
+ * by card and the trainer pays nothing. Off: the trainer pays (0037).
+ */
+export async function setPlayerPay(id: string, on: boolean, priceDollars: number, trialDays: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  const cents = Math.round(priceDollars * 100);
+  if (!Number.isFinite(cents) || cents < 100 || cents > 100000) return { ok: false, error: 'Set a price between $1 and $1,000.' };
+  if (!Number.isInteger(trialDays) || trialDays < 0 || trialDays > 365) return { ok: false, error: 'Free days can be 0 to 365.' };
+  const db = await serverClient();
+  const { error } = await db.rpc('admin_set_player_pay', { p_academy: id, p_on: on, p_price_cents: cents, p_trial_days: trialDays });
+  if (error) {
+    console.error('admin_set_player_pay', error);
+    return { ok: false, error: error.code === 'PGRST202' ? 'Run migration 0038 first.'
+      : /admins only/i.test(error.message) ? 'Only platform admins can do that.' : 'Couldn’t save that. Try again.' };
+  }
+  revalidatePath('/', 'layout');
   return { ok: true };
 }

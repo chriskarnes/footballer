@@ -23,6 +23,8 @@ import { getAcademy } from '@/lib/branding-server';
 import { avatarSrc } from '@/lib/avatar';
 import { libraryAllowed } from '@/lib/library-gate';
 import { speedAllowed } from '@/lib/speed-gate';
+import { myMembership } from '@/lib/membership-server';
+import { membershipLine } from '@/lib/membership';
 
 /**
  * "Me" is the reorder counter. Signed out it's the sign-in prompt; signed in
@@ -294,6 +296,16 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
       </section>
 
       {calendar !== undefined && <CalendarSection initial={calendar} plan={library} speed={await speedAllowed().catch(() => true)} />}
+
+      {await myMembership().then((m) => m && (
+        <Link href="/membership" className="card pressable mt-6 flex min-h-14 items-center justify-between gap-4 px-4 py-3">
+          <span className="min-w-0">
+            <span className="block text-body font-semibold text-on-surface">Membership</span>
+            <span className="mt-0.5 block text-body-sm text-on-surface-variant">{membershipLine(m.terms, m.access, m.row)}</span>
+          </span>
+          <span className="shrink-0 text-body text-on-surface-variant" aria-hidden="true">›</span>
+        </Link>
+      ))}
 
       <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={selfServe && role === 'player' ? null : role} admin={admin}
                       academy={role ? academyName : null} owner={role === 'owner'}
