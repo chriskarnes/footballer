@@ -35,9 +35,9 @@ with your videos, and you see who did them before the next session.
 Each trainer gets their own page (yourname.train.futbol) with their name and colors.
 Players join from a link, with no app to download.
 
-It's free for you. Families pay $10 a month for their player, after 7 days free.
-I'm setting up the first 3 trainers myself, and their families get the first 3
-months free. Could I show you in 15 minutes this week? Or look at what a player sees here:
+It's $10 a player a month, or $5 a player if you'd rather charge your players your
+own way. I'm setting up the first 3 trainers myself, and their first 3 months are
+free. Could I show you in 15 minutes this week? Or look at what a player sees here:
 demo.train.futbol
 
 Thanks,
@@ -52,8 +52,8 @@ train.futbol
 
 Hi [First name],
 
-Two things I left out. It costs you nothing: families pay for their own player, so
-there's no bill and no contract. And you don't need a big drill library to start. Three or four
+Two things I left out. Every player's first 7 days are free, and there's no setup
+fee or contract. And you don't need a big drill library to start. Three or four
 sessions you already run are enough, and if your drills are on YouTube you paste the
 link and the video plays inside the session. I set up the first sessions with you.
 
@@ -93,8 +93,8 @@ couple of short sessions for the player's week, they do them at home with your v
 and you see who actually did them.
 
 I'd like you to be one of the first three trainers on it. I'll set up your page and
-your first sessions myself. It costs you nothing: families pay $10 a month for their
-player, and for my first three trainers their first 3 months are free. All I ask is
+your first sessions myself. It's $10 a player a month, or $5 if you charge your
+players your own way, and for my first three trainers the first 3 months are free. All I ask is
 that you tell me honestly what's wrong with it.
 
 Can I show you after [child]'s session on [day]?
@@ -114,8 +114,8 @@ do it?
 **If they answer** (most trainers say "I send videos, no idea if they do them"):
 
 That's what I built Train.futbol for. You pick drills for their week, they do them at
-home with your videos, and you see who did them. Your own page, your name on it, and
-it's free for trainers. I'm setting up the first few myself. Can I send you a
+home with your videos, and you see who did them. Your own page, your name on it.
+I'm setting up the first few trainers myself, free for 3 months. Can I send you a
 90-second video of how it works?
 
 **Then send:** the screen recording (see `launch-kit.md`) and train.futbol/trainers.
@@ -137,9 +137,8 @@ fine:
 3. Links to any drill videos you have. YouTube works. If you have none, film them on
    your phone held sideways and send them over.
 4. Roughly how many players you'd start with.
-5. Who pays. The usual way is that families pay $10 a month for their player after a
-   free start. If you'd rather include it in your training, you can cover it yourself
-   at $5 a player a month and your families pay nothing.
+5. Which price suits you: $10 a player a month, or $5 a player if you'd rather
+   charge your players your own way. I'll explain how each is paid when we talk.
 
 I'll have your page ready within [two days]. Then we spend 20 minutes together so you
 can see your players' week and send them the link.
