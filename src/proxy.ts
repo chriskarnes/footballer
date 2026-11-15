@@ -4,7 +4,8 @@ import { ROOT_DOMAIN, rootOrigin, slugFromHost } from '@/lib/tenant';
 
 /**
  * The marketing site lives on the bare domain. Its pages are files under
- * app/site; here the bare domain's `/`, `/trainers`, `/players` and `/start`
+ * app/site; here the bare domain's `/`, `/trainers`, `/players`, `/start`,
+ * `/privacy` and `/terms`
  * are served from there, and the layout is told (x-site) to drop the app's
  * tab bar for them.
  *
@@ -15,7 +16,7 @@ import { ROOT_DOMAIN, rootOrigin, slugFromHost } from '@/lib/tenant';
  * Everything else on the bare domain — calendar feeds, auth callbacks — is
  * untouched. On an academy's subdomain none of this runs: its `/` is the app.
  */
-const PAGES = ['/trainers', '/players', '/start'];
+const PAGES = ['/trainers', '/players', '/start', '/privacy', '/terms'];
 
 /**
  * Keeps the sign-in fresh. Pages and server actions read the session but

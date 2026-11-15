@@ -1,4 +1,5 @@
 'use client';
+import { LegalLinks } from './LegalLinks';
 import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase/client';
 import { pendingPlan, pendingWorkout } from '@/lib/pending';
@@ -156,6 +157,7 @@ export function SignIn({ next: given = '/me', title, button = 'Email me a sign-i
         {busy ? 'Sending…' : button}
       </button>
       {err && <p id="signin-error" role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
+      <LegalLinks />
     </form>
   );
 }

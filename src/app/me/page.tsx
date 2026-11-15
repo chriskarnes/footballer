@@ -104,6 +104,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   let timeZone = 'UTC';
   let staffAnywhere = false;
   let role: string | null = null;
+  let academyName: string | null = null;
   // undefined: the calendar table doesn't exist yet (migration 0003), so no
   // section. null: it does, and this player hasn't turned it on.
   let calendar: CalendarFeed | null | undefined;
@@ -141,6 +142,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         const { data: staffRows } = await db.from('academy_members').select('role').eq('user_id', user.id).in('role', ['owner', 'trainer']).limit(1);
         staffAnywhere = !!staffRows?.length;
         role = viewer.role;
+        academyName = viewer.academy?.name ?? null;
         if (!cal.error) calendar = cal.data ?? null;
         workouts = rows;
         profile = prof;
@@ -293,7 +295,9 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
 
       {calendar !== undefined && <CalendarSection initial={calendar} plan={library} speed={await speedAllowed().catch(() => true)} />}
 
-      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={selfServe && role === 'player' ? null : role} admin={admin} />
+      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={selfServe && role === 'player' ? null : role} admin={admin}
+                      academy={role ? academyName : null} owner={role === 'owner'}
+                      legal={{ privacy: await rootHref('/privacy'), terms: await rootHref('/terms') }} />
     </div>
   );
 }

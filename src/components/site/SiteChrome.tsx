@@ -38,6 +38,8 @@ export async function SiteChrome({ children }: { children: React.ReactNode }) {
               <Link href="/trainers" className="font-semibold text-white">Trainers</Link>
               <Link href="/players" className="font-semibold text-white">Players</Link>
               <Link href="/start" className="font-semibold text-white">Get started</Link>
+              <Link href="/privacy" className="font-semibold text-white">Privacy</Link>
+              <Link href="/terms" className="font-semibold text-white">Terms</Link>
             </span>
           </div>
         </div>
