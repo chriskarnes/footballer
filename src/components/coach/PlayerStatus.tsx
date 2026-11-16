@@ -27,7 +27,12 @@ export function PlayerStatus({ userId, first, active, mode, paid, paidOn, line, 
   return (
     <section className="card mt-9 p-5 xl:mt-0">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="h-card">{active ? 'Active' : 'Inactive'}</div>
+        <div className="h-card">
+          {active ? 'Active' : (
+            // In colour, as on the player list: the one state that should catch the eye.
+            <span className="inline-block rounded-full border border-[#E8A0B4] bg-[#FCE4EC] px-3 py-0.5 text-[#9B1C45] dark:border-[#8E3A55] dark:bg-[#4A1F2D] dark:text-[#FFC2D4]">Inactive</span>
+          )}
+        </div>
         {label && active && <div className="text-body font-semibold text-on-surface-variant">{label}</div>}
       </div>
       <p className="mt-1 text-body leading-snug text-on-surface-variant">

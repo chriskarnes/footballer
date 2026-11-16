@@ -157,6 +157,9 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
               {p.progress.status !== 'good' && (
                 <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable shrink-0">Nudge</NoteButton>
               )}
+              <Link href={`/coach/players/${p.user_id}`} aria-label={`Open ${p.name}`} className="pressable -mr-1 flex size-9 shrink-0 items-center justify-center text-on-surface-variant">
+                <Chevron />
+              </Link>
             </li>
           );
         })}
@@ -173,9 +176,9 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
               {players.map((p) => {
                 const detail = detailOf(p.progress);
                 return (
-                  <tr key={p.user_id} className="relative hover:bg-surface-container-low">
+                  <tr key={p.user_id} className="group relative cursor-pointer hover:bg-surface-container-low">
                     <td className="px-5 py-3.5 font-bold text-on-surface">
-                      <Link href={`/coach/players/${p.user_id}`} className="after:absolute after:inset-0">{p.name}</Link><PayTag mark={marks.get(p.user_id)} />
+                      <Link href={`/coach/players/${p.user_id}`} className="underline-offset-4 after:absolute after:inset-0 group-hover:underline">{p.name}</Link><PayTag mark={marks.get(p.user_id)} />
                     </td>
                     <td className="max-w-[14rem] truncate px-5 py-3.5 text-body text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
                     <td className="px-5 py-3.5"><WeekDots week={p.progress.week} /></td>
@@ -186,10 +189,13 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-5 py-3.5 text-body text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
-                    <td className="relative z-10 px-5 py-3.5 text-right">
-                      {p.progress.status !== 'good' && (
-                        <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable">Nudge</NoteButton>
-                      )}
+                    <td className="px-5 py-3.5 text-right">
+                      <span className="flex items-center justify-end gap-3">
+                        {p.progress.status !== 'good' && (
+                          <span className="relative z-10"><NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable">Nudge</NoteButton></span>
+                        )}
+                        <span className="text-on-surface-variant transition-transform group-hover:translate-x-0.5 group-hover:text-on-surface"><Chevron /></span>
+                      </span>
                     </td>
                   </tr>
                 );
@@ -227,6 +233,20 @@ function PayTag({ mark }: { mark?: RosterMark }) {
   if (!mark?.label) return null;
   return (
     <span className={`ml-2 inline-block rounded-full border px-2 py-0.5 align-middle text-caption font-semibold
-      ${mark.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{mark.label}</span>
+      ${!mark.active ? INACTIVE_TAG : mark.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{mark.label}</span>
+  );
+}
+
+/**
+ * Switched off: the one tag in colour, so it's seen in a long list. Rose on
+ * a light page and on a dark one; the app's own palette has no red in it.
+ */
+const INACTIVE_TAG = 'border-[#E8A0B4] bg-[#FCE4EC] text-[#9B1C45] dark:border-[#8E3A55] dark:bg-[#4A1F2D] dark:text-[#FFC2D4]';
+
+/** The end of a row: this opens something. */
+function Chevron() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+         className="size-4.5" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
   );
 }
