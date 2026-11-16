@@ -90,8 +90,8 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
 
       {(billing !== undefined || terms) && (
         <Section title="Billing">
-          {terms && <PlayerPay id={x.id} on={terms.mode === 'players_pay'} priceCents={terms.priceCents} trialDays={terms.trialDays} />}
-          {billing !== undefined && terms?.mode !== 'players_pay' && (
+          {terms && <PlayerPay id={x.id} mode={terms.mode} priceCents={terms.priceCents} trialDays={terms.trialDays} />}
+          {billing !== undefined && (!terms || terms.mode === 'trainer_pays') && (
             <div className="card mt-4 p-5">
               <div className="h-card">The trainer pays</div>
               <p className="mt-1 text-body text-on-surface">

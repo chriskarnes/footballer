@@ -32,7 +32,9 @@ export async function startCheckout(): Promise<Go> {
   if (!o) return { ok: false, error: 'Only the academy’s owner can set up billing.' };
   if (o.off) return { ok: false, error: NOT_ON };
   try {
-    if ((await readTerms(o.db, o.academy.id))?.mode === 'players_pay') return { ok: false, error: 'Your players’ families pay here, so there’s nothing for you to pay.' };
+    const mode = (await readTerms(o.db, o.academy.id))?.mode;
+    if (mode === 'players_pay') return { ok: false, error: 'Your players’ families pay here, so there’s nothing for you to pay.' };
+    if (mode === 'none') return { ok: false, error: 'There’s nothing to pay here.' };
     const row = await readBilling(o.db, o.academy.id);
     // Already paying: the card is changed on Stripe's own page, not by starting again.
     if (row?.stripe_subscription_id && isLive(row.status)) return openPortal();

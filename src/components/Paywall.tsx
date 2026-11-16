@@ -6,8 +6,20 @@ import { MembershipButtons } from './MembershipButtons';
  * What a player sees in place of their training once their free days are
  * over and there's no card (0038). Says what it costs and whose training it
  * is, and goes straight to the card. Me stays open, to sign out or leave.
+ * A player their trainer has switched off sees that said, with nothing to pay.
  */
-export function Paywall({ lock }: { lock: { academy: string; price: string; line: string } }) {
+export function Paywall({ lock }: { lock: { academy: string; price: string; line: string; paused?: boolean } }) {
+  // Switched off by their trainer (0040): nothing to pay, only to ask.
+  if (lock.paused) {
+    return (
+      <div className="animate-pop pt-10">
+        <p className="eyebrow mb-3">{lock.academy}</p>
+        <h1 className="h-page">Training is paused</h1>
+        <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">{lock.line}</p>
+        <Link href="/me" className="mt-6 inline-block text-body font-semibold text-on-surface-variant underline underline-offset-4">Your account</Link>
+      </div>
+    );
+  }
   return (
     <div className="animate-pop pt-10">
       <p className="eyebrow mb-3">{lock.academy}</p>

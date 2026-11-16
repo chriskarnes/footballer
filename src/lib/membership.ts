@@ -10,7 +10,8 @@ export const DEFAULT_TRIAL_DAYS = 7;
 
 /** What an academy charges, as academy_terms() gives it. */
 export type Terms = {
-  mode: 'trainer_pays' | 'players_pay';
+  /** none (0040): nobody is billed here. */
+  mode: 'trainer_pays' | 'players_pay' | 'none';
   priceCents: number;
   trialDays: number;
   /** When families started paying here: nobody's free days begin before it. */
@@ -36,7 +37,7 @@ export function toTerms(raw: unknown): Terms | null {
   const price = r.price_cents == null ? NaN : Number(r.price_cents);
   const days = r.trial_days == null ? NaN : Number(r.trial_days);
   return {
-    mode: r.mode === 'players_pay' ? 'players_pay' : 'trainer_pays',
+    mode: r.mode === 'players_pay' ? 'players_pay' : r.mode === 'none' ? 'none' : 'trainer_pays',
     priceCents: Number.isFinite(price) && price > 0 ? price : DEFAULT_PLAYER_PRICE_CENTS,
     trialDays: Number.isFinite(days) && days >= 0 ? days : DEFAULT_TRIAL_DAYS,
     since: typeof r.since === 'string' ? r.since : null,
@@ -60,8 +61,10 @@ export type Access = {
    * paid        a card on file and Stripe is happy (or still in its own trial)
    * past_due    the last payment failed and Stripe is retrying: still let in
    * locked      free days over and no live subscription
+   * paused      switched off by their trainer (0040): on the roster, not
+   *             training, and nobody is charged for them
    */
-  state: 'not_needed' | 'trial' | 'paid' | 'past_due' | 'locked';
+  state: 'not_needed' | 'trial' | 'paid' | 'past_due' | 'locked' | 'paused';
   /** When the free days end, as a time; null where it doesn't apply. */
   freeUntil: number | null;
   /** Whole days of free time left, rounded up; 0 where it doesn't apply. */
@@ -69,7 +72,9 @@ export type Access = {
 };
 
 /** Whether a player may train today. */
-export function playerAccess(terms: Terms | null, joinedAt: string | null | undefined, row: PlayerBillingRow | null, now: number): Access {
+export function playerAccess(terms: Terms | null, joinedAt: string | null | undefined, row: PlayerBillingRow | null, now: number, active = true): Access {
+  // Whoever pays: a player their trainer has switched off doesn't train.
+  if (!active) return { state: 'paused', freeUntil: null, daysLeft: 0 };
   if (!terms || terms.mode !== 'players_pay') return { state: 'not_needed', freeUntil: null, daysLeft: 0 };
   const until = freeUntil(terms, joinedAt);
   const left = Math.max(0, Math.ceil((until - now) / DAY));
@@ -103,6 +108,7 @@ export function membershipLine(terms: Terms, access: Access, row: PlayerBillingR
   const price = `${dollars(terms.priceCents)} a month`;
   switch (access.state) {
     case 'not_needed': return 'There’s nothing to pay here.';
+    case 'paused': return 'Your trainer has paused your training here. Nothing is being charged. Ask them to switch it back on.';
     case 'trial': return `Free until ${longDay(access.freeUntil!)}. After that it’s ${price}. Add a card any time; it won’t be charged before then.`;
     case 'locked': return row?.status === 'canceled'
       ? `Your membership ended. It’s ${price} to start training again.`
@@ -122,5 +128,6 @@ export function accessLabel(a: Access): string {
     : a.state === 'past_due' ? 'Payment failed'
     : a.state === 'trial' ? `Free, ${a.daysLeft} ${a.daysLeft === 1 ? 'day' : 'days'} left`
     : a.state === 'locked' ? 'Not paying'
+    : a.state === 'paused' ? 'Inactive'
     : '';
 }

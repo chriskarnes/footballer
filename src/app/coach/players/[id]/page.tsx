@@ -19,6 +19,10 @@ import { TESTS, fmtTest } from '@/lib/speed';
 import { shortDate } from '@/lib/dates';
 // The bands the profile form offers (ProfileSetup).
 import { AGE_LABEL as AGE } from '@/lib/positions';
+import { rosterMarks } from '@/lib/membership-server';
+import { membershipLine } from '@/lib/membership';
+import { PlayerStatus } from '@/components/coach/PlayerStatus';
+import { shortDate as markDay } from '@/lib/dates';
 
 export const metadata = { title: 'Player', robots: { index: false } };
 
@@ -54,6 +58,8 @@ export default async function PlayerPage({ params }: {
   if (error) return <LoadFailed title="Player" path={`/coach/players/${id}`} back={{ href: '/coach', label: 'Players' }} />;
   const p = players[0];
   if (!p) notFound();
+  const { terms, marks } = await rosterMarks(db, academy.id);
+  const mark = marks.get(p.user_id);
   const pr = p.progress;
   const soccer = content.schedules.find((x) => x.user_id === p.user_id);
   const tz = academy.timeZone;
@@ -143,7 +149,12 @@ export default async function PlayerPage({ params }: {
 
      {/* On a laptop, how they're doing sits beside what they're set. */}
      <aside className="min-w-0 xl:pt-[68px]">
-      <section className="card mt-9 p-5 xl:mt-0">
+      {terms && mark && (
+        <PlayerStatus userId={p.user_id} first={p.first} active={mark.active} mode={terms.mode}
+          paid={!!mark.paidMarkedAt} paidOn={mark.paidMarkedAt ? markDay(mark.paidMarkedAt.slice(0, 10)) : null}
+          line={terms.mode === 'players_pay' && mark.active ? membershipLineFor(terms, mark) : null} label={mark.label} />
+      )}
+      <section className={`card p-5 ${terms && mark ? 'mt-3' : 'mt-9 xl:mt-0'}`}>
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-body text-on-surface-variant">
@@ -260,4 +271,14 @@ function dayLabel(at: string, tz: string) {
 /** The four-weeks chart's columns, oldest first. */
 function weekName(i: number) {
   return i === 3 ? 'This week' : i === 2 ? 'Last week' : `${3 - i} weeks ago`;
+}
+
+/** What a trainer reads about a family's payments: where it stands, without the card talk. */
+function membershipLineFor(terms: NonNullable<Awaited<ReturnType<typeof rosterMarks>>['terms']>, mark: { access: import('@/lib/membership').Access }) {
+  const a = mark.access;
+  return a.state === 'paid' ? 'Their family is paying.'
+    : a.state === 'past_due' ? 'Their family’s last payment didn’t go through. Stripe is retrying, and they’ve been asked to update the card.'
+    : a.state === 'trial' ? `In their free days: ${a.daysLeft} ${a.daysLeft === 1 ? 'day' : 'days'} left. Their family hasn’t added a card yet.`
+    : a.state === 'locked' ? 'Their free days are over and their family hasn’t added a card, so they can’t open their sessions.'
+    : membershipLine(terms, a, null);
 }

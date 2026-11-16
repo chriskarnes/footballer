@@ -27,14 +27,16 @@ their trainer sees how the week is going.
   (`ANTHROPIC_API_KEY`). Both have limits kept in the database, and neither is
   sent a player's name.
 - **Billing** is optional, through Stripe (`STRIPE_SECRET_KEY`,
-  `STRIPE_WEBHOOK_SECRET`, the service key, migrations 0037 and 0038). Two ways,
-  set per academy by a platform admin. *Families pay* (0038): each player trains
-  free for a number of days, then their family pays by card from `/membership`,
-  $10 a month unless set otherwise, and a player who hasn't paid sees the way to
-  pay in place of their training. *The trainer pays* (0037, the default): the
-  owner pays $5 a player a month from `/coach/billing`, and nothing is locked.
-  Stripe is told the paying account's email and the academy's name, never a
-  player's name.
+  `STRIPE_WEBHOOK_SECRET`, the service key, migrations 0037 to 0040). Who pays is
+  set per academy by a platform admin. *Families pay* (the default for a new
+  academy): each player trains free for a number of days, then their family pays
+  by card from `/membership`, $10 a month unless set otherwise, and a player who
+  hasn't paid sees the way to pay in place of their training. *The trainer pays*:
+  the owner pays $5 for each active player from `/coach/billing`, and nothing is
+  locked. *Nobody pays*: the demo and the platform's own academies. A trainer can
+  make a player inactive: still on the roster, not training, and not charged for
+  either way. Stripe is told the paying account's email and the academy's name,
+  never a player's name.
 - **Privacy and terms** are at `/privacy` and `/terms`; set
   `NEXT_PUBLIC_CONTACT_EMAIL` so they give an inbox.
 

@@ -55,10 +55,13 @@ export async function readBilling(db: SupabaseClient, academyId: string): Promis
   return (data as BillingRow | null) ?? null;
 }
 
-/** Players in an academy: what the owner pays for. Staff don't count. */
+/** Active players in an academy: what the owner pays for. Staff don't count. */
 export async function playerCount(db: SupabaseClient, academyId: string): Promise<number> {
-  const { count, error } = await db.from('academy_members')
+  const ask = () => db.from('academy_members')
     .select('user_id', { count: 'exact', head: true }).eq('academy_id', academyId).eq('role', 'player');
+  // Not the ones switched off (0040): on the roster, not paid for.
+  let { count, error } = await ask().eq('active', true);
+  if (error?.code === '42703') ({ count, error } = await ask());
   if (error) throw error;
   return count ?? 0;
 }

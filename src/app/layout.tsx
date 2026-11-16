@@ -141,8 +141,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // page they come back to from Stripe is one.
   const m = await myMembership();
   const membership = !m ? null : {
-    lock: m.access.state === 'locked'
-      ? { academy: m.academyName, price: dollars(m.terms.priceCents), line: membershipLine(m.terms, m.access, m.row) } : null,
+    lock: m.access.state === 'locked' || m.access.state === 'paused'
+      ? { academy: m.academyName, price: dollars(m.terms.priceCents), line: membershipLine(m.terms, m.access, m.row), paused: m.access.state === 'paused' } : null,
     note: m.access.state === 'past_due' ? 'Your last payment didn’t go through. Update your card.'
       : m.access.state === 'trial' && m.access.daysLeft <= 5
         ? `${m.access.daysLeft} free ${m.access.daysLeft === 1 ? 'day' : 'days'} left, then ${dollars(m.terms.priceCents)} a month. Add a card.`

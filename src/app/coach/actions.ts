@@ -103,3 +103,29 @@ export async function answerJoinRequest(userId: string, approve: boolean, shown:
   revalidatePath('/coach', 'layout');
   return { ok: true as const, already };
 }
+
+/**
+ * Switches a player off or back on (0040). Off, they stay on the roster with
+ * their history, but can't open their training, aren't counted in what the
+ * trainer pays, and their family's payments stop. Back on, a family that was
+ * paying adds their card again.
+ */
+export async function setPlayerActive(userId: string, active: boolean) {
+  const v = await staff();
+  if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
+  const { error } = await v.db.rpc('set_player_active', { p_academy: v.academy.id, p_user: userId, p_active: active });
+  if (error) return { ok: false as const, error: error.code === 'PGRST202' ? 'That isn’t switched on yet. Try again later.' : plain(error) };
+  if (!active) await cancelPlayerBilling(userId, v.academy.id);
+  revalidatePath('/coach', 'layout');
+  return { ok: true as const };
+}
+
+/** A trainer's own note that a player has paid them, for those who collect their own way (0040). */
+export async function setPlayerPaid(userId: string, paid: boolean) {
+  const v = await staff();
+  if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
+  const { error } = await v.db.rpc('set_player_paid', { p_academy: v.academy.id, p_user: userId, p_paid: paid });
+  if (error) return { ok: false as const, error: error.code === 'PGRST202' ? 'That isn’t switched on yet. Try again later.' : plain(error) };
+  revalidatePath('/coach', 'layout');
+  return { ok: true as const };
+}

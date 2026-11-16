@@ -106,7 +106,7 @@ export default async function TeamPage() {
         </section>
       )}
 
-      {owner && billingOn() && (
+      {owner && billingOn() && terms?.mode !== 'none' && (
         <Link href="/coach/billing" className="card pressable mt-9 flex min-h-14 items-center justify-between px-4">
           <span className="text-body font-semibold text-on-surface">Billing</span>
           <span className="text-body text-on-surface-variant">{terms?.mode === 'players_pay' ? `Families pay ${dollars(terms.priceCents)} a month ›` : '$5 a player a month ›'}</span>

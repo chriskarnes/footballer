@@ -4,8 +4,9 @@ import { BillingButtons } from '@/components/coach/BillingButtons';
 import { billingState, dollars, isLive, monthlyCents, PRICE_CENTS } from '@/lib/billing';
 import { billingDb, billingOn, playerCount, readBilling, stripe, syncSeats } from '@/lib/billing-server';
 import { CONTACT_EMAIL } from '@/lib/legal';
-import { readTerms } from '@/lib/membership-server';
-import { accessLabel, playerAccess, PLAYER_BILLING_COLUMNS, type PlayerBillingRow } from '@/lib/membership';
+import { readTerms, rosterMarks } from '@/lib/membership-server';
+import { accessLabel, playerAccess } from '@/lib/membership';
+import Link from 'next/link';
 import { nameOf } from '@/lib/coach-data';
 
 export const metadata = { title: 'Billing', robots: { index: false } };
@@ -32,14 +33,20 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
   // Families pay here (0038): the owner pays nothing, and sees who is paying.
   const terms = await readTerms(db, academy.id);
+  if (terms?.mode === 'none') {
+    return (
+      <div className="animate-pop">
+        <PageHead title="Billing" back={back}>There&rsquo;s nothing to pay for {academy.name}, for you or your players&rsquo; families.</PageHead>
+      </div>
+    );
+  }
   if (terms?.mode === 'players_pay') {
-    const [{ data: roster }, { data: paid }] = await Promise.all([
+    const [{ data: roster }, paid] = await Promise.all([
       db.rpc('academy_players', { p_academy: academy.id, p_since: new Date().toISOString(), p_player: null }),
-      db.from('player_billing').select(`user_id, ${PLAYER_BILLING_COLUMNS}`).eq('academy_id', academy.id),
+      rosterMarks(db, academy.id),
     ]);
-    const rows = new Map(((paid ?? []) as unknown as (PlayerBillingRow & { user_id: string })[]).map((r) => [r.user_id, r]));
     const list = ((roster ?? []) as { user_id: string; joined_at: string; email: string | null; display_name: string | null }[])
-      .map((r) => ({ id: r.user_id, name: nameOf(r), access: playerAccess(terms, r.joined_at, rows.get(r.user_id) ?? null, Date.now()) }))
+      .map((r) => ({ id: r.user_id, name: nameOf(r), access: paid.marks.get(r.user_id)?.access ?? playerAccess(terms, r.joined_at, null, Date.now()) }))
       .sort((a, b) => a.name.localeCompare(b.name));
     const count = (s: string) => list.filter((p) => p.access.state === s).length;
     const paying = count('paid') + count('past_due');
@@ -58,12 +65,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           </p>
         </section>
         <section className="mt-8">
-          <p className="eyebrow mb-3">{paying} paying · {count('trial')} in free days · {count('locked')} not paying</p>
+          <p className="eyebrow mb-3">{paying} paying · {count('trial')} in free days · {count('locked')} not paying{count('paused') ? ` · ${count('paused')} inactive` : ''}</p>
           {!list.length ? <p className="text-body text-on-surface-variant">No players yet.</p> : (
             <ul className="card divide-y divide-outline-variant">
               {list.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3.5">
-                  <span className="min-w-0 truncate text-body font-semibold text-on-surface">{p.name}</span>
+                  <Link href={`/coach/players/${p.id}`} className="min-w-0 truncate text-body font-semibold text-on-surface underline-offset-4 hover:underline">{p.name}</Link>
                   <span className={`shrink-0 text-body-sm font-semibold ${p.access.state === 'locked' || p.access.state === 'past_due' ? 'text-on-surface' : 'text-on-surface-variant'}`}>{accessLabel(p.access)}</span>
                 </li>
               ))}
@@ -102,10 +109,10 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           <span className="text-body font-semibold text-on-surface-variant">per player, per month</span>
         </div>
         <p className="mt-4 text-body-lg font-semibold text-on-surface">
-          {players} {players === 1 ? 'player' : 'players'} · {dollars(monthlyCents(players))} a month
+          {players} active {players === 1 ? 'player' : 'players'} · {dollars(monthlyCents(players))} a month
         </p>
         <p className="mt-1 text-body leading-relaxed text-on-surface-variant">
-          Trainers aren&rsquo;t counted. Remove a player and you stop paying for them from your next payment.
+          Trainers aren&rsquo;t counted. Make a player inactive, or remove them, and you stop paying for them from your next payment.
         </p>
       </section>
 

@@ -17,7 +17,7 @@ const stillOpen = (path: string) => OPEN.some((p) => path === p || path.startsWi
 /** Where the signed-in player's membership stands, worked out by the layout. */
 export type MembershipNotice = {
   /** Free days over and no card: training is replaced by the way to pay. */
-  lock: { academy: string; price: string; line: string } | null;
+  lock: { academy: string; price: string; line: string; paused?: boolean } | null;
   /** A line above the page: free days nearly over, or a payment that failed. */
   note: string | null;
 };

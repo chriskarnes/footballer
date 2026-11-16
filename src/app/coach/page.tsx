@@ -1,3 +1,4 @@
+import { rosterMarks, type RosterMark } from '@/lib/membership-server';
 import Link from 'next/link';
 import { GroupGone } from '@/components/coach/GroupGone';
 import { staffOnly } from '@/components/coach/Gate';
@@ -34,6 +35,8 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   // A new academy's owner is led back to the checklist until it's done.
   const steps = role === 'owner' && setup.ready && !setup.done ? setupSteps(setup, content) : null;
 
+  // Who's paying, who isn't, and who's switched off (0038, 0040).
+  const { marks } = await rosterMarks(db, academy.id);
   const [{ players: all, error }, { data: invite }, { data: asking }, { data: me }] = await Promise.all([
     loadPlayers(db, academy, { content }),
     db.from('academy_invites').select('code').eq('academy_id', academy.id).eq('role', 'player').maybeSingle(),
@@ -138,7 +141,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
           return (
             <li key={p.user_id} className="card flex items-center gap-3 py-4 pl-4 pr-3">
               <Link href={`/coach/players/${p.user_id}`} className="min-w-0 flex-1">
-                <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
+                <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}<PayTag mark={marks.get(p.user_id)} /></span>
                 {!inGroup && !!p.groups.length && (
                   <span className="block truncate text-caption font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
                 )}
@@ -172,7 +175,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                 return (
                   <tr key={p.user_id} className="relative hover:bg-surface-container-low">
                     <td className="px-5 py-3.5 font-bold text-on-surface">
-                      <Link href={`/coach/players/${p.user_id}`} className="after:absolute after:inset-0">{p.name}</Link>
+                      <Link href={`/coach/players/${p.user_id}`} className="after:absolute after:inset-0">{p.name}</Link><PayTag mark={marks.get(p.user_id)} />
                     </td>
                     <td className="max-w-[14rem] truncate px-5 py-3.5 text-body text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
                     <td className="px-5 py-3.5"><WeekDots week={p.progress.week} /></td>
@@ -217,4 +220,13 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
 function Th({ children }: { children: React.ReactNode }) {
   return <th scope="col" className="px-5 py-3 font-semibold">{children}</th>;
+}
+
+/** Beside a player's name: where their payment stands, or that they're switched off. */
+function PayTag({ mark }: { mark?: RosterMark }) {
+  if (!mark?.label) return null;
+  return (
+    <span className={`ml-2 inline-block rounded-full border px-2 py-0.5 align-middle text-caption font-semibold
+      ${mark.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{mark.label}</span>
+  );
 }

@@ -49,10 +49,12 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
       <h1 className="h-page">Membership</h1>
 
       <section className="card mt-6 p-6">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-brand text-[44px] font-extrabold leading-none text-on-surface">{dollars(terms.priceCents)}</span>
-          <span className="text-body font-semibold text-on-surface-variant">a month</span>
-        </div>
+        {terms.mode === 'players_pay' && (
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="font-brand text-[44px] font-extrabold leading-none text-on-surface">{dollars(terms.priceCents)}</span>
+            <span className="text-body font-semibold text-on-surface-variant">a month</span>
+          </div>
+        )}
         {done && !paying && (
           <p className="mt-4 text-body font-semibold text-on-surface">Card saved. It can take a minute to show here.</p>
         )}
@@ -61,7 +63,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           {membershipLine(terms, access, row)}
         </p>
         <div className="mt-5">
-          {billingOn()
+          {access.state === 'paused' ? null : billingOn()
             ? <MembershipButtons action={paying ? 'manage' : 'add'} hasCustomer={!!row?.stripe_customer_id && !paying} />
             : <p className="text-body text-on-surface-variant">Paying by card isn&rsquo;t switched on yet.</p>}
         </div>

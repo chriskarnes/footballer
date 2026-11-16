@@ -88,6 +88,17 @@ test('what a family is told', () => {
   assert.match(membershipLine(terms({ priceCents: 1250 }), locked, null), /\$12\.50 a month/);
 });
 
+test('a player switched off is paused, whoever pays', () => {
+  const recent = new Date(NOW - DAY).toISOString();
+  assert.equal(playerAccess(terms(), recent, row(), NOW, false).state, 'paused');
+  assert.equal(playerAccess(terms({ mode: 'trainer_pays' }), recent, null, NOW, false).state, 'paused');
+  assert.equal(playerAccess(terms({ mode: 'none' }), recent, null, NOW, false).state, 'paused');
+  assert.equal(playerAccess(terms({ mode: 'none' }), recent, null, NOW).state, 'not_needed');
+  assert.equal(accessLabel(playerAccess(terms(), recent, null, NOW, false)), 'Inactive');
+  assert.match(membershipLine(terms(), playerAccess(terms(), recent, null, NOW, false), null), /paused your training/);
+  assert.equal(toTerms({ mode: 'none' })?.mode, 'none');
+});
+
 test('what a trainer sees beside each player', () => {
   const t = terms();
   assert.equal(accessLabel(playerAccess(t, new Date(NOW - 13 * DAY).toISOString(), null, NOW)), 'Free, 1 day left');

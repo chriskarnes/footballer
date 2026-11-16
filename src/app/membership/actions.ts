@@ -54,8 +54,10 @@ export async function startMembership(): Promise<Go> {
       .upsert({ academy_id: p.academy.id, user_id: p.user.id, stripe_customer_id: customer, updated_at: new Date().toISOString() }, { onConflict: 'academy_id,user_id' });
     if (error) throw error;
 
-    const { data: member } = await p.db.from('academy_members').select('joined_at')
+    const { data: member } = await p.db.from('academy_members').select('*')
       .eq('academy_id', p.academy.id).eq('user_id', p.user.id).maybeSingle();
+    // Switched off by their trainer (0040): nothing to pay until they're back on.
+    if (member?.active === false) return { ok: false, error: 'Your trainer has paused your training here, so there’s nothing to pay.' };
     // A card added in the free days isn't charged until they end. Someone
     // coming back after cancelling has had theirs.
     const trialEnd = row?.stripe_subscription_id ? null : subscriptionTrialEnd(freeUntil(terms, member?.joined_at), Date.now());
