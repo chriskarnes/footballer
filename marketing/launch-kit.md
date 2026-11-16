@@ -19,9 +19,9 @@ The other things you'll need, in the order you'll reach for them.
 
 **Decide**
 
-- [x] The price: free for trainers. Families pay $10 a month after 7 days free. A
-      trainer can cover it at $5 a player instead.
-- [x] The founding offer: families of the first 3 trainers get 3 months free
+- [x] The price, as the site says it: $10 a player a month, or $5 a player for a
+      trainer who charges their own way. Every player's first 7 days are free.
+- [x] The founding offer: the first 3 months free, for the first 3 trainers
 - [ ] Check /trainers and /players state the new price
 - [ ] Which inbox trainers reply to, and set `NEXT_PUBLIC_CONTACT_EMAIL` to it
 
@@ -30,8 +30,8 @@ The other things you'll need, in the order you'll reach for them.
 - [ ] Run the real-phone checks at the top of `TODO.md`
 - [ ] Go through the whole trainer path as a stranger: /start, approval, the claim
       email, setup, adding a player, the player joining
-- [ ] Once family billing is built, subscribe as a parent with Stripe's test card,
-      then cancel, and check the player's access follows
+- [ ] On one of your own pages, subscribe as a parent with Stripe's test card, then
+      cancel, and check the player's access follows
 - [ ] Have the privacy and terms pages reviewed, the children's section especially
 - [ ] Check your hosting and database plans allow commercial use and don't pause
 
@@ -67,7 +67,7 @@ Record your phone screen and talk over it. One take is fine.
 | 0:35 | A drill with the video playing, then checked off | "Each drill has the trainer's video and the reps. They check it off when it's done." |
 | 0:55 | The trainer's player list | "The trainer sees every player's week on one line: on track, one behind, not seen since Tuesday." |
 | 1:10 | Tapping the reminder | "One tap sends a reminder." |
-| 1:20 | train.futbol/trainers | "Free for trainers. Families pay ten dollars a month after two free weeks. I set up your page with you. train.futbol." |
+| 1:20 | train.futbol/trainers | "Ten dollars a player a month, and the first week is free. I set up your page with you. train.futbol." |
 
 Use your own drills or a trainer's in the recording, not the licensed library.
 
@@ -93,10 +93,11 @@ by text. This is that same video, here."
 **Minutes 12 to 15: the ask.**
 
 - "What would you want in your first three sessions?"
-- "I'll set your page up myself, and it costs you nothing. Families pay $10 a month
-  for their player after 7 days free."
-- "Would your families pay that, or would you rather cover it yourself at $5 a
-  player?" Write down the answer; it's the most useful thing you'll learn.
+- "I'll set your page up myself. It's $10 a player a month, or $5 a player if you'd
+  rather charge your players your own way. Every player's first 7 days are free."
+- "Which would suit you?" If they ask how it's paid: at $10 the player's family pays
+  by card and you pay nothing; at $5 you pay for your players and charge them however
+  you like. Write down the answer; it's the most useful thing you'll learn.
 - "Can we do the setup on [day]? I need 20 minutes and your drill list."
 
 Leave with a date, not "I'll think about it".
@@ -128,14 +129,18 @@ No. It opens from a link and works like an app.
 You do. Your page has your name on it. Other trainers can't see your drills or your
 players, and neither can your players' clubs.
 
+**"$10 a player adds up."**
+At $10 it's the player's family who pays, by card, not you. If you'd rather it came
+from you, it's $5 a player and you charge your players however you like.
+
 **"Will parents pay $10 a month?"**
 A family whose player trains with you weekly already pays you $320 to $500 a month.
 This is $10 on top, for a plan that makes those sessions count. The first 7 days are
 free, so they see their player using it before they pay, and they can cancel any time.
 
 **"I don't want my clients charged by someone else."**
-Then cover it yourself: $5 a player a month, billed to you, and your families pay
-nothing. You can fold it into your package price.
+Then take the $5 price: $5 a player a month, billed to you, and your families pay
+nothing to us. You can fold it into your package price.
 
 **"Won't they book fewer sessions if they can train at home?"**
 The drills are homework for your session, not a replacement for it. Players who
@@ -148,8 +153,7 @@ training. There are no ads and no public profiles. [Confirm this against the pri
 page once it has been reviewed.]
 
 **"Do I get a share of what families pay?"**
-Not at the moment. You pay nothing, and what you gain is players who practise, improve
-and keep booking.
+Not at the moment. What you gain is players who practise, improve and keep booking.
 
 **"Can players pay me through it?"**
 No. Families pay Train.futbol for the at-home plan. You keep charging for your
@@ -227,10 +231,9 @@ For printing, or pasting into a message when someone asks "what is it?"
 > - Groups, individual players, or both
 > - Nothing for players to download
 >
-> **Price:** free for trainers, with no setup fee and no contract. Families pay $10 a
-> month for their player after 7 days free, and can cancel any time. If you'd rather
-> include it, cover it yourself at $5 a player a month. Founding trainers: your
-> families get their first 3 months free.
+> **Price:** $10 a player a month, or $5 a player if you'd rather charge your players
+> your own way. Every player's first 7 days are free. No setup fee, no contract.
+> Founding trainers: your first 3 months free.
 >
 > **Start:** train.futbol/start · [your email]
 

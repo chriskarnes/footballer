@@ -7,9 +7,11 @@ Every figure here is built from assumptions, listed below. They are planning num
 not predictions. By day 90 you will have your own numbers for the ones that matter
 most, and you should replace mine with them.
 
-**Revised 15 November 2026 for the new price.** Trainers pay nothing. Families pay
-Train.futbol directly: $10 a month per player, by card, after 7 days free. A trainer
-who would rather include it can cover it at $5 a player. The earlier versions of this
+**Revised 16 November 2026 for the new price.** The site says: $10 a player a month,
+or $5 a player for a trainer who charges their own way, with every player's first 7
+days free. Behind that, at $10 the player's family pays Train.futbol by card and the
+trainer pays nothing; at $5 the trainer pays for their players. The scenarios below
+assume the $10 route. The earlier versions of this
 document, built on trainers paying $5 a player, no longer apply.
 
 ## The short version

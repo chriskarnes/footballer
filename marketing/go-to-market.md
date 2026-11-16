@@ -33,19 +33,24 @@ Three reasons a trainer says yes, in the order they care:
 1. **Their players improve faster**, which is what parents pay them for.
 2. **They look more professional**: their own page, their name and colors, a plan
    parents can see.
-3. **It costs them nothing.** Families pay for their own player, so there is no bill
-   and no risk in trying it.
+3. **It pays for itself.** A session costs $80 to $125, so one or two extra sessions
+   a year from a player cover what this costs for them.
 
 ## The offer
 
-**For trainers: free.** Families pay Train.futbol directly for their player: $10 a
-month by card, with the first 7 days free, and they can cancel any time.
+**What you say:** $10 a player a month, or $5 a player if the trainer would rather
+charge their players their own way. Every player's first 7 days are free. No setup
+fee, no contract. This is the wording on the site, the deck and the emails.
 
-**If a trainer or club would rather include it,** they cover it themselves at $5 a
-player a month, and their families pay nothing.
+**How each is paid** (for the conversation, not the pitch):
 
-**Founding trainers:** the first 3 are set up by you personally, and their players'
-families get the first 3 months free instead of 7 days. In return the trainer gives
+- **At $10,** the player's family pays Train.futbol by card after the free days, and
+  the trainer pays nothing. Families can cancel any time.
+- **At $5,** the trainer pays for the players on their page and charges them however
+  they like, or includes it in their fees. This suits clubs and teams.
+
+**Founding trainers:** the first 3 are set up by you personally and get their first 3
+months free. Where families pay, that means the families' first 3 months. In return the trainer gives
 honest feedback and, if they're happy, a quote.
 
 Once the three places are taken, take the 3-months line out of the emails, the deck

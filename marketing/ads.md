@@ -80,7 +80,7 @@ Each one is a single idea. Film on a phone; these do better looking real than po
   colors. Cut between two differently branded pages.
 - **Headline:** Your own training page
 - **Text:** Your page, your drills, your videos, your name. Players join from one link
-  with no app to download. Free for trainers.
+  with no app to download. $10 a player a month.
 - **Button:** Get started
 
 ### 5. A trainer says it (run this as soon as you have one)
@@ -95,10 +95,10 @@ Each one is a single idea. Film on a phone; these do better looking real than po
 ### 6. Founding trainers
 
 - **Visual:** plain text on the dark green brand color, no footage.
-- **Headline:** Free for trainers
+- **Headline:** Your first 3 months free
 - **Text:** We're setting up our first 3 private soccer trainers by hand: your page,
-  your first sessions, built with you. It costs you nothing, and your players'
-  families get their first 3 months free.
+  your first sessions, built with you. Free for your first 3 months, then $10 a
+  player a month.
 - **Button:** Apply now
 
 Start with 1, 2 and 3. Add 5 the day you have the footage; it will probably win.
@@ -128,14 +128,14 @@ any child other than your own appears in an ad.
 - See Who Trained This Week
 - Drills Players Do at Home
 - Your Own Training Page
-- Free for Trainers
+- $10 a Player per Month
 - No App Download for Players
 - Soccer Trainer Homework App
 
 **Descriptions** (90 characters or fewer):
 
 - Give your players drills to do at home between sessions, and see who did them.
-- Your page, your drills, your videos. Players join from one link. Free for trainers.
+- Your page, your drills, your videos. Players join from one link. $10 a player a month.
 - We set up your page and first sessions with you. No cost to you and no contract.
 
 ## Budget and rules
@@ -147,8 +147,8 @@ any child other than your own appears in an ad.
 | 2 | Weeks 7 to 10 | $25 a day: the winning ad, ad 5, and $5 a day on Google | Whether paid requests turn into active trainers |
 | 3 | After that | Only what pays back | See the rule below |
 
-**When to stop or keep going.** Trainers pay nothing, so what a trainer is worth to
-you comes from their players' families. Take a trainer with 22 players whose families
+**When to stop or keep going.** At $10 a player the family pays, not the trainer, so
+what a trainer is worth to you comes from their players' families. Take a trainer with 22 players whose families
 pay $10 a month: that is $220 a month. The 22 is an assumption until you have your
 own numbers. If you're willing to spend about one month of that to win a trainer, an
 active trainer is worth about $220 to you. If one in three requests becomes an active
