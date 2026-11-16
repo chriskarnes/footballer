@@ -1,5 +1,5 @@
 import { mailtoAddr } from '@/lib/mailto';
-import { AdminGate } from '@/components/admin/ui';
+import { AdminGate, Empty, PageHead, Tag } from '@/components/admin/ui';
 import { getViewer } from '@/lib/viewer';
 import { ago } from '@/lib/notes';
 import { ApproveRequest } from '@/components/ApproveRequest';
@@ -50,10 +50,9 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="animate-pop">
-      <p className="eyebrow mb-2">Get started</p>
-      <h1 className="h-page">Academy requests</h1>
+      <PageHead title="Requests" sub="Everyone who asked for an academy from the site, newest first." />
       {error && <p className="mt-3 text-body-sm text-on-surface-variant">Couldn&rsquo;t load: {error.message}. Has migration 0006 run?</p>}
-      <nav className="mt-5 flex flex-wrap gap-2" aria-label="Show">
+      <nav className="mt-8 flex flex-wrap gap-2" aria-label="Show">
         {TABS.map((t) => (
           <Link key={t.id} href={t.id === 'open' ? '/admin/requests' : `/admin/requests?show=${t.id}`}
                 aria-current={t.id === tab.id ? 'page' : undefined} className={`chip ${t.id === tab.id ? 'chip-on' : ''}`}>
@@ -61,31 +60,40 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
           </Link>
         ))}
       </nav>
-      {!error && !rows.length && <p className="mt-4 text-body text-on-surface-variant">{tab.id === 'open' ? 'Nothing waiting.' : 'None.'}</p>}
+      {!error && !rows.length && <Empty>{tab.id === 'open' ? 'Nothing waiting.' : 'None.'}</Empty>}
       {total(tab.id) > SHOWN && <p className="mt-3 text-body-sm text-on-surface-variant">The newest {SHOWN} of {total(tab.id).toLocaleString('en-US')}.</p>}
-      <ul className="mt-6 space-y-3">
-        {rows.map((r) => (
-          <li key={r.id} className="card p-5">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="truncate text-body-lg font-bold text-on-surface">{r.academy_name}</span>
-              <span className="shrink-0 text-body-sm text-on-surface-variant">{r.status === 'contacted' ? 'Contacted · ' : ''}{ago(r.created_at)}</span>
-            </div>
-            <p className="mt-1 text-body text-on-surface-variant">
-              {r.name} · <a href={`mailto:${mailtoAddr(r.email)}`} className="font-semibold text-on-surface underline underline-offset-2">{r.email}</a>
-            </p>
-            <p className="mt-2 text-body-sm leading-relaxed text-on-surface-variant">
-              {[r.slug && `${r.slug}.train.futbol`, r.city, r.players && `${r.players} players`,
-                r.trainers && (r.trainers === 'Just me' ? 'trainer on their own' : `${r.trainers} trainers`), r.content].filter(Boolean).join(' · ')}
-            </p>
-            {r.message && <p className="mt-2 whitespace-pre-line text-body leading-relaxed text-on-surface">{r.message}</p>}
-            {['new', 'contacted', 'declined'].includes(r.status) && <RequestStatus id={r.id} status={r.status} />}
-            {r.status !== 'declined' && (
-              <ApproveRequest id={r.id} slug={r.slug} academyName={r.academy_name} email={r.email} trainer={r.name}
-                approved={r.academy_id && r.claim_code && r.slug
-                  ? { slug: r.slug, code: r.claim_code, claimed: !!r.claimed_at } : null} />
-            )}
-          </li>
-        ))}
+      <ul className="mt-6 max-w-3xl divide-y divide-outline-variant">
+        {rows.map((r) => {
+          const menu = ['new', 'contacted', 'declined'].includes(r.status) ? <RequestStatus id={r.id} status={r.status} name={r.academy_name} /> : null;
+          return (
+            <li key={r.id} className="py-8">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-body-lg font-bold text-on-surface">{r.academy_name}</span>
+                    {r.status === 'contacted' && <Tag tone="wait">Contacted</Tag>}
+                    {r.status === 'declined' && <Tag tone="rose">Declined</Tag>}
+                    {['approved', 'set_up'].includes(r.status) && <Tag tone={r.claimed_at ? 'good' : 'wait'}>{r.claimed_at ? 'Claimed' : 'Approved, not claimed'}</Tag>}
+                  </div>
+                  <p className="mt-1 text-body text-on-surface-variant">
+                    {r.name} · <a href={`mailto:${mailtoAddr(r.email)}`} className="font-semibold text-on-surface underline underline-offset-2">{r.email}</a>
+                  </p>
+                </div>
+                <span className="shrink-0 pt-1 text-body-sm text-on-surface-variant">{ago(r.created_at)}</span>
+              </div>
+              <p className="mt-3 text-body-sm leading-relaxed text-on-surface-variant">
+                {[r.slug && `${r.slug}.train.futbol`, r.city, r.players && `${r.players} players`,
+                  r.trainers && (r.trainers === 'Just me' ? 'trainer on their own' : `${r.trainers} trainers`), r.content].filter(Boolean).join(' · ')}
+              </p>
+              {r.message && <p className="mt-3 max-w-2xl whitespace-pre-line text-body leading-relaxed text-on-surface">{r.message}</p>}
+              {r.status !== 'declined' ? (
+                <ApproveRequest id={r.id} slug={r.slug} academyName={r.academy_name} email={r.email} trainer={r.name} extra={menu}
+                  approved={r.academy_id && r.claim_code && r.slug
+                    ? { slug: r.slug, code: r.claim_code, claimed: !!r.claimed_at } : null} />
+              ) : <div className="mt-4 flex items-center gap-2">{menu}</div>}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

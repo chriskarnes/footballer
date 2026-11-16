@@ -14,10 +14,13 @@ import { ConfirmSheet } from '@/components/ConfirmSheet';
  *
  * Approved already, the card shows the link, and whether it's been claimed.
  */
-export function ApproveRequest({ id, slug, academyName, email, trainer, approved }: {
+export function ApproveRequest({ id, slug, academyName, email, trainer, approved, extra }: {
   id: string; slug: string | null; academyName: string; email: string; trainer: string;
   approved: { slug: string; code: string; claimed: boolean } | null;
+  /** What sits beside Approve: the request's menu. */
+  extra?: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   const [address, setAddress] = useState(slug ?? '');
   const [name, setName] = useState(academyName);
   const [done, setDone] = useState(approved);
@@ -36,9 +39,9 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
       + `Open this link and sign in with this email address to make it yours. A short checklist then walks you `
       + `through your first drills, a session and a program, and your players' invite link.\n\n${url}\n`;
     return (
-      <div className="mt-4 border-t border-outline-variant pt-4">
+      <div className="mt-5">
         <p className="text-body font-bold text-on-surface">
-          {done.claimed ? `Claimed. ${first} is the owner.` : `Approved. Send ${first} this link to claim it:`}
+          {done.claimed ? `Claimed. ${first} is the owner.` : `Send ${first} this link to claim it:`}
         </p>
         {!done.claimed && (
           <>
@@ -68,8 +71,17 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
     );
   }
 
+  if (!open) {
+    return (
+      <div className="mt-5 flex items-center gap-2">
+        <button type="button" className="btn-primary btn-sm pressable" onClick={() => setOpen(true)}>Approve</button>
+        {extra}
+      </div>
+    );
+  }
+
   return (
-    <form className="mt-4 border-t border-outline-variant pt-4"
+    <form className="mt-5 rounded-2xl bg-surface-container-low p-5"
           onSubmit={(e) => { e.preventDefault(); setErr(''); setConfirming(true); }}>
       <ConfirmSheet open={confirming} busy={busy} title={`Make ${address.trim() || 'this'}.train.futbol?`} confirmLabel="Approve"
         body={`This creates ${name.trim() || 'the academy'} at ${address.trim()}.train.futbol, unlisted, for ${email} to claim. The address can't be taken back.`}
@@ -91,9 +103,10 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
           <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={40} />
         </label>
       </div>
-      <button type="submit" disabled={busy} className="btn-primary btn-sm pressable mt-3">
-        Approve…
-      </button>
+      <div className="mt-4 flex gap-2">
+        <button type="submit" disabled={busy} className="btn-primary btn-sm pressable">Approve…</button>
+        <button type="button" disabled={busy} className="btn-ghost btn-sm pressable" onClick={() => { setErr(''); setOpen(false); }}>Cancel</button>
+      </div>
       {err && <p role="alert" className="mt-2 text-body-sm font-semibold text-on-surface">{err}</p>}
     </form>
   );

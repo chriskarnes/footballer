@@ -59,7 +59,7 @@ export function AdminFrame({ brand, children }: { brand: React.ReactNode; childr
             })}
           </nav>
         </header>
-        <main className="safe-x mx-auto w-full max-w-6xl px-5 pb-16 pt-4 lg:px-10 lg:pt-10">{children}</main>
+        <main className="safe-x mx-auto w-full max-w-6xl px-5 pb-24 pt-6 lg:px-14 lg:pt-14">{children}</main>
       </div>
     </>
   );

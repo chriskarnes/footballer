@@ -1,15 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { adminViewer, aiLine, day, loadAcademy, loadKinds, n, sourceLabel } from '@/lib/admin-data';
-import { OpenSwitch } from '@/components/admin/OpenSwitch';
-import { SelfServeInvite } from '@/components/admin/SelfServeInvite';
+import { SelfServeAccess } from '@/components/admin/SelfServeAccess';
 import { RemoveMember } from '@/components/admin/RemoveMember';
 import { aiMonthlyLimit } from '@/lib/ai';
 import { ago } from '@/lib/notes';
 import { headers } from 'next/headers';
 import { academyOrigin } from '@/lib/tenant';
 import { BackLink } from '@/components/BackLink';
-import { AdminGate, Failed, RoleTag, Section, Stat, Table, Td, Th } from '@/components/admin/ui';
+import { AdminGate, Aside, Empty, Failed, ICON, IconLink, PageHead, RoleTag, Rows, Section, Stat, Stats, Table, Tag, Td, Th } from '@/components/admin/ui';
 import { FreeUntil } from '@/components/admin/FreeUntil';
 import { PlayerPay } from '@/components/admin/PlayerPay';
 import { readTerms } from '@/lib/membership-server';
@@ -50,63 +49,61 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
   return (
     <div className="animate-pop">
       <BackLink href="/admin/academies" label="Academies" />
-      <h1 className="h-page">{x.name}</h1>
-      <p className="mt-2 text-body text-on-surface-variant">
-        <a href={site} className="font-semibold text-on-surface underline underline-offset-4">{site.replace(/^https?:\/\//, '')}</a>
-        {x.city && ` · ${x.city}`} · started {day(x.created_at)} · {x.time_zone}
-        {kind?.selfServe ? ` · self-serve, ${kind.open ? 'open to everyone' : 'invite only'}` : x.unclaimed ? ' · approved, not yet claimed by its owner' : !x.set_up && ' · still setting up'}{x.library_access && ' · Forge library on'}{!x.listed && ' · unlisted'}
-      </p>
+      <PageHead title={x.name}
+        tags={<>
+          {kind?.selfServe ? <Tag tone="dark">Self-serve</Tag>
+            : x.unclaimed ? <Tag tone="wait">Approved, not claimed yet</Tag>
+            : !x.set_up && <Tag tone="wait">Still setting up</Tag>}
+          {x.library_access && <Tag>Forge library</Tag>}
+          {!x.listed && <Tag>Unlisted</Tag>}
+        </>}
+        sub={<>{site.replace(/^https?:\/\//, '')}{x.city && ` · ${x.city}`} · since {day(x.created_at)} · {x.time_zone}</>}
+        actions={<IconLink href={site} label="Open its site" d={ICON.open} external />} />
 
-      {kind?.selfServe && (
-        <>
-          <OpenSwitch id={x.id} slug={x.slug} open={kind.open} licensed={x.library_access} />
-          <SelfServeInvite id={x.id} site={site} code={invite} />
-        </>
-      )}
+      {kind?.selfServe && <SelfServeAccess id={x.id} slug={x.slug} site={site} open={kind.open} licensed={x.library_access} code={invite} />}
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Stats>
         <Stat label="Players" value={n(players.length)} sub={`${n(staff.length)} staff`} />
         <Stat label="Trained, last 7 days" value={n(active)} sub={players.length ? `of ${n(players.length)}` : undefined} />
         <Stat label="Sessions, last 7 days" value={n(players.reduce((s, m) => s + m.sessions_7d, 0))}
               sub={`${n(players.reduce((s, m) => s + m.sessions_30d, 0))} in 30 days`} />
         <Stat label="Programs" value={n(x.programs.length)} sub={`${n(x.groups.length)} ${x.groups.length === 1 ? 'group' : 'groups'} · ${n(x.drills)} own ${x.drills === 1 ? 'drill' : 'drills'}`} />
-      </div>
-      <p className="mt-3 text-body-sm text-on-surface-variant">
-        Sessions count what players did for this academy and on their own (library, Speed, free sessions), not for another academy. {n(x.notes_30d)} notes sent in 30 days · {aiLine(x.ai_30d)} in 30 days{x.ai_30d.month !== undefined && ` · ${n(x.ai_30d.month)} of ${n(aiMonthlyLimit())} this month`}
+      </Stats>
+      <p className="mt-5 text-body-sm text-on-surface-variant">
+        In 30 days: {n(x.notes_30d)} notes sent · {aiLine(x.ai_30d)}{x.ai_30d.month !== undefined && ` · ${n(x.ai_30d.month)} of ${n(aiMonthlyLimit())} this month`}
       </p>
+      <Aside label="How sessions are counted">
+        Sessions count what players did for this academy and on their own (library, Speed, free sessions), not for another academy.
+      </Aside>
 
       {!!x.waiting.length && (
-        <Section title={`Waiting to be let in (${x.waiting.length})`}>
-          <ul className="card mt-4 divide-y divide-outline-variant">
+        <Section title="Waiting to be let in" count={x.waiting.length}>
+          <Rows>
             {x.waiting.map((w) => (
-              <li key={w.id} className="flex items-baseline justify-between gap-3 px-4 py-3">
+              <li key={w.id} className="flex items-baseline justify-between gap-3 py-4">
                 <Link href={`/admin/users/${w.id}`} className="truncate font-bold text-on-surface hover:underline">{w.name} <span className="font-normal text-on-surface-variant">{w.role === 'trainer' ? 'as a trainer · ' : ''}{w.email}</span></Link>
                 <span className="shrink-0 text-body-sm text-on-surface-variant">{ago(w.created_at)}</span>
               </li>
             ))}
-          </ul>
+          </Rows>
         </Section>
       )}
 
       {(billing !== undefined || terms) && (
         <Section title="Billing">
-          {terms && <PlayerPay id={x.id} mode={terms.mode} priceCents={terms.priceCents} trialDays={terms.trialDays} />}
-          {billing !== undefined && (!terms || terms.mode === 'trainer_pays') && (
-            <div className="card mt-4 p-5">
-              <div className="h-card">The trainer pays</div>
-              <p className="mt-1 text-body text-on-surface">
-                {billing?.status ? `Stripe: ${billing.status.replace(/_/g, ' ')}${billing.quantity != null ? `, ${n(billing.quantity)} players` : ''}. ` : ''}
-                {billingState(billing, players.length, Date.now()).line}
-              </p>
-              <FreeUntil id={x.id} until={billing?.free_until ?? null} />
-            </div>
-          )}
+          <div className="mt-3 divide-y divide-outline-variant border-b border-outline-variant">
+            {terms && <PlayerPay id={x.id} mode={terms.mode} priceCents={terms.priceCents} trialDays={terms.trialDays} />}
+            {billing !== undefined && (!terms || terms.mode === 'trainer_pays') && (
+              <FreeUntil id={x.id} until={billing?.free_until ?? null}
+                status={`${billing?.status ? `Stripe: ${billing.status.replace(/_/g, ' ')}${billing.quantity != null ? `, ${n(billing.quantity)} players` : ''}. ` : ''}${billingState(billing, players.length, Date.now()).line}`} />
+            )}
+          </div>
         </Section>
       )}
 
-      <Section title={`People (${x.members.length})`}>
-        {!x.members.length ? <p className="mt-3 text-body text-on-surface-variant">No one yet.</p> : (
-          <Table head={<><Th>Name</Th><Th>Role</Th><Th>Groups</Th><Th right>7d</Th><Th right>30d</Th><Th>Last session</Th><Th>Last sign-in</Th><Th>Joined</Th>{kind?.selfServe && <Th right><span className="sr-only">Remove</span></Th>}</>}>
+      <Section title="People" count={x.members.length}>
+        {!x.members.length ? <Empty>No one yet.</Empty> : (
+          <Table head={<><Th>Name</Th><Th>Role</Th><Th>Groups</Th><Th right>Sessions 7d</Th><Th>Last session</Th><Th>Last sign-in</Th>{kind?.selfServe && <Th right><span className="sr-only">Options</span></Th>}</>}>
             {x.members.map((m) => (
               <tr key={m.id} className="relative hover:bg-surface-container-low">
                 <Td strong className="max-w-[15rem]">
@@ -115,13 +112,11 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
                 </Td>
                 <Td><RoleTag role={m.role} /></Td>
                 <Td className="max-w-[12rem] truncate">{m.groups ?? '—'}</Td>
-                <Td right>{m.role === 'player' ? n(m.sessions_7d) : '—'}</Td>
-                <Td right>{m.role === 'player' ? n(m.sessions_30d) : '—'}</Td>
+                <Td right>{m.role === 'player' ? <><span className="text-on-surface">{n(m.sessions_7d)}</span><span className="block text-body-sm">{n(m.sessions_30d)} in 30d</span></> : '—'}</Td>
                 <Td className="whitespace-nowrap">{m.role !== 'player' ? '—' : m.last_done ? ago(m.last_done) : 'Never'}</Td>
-                <Td className="whitespace-nowrap">{m.last_sign_in_at ? ago(m.last_sign_in_at) : 'Never'}</Td>
-                <Td className="whitespace-nowrap">{day(m.joined_at)}</Td>
+                <Td className="whitespace-nowrap"><span title={`Joined ${day(m.joined_at)}`}>{m.last_sign_in_at ? ago(m.last_sign_in_at) : 'Never'}</span></Td>
                 {kind?.selfServe && (
-                  <Td right>{m.role === 'player' && <RemoveMember academyId={x.id} userId={m.id} name={m.name || m.email} />}</Td>
+                  <Td right className="py-2">{m.role === 'player' && <RemoveMember academyId={x.id} userId={m.id} name={m.name || m.email} />}</Td>
                 )}
               </tr>
             ))}
@@ -129,38 +124,38 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
         )}
       </Section>
 
-      <div className="grid gap-x-8 lg:grid-cols-2">
-        <Section title={`Programs (${x.programs.length})`}>
-          {!x.programs.length ? <p className="mt-3 text-body text-on-surface-variant">None yet.</p> : (
-            <ul className="card mt-4 divide-y divide-outline-variant">
+      <div className="grid gap-x-14 lg:grid-cols-2">
+        <Section title="Programs" count={x.programs.length}>
+          {!x.programs.length ? <Empty>None yet.</Empty> : (
+            <Rows>
               {x.programs.map((p) => (
-                <li key={p.id} className="flex items-baseline justify-between gap-3 px-4 py-3">
+                <li key={p.id} className="flex items-baseline justify-between gap-3 py-4">
                   <span className="truncate font-bold text-on-surface">{p.name}</span>
                   <span className="shrink-0 text-body-sm text-on-surface-variant">{p.weeks} weeks · {n(p.sessions)} sessions</span>
                 </li>
               ))}
-            </ul>
+            </Rows>
           )}
         </Section>
-        <Section title={`Groups (${x.groups.length})`}>
-          {!x.groups.length ? <p className="mt-3 text-body text-on-surface-variant">None yet.</p> : (
-            <ul className="card mt-4 divide-y divide-outline-variant">
+        <Section title="Groups" count={x.groups.length}>
+          {!x.groups.length ? <Empty>None yet.</Empty> : (
+            <Rows>
               {x.groups.map((g) => (
-                <li key={g.id} className="flex items-baseline justify-between gap-3 px-4 py-3">
+                <li key={g.id} className="flex items-baseline justify-between gap-3 py-4">
                   <span className="truncate font-bold text-on-surface">{g.name}</span>
                   <span className="shrink-0 text-body-sm text-on-surface-variant">{n(g.members)} players{g.program ? ` · ${g.program}` : ''}</span>
                 </li>
               ))}
-            </ul>
+            </Rows>
           )}
         </Section>
       </div>
 
       <Section title="Latest sessions">
-        {!x.recent.length ? <p className="mt-3 text-body text-on-surface-variant">No sessions finished yet.</p> : (
+        {!x.recent.length ? <Empty>No sessions finished yet.</Empty> : (
           <Table head={<><Th>Who</Th><Th>Session</Th><Th>Kind</Th><Th right>Min</Th><Th>When</Th></>}>
             {x.recent.map((w) => (
-              <tr key={w.id} className="hover:bg-surface-container-low">
+              <tr key={w.id}>
                 <Td strong><Link href={`/admin/users/${w.user_id}`} className="hover:underline">{w.who}</Link></Td>
                 <Td><span className="text-on-surface">{w.title}</span>{w.feel && <span className="block text-body-sm">felt {w.feel}</span>}</Td>
                 <Td>{sourceLabel(w.source)}</Td>
