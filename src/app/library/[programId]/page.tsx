@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { getPrograms, getSessions } from '@/lib/library';
@@ -24,6 +26,9 @@ import { BlockSection, BlockStrip, SessionList, type Block, type CardSession } f
  * brand block on the page. Signed out, the first card says "Start here".
  */
 export default async function ProgramPage({ params }: { params: Promise<{ programId: string }> }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   const { programId } = await params;
   if (!(await libraryAllowed())) return <LibraryLocked title="Library" next="/library" />;
   const [programs, sessions] = await Promise.all([getPrograms(), getSessions()]);

@@ -298,8 +298,10 @@ async function place(v: any, s: { id: string; name: string; drill_ids: string[] 
 export async function placeSessions(libraryIds: string[], programId: string, week: number): Promise<Result> {
   try {
     const v = await staff();
-    const ids = libraryIds.filter((x) => typeof x === 'string').slice(0, 20);
+    const ids = libraryIds.filter((x) => typeof x === 'string');
     if (!ids.length) return { ok: false, error: 'Tick at least one session.' };
+    // Said, not cut short: the button promised all of them.
+    if (ids.length > 20) return { ok: false, error: 'That’s more than 20 at once. Untick a few and add the rest after.' };
     await ownProgram(v, programId, week);
     const { data, error } = await v.db.from('library_sessions').select('id, name, drill_ids').eq('academy_id', v.academy.id).in('id', [...new Set(ids)]);
     if (error) return { ok: false, error: plain(error) };
@@ -384,8 +386,13 @@ export async function duplicateProgram(id: string): Promise<Result> {
       .insert({ academy_id: v.academy.id, name: `${src.name.slice(0, 53)} (copy)`, description: src.description, weeks: src.weeks }).select('id').single();
     if (me) return { ok: false, error: plain(me) };
     const q = (cols: string) => v.db.from('academy_sessions').select(cols).eq('program_id', id).eq('academy_id', v.academy.id);
-    let { data: rows } = await q('name, week, position, drill_ids, library_id');
-    if (!rows) ({ data: rows } = await q('name, week, position, drill_ids'));
+    let { data: rows, error: re } = await q('name, week, position, drill_ids, library_id');
+    if (re) ({ data: rows, error: re } = await q('name, week, position, drill_ids'));
+    // A copy with nothing in it isn't a copy: take the empty program back.
+    if (re) {
+      await v.db.from('academy_programs').delete().eq('id', made.id).eq('academy_id', v.academy.id);
+      return { ok: false, error: plain(re) };
+    }
     if (rows?.length) {
       const { error } = await v.db.from('academy_sessions').insert(
         (rows as unknown as Record<string, unknown>[]).map((s) => ({ ...s, academy_id: v.academy.id, program_id: made.id })));
@@ -432,17 +439,25 @@ export async function addStarterSessions(): Promise<Result> {
       .in('name', STARTER_SESSIONS.map((s) => s.name)).limit(1);
     if (te) return { ok: false, error: plain(te) };
     if (there?.length) return { ok: false, error: 'The example sessions are already in your library.' };
-    const { data: drills, error: de } = await v.db.from('drills').insert(STARTER_DRILLS.map((d) => ({
+    // The example drills still here from last time (the sessions were
+    // deleted, the drills kept) are used again, not added a second time.
+    const { data: kept, error: ke } = await v.db.from('drills').select('id, name').eq('academy_id', v.academy.id)
+      .in('name', STARTER_DRILLS.map((d) => d.name));
+    if (ke) return { ok: false, error: plain(ke) };
+    const have = new Map(((kept ?? []) as { id: string; name: string }[]).map((d) => [d.name, d.id]));
+    const fresh = STARTER_DRILLS.filter((d) => !have.has(d.name));
+    const { data: drills, error: de } = !fresh.length ? { data: [], error: null } : await v.db.from('drills').insert(fresh.map((d) => ({
       academy_id: v.academy.id, created_by: v.user.id, name: d.name, amount: d.amount, minutes: d.minutes,
       focus: d.focus, focus_areas: [d.focus], video_url: null, how: d.how,
     }))).select('id, name');
     if (de) return { ok: false, error: plain(de) };
-    const idOf = new Map(((drills ?? []) as { id: string; name: string }[]).map((d) => [d.name, d.id]));
+    const made = ((drills ?? []) as { id: string; name: string }[]);
+    const idOf = new Map([...have, ...made.map((d) => [d.name, d.id] as const)]);
     const { error } = await v.db.from('library_sessions').insert(STARTER_SESSIONS.map((s) => ({
       academy_id: v.academy.id, name: s.name, drill_ids: s.drills.map((n) => idOf.get(n)).filter(Boolean),
     })));
     if (error) {
-      await v.db.from('drills').delete().eq('academy_id', v.academy.id).in('id', [...idOf.values()]);
+      if (made.length) await v.db.from('drills').delete().eq('academy_id', v.academy.id).in('id', made.map((d) => d.id));
       return { ok: false, error: plain(error) };
     }
     done();

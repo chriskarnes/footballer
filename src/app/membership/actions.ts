@@ -5,7 +5,8 @@ import { plain } from '@/lib/plain-error';
 import { isLive } from '@/lib/billing';
 import { freeUntil, subscriptionTrialEnd } from '@/lib/membership';
 import { readTerms } from '@/lib/membership-server';
-import { billingDb, ensurePlayerPrice, readPlayerBilling, stripe } from '@/lib/billing-server';
+import { billingDb, ensurePlayerPrice, expireCheckouts, readPlayerBilling, runningSubscription, saveSubscription, stripe } from '@/lib/billing-server';
+import { trialStart } from '@/lib/membership-server';
 
 type Go = { ok: true; url: string } | { ok: false; error: string };
 
@@ -60,18 +61,30 @@ export async function startMembership(): Promise<Go> {
     if (member?.active === false) return { ok: false, error: 'Your trainer has paused your training here, so there’s nothing to pay.' };
     // A card added in the free days isn't charged until they end. Someone
     // coming back after cancelling has had theirs.
-    const trialEnd = row?.stripe_subscription_id ? null : subscriptionTrialEnd(freeUntil(terms, member?.joined_at), Date.now());
+    // Already paying, and Stripe's message about it hasn't reached us yet
+    // (they paid a moment ago, in this tab or another): no second checkout.
+    const ref = `${p.academy.id}:${p.user.id}`;
+    const has = await runningSubscription(p.s, customer, (m) => m.kind === 'player' && m.academy_id === p.academy.id && m.user_id === p.user.id);
+    if (has) {
+      await saveSubscription(p.s, p.db, has);
+      return openMembershipPortal();
+    }
+    // And one checkout page at a time: an older one left open is closed.
+    await expireCheckouts(p.s, customer, ref);
+    const began = (await trialStart(p.db, p.academy.id, p.user.id)).get(p.user.id);
+    const trialEnd = row?.stripe_subscription_id ? null : subscriptionTrialEnd(freeUntil(terms, member?.joined_at, began), Date.now());
     const session = await p.s.checkout.sessions.create({
       mode: 'subscription',
       customer,
-      client_reference_id: `${p.academy.id}:${p.user.id}`,
+      client_reference_id: ref,
       line_items: [{ price: await ensurePlayerPrice(p.s, terms.priceCents), quantity: 1 }],
       subscription_data: {
         description: `Training plan with ${p.academy.name}`,
         metadata: { kind: 'player', academy_id: p.academy.id, user_id: p.user.id },
         ...(trialEnd ? { trial_end: trialEnd } : {}),
       },
-      success_url: `${p.back}?done=1`,
+      // Stripe fills in the id, and the page reads the result straight back.
+      success_url: `${p.back}?done=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: p.back,
     });
     if (!session.url) throw new Error('checkout session has no url');

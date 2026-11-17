@@ -36,6 +36,20 @@ export default function TermsPage() {
         </ul>
       </LegalSection>
 
+      <LegalSection title="Paying">
+        <p>Some academies are paid for by card, through Stripe. Who pays depends on the academy: each player&rsquo;s family, or the trainer. Where nobody is asked for a card, there is nothing to pay.</p>
+        <ul>
+          <li><b>Where families pay</b>, a player trains free for the number of days their Membership page shows, then it&rsquo;s the monthly price shown there. A card added during the free days isn&rsquo;t charged before they end.</li>
+          <li><b>It renews every month</b> on the card you gave, at the price you started at, until you cancel.</li>
+          <li><b>Cancel any time</b> under Me, then Membership. Training stays open to the end of the month you&rsquo;ve paid for, and nothing more is charged.</li>
+          <li><b>A parent or guardian</b> should be the one to add a card for a player under 18.</li>
+          <li>If a trainer switches a player off, the family&rsquo;s payments are paused until the player is switched back on. If a player leaves an academy, is removed from it, or the account is deleted, payments stop then.</li>
+          <li>If a payment fails, training stays open while the card is tried again, and closes if it still can&rsquo;t be taken.</li>
+          <li><b>Where the trainer pays</b>, it&rsquo;s a monthly price for each active player, charged to the academy owner&rsquo;s card. The number of players is counted before each payment. The owner can cancel any time under Billing.</li>
+          <li>Payments already taken aren&rsquo;t refunded automatically. <Contact about="if you think you&rsquo;ve been charged in error, and we&rsquo;ll put it right" /></li>
+        </ul>
+      </LegalSection>
+
       <LegalSection title="Using it fairly">
         <p>Don&rsquo;t try to get into anyone else&rsquo;s account or academy, don&rsquo;t copy the drill library out of the app, don&rsquo;t overload or interfere with the service, and don&rsquo;t use it to send anything abusive or unlawful. We can suspend or close an account that does.</p>
       </LegalSection>

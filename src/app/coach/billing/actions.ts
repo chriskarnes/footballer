@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { getViewer } from '@/lib/viewer';
 import { plain } from '@/lib/plain-error';
 import { isLive, trialEndFor } from '@/lib/billing';
-import { billingDb, ensurePrice, playerCount, readBilling, stripe } from '@/lib/billing-server';
+import { billingDb, ensurePrice, expireCheckouts, playerCount, readBilling, runningSubscription, saveSubscription, stripe } from '@/lib/billing-server';
 import { readTerms } from '@/lib/membership-server';
 
 type Go = { ok: true; url: string } | { ok: false; error: string };
@@ -54,6 +54,15 @@ export async function startCheckout(): Promise<Go> {
       if (error) throw error;
     }
 
+    // Already paying, and Stripe's message about it hasn't reached us yet: no
+    // second checkout. And one checkout page at a time.
+    const has = await runningSubscription(o.s, customer, (m) => m.kind !== 'player' && m.academy_id === o.academy.id);
+    if (has) {
+      await saveSubscription(o.s, o.db, has, o.academy.id);
+      return openPortal();
+    }
+    await expireCheckouts(o.s, customer, o.academy.id);
+
     const trialEnd = trialEndFor(row?.free_until, Date.now());
     const session = await o.s.checkout.sessions.create({
       mode: 'subscription',
@@ -61,7 +70,7 @@ export async function startCheckout(): Promise<Go> {
       client_reference_id: o.academy.id,
       line_items: [{ price: await ensurePrice(o.s), quantity: players }],
       subscription_data: { metadata: { academy_id: o.academy.id }, ...(trialEnd ? { trial_end: trialEnd } : {}) },
-      success_url: `${o.back}?done=1`,
+      success_url: `${o.back}?done=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: o.back,
     });
     if (!session.url) throw new Error('checkout session has no url');

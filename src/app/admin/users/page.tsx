@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { adminViewer, day, loadInactive, loadUsers, n, USER_FILTERS, USERS_PER_PAGE, type UserFilter } from '@/lib/admin-data';
 import { ago } from '@/lib/notes';
 import { AdminGate, Empty, Failed, PageHead, Pager, RoleTag, Table, Tag, Td, Th } from '@/components/admin/ui';
@@ -25,6 +26,12 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   const { data, error } = await loadUsers(q, filter, page);
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
+  // Past the last page (an old link, or a search that's since narrowed): the last one.
+  if (!error && !rows.length && total > 0 && page > 0) {
+    const last = Math.max(0, Math.ceil(total / USERS_PER_PAGE) - 1);
+    const qs = new URLSearchParams({ ...(q ? { q } : {}), ...(filter !== 'all' ? { in: filter } : {}), ...(last ? { page: String(last) } : {}) }).toString();
+    redirect(`/admin/users${qs ? `?${qs}` : ''}`);
+  }
   const inactive = await loadInactive({ users: rows.map((u) => u.id) });
   const href = (id: UserFilter, p = 0) =>
     `/admin/users?${new URLSearchParams({ ...(id !== 'all' && { in: id }), ...(q && { q }), ...(p > 0 && { page: String(p) }) })}`;

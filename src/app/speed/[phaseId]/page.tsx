@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { notFound } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { KIND_LABELS, phaseById, sessionsFor, sessionSeconds } from '@/lib/speed';
@@ -9,6 +11,9 @@ import { KIND_LABELS, phaseById, sessionsFor, sessionSeconds } from '@/lib/speed
  * as the week it is.
  */
 export default async function PhasePage({ params }: { params: Promise<{ phaseId: string }> }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   const { phaseId } = await params;
   const phase = phaseById(phaseId);
   if (!phase) notFound();

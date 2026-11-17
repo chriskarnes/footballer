@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { BrandBand } from '@/components/BrandBand';
 import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS, SOURCES } from '@/lib/speed';
 import { serverClient } from '@/lib/supabase/server';
@@ -17,6 +19,9 @@ const Chevron = ({ className }: { className: string }) => (
  * started) is for the adults, in one closed section at the bottom.
  */
 export default async function SpeedPage() {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   // The self-serve space (0030) has no trainer to read the adults' section.
   const selfServe = !!(await getAcademy().catch(() => null))?.academy?.selfServe;
   // Finished speed sessions from the last eight days, to tick this week off.

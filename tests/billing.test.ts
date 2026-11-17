@@ -16,12 +16,17 @@ test('five dollars a player', () => {
   assert.equal(dollars(550), '$5.50');
 });
 
-test('free time becomes a trial only with two days or more left', () => {
+test('a card added in free time is never charged before it ends', () => {
   assert.equal(trialEndFor(null, NOW), null);
   assert.equal(trialEndFor('not a date', NOW), null);
   assert.equal(trialEndFor('2026-11-10', NOW), null, 'already over');
-  assert.equal(trialEndFor('2026-11-16', NOW), null, 'under two days left');
   assert.equal(trialEndFor('2027-01-14', NOW), Date.parse('2027-01-14T23:59:59Z') / 1000);
+  // Under two days left: Stripe won't take a free period that short, so the
+  // first payment is put two days out. Later than the free day, not sooner.
+  const soon = new Date(NOW + 20 * 3_600_000).toISOString().slice(0, 10);
+  const end = trialEndFor(soon, NOW);
+  assert.ok(end !== null && end * 1000 >= Date.parse(`${soon}T23:59:59Z`), 'not before the free day ends');
+  assert.ok(end !== null && end * 1000 - NOW >= 2 * 86_400_000, 'at least the two days Stripe needs');
 });
 
 test('a cancelled or expired subscription is not live', () => {

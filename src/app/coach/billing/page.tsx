@@ -3,7 +3,8 @@ import { StatusTag } from '@/components/coach/StatusTag';
 import { staffOnly } from '@/components/coach/Gate';
 import { BillingButtons } from '@/components/coach/BillingButtons';
 import { billingState, dollars, isLive, monthlyCents, PRICE_CENTS } from '@/lib/billing';
-import { billingDb, billingOn, playerCount, readBilling, stripe, syncSeats } from '@/lib/billing-server';
+import { billingDb, billingOn, playerCount, readBilling, stripe, syncCheckout, syncSeats } from '@/lib/billing-server';
+import { redirect } from 'next/navigation';
 import { CONTACT_EMAIL } from '@/lib/legal';
 import { readTerms, rosterMarks } from '@/lib/membership-server';
 import { accessLabel, playerAccess } from '@/lib/membership';
@@ -17,11 +18,11 @@ export const metadata = { title: 'Billing', robots: { index: false } };
  * The card itself is never here; adding or changing it happens on Stripe's
  * own pages, and this shows what Stripe last told us.
  */
-export default async function BillingPage({ searchParams }: { searchParams: Promise<{ done?: string }> }) {
+export default async function BillingPage({ searchParams }: { searchParams: Promise<{ done?: string; session_id?: string }> }) {
   const gate = await staffOnly('/coach/billing');
   if ('page' in gate) return gate.page;
   const { db, academy, role } = gate.viewer;
-  const { done } = await searchParams;
+  const { done, session_id } = await searchParams;
   const back = { href: '/coach/team', label: 'Academy' };
 
   if (role !== 'owner') {
@@ -30,6 +31,14 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
         <PageHead title="Billing" back={back}>Only {academy.name}&rsquo;s owner sees billing.</PageHead>
       </div>
     );
+  }
+
+  // Back from Stripe's checkout: read what was just set up straight from
+  // Stripe, so the page doesn't still offer "Add a card" while its message
+  // is on the way.
+  if (session_id) {
+    await syncCheckout(session_id, academy.id);
+    redirect('/coach/billing?done=1');
   }
 
   // Families pay here (0038): the owner pays nothing, and sees who is paying.

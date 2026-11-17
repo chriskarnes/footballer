@@ -3,7 +3,9 @@ import { cache } from 'react';
 import { addDays, localDate } from './progress';
 import { getViewer } from './viewer';
 
-export type InboxNote = { id: string; body: string; kind: string; author: string; at: string; seen: boolean };
+export type InboxNote = { id: string; body: string; kind: string; author: string;
+  /** Whose account wrote it; null once that account is gone. */
+  authorId: string | null; at: string; seen: boolean };
 
 /**
  * The signed-in player's notes from this academy, newest first. RLS limits
@@ -16,13 +18,13 @@ export async function readInbox(db: any, userId: string, academyId: string, limi
   // embed (referencedTable) only sorted inside each row: the limit took the
   // oldest, and from about the twentieth note new ones never showed.
   let q = db.from('note_recipients')
-    .select('seen_at, notes!inner(id, body, kind, author_name, created_at, academy_id)')
+    .select('seen_at, notes!inner(id, body, kind, author_name, author_id, created_at, academy_id)')
     .eq('user_id', userId).eq('notes.academy_id', academyId);
   if (unreadOnly) q = q.is('seen_at', null);
   const { data, error } = await q.order('notes(created_at)', { ascending: false }).limit(limit);
   if (error || !data) return [];
-  return (data as { seen_at: string | null; notes: { id: string; body: string; kind: string; author_name: string; created_at: string } }[])
-    .map((r) => ({ id: r.notes.id, body: r.notes.body, kind: r.notes.kind, author: r.notes.author_name, at: r.notes.created_at, seen: !!r.seen_at }))
+  return (data as { seen_at: string | null; notes: { id: string; body: string; kind: string; author_name: string; author_id: string | null; created_at: string } }[])
+    .map((r) => ({ id: r.notes.id, body: r.notes.body, kind: r.notes.kind, author: r.notes.author_name, authorId: r.notes.author_id ?? null, at: r.notes.created_at, seen: !!r.seen_at }))
     .sort((a, b) => b.at.localeCompare(a.at));
 }
 

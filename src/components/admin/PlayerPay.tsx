@@ -46,7 +46,10 @@ export function PlayerPay({ id, mode, priceCents, trialDays }: { id: string; mod
   const [busy, start] = useTransition();
   const save = () => start(async () => {
     setMsg('');
-    const r = await setBilling(id, pick, Number(price), Number(days)).catch(offline);
+    // The price and free days are only on screen for families-pay: any other
+    // choice keeps what's saved, not whatever was left in a hidden box.
+    const fam = pick === 'players_pay';
+    const r = await setBilling(id, pick, fam ? Number(price) : priceCents / 100, fam ? Number(days) : trialDays).catch(offline);
     if (r.ok) setEditing(false); else setMsg(r.error);
   });
   const cancel = () => { setPick(mode); setPrice(String(priceCents / 100)); setDays(String(trialDays)); setMsg(''); setEditing(false); };
@@ -79,7 +82,7 @@ export function PlayerPay({ id, mode, priceCents, trialDays }: { id: string; mod
         )}
         <p className="mt-5 text-body-sm leading-relaxed text-on-surface-variant">
           Switching to families-pay starts every player&rsquo;s free days from now. A new price is for families who add a card from now on.
-          Changing who pays doesn&rsquo;t cancel cards already on file: do that in Stripe.
+          Families already paying keep the price they started at. Changing who pays stops the card payments that no longer apply.
         </p>
         <div className="mt-5 flex gap-2">
           <button type="button" disabled={busy} className="btn-primary btn-sm pressable" onClick={save}>{busy ? 'Saving…' : 'Save'}</button>

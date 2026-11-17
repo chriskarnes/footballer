@@ -1,4 +1,6 @@
 import { getExercises, getSessions } from '@/lib/library';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { serverClient } from '@/lib/supabase/server';
@@ -31,6 +33,9 @@ type PlanRow = { id: string; name: string; active: boolean; intake: PlanIntake |
 export default async function PlanPage({
   searchParams,
 }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   const q = await searchParams;
   if (!(await libraryAllowed())) return <LibraryLocked title="Plan" next="/plan" />;
   const one = (k: string) => (typeof q[k] === 'string' ? (q[k] as string) : undefined);

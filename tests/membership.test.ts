@@ -71,7 +71,8 @@ test('a cancelled, unpaid or unfinished subscription is locked, and free days do
 test('a card added in the free days is charged when they end, unless that is under two days away', () => {
   assert.equal(subscriptionTrialEnd(null, NOW), null);
   assert.equal(subscriptionTrialEnd(NOW - DAY, NOW), null);
-  assert.equal(subscriptionTrialEnd(NOW + DAY, NOW), null);
+  // A day of free time left: charged two days out, never today.
+  assert.equal(subscriptionTrialEnd(NOW + DAY, NOW), Math.floor((NOW + 2 * DAY + 2 * 3_600_000) / 1000));
   assert.equal(subscriptionTrialEnd(NOW + 10 * DAY, NOW), Math.floor((NOW + 10 * DAY) / 1000));
 });
 
@@ -104,4 +105,25 @@ test('what a trainer sees beside each player', () => {
   assert.equal(accessLabel(playerAccess(t, new Date(NOW - 13 * DAY).toISOString(), null, NOW)), 'Free, 1 day left');
   assert.equal(accessLabel(playerAccess(t, new Date(NOW - 30 * DAY).toISOString(), null, NOW)), 'Not paying');
   assert.equal(accessLabel(playerAccess(t, null, row(), NOW)), 'Paying');
+});
+
+test('leaving and joining again does not start the free days over', () => {
+  const t = terms({ trialDays: 7 });
+  const first = new Date(NOW - 20 * DAY).toISOString(), again = new Date(NOW - DAY).toISOString();
+  // Joined again yesterday, first joined twenty days ago: the free days are long over.
+  assert.equal(playerAccess(t, again, null, NOW, true, first).state, 'locked');
+  // With no record of a first time (before 0042), the day they joined stands in.
+  assert.equal(playerAccess(t, again, null, NOW).state, 'trial');
+  assert.equal(freeUntil(t, again, first), Date.parse(first) + 7 * DAY);
+  // A record later than this joining (it can't be, but) never shortens it the wrong way.
+  assert.equal(freeUntil(t, first, again), Date.parse(first) + 7 * DAY);
+});
+
+test('a family already paying is shown what they pay, not a price changed since', () => {
+  const t = terms({ priceCents: 1500 });
+  const paid = playerAccess(t, new Date(NOW - 30 * DAY).toISOString(), row({ price_cents: 1000 }), NOW);
+  assert.match(membershipLine(t, paid, row({ price_cents: 1000 })), /\$10 a month/);
+  // Someone not paying yet is shown the price they'd start at.
+  const locked = playerAccess(t, new Date(NOW - 30 * DAY).toISOString(), null, NOW);
+  assert.match(membershipLine(t, locked, null), /\$15 a month/);
 });

@@ -101,7 +101,7 @@ export default async function AdminAcademy({ params, searchParams }: { params: P
             {terms && <PlayerPay id={x.id} mode={terms.mode} priceCents={terms.priceCents} trialDays={terms.trialDays} />}
             {billing !== undefined && (!terms || terms.mode === 'trainer_pays') && (
               <FreeUntil id={x.id} until={billing?.free_until ?? null}
-                status={`${billing?.status ? `Stripe: ${billing.status.replace(/_/g, ' ')}${billing.quantity != null ? `, ${n(billing.quantity)} players` : ''}. ` : ''}${billingState(billing, players.length, Date.now()).line}`} />
+                status={`${billing?.status ? `Stripe: ${billing.status.replace(/_/g, ' ')}${billing.quantity != null ? `, ${n(billing.quantity)} players` : ''}. ` : ''}${billingState(billing, players.length - off, Date.now()).line}`} />
             )}
           </div>
         </Section>

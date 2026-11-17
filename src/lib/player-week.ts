@@ -80,7 +80,9 @@ export const readMyWeek = cache(async (): Promise<MyWeek | null> => {
 });
 
 /** Their trainer, as a player sees them (0018). Both null until that migration runs. */
-export type Trainer = { name: string | null; photo: string | null };
+export type Trainer = { name: string | null; photo: string | null;
+  /** The owner's account (0042); absent before that migration. */
+  id?: string | null };
 
 /**
  * Where a player stands with their trainer, so each screen can say the right
@@ -125,6 +127,6 @@ export const getTrainer = cache(async (): Promise<Trainer> => {
   if (!v.academy || !v.user) return { name: null, photo: null };
   const { data, error } = await v.db.rpc('academy_trainer', { p_academy: v.academy.id });
   if (error || !data) return { name: null, photo: null };
-  const t = data as { name: string | null; photo_at: string | null };
-  return { name: t.name ?? null, photo: t.photo_at ? `/me/trainer-photo?v=${encodeURIComponent(t.photo_at)}` : null };
+  const t = data as { id?: string | null; name: string | null; photo_at: string | null };
+  return { id: t.id ?? null, name: t.name ?? null, photo: t.photo_at ? `/me/trainer-photo?v=${encodeURIComponent(t.photo_at)}` : null };
 });

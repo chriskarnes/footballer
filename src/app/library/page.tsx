@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { AcademyLibrary } from '@/components/AcademyLibrary';
@@ -42,6 +44,9 @@ function Mark({ cat, className }: { cat: string; className: string }) {
 }
 
 export default async function LibraryPage() {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   if (!(await libraryAllowed())) {
     // Their academy's own library, when their trainer lets them browse it.
     const own = await AcademyLibrary({});

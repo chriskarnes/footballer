@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { SignIn } from '@/components/SignIn';
 import { MembershipButtons } from '@/components/MembershipButtons';
@@ -6,7 +7,7 @@ import { getViewer } from '@/lib/viewer';
 import { dollars } from '@/lib/billing';
 import { membershipLine } from '@/lib/membership';
 import { myMembership } from '@/lib/membership-server';
-import { billingOn } from '@/lib/billing-server';
+import { billingOn, syncCheckout } from '@/lib/billing-server';
 import { CONTACT_EMAIL } from '@/lib/legal';
 import { CardNote, Included } from '@/components/Paywall';
 import { getTrainer } from '@/lib/player-week';
@@ -19,9 +20,9 @@ export const metadata = { title: 'Membership', robots: { index: false } };
  * stands, and the way to Stripe to add a card, change it or cancel. The card
  * itself is never here.
  */
-export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ done?: string }> }) {
+export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ done?: string; session_id?: string }> }) {
   const v = await getViewer();
-  const { done } = await searchParams;
+  const { done, session_id } = await searchParams;
   if (!v.user) {
     return (
       <div className="animate-pop pt-6">
@@ -30,6 +31,13 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
         <div className="mt-5"><SignIn next="/membership" /></div>
       </div>
     );
+  }
+  // Back from Stripe's checkout: what was just paid for is read straight from
+  // Stripe, then the page is loaded again so it (and the lock around the
+  // app) is drawn from that, not from before the card went in.
+  if (session_id && v.academy) {
+    await syncCheckout(session_id, `${v.academy.id}:${v.user.id}`);
+    redirect('/membership?done=1');
   }
   const m = await myMembership();
   if (!m) {
@@ -61,7 +69,7 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
         {terms.mode === 'players_pay' && (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-brand text-[44px] font-extrabold leading-none text-on-surface">{dollars(terms.priceCents)}</span>
+              <span className="font-brand text-[44px] font-extrabold leading-none text-on-surface">{dollars(paying && row?.price_cents ? row.price_cents : terms.priceCents)}</span>
               <span className="text-body font-semibold text-on-surface-variant">a month</span>
             </div>
             {status && <Tag tone={status.tone}>{status.word}</Tag>}

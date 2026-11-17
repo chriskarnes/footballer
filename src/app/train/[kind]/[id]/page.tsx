@@ -1,4 +1,6 @@
 import { headers } from 'next/headers';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
@@ -28,6 +30,9 @@ export default async function TrainerSessionPage({ params, searchParams }: {
   params: Promise<{ kind: string; id: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   const { kind, id } = await params;
   // "Do it again" from your history: back to the history, and run as new
   // rather than opening as this week's finished one.
@@ -56,6 +61,8 @@ export default async function TrainerSessionPage({ params, searchParams }: {
         <div className="relative -mt-12">
           <SignIn next={path} />
         </div>
+        {/* No tab bar on a session page: the way out for someone not signing in. */}
+        <Link href="/" className="mt-6 inline-block text-body font-semibold text-on-surface-variant underline underline-offset-4">Back to Train</Link>
       </div>
     );
   }

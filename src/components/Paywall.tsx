@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { MembershipButtons } from './MembershipButtons';
 import { Avatar } from './Avatar';
 import { Tick } from './TickMark';
+import { LegalLinks } from './LegalLinks';
 
 export type PaywallLock = {
   academy: string; price: string; line: string; paused?: boolean;
@@ -28,12 +29,16 @@ export function Included({ trainer }: { trainer?: string | null }) {
 /** Who takes the card, said once, small, where a parent is about to type it. */
 export function CardNote({ children }: { children?: React.ReactNode }) {
   return (
-    <p className="mt-4 flex items-start gap-2.5 text-body-sm leading-relaxed text-on-surface-variant">
+    <div className="mt-4 flex items-start gap-2.5 text-body-sm leading-relaxed text-on-surface-variant">
       <svg viewBox="0 0 24 24" aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
       </svg>
-      <span>A parent or guardian should do this. Cards are taken by Stripe; we never see or store the card number.{children}</span>
-    </p>
+      <div>
+        <p>A parent or guardian should do this. Cards are taken by Stripe; we never see or store the card number.{children}</p>
+        {/* Said where the card is about to go in: it renews, and how to stop it. */}
+        <LegalLinks lead="It renews every month until you cancel, under Me, then Membership. By adding a card you agree to the" parentLine={false} />
+      </div>
+    </div>
   );
 }
 

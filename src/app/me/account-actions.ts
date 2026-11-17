@@ -1,9 +1,9 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
-import { cancelPlayerBilling } from '@/lib/billing-server';
+import { cancelPlayerBilling, playerSubscriptions, stopSubscriptions } from '@/lib/billing-server';
 
-type Result = { ok: true } | { ok: false; error: string };
+type Result = { ok: true; note?: string } | { ok: false; error: string };
 const LATER = 'That isn’t switched on yet. Try again later.';
 
 /**
@@ -15,10 +15,7 @@ export async function leaveAcademy(): Promise<Result> {
   const v = await getViewer();
   if (!v.user || !v.academy) return { ok: false, error: 'You’re not signed in here.' };
   if (v.role === 'owner') return { ok: false, error: 'You own this academy, so you can’t leave it. Ask us to hand it over or close it.' };
-  if (!v.role) return { ok: true };
-  const { error } = await v.db.rpc('leave_academy', { p_academy: v.academy.id });
-  // Gone from here: their family stops paying for it (0038).
-  if (!error) await cancelPlayerBilling(v.user.id, v.academy.id);
+  const { error } = v.role ? await v.db.rpc('leave_academy', { p_academy: v.academy.id }) : { error: null };
   if (error) {
     console.error('leave_academy', error);
     return { ok: false, error: error.code === 'PGRST202' ? LATER
@@ -26,6 +23,11 @@ export async function leaveAcademy(): Promise<Result> {
       : 'Couldn’t do that. Try again.' };
   }
   revalidatePath('/', 'layout');
+  // Gone from here: their family stops paying for it (0038). Also when they
+  // had already left, so a second tap finishes what the first couldn't.
+  if ((await cancelPlayerBilling(v.user.id, v.academy.id)).failed) {
+    return { ok: false, error: 'You’ve left, but your card payments couldn’t be stopped. Tap Leave again; if it still says this, write to us and we’ll stop them.' };
+  }
   return { ok: true };
 }
 
@@ -38,17 +40,21 @@ export async function leaveAcademy(): Promise<Result> {
 export async function deleteAccount(): Promise<Result> {
   const v = await getViewer();
   if (!v.user) return { ok: false, error: 'You’re not signed in.' };
-  // Before the account goes, while its memberships can still be found: a
-  // deleted account must not go on being charged (0038). An owner's delete
-  // is refused below, so theirs are left alone.
-  const { data: owns } = await v.db.from('academy_members').select('academy_id').eq('user_id', v.user.id).eq('role', 'owner').limit(1);
-  if (!owns?.length) await cancelPlayerBilling(v.user.id);
+  // The card payments are looked up before the account goes, while they can
+  // still be found, and stopped only once it has: a delete that fails must
+  // not leave someone locked out of training they've paid for.
+  const subs = await playerSubscriptions(v.user.id);
+  if (!subs) return { ok: false, error: 'Couldn’t check your card payments, so nothing was deleted. Try again in a minute.' };
   const { error } = await v.db.rpc('delete_account');
   if (error) {
     console.error('delete_account', error);
     return { ok: false, error: error.code === 'PGRST202' ? LATER
       : /owns an academy/i.test(error.message) ? 'You own an academy, and deleting your account would leave its players with nobody. Ask us to hand it over or close it first.'
       : 'Couldn’t delete it. Try again.' };
+  }
+  // The account is gone, so there's no trying again from here: say so.
+  if (await stopSubscriptions(subs)) {
+    return { ok: true, note: 'Your account is deleted, but a card payment couldn’t be stopped. Write to us and we’ll stop it and refund anything taken since.' };
   }
   return { ok: true };
 }

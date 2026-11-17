@@ -16,7 +16,8 @@ export async function NoteBanner() {
   const n = unread[0];
   const trainer = await getTrainer().catch(() => null);
   // A note from another trainer here gets that trainer's initial, not the owner's photo.
-  const theirs = !!trainer?.name && n.author.split(' ')[0] === trainer.name;
+  // By account where it's known (0042); two trainers can share a first name.
+  const theirs = trainer?.id ? n.authorId === trainer.id : !!trainer?.name && n.author.split(' ')[0] === trainer.name;
   return (
     <Link href="/me/notes" className="pressable mb-6 mt-1 flex items-start gap-3.5 brand-card p-5 shadow-level2">
       <Avatar name={n.author} src={theirs ? trainer?.photo ?? null : null} className="h-11 w-11 text-body-lg" onBrand />

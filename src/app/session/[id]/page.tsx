@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { BackLink } from '@/components/BackLink';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { notFound, redirect } from 'next/navigation';
 import { libraryAllowed } from '@/lib/library-gate';
 import { speedAllowed } from '@/lib/speed-gate';
@@ -25,6 +28,9 @@ export default async function SessionPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   const { id } = await params;
   const { from } = await searchParams;
 
@@ -37,7 +43,8 @@ export default async function SessionPage({
     if (again) redirect(again.go);
   }
 
-  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
+  // The tab bar is hidden on session pages, so this needs its own way out.
+  if (!(await libraryAllowed())) return <><div className="pt-6"><BackLink href="/" label="Train" /></div><LibraryLocked title="Train" /></>;
   const exercises = await getExercises();
 
   if (from === 'history') {

@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { plain } from '@/lib/plain-error';
 import { localDate, mondayOf } from '@/lib/progress';
-import { cancelPlayerBilling } from '@/lib/billing-server';
+import { cancelPlayerBilling, resumePlayerBilling } from '@/lib/billing-server';
 
 /**
  * The trainer area's writes. Each goes through a database function that
@@ -25,8 +25,19 @@ export async function sendNote(input: { body: string; to: string[] | null; kind:
   if (input.to && !input.to.length) return { ok: false as const, error: 'Pick who it’s for.' };
   if (body.length > 1000) return { ok: false as const, error: 'Keep it under 1,000 characters.' };
 
+  // "Everyone" is everyone training: not the players switched off (0040),
+  // who can't open the app to read it.
+  let to = input.to?.length ? input.to : null;
+  if (!to) {
+    const { data: members, error: me } = await v.db.from('academy_members').select('user_id, active').eq('academy_id', v.academy.id).eq('role', 'player');
+    const rows = (me ? [] : members ?? []) as { user_id: string; active: boolean | null }[];
+    if (rows.some((m) => m.active === false)) {
+      to = rows.filter((m) => m.active !== false).map((m) => m.user_id);
+      if (!to.length) return { ok: false as const, error: 'Every player is inactive, so there’s nobody to send it to.' };
+    }
+  }
   const { error } = await v.db.rpc('send_note', {
-    p_academy: v.academy.id, p_body: body, p_to: input.to?.length ? input.to : null, p_kind: input.kind,
+    p_academy: v.academy.id, p_body: body, p_to: to, p_kind: input.kind,
   });
   if (error) return { ok: false as const, error: plain(error) };
 
@@ -37,26 +48,33 @@ export async function sendNote(input: { body: string; to: string[] | null; kind:
 
 /**
  * A nudge each for the players who are behind: every one their own note, as
- * if sent one at a time. Stops at the first that fails and says how far it got.
+ * if sent one at a time. One that fails (a player who left since the page
+ * loaded) doesn't stop the rest; the answer says who got theirs, so trying
+ * again goes only to the ones who didn't.
  */
-export async function sendNudges(items: { to: string; body: string }[]): Promise<{ ok: true; sent: number } | { ok: false; error: string }> {
+export async function sendNudges(items: { to: string; body: string }[]): Promise<{ ok: true; sent: number } | { ok: false; error: string; sent: string[] }> {
   const v = await staff();
-  if (!v) return { ok: false, error: 'Only trainers can send notes.' };
+  if (!v) return { ok: false, error: 'Only trainers can send notes.', sent: [] };
   const list = items.filter((i) => i.to && i.body.trim()).slice(0, 200);
-  if (!list.length) return { ok: false, error: 'Pick who it’s for.' };
-  let sent = 0;
+  if (!list.length) return { ok: false, error: 'Pick who it’s for.', sent: [] };
+  const sent: string[] = [];
+  let failed = 0;
   for (const i of list) {
     const { error } = await v.db.rpc('send_note', {
       p_academy: v.academy.id, p_body: i.body.trim().slice(0, 1000), p_to: [i.to], p_kind: 'nudge',
     });
-    if (error) {
-      revalidatePath('/coach', 'layout');
-      return { ok: false, error: sent ? `Sent ${sent} of ${list.length}, then it stopped. Try the rest again.` : plain(error) };
-    }
-    sent++;
+    if (error) { failed++; console.error('sendNudges', error); } else sent.push(i.to);
+    // Three in a row with none through: it's down, not one stale player.
+    if (failed >= 3 && !sent.length) break;
   }
   revalidatePath('/coach', 'layout');
-  return { ok: true, sent };
+  if (sent.length < list.length) {
+    const left = list.length - sent.length;
+    return { ok: false, sent, error: sent.length
+      ? `Sent ${sent.length}. ${left} didn’t go: they’re still ticked, so Send tries only those.`
+      : 'Couldn’t send those. Try again.' };
+  }
+  return { ok: true, sent: sent.length };
 }
 
 export async function rotateInvite(role: 'player' | 'trainer') {
@@ -82,7 +100,7 @@ export async function removeMember(userId: string) {
     if (still) return { ok: false as const, error: 'You can’t remove that person.' };
   }
   // Removed by their trainer: their family stops paying for it (0038).
-  await cancelPlayerBilling(userId, v.academy.id);
+  const unpaid = await cancelPlayerBilling(userId, v.academy.id);
   // Out of their groups and programs too, so they stop counting in them, and
   // their plan settings and the weeks still to come: someone let back in
   // later starts fresh, not on a week built before they left. Past weeks
@@ -103,6 +121,9 @@ export async function removeMember(userId: string) {
     console.error('removeMember: clean-up', failed.error);
     return { ok: false as const, error: 'They’re removed, but their groups and plan couldn’t all be cleared. Tap Remove again to finish.' };
   }
+  // Said, not left in a log: a family still being charged for a player who
+  // is gone. A second tap tries again.
+  if (unpaid.failed) return { ok: false as const, error: 'They’re removed, but their family’s card payments couldn’t be stopped. Tap Remove again; if it still says this, tell us so we can stop them.' };
   return { ok: true as const };
 }
 
@@ -137,10 +158,21 @@ export async function answerJoinRequest(userId: string, approve: boolean, shown:
 export async function setPlayerActive(userId: string, active: boolean) {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };
+  // Only for a player of this academy: the payments below are found by id.
+  const { data: here } = await v.db.from('academy_members').select('user_id').eq('academy_id', v.academy.id).eq('user_id', userId).eq('role', 'player').maybeSingle();
+  if (!here) return { ok: false as const, error: 'They’re not a player here any more.' };
+  // Off: their family's payments are paused first, so nobody is switched off
+  // and still charged. Paused, not cancelled: back on, the card carries on
+  // from its next payment, with nothing to pay twice.
+  if (!active && (await cancelPlayerBilling(userId, v.academy.id, 'pause')).failed) {
+    return { ok: false as const, error: 'Couldn’t pause their family’s card payments, so nothing was changed. Try again in a minute.' };
+  }
   const { error } = await v.db.rpc('set_player_active', { p_academy: v.academy.id, p_user: userId, p_active: active });
   if (error) return { ok: false as const, error: error.code === 'PGRST202' ? 'That isn’t switched on yet. Try again later.' : plain(error) };
-  if (!active) await cancelPlayerBilling(userId, v.academy.id);
   revalidatePath('/coach', 'layout');
+  if (active && (await resumePlayerBilling(userId, v.academy.id)).failed) {
+    return { ok: false as const, error: 'They’re active again, but their family’s card payments couldn’t be restarted. Tell us so we can.' };
+  }
   return { ok: true as const };
 }
 

@@ -36,6 +36,8 @@ export function LeaveOrDelete({ academy, owner }: {
       try { await browserClient().auth.signOut({ scope: 'local' }); } catch { /* nothing left to sign out of */ }
       pendingWorkout.clear(); pendingPlan.clear(); pendingFinish.clear();
       await notePageCacheUser(null);
+      // Read before the page goes: there's no account left to tell later.
+      if ('note' in r && r.note) window.alert(r.note);
     }
     // A full load: every page behind this one was drawn for a member.
     window.location.assign(what === 'delete' ? '/' : '/me');

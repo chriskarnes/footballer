@@ -31,7 +31,13 @@ export function NudgeAll({ people }: { people: { id: string; name: string; body:
   const send = () => start(async () => {
     setErr('');
     const r = await sendNudges(going.map((p) => ({ to: p.id, body: p.body }))).catch(offline);
-    if (!r.ok) { setErr(r.error); return; }
+    if (!r.ok) {
+      // The ones that went come off the list, so trying again can't send twice.
+      const gone = 'sent' in r ? r.sent : [];
+      if (gone.length) setSkip((s) => new Set([...s, ...gone]));
+      setErr(r.error);
+      return;
+    }
     close(); setSkip(new Set());
     toast(`Nudged ${r.sent} ${r.sent === 1 ? 'player' : 'players'}.`);
     router.refresh();

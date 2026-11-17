@@ -155,7 +155,7 @@ export default async function PlayerPage({ params }: {
      <aside className="min-w-0 xl:pt-[68px]">
       {terms && mark && (
         <PlayerStatus first={p.first} active={mark.active} mode={terms.mode}
-          paid={!!mark.paidMarkedAt} paidOn={mark.paidMarkedAt ? markDay(mark.paidMarkedAt.slice(0, 10)) : null}
+          paid={!!mark.paidMarkedAt} paidOn={mark.paidMarkedAt ? markDay(localDate(mark.paidMarkedAt, tz)) : null}
           line={terms.mode === 'players_pay' && mark.active ? membershipLineFor(terms, mark) : null} label={mark.label} />
       )}
       <section className={`card p-5 ${terms && mark ? 'mt-3' : 'mt-9 xl:mt-0'}`}>

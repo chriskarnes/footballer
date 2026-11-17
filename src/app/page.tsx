@@ -1,4 +1,6 @@
 import { getExercises } from '@/lib/library';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { Coach } from '@/components/Coach';
@@ -16,6 +18,9 @@ import type { Exercise } from '@/lib/types';
 
 // TRAIN NOW is the front door. No sign-in, no setup, no form.
 export default async function TrainNowPage({ searchParams }: { searchParams: Promise<{ error_code?: string }> }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   // A sign-in link that failed (used, expired, or opened in another browser)
   // comes back from Supabase to the site's front door with an error on it.
   // Say so on Me, where they can send a new one, not a silent Train.

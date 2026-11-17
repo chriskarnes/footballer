@@ -1,4 +1,6 @@
 import { rosterMarks } from '@/lib/membership-server';
+import { billingOn } from '@/lib/billing-server';
+import { dollars, isLive, monthlyCents } from '@/lib/billing';
 import { Roster, type RosterRow } from '@/components/coach/Roster';
 import { NudgeAll } from '@/components/coach/NudgeAll';
 import Link from 'next/link';
@@ -37,7 +39,12 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const steps = role === 'owner' && setup.ready && !setup.done ? setupSteps(setup, content) : null;
 
   // Who's paying, who isn't, and who's switched off (0038, 0040).
-  const { marks } = await rosterMarks(db, academy.id);
+  const { terms, marks } = await rosterMarks(db, academy.id);
+  // Where the trainer pays (0037): the owner's own billing, to say when a card is due.
+  const billing = role === 'owner' && terms?.mode === 'trainer_pays' && billingOn()
+    ? await db.from('academy_billing').select('status, free_until').eq('academy_id', academy.id).maybeSingle()
+        .then((r: { data: { status: string | null; free_until: string | null } | null; error: unknown }) => (r.error ? null : r.data ?? { status: null, free_until: null }), () => null)
+    : null;
   const [{ players: all, error }, { data: invite }, { data: asking }, { data: me }] = await Promise.all([
     loadPlayers(db, academy, { content }),
     db.from('academy_invites').select('code').eq('academy_id', academy.id).eq('role', 'player').maybeSingle(),
@@ -64,11 +71,17 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const isActive = (id: string) => marks.get(id)?.active !== false;
   const training = players.filter((p) => isActive(p.user_id));
   const behind = training.filter((p) => p.progress.status !== 'good');
+  // The owner is told when their card is due: free time over (or never
+  // given), players training, and nothing on file. Nothing is locked.
+  const freeLeft = !!billing?.free_until && Date.parse(`${billing.free_until}T23:59:59Z`) > Date.now();
+  const cardDue = !billing || inGroup ? null
+    : ['past_due', 'unpaid'].includes(billing.status ?? '') ? 'failed' as const
+    : !isLive(billing.status) && !freeLeft && all.some((p) => isActive(p.user_id)) ? 'add' as const : null;
   const needs = behind.length;
   // All three count all training this week (set sessions, Speed, their own),
   // so they agree: "3 of 12 trained · 5 sessions · 140 min".
   const thisWeek = (p: (typeof players)[number]) => p.progress.weeks[3]?.done ?? 0;
-  const trained = players.filter((p) => thisWeek(p) > 0 || p.progress.minutesThisWeek > 0).length;
+  const trained = training.filter((p) => thisWeek(p) > 0 || p.progress.minutesThisWeek > 0).length;
   // Last week, whole, beside this week so far: said as it is, not as up or down.
   const lastWeek = (p: (typeof players)[number]) => p.progress.weeks[2]?.done ?? 0;
   const trainedLast = players.filter((p) => lastWeek(p) > 0).length;
@@ -86,10 +99,12 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
   // What the note dialog needs: everyone it could go to, and who's in each group.
-  const notePlayers = all.map((p) => ({ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, p.progress) }));
+  // Not the players switched off: they can't open the app to read one.
+  const reach = all.filter((p) => isActive(p.user_id));
+  const notePlayers = reach.map((p) => ({ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, p.progress) }));
   const noteGroups = groups.map((g) => ({
     id: g.id, name: g.name,
-    members: content.memberships.filter((m) => m.group_id === g.id && all.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
+    members: content.memberships.filter((m) => m.group_id === g.id && reach.some((p) => p.user_id === m.user_id)).map((m) => m.user_id),
   }));
 
   // A failed load isn't an empty academy: no "No players yet", no invite card.
@@ -111,7 +126,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                   {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable">Invite players</Link>}
                 </>}>
         {!!players.length && <>
-          This week: <b className="font-semibold text-on-surface">{trained} of {players.length}</b> trained
+          This week: <b className="font-semibold text-on-surface">{trained} of {training.length}</b> trained
           {' · '}{sessions} {sessions === 1 ? 'session' : 'sessions'} · {minutes} min
           {sessionsLast > 0 && <> · last week {trainedLast} trained, {sessionsLast} {sessionsLast === 1 ? 'session' : 'sessions'}</>}
         </>}
@@ -125,6 +140,18 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
             <p className="mt-0.5 text-body text-on-surface-variant">{steps.filter(Boolean).length} of {steps.length} done</p>
           </div>
           <Link href="/coach/setup" className="btn-primary btn-sm pressable shrink-0">Continue</Link>
+        </section>
+      )}
+      {cardDue && (
+        <section role="status" className="card mt-5 flex items-center gap-4 p-5 lg:max-w-xl">
+          <div className="min-w-0 flex-1">
+            <div className="h-card">{cardDue === 'failed' ? 'Your last payment didn’t go through' : `Add a card for ${academy.name}`}</div>
+            <p className="mt-0.5 text-body text-on-surface-variant">
+              {cardDue === 'failed' ? 'Update your card to keep things running.'
+                : `${training.length} active ${training.length === 1 ? 'player' : 'players'} · ${dollars(monthlyCents(training.length))} a month.`}
+            </p>
+          </div>
+          <Link href="/coach/billing" className="btn-primary btn-sm pressable shrink-0">Billing</Link>
         </section>
       )}
       {askName && <YourName />}

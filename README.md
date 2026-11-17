@@ -27,7 +27,7 @@ their trainer sees how the week is going.
   (`ANTHROPIC_API_KEY`). Both have limits kept in the database, and neither is
   sent a player's name.
 - **Billing** is optional, through Stripe (`STRIPE_SECRET_KEY`,
-  `STRIPE_WEBHOOK_SECRET`, the service key, migrations 0037 to 0040). Who pays is
+  `STRIPE_WEBHOOK_SECRET`, the service key, migrations 0037 to 0042). Who pays is
   set per academy by a platform admin. *Families pay* (the default for a new
   academy): each player trains free for a number of days, then their family pays
   by card from `/membership`, $10 a month unless set otherwise, and a player who

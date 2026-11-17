@@ -2,7 +2,7 @@
 import { revalidatePath, updateTag } from 'next/cache';
 import { academyTag } from '@/lib/branding-server';
 import { serverClient } from '@/lib/supabase/server';
-import { cancelPlayerBilling } from '@/lib/billing-server';
+import { cancelPlayerBilling, stopBillingNotFor } from '@/lib/billing-server';
 
 /**
  * Opens or closes a self-serve space (0030): open, anyone signed in joins with
@@ -57,8 +57,9 @@ export async function removeSelfServeMember(academyId: string, userId: string): 
       : /not a member/i.test(error.message) ? 'They’re not in it any more.'
       : 'Couldn’t remove them. Try again.' };
   }
-  await cancelPlayerBilling(userId, academyId);
+  const unpaid = await cancelPlayerBilling(userId, academyId);
   revalidatePath(`/admin/academies/${academyId}`);
+  if (unpaid.failed) return { ok: false, error: 'They’re removed, but their card payments couldn’t be stopped. Cancel them in Stripe.' };
   return { ok: true };
 }
 
@@ -97,5 +98,10 @@ export async function setBilling(id: string, mode: 'players_pay' | 'trainer_pays
       : /admins only/i.test(error.message) ? 'Only platform admins can do that.' : 'Couldn’t save that. Try again.' };
   }
   revalidatePath('/', 'layout');
+  // The payments that no longer apply stop with it: families' when families
+  // no longer pay here, the trainer's when the trainer no longer does.
+  // Otherwise they'd go on being charged with nothing in the app to say so.
+  const failed = await stopBillingNotFor(id, mode);
+  if (failed) return { ok: false, error: `Saved, but ${failed} card ${failed === 1 ? 'payment' : 'payments'} couldn’t be stopped. Cancel ${failed === 1 ? 'it' : 'them'} in Stripe.` };
   return { ok: true };
 }

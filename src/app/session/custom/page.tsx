@@ -1,4 +1,7 @@
 import { redirect } from 'next/navigation';
+import { BackLink } from '@/components/BackLink';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
 import { getExercises } from '@/lib/library';
@@ -18,7 +21,11 @@ export default async function CustomSessionPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  if (!(await libraryAllowed())) return <LibraryLocked title="Train" />;
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
+  // The tab bar is hidden on session pages, so this needs its own way out.
+  if (!(await libraryAllowed())) return <><div className="pt-6"><BackLink href="/" label="Train" /></div><LibraryLocked title="Train" /></>;
   const raw = await searchParams;
   const params = new URLSearchParams(
     Object.entries(raw).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v]] : [])),

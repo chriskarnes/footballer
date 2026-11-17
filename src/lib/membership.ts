@@ -25,6 +25,8 @@ export type PlayerBillingRow = {
   current_period_end: string | null;
   trial_end: string | null;
   cancel_at_period_end: boolean;
+  /** What this family's subscription charges (0042); the academy's price when not known. */
+  price_cents?: number | null;
 };
 
 export const PLAYER_BILLING_COLUMNS =
@@ -46,9 +48,14 @@ export function toTerms(raw: unknown): Terms | null {
 
 const DAY = 86_400_000;
 
-/** When a player's free days end: counted from joining, or from when families started paying here if that's later. */
-export function freeUntil(terms: Terms, joinedAt: string | null | undefined): number {
-  const joined = Date.parse(joinedAt ?? '');
+/**
+ * When a player's free days end: counted from joining, or from when families
+ * started paying here if that's later. `began` is when they first joined
+ * this academy (0042): leaving and joining again doesn't start them over.
+ */
+export function freeUntil(terms: Terms, joinedAt: string | null | undefined, began?: string | null): number {
+  const first = Date.parse(began ?? ''), last = Date.parse(joinedAt ?? '');
+  const joined = Number.isNaN(first) ? last : Number.isNaN(last) ? first : Math.min(first, last);
   const since = Date.parse(terms.since ?? '');
   const from = Math.max(Number.isNaN(joined) ? 0 : joined, Number.isNaN(since) ? 0 : since);
   return from + terms.trialDays * DAY;
@@ -72,11 +79,11 @@ export type Access = {
 };
 
 /** Whether a player may train today. */
-export function playerAccess(terms: Terms | null, joinedAt: string | null | undefined, row: PlayerBillingRow | null, now: number, active = true): Access {
+export function playerAccess(terms: Terms | null, joinedAt: string | null | undefined, row: PlayerBillingRow | null, now: number, active = true, began?: string | null): Access {
   // Whoever pays: a player their trainer has switched off doesn't train.
   if (!active) return { state: 'paused', freeUntil: null, daysLeft: 0 };
   if (!terms || terms.mode !== 'players_pay') return { state: 'not_needed', freeUntil: null, daysLeft: 0 };
-  const until = freeUntil(terms, joinedAt);
+  const until = freeUntil(terms, joinedAt, began);
   const left = Math.max(0, Math.ceil((until - now) / DAY));
   if (row && isLive(row.status)) {
     if (row.status === 'active' || row.status === 'trialing') return { state: 'paid', freeUntil: until, daysLeft: left };
@@ -89,15 +96,20 @@ export function playerAccess(terms: Terms | null, joinedAt: string | null | unde
   return { state: 'locked', freeUntil: until, daysLeft: 0 };
 }
 
+/** The least notice Stripe takes for a free period's end: two days, and room to spare. */
+export const TRIAL_NOTICE = 2 * DAY + 2 * 3_600_000;
+
 /**
- * The free time a new subscription carries, in Unix seconds, or null. A card
- * added during the free days isn't charged until they end. Stripe wants a
- * trial's end at least two days out, so with less than that left the first
- * payment is taken when the card is added.
+ * The free time a new subscription carries, in Unix seconds, or null when
+ * the free days are over. A card added during them isn't charged until they
+ * end. Stripe wants that end at least two days out, so with less than that
+ * left the first payment is put two days from now: a little later than the
+ * free days, never earlier, since the page says the card won't be charged
+ * before then.
  */
 export function subscriptionTrialEnd(until: number | null, now: number): number | null {
-  if (!until || until - now < 2 * DAY + 3_600_000) return null;
-  return Math.floor(until / 1000);
+  if (!until || until <= now) return null;
+  return Math.floor(Math.max(until, now + TRIAL_NOTICE) / 1000);
 }
 
 const longDay = (ms: number | string) =>
@@ -105,10 +117,11 @@ const longDay = (ms: number | string) =>
 
 /** The sentence a family reads about where their membership stands. */
 export function membershipLine(terms: Terms, access: Access, row: PlayerBillingRow | null): string {
-  const price = `${dollars(terms.priceCents)} a month`;
+  const paying = access.state === 'paid' || access.state === 'past_due';
+  const price = `${dollars(paying && row?.price_cents ? row.price_cents : terms.priceCents)} a month`;
   switch (access.state) {
     case 'not_needed': return 'There’s nothing to pay here.';
-    case 'paused': return 'Your trainer has paused your training here. Nothing is being charged. Ask them to switch it back on.';
+    case 'paused': return 'Your trainer has paused your training here. Nothing is charged while it’s paused. Ask them to switch it back on.';
     case 'trial': return `Free until ${longDay(access.freeUntil!)}. After that it’s ${price}. Add a card any time; it won’t be charged before then.`;
     case 'locked': return row?.status === 'canceled'
       ? `Your membership ended. It’s ${price} to start training again.`

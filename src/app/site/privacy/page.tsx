@@ -42,6 +42,7 @@ export default function PrivacyPage() {
         <ul>
           <li><b>Hosting and the database</b> (currently Vercel and Supabase): everything above is stored and served through them, including the sign-in emails.</li>
           <li><b>AI services</b> (currently Anthropic and Google): if you type what you want to train in your own words, that text is sent to turn it into a session. When a trainer has the AI help with a player&rsquo;s week, the player&rsquo;s age range, positions and recent session titles are sent with the trainer&rsquo;s drills. Names, email addresses and photos are never sent.</li>
+          <li><b>Payments</b> (Stripe): where an academy is paid for by card, Stripe takes the card and the payment on its own pages. We send Stripe the email address of the account that pays and the academy&rsquo;s name, and for a trainer the number of players they pay for. A player&rsquo;s name is never sent. We never see or store the card number; we keep Stripe&rsquo;s reference for the payer and where the subscription stands (free days, paid, ended).</li>
           <li><b>YouTube</b>: drill videos are YouTube&rsquo;s. When you play one, YouTube receives the request and may set its own cookies.</li>
         </ul>
         <p>We don&rsquo;t sell information, we don&rsquo;t show ads, and we don&rsquo;t use advertising or analytics trackers.</p>

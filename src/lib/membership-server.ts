@@ -2,7 +2,8 @@ import 'server-only';
 import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getViewer } from './viewer';
-import { accessLabel, playerAccess, toTerms, PLAYER_BILLING_COLUMNS, type Access, type PlayerBillingRow, type Terms } from './membership';
+import { accessLabel, playerAccess, toTerms, type Access, type PlayerBillingRow, type Terms } from './membership';
+import { withPrice } from './billing-server';
 
 /** What an academy charges (0038). Null before the migration, or when it can't be read. */
 export async function readTerms(db: SupabaseClient, academyId: string): Promise<Terms | null> {
@@ -29,6 +30,30 @@ async function memberRows(db: SupabaseClient, academyId: string, userId?: string
 }
 
 /**
+ * When each player first joined this academy (0042), by account: what their
+ * free days count from, so leaving and joining again doesn't start them
+ * over. Empty before the migration, or when it can't be read: the day they
+ * joined this time stands in.
+ */
+export async function trialStart(db: SupabaseClient, academyId: string, userId?: string): Promise<Map<string, string>> {
+  try {
+    let q = db.from('player_trials').select('user_id, started_at').eq('academy_id', academyId);
+    if (userId) q = q.eq('user_id', userId);
+    const { data, error } = await q;
+    if (error) return new Map();
+    return new Map(((data ?? []) as { user_id: string; started_at: string }[]).map((r) => [r.user_id, r.started_at]));
+  } catch {
+    return new Map();
+  }
+}
+
+/** True when the signed-in player may not open training here: free days over and no card, or switched off. */
+export async function trainingLocked(): Promise<boolean> {
+  const s = (await myMembership())?.access.state;
+  return s === 'locked' || s === 'paused';
+}
+
+/**
  * Where the signed-in player stands at this academy: free days, paying,
  * locked, or switched off by their trainer. Null for anyone it doesn't apply
  * to: signed out, not a player here (trainers never pay), or an active player
@@ -46,10 +71,14 @@ export const myMembership = cache(async (): Promise<Membership | null> => {
     if (!terms || !me) return null;
     const active = me.active !== false;
     if (active && terms.mode !== 'players_pay') return null;
-    const billing = await v.db.from('player_billing').select(PLAYER_BILLING_COLUMNS).eq('academy_id', v.academy.id).eq('user_id', v.user.id).maybeSingle();
+    const academyId = v.academy.id, userId = v.user.id;
+    const [billing, began] = await Promise.all([
+      withPrice((cols) => v.db.from('player_billing').select(cols).eq('academy_id', academyId).eq('user_id', userId).maybeSingle()),
+      trialStart(v.db, academyId, userId),
+    ]);
     if (billing.error && active) return null;
     const row = (billing.data as PlayerBillingRow | null) ?? null;
-    return { terms, row, academyName: v.academy.name, access: playerAccess(terms, me.joined_at, row, Date.now(), active) };
+    return { terms, row, academyName: v.academy.name, access: playerAccess(terms, me.joined_at, row, Date.now(), active, began.get(userId)) };
   } catch {
     return null;
   }
@@ -78,15 +107,16 @@ export async function rosterMarks(db: SupabaseClient, academyId: string): Promis
     const [terms, members] = await Promise.all([readTerms(db, academyId), memberRows(db, academyId)]);
     if (!terms || !members) return { terms, marks };
     const paying = terms.mode === 'players_pay'
-      ? ((await db.from('player_billing').select(`user_id, ${PLAYER_BILLING_COLUMNS}`).eq('academy_id', academyId)).data ?? []) as unknown as (PlayerBillingRow & { user_id: string })[]
+      ? ((await withPrice((cols) => db.from('player_billing').select(cols).eq('academy_id', academyId), 'user_id, ')).data ?? []) as unknown as (PlayerBillingRow & { user_id: string })[]
       : [];
+    const began = terms.mode === 'players_pay' ? await trialStart(db, academyId) : new Map<string, string>();
     const rows = new Map(paying.map((r) => [r.user_id, r]));
     const usesMarks = members.some((m) => m.paid_marked_at);
     const now = Date.now();
     for (const m of members) {
       if (!m.user_id) continue;
       const active = m.active !== false;
-      const access = playerAccess(terms, m.joined_at, rows.get(m.user_id) ?? null, now, active);
+      const access = playerAccess(terms, m.joined_at, rows.get(m.user_id) ?? null, now, active, began.get(m.user_id));
       const paidMarkedAt = m.paid_marked_at ?? null;
       const label = !active ? 'Inactive'
         : terms.mode === 'players_pay' ? accessLabel(access)

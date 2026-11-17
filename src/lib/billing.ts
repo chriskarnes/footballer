@@ -36,16 +36,16 @@ export const isLive = (status: string | null | undefined) =>
 const DAY = 86_400_000;
 
 /**
- * When a new subscription's free time ends, in Unix seconds, or null for
- * none. The free day runs to its end (UTC). Stripe wants a trial's end at
- * least two days out, so free time with less than that left is no trial: the
- * first payment is taken when the card is added.
+ * When a new subscription's free time ends, in Unix seconds, or null when
+ * there's none left. The free day runs to its end (UTC). Stripe wants a
+ * trial's end at least two days out, so with less than that left the first
+ * payment is put two days from now: later than promised, never earlier.
  */
 export function trialEndFor(freeUntil: string | null | undefined, now: number): number | null {
   if (!freeUntil || !/^\d{4}-\d{2}-\d{2}$/.test(freeUntil)) return null;
   const end = Date.parse(`${freeUntil}T23:59:59Z`);
-  if (Number.isNaN(end) || end - now < 2 * DAY + 3_600_000) return null;
-  return Math.floor(end / 1000);
+  if (Number.isNaN(end) || end <= now) return null;
+  return Math.floor(Math.max(end, now + 2 * DAY + 2 * 3_600_000) / 1000);
 }
 
 const longDay = (iso: string) =>

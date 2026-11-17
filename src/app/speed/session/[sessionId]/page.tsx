@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { trainingLocked } from '@/lib/membership-server';
+import { TrainingLocked } from '@/components/TrainingLocked';
 import { Runner } from '@/components/Runner';
 import { KIND_LABELS, phaseById, sessionExercises, speedSessionById } from '@/lib/speed';
 import { serverClient } from '@/lib/supabase/server';
@@ -15,6 +17,9 @@ export default async function SpeedSessionPage({
   params: Promise<{ sessionId: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
+  // Not for a player whose free days are over or who is switched off: the
+  // page itself holds nothing for them, whatever the frame shows.
+  if (await trainingLocked()) return <TrainingLocked />;
   const { sessionId } = await params;
   const { from } = await searchParams;
   const s = speedSessionById(sessionId);

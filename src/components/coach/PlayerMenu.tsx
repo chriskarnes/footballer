@@ -47,7 +47,7 @@ export function PlayerMenu({ userId, first, active, mode, paid }: {
       <Menu label={`Options for ${first}`} items={items} busy={busy} />
       {err && <p role="alert" className="basis-full text-body-sm font-semibold text-on-surface">{err}</p>}
       <ConfirmSheet open={ask === 'off'} busy={busy} title={`Make ${first} inactive?`} confirmLabel="Make inactive"
-        body={`${first} stays on your list with their history, but can’t open their training. ${mode === 'players_pay' ? 'Their family’s payments stop, and they add their card again if you switch them back on.' : mode === 'trainer_pays' ? 'You aren’t charged for them.' : ''}`}
+        body={`${first} stays on your list with their history, but can’t open their training. ${mode === 'players_pay' ? 'Their family’s card payments are paused, and carry on if you switch them back on.' : mode === 'trainer_pays' ? 'You aren’t charged for them.' : ''}`}
         onCancel={() => setAsk(null)}
         onConfirm={() => run(() => setPlayerActive(userId, false), `${first} is inactive.`)} />
       <ConfirmSheet open={ask === 'remove'} busy={busy} title={`Remove ${first}?`} confirmLabel="Remove"
