@@ -16,61 +16,35 @@ export type RosterRow = {
   pay: { label: string; active: boolean; attention: boolean } | null;
 };
 
-type Filter = 'all' | 'nudge' | 'unpaid' | 'inactive';
-
 const active = (r: RosterRow) => r.pay?.active !== false;
-const FILTERS: { id: Filter; label: string; keep: (r: RosterRow) => boolean }[] = [
-  { id: 'all', label: 'Everyone', keep: () => true },
-  { id: 'nudge', label: 'Need a nudge', keep: (r) => active(r) && r.status !== 'good' },
-  { id: 'unpaid', label: 'Not paying', keep: (r) => !!r.pay?.attention },
-  { id: 'inactive', label: 'Inactive', keep: (r) => !active(r) },
-];
 
 /**
- * The trainer's players: worst first, switched-off players last. One quiet
- * row above it, a search box and one "Show" menu, and only once the list is
- * long enough to need finding in. Colour is kept for what needs a look: a
+ * The trainer's players: worst first, switched-off players last. A search box
+ * above it, and only once the list is long enough to need finding in. Colour is kept for what needs a look: a
  * player on track is plain text. Cards on a phone, a table on a laptop.
  */
 export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: boolean }) {
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
-
-  const counts = useMemo(() => Object.fromEntries(FILTERS.map((f) => [f.id, rows.filter(f.keep).length])) as Record<Filter, number>, [rows]);
   const shown = useMemo(() => {
     const word = q.trim().toLowerCase();
-    const keep = FILTERS.find((f) => f.id === filter)!.keep;
-    const out = rows.filter((r) => keep(r) && (!word || r.name.toLowerCase().includes(word) || r.groups.some((g) => g.toLowerCase().includes(word))));
+    const out = rows.filter((r) => (!word || r.name.toLowerCase().includes(word) || r.groups.some((g) => g.toLowerCase().includes(word))));
     // Switched off: still on the list, at the end of it.
     return [...out.filter(active), ...out.filter((r) => !active(r))];
-  }, [rows, q, filter]);
+  }, [rows, q]);
 
   // With a handful of players there's nothing to find.
   const search = rows.length > 8;
-  const options = FILTERS.filter((f) => f.id === 'all' || counts[f.id] > 0);
-  const pick = options.length > 1 && rows.length > 4;
 
   return (
     <div className="mt-6">
-      {(search || pick) && (
+      {search && (
         <div className="flex flex-wrap items-center gap-3">
-          {search && (
             <label className="relative block min-w-0 flex-1 basis-56 lg:max-w-xs">
               <span className="sr-only">Search players by name or group</span>
               <svg viewBox="0 0 24 24" aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-4.5 -translate-y-1/2 text-on-surface-variant" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
               <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search players"
                      className="min-h-11 w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-11 pr-4 text-[16px] text-on-surface outline-none placeholder:text-on-surface-variant focus:border-primary" />
             </label>
-          )}
-          {pick && (
-            <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface-variant">
-              Show
-              <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}
-                      className="min-h-11 rounded-full border border-outline-variant bg-surface-container-lowest px-4 text-body font-semibold text-on-surface">
-                {options.map((f) => <option key={f.id} value={f.id}>{f.label}{f.id === 'all' ? '' : ` (${counts[f.id]})`}</option>)}
-              </select>
-            </label>
-          )}
         </div>
       )}
 
