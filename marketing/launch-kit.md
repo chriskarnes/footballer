@@ -22,7 +22,7 @@ The other things you'll need, in the order you'll reach for them.
 - [x] The price, as the site says it: $10 a player a month, or $5 a player for a
       trainer who charges their own way. Every player's first 7 days are free.
 - [x] The founding offer: the first 3 months free, for the first 3 trainers
-- [ ] Check /trainers and /players state the new price
+- [x] /trainers states the price. /players shows no price, on purpose.
 - [ ] Which inbox trainers reply to, and set `NEXT_PUBLIC_CONTACT_EMAIL` to it
 
 **Product**
@@ -32,6 +32,11 @@ The other things you'll need, in the order you'll reach for them.
       email, setup, adding a player, the player joining
 - [ ] On one of your own pages, subscribe as a parent with Stripe's test card, then
       cancel, and check the player's access follows
+- [ ] Switch Stripe to live: clear the test customers and subscriptions from the
+      database, put in the live keys, add the live webhook and its signing secret,
+      and save the customer portal settings in live mode
+- [ ] Make one real $10 payment as a parent, then cancel it
+- [ ] Add payments, cancelling and refunds to the terms page
 - [ ] Have the privacy and terms pages reviewed, the children's section especially
 - [ ] Check your hosting and database plans allow commercial use and don't pause
 
@@ -65,8 +70,8 @@ Record your phone screen and talk over it. One take is fine.
 | 0:10 | Picking sessions for a player's week | "After a session, the trainer picks two or three short sessions for the week." |
 | 0:25 | The player's side: today's session | "The player opens the link. Today's session is there." |
 | 0:35 | A drill with the video playing, then checked off | "Each drill has the trainer's video and the reps. They check it off when it's done." |
-| 0:55 | The trainer's player list | "The trainer sees every player's week on one line: on track, one behind, not seen since Tuesday." |
-| 1:10 | Tapping the reminder | "One tap sends a reminder." |
+| 0:55 | The trainer's player list | "The trainer sees every player's week on one line: on track, one behind, quiet for ten days." |
+| 1:10 | Tapping Nudge beside a player, then Send | "One tap writes the reminder. Send it." |
 | 1:20 | train.futbol/trainers | "Ten dollars a player a month, and the first week is free. I set up your page with you. train.futbol." |
 
 Use your own drills or a trainer's in the recording, not the licensed library.
@@ -120,7 +125,17 @@ in the thread. This keeps the week in one place and shows you who finished.
 
 **"I don't have videos of my drills."**
 Film them on your phone, held sideways, next time you're on the field. Ten drills
-takes twenty minutes. A session works without video too.
+takes twenty minutes. Put them on YouTube as unlisted and paste the links; a drill's
+video is a link, not a file you upload here. A session works without video too.
+
+**"Some of my players come and go."**
+Switch a player to inactive in your player list. They stay on your list, nobody is
+charged for them, and you switch them back on when they return.
+
+**"How do I know who has paid?"**
+Your player list shows it beside each name: paying, free with the days left, not
+paying, or payment failed. If you charge players yourself, you can mark each one
+paid.
 
 **"Is it another app parents have to download?"**
 No. It opens from a link and works like an app.
@@ -172,6 +187,9 @@ Aim for the trainer's players to have a session to do within 48 hours of the yes
 - [ ] Get from them: page name and address, colors, three or four sessions, video links
 - [ ] Agree who pays: families ($10 a month after the free days) or the trainer ($5 a
       player)
+- [ ] Set it in the admin, on their academy's page under Billing. A new page starts
+      as families pay. For a founding trainer, set the free days to 90 before their
+      first player joins.
 - [ ] Build their drills and sessions for them
 - [ ] 20-minute call: they add two players themselves, build one week, and see the
       player list
@@ -222,7 +240,7 @@ For printing, or pasting into a message when someone asks "what is it?"
 > **How it works**
 > 1. After your session, pick two or three short sessions for the player's week.
 > 2. They train at home, with your videos, 15 to 30 minutes at a time.
-> 3. You see who did it, and send a reminder in one tap to who didn't.
+> 3. You see who did it. One tap writes a reminder to who didn't.
 >
 > **What you get**
 > - Your own page at yourname.train.futbol, with your name and colors

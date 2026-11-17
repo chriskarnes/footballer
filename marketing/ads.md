@@ -58,7 +58,7 @@ Each one is a single idea. Film on a phone; these do better looking real than po
 ### 2. Did they do it?
 
 - **Visual:** screen recording of the trainer's player list: On track, One behind,
-  Not seen since Tuesday. A thumb taps "Send reminder".
+  Quiet 10 days. A thumb taps "Nudge".
 - **Headline:** See who trained this week
 - **Text:** You give your players homework. Do you know who does it? Each player's
   week on one line, before you see them next.
@@ -136,7 +136,7 @@ any child other than your own appears in an ad.
 
 - Give your players drills to do at home between sessions, and see who did them.
 - Your page, your drills, your videos. Players join from one link. $10 a player a month.
-- We set up your page and first sessions with you. No cost to you and no contract.
+- We set up your page and first sessions with you. No setup fee and no contract.
 
 ## Budget and rules
 

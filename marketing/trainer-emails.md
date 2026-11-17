@@ -135,7 +135,7 @@ fine:
    `[name].train.futbol`).
 2. Three or four sessions you already run. A voice memo or a list of drills is enough.
 3. Links to any drill videos you have. YouTube works. If you have none, film them on
-   your phone held sideways and send them over.
+   your phone held sideways and send them over; I'll put them up for you.
 4. Roughly how many players you'd start with.
 5. Which price suits you: $10 a player a month, or $5 a player if you'd rather
    charge your players your own way. I'll explain how each is paid when we talk.

@@ -56,6 +56,10 @@ honest feedback and, if they're happy, a quote.
 Once the three places are taken, take the 3-months line out of the emails, the deck
 and the ads.
 
+**Players who come and go.** A trainer can switch a player to inactive in their
+player list. The player stays on the list, isn't charged for, and can be switched
+back on. Say this when a trainer worries about paying for players they see twice.
+
 **Not offered yet:** trainers setting their own price for families, or earning a
 share. Don't promise either.
 
@@ -65,8 +69,8 @@ share. Don't promise either.
 
 Work through the checklist in `launch-kit.md`. The ones that matter most:
 
-- Check the site's pricing says the same as "The offer" above (see "Before you
-  launch" below).
+- Switch Stripe from test mode to live (see "Before you launch" below). The site's
+  pricing already says the same as "The offer" above.
 - Record the 90-second screen video of a trainer's week.
 - Pick one inbox for trainers to reply to, and set it on the site.
 - Start the tracking sheet.
@@ -173,18 +177,20 @@ About six to eight hours a week, outside of product work.
 
 Things I found in the project that affect what you can promise:
 
-1. **Family billing is being built now.** Families paying $10 a month by card is the
-   main way you earn, and it isn't live yet. Don't send a trainer's families a join
-   link that promises it until it has been tested end to end. Check that /trainers
-   and /players state the new price; the old line about players paying trainers
-   through Train.futbol is dropped.
-2. **Trainer-pays billing is built and tested, in Stripe's test mode.** This is the
-   $5 a player option for a trainer who'd rather cover it. Before any real payment,
-   clear the test records and switch to live keys.
+1. **Both ways of paying are built and tested, in Stripe's test mode.** Families
+   paying $10 a month by card, and the trainer paying $5 a player. No real card has
+   been charged yet. Before a trainer's families get a join link: clear the test
+   customers and subscriptions from the database, put in the live Stripe keys, add
+   the live webhook and its signing secret, and save the customer portal settings
+   once in live mode. Then make one real $10 payment yourself and cancel it.
+2. **Who pays is set per trainer, by you, in the admin.** A new page starts as
+   families pay, $10 a month, 7 free days. For a founding trainer, set the free days
+   to 90 before their first player joins; nothing does that for you. /trainers
+   states the price. /players shows no price, on purpose.
 3. **The privacy and terms pages haven't been reviewed by a lawyer**, and under-13
    sign-up by a parent isn't enforced (both are on your to-do list). With families
-   paying by card, a parent has to be the one who signs up and pays, and the terms
-   need to cover payments, cancelling and refunds. Do the review
+   paying by card, a parent has to be the one who signs up and pays. The terms page
+   says nothing yet about payments, cancelling or refunds, and it needs to. Do the review
    before families you don't know start joining, which is exactly what this plan
    brings.
 4. **Hosting plans.** Your launch notes say the free hosting tier is for
