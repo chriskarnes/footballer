@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { staffOnly } from '@/components/coach/Gate';
 import { SessionEditor } from '@/components/coach/SessionEditor';
 import { PickSession } from '@/components/coach/PickSession';
+import { AddToWeek } from '@/components/coach/AddToWeek';
 import { loadContent } from '@/lib/academy-data';
 import { programWeek } from '@/lib/academy-week';
 import { localDate } from '@/lib/progress';
@@ -54,24 +55,26 @@ export default async function SessionEditPage({ params, searchParams }: {
                 title={session ? session.name : 'Add a session'} />
       <div className="mt-6" />
 
-      {!session && c.libraryReady && !!c.library.length && (
-        <section className="mb-9">
-          <p className="eyebrow mb-2">From your sessions</p>
-          <PickSession programId={p.id} week={week}
-            sessions={c.library.map((s) => ({
-              id: s.id, name: s.name, drills: s.drill_ids.length,
-              minutes: s.drill_ids.reduce((a, d) => a + (minutes.get(d) ?? 0), 0),
-              here: c.sessions.some((x) => x.program_id === p.id && x.week === week && x.library_id === s.id),
-            }))} />
-          <p className="eyebrow mb-2 mt-9">Or build a new one</p>
-        </section>
-      )}
-
-      <SessionEditor session={session} drills={c.drills} lastNote={lastNote}
-        target={c.libraryReady
-          ? { kind: 'placed', programId: p.id, week, placementId: session?.id, libraryId: session?.library_id,
-              alsoIn: session?.library_id ? placesOf(c, session.library_id, session.id) : [] }
-          : { kind: 'legacy', programId: p.id, week, id: session?.id }} />
+      {(() => {
+        const editor = (
+          <SessionEditor session={session} drills={c.drills} lastNote={lastNote}
+            target={c.libraryReady
+              ? { kind: 'placed', programId: p.id, week, placementId: session?.id, libraryId: session?.library_id,
+                  alsoIn: session?.library_id ? placesOf(c, session.library_id, session.id) : [] }
+              : { kind: 'legacy', programId: p.id, week, id: session?.id }} />
+        );
+        // Adding, with sessions already made: tick those, or build a new one.
+        if (session || !c.libraryReady || !c.library.length) return editor;
+        return (
+          <AddToWeek build={editor}
+            pick={<PickSession programId={p.id} week={week}
+              sessions={c.library.map((s) => ({
+                id: s.id, name: s.name, drills: s.drill_ids.length,
+                minutes: s.drill_ids.reduce((a, d) => a + (minutes.get(d) ?? 0), 0),
+                here: c.sessions.some((x) => x.program_id === p.id && x.week === week && x.library_id === s.id),
+              }))} />} />
+        );
+      })()}
     </div>
   );
 }

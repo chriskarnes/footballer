@@ -83,13 +83,20 @@ export function SessionEditor({ target, session, drills: given, lastNote }: {
               );
             })}
           </ol>
-        ) : <p className="card-flat px-4 py-3 text-body text-on-surface-variant">Tap drills below to add them.</p>}
+        ) : <p className="card-flat px-4 py-3 text-body text-on-surface-variant">No drills in it yet. Add them from the list below.</p>}
       </section>
 
       <section>
-        <div className="mb-2 flex items-baseline justify-between">
-          <p className="eyebrow">Your drills</p>
-          {!writing && <button type="button" onClick={() => setWriting(true)} className="text-body font-semibold text-on-surface underline underline-offset-4">New drill</button>}
+        {/* A drawer of parts, set apart from the session above it: a tinted
+            panel and small rows with a plus, so a drill doesn't read as
+            another session. */}
+        <div className="rounded-large-increased bg-surface-container-low p-4">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <div>
+            <p className="h-card">Add drills</p>
+            {!writing && !!drills.length && <p className="mt-0.5 text-body-sm text-on-surface-variant">Tap a drill to put it in the session.</p>}
+          </div>
+          {!writing && <button type="button" onClick={() => setWriting(true)} className="shrink-0 text-body font-semibold text-on-surface underline underline-offset-4">New drill</button>}
         </div>
         {writing ? (
           <div className="card p-5">
@@ -102,19 +109,23 @@ export function SessionEditor({ target, session, drills: given, lastNote }: {
           <label className="text-field mb-2"><input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a drill" aria-label="Find a drill" /></label>
         )}
         {drills.length ? (
-          <ul className="card divide-y divide-outline-variant">
-            {shown.map((d) => (
-              <li key={d.id}>
-                <button type="button" onClick={() => setIds((xs) => [...xs, d.id])}
-                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-                  <span className="min-w-0">
-                    <span className="block truncate text-body-lg font-semibold text-on-surface">{d.name}</span>
-                    <span className="block truncate text-body-sm text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>
-                  </span>
-                  <span className="shrink-0 text-body font-bold text-on-surface">{ids.includes(d.id) ? 'Again' : 'Add'}</span>
-                </button>
-              </li>
-            ))}
+          <ul className="space-y-1">
+            {shown.map((d) => {
+              const times = ids.filter((x) => x === d.id).length;
+              return (
+                <li key={d.id}>
+                  <button type="button" onClick={() => setIds((xs) => [...xs, d.id])} aria-label={`Add ${d.name} to the session`}
+                          className="pressable flex w-full items-center gap-3 rounded-medium px-2 py-2 text-left">
+                    <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-outline text-title font-semibold leading-none text-on-surface">+</span>
+                    <span className="min-w-0 flex-1 truncate text-body font-semibold text-on-surface">
+                      {d.name}
+                      <span className="ml-2 font-normal text-on-surface-variant">{[d.amount, `${d.minutes} min`].filter(Boolean).join(' · ')}</span>
+                    </span>
+                    {times > 0 && <span className="shrink-0 text-body-sm font-semibold text-on-surface-variant">In it{times > 1 ? ` ×${times}` : ''}</span>}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="card-flat px-4 py-3 text-body text-on-surface-variant">
@@ -122,6 +133,7 @@ export function SessionEditor({ target, session, drills: given, lastNote }: {
           </p>
         )}
         </>}
+        </div>
       </section>
 
       <FormError error={err} />

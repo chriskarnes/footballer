@@ -294,16 +294,23 @@ async function place(v: any, s: { id: string; name: string; drill_ids: string[] 
   return error ? plain(error) : null;
 }
 
-/** Put a session from the library into a program week. */
-export async function placeSession(libraryId: string, programId: string, week: number): Promise<Result> {
+/** Put several sessions from the library into a program week, in the order picked, in one save. */
+export async function placeSessions(libraryIds: string[], programId: string, week: number): Promise<Result> {
   try {
     const v = await staff();
-    const { data } = await v.db.from('library_sessions').select('id, name, drill_ids')
-      .eq('id', libraryId).eq('academy_id', v.academy.id).maybeSingle();
-    if (!data) return { ok: false, error: 'That session isn’t in your library any more.' };
+    const ids = libraryIds.filter((x) => typeof x === 'string').slice(0, 20);
+    if (!ids.length) return { ok: false, error: 'Tick at least one session.' };
     await ownProgram(v, programId, week);
-    const r = await place(v, data, programId, week);
-    if (r) return { ok: false, error: r };
+    const { data, error } = await v.db.from('library_sessions').select('id, name, drill_ids').eq('academy_id', v.academy.id).in('id', [...new Set(ids)]);
+    if (error) return { ok: false, error: plain(error) };
+    const byId = new Map(((data ?? []) as { id: string; name: string; drill_ids: string[] }[]).map((s) => [s.id, s]));
+    if (ids.some((id) => !byId.has(id))) return { ok: false, error: 'One of those sessions isn’t in your library any more. Reload and try again.' };
+    const first = await nextPosition(v, programId, week);
+    const { error: ie } = await v.db.from('academy_sessions').insert(ids.map((id, i) => {
+      const s = byId.get(id)!;
+      return { academy_id: v.academy.id, program_id: programId, week, position: first + i, name: s.name, drill_ids: s.drill_ids, library_id: s.id };
+    }));
+    if (ie) return { ok: false, error: plain(ie) };
     done();
     redirect(withSaved(`/coach/programs/${programId}#week-${week}`));
   } catch (e) { if (isRedirect(e)) throw e; return fail(e); }

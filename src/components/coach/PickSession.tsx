@@ -1,40 +1,54 @@
 'use client';
 import { offline } from '@/lib/plain-error';
 import { useState, useTransition } from 'react';
-import { placeSession } from '@/app/coach/content-actions';
+import { placeSessions } from '@/app/coach/content-actions';
+import { TickMark } from '@/components/TickMark';
 
 type Row = { id: string; name: string; drills: number; minutes: number; here: boolean };
 
-/** The trainer's sessions, each one tap from being in this program week. */
+/**
+ * The trainer's sessions, to tick for this program week. Nothing is added
+ * until the button at the bottom is pressed: tapping one used to add it and
+ * leave for the program page, mid-way through picking.
+ */
 export function PickSession({ programId, week, sessions }: { programId: string; week: number; sessions: Row[] }) {
   const [busy, start] = useTransition();
-  const [picked, setPicked] = useState('');
+  // In the order ticked: that's the order they go into the week.
+  const [picked, setPicked] = useState<string[]>([]);
   const [err, setErr] = useState('');
+  const flip = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const n = picked.length;
   return (
     <>
-      <ul className="card max-h-80 divide-y divide-outline-variant overflow-y-auto">
-        {sessions.map((s) => (
-          <li key={s.id} className="flex items-center justify-between gap-3 py-2.5 pl-4 pr-3">
-            <span className="min-w-0">
-              <span className="block truncate text-body-lg font-semibold text-on-surface">{s.name}</span>
-              <span className="block truncate text-body-sm text-on-surface-variant">
-                {s.drills} {s.drills === 1 ? 'drill' : 'drills'} · {s.minutes} min{s.here && ' · already in this week'}
-              </span>
-            </span>
-            <button type="button" disabled={busy} className="btn-ghost btn-sm pressable shrink-0"
-                    aria-label={busy && picked === s.id ? `Adding ${s.name}…` : `Add ${s.name} to week ${week}${s.here ? ' again' : ''}`}
-                    onClick={() => { setPicked(s.id); setErr(''); start(async () => {
-                      // On success the action redirects back to the program.
-                      const r = await placeSession(s.id, programId, week).catch(offline);
-                      if (r && !r.ok) setErr(r.error);
-                    }); }}>
-              {/* Twice in a week can be what the trainer wants; say it's a second copy. */}
-              {busy && picked === s.id ? 'Adding…' : s.here ? 'Add again' : 'Add'}
-            </button>
-          </li>
-        ))}
+      <ul className="space-y-2.5">
+        {sessions.map((s) => {
+          const on = picked.includes(s.id);
+          return (
+            <li key={s.id}>
+              <button type="button" role="checkbox" aria-checked={on} disabled={busy} onClick={() => { setErr(''); flip(s.id); }}
+                      className={`card pressable flex w-full items-center gap-3 p-3 text-left ${on ? 'ring-2 ring-inset ring-primary' : ''}`}>
+                <span className="shrink-0 scale-75"><TickMark on={on} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body-lg font-semibold text-on-surface">{s.name}</span>
+                  <span className="block truncate text-body-sm text-on-surface-variant">
+                    {s.drills} {s.drills === 1 ? 'drill' : 'drills'} · {s.minutes} min{s.here && ' · already in this week'}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
-      {err && <p role="alert" className="mt-2 text-body font-semibold text-on-surface">{err}</p>}
+      {err && <p role="alert" className="mt-3 text-body font-semibold text-on-surface">{err}</p>}
+      <button type="button" disabled={busy || !n} className="btn-primary pressable mt-6 w-full"
+              onClick={() => start(async () => {
+                setErr('');
+                // On success the action goes back to the program, at this week.
+                const r = await placeSessions(picked, programId, week).catch(offline);
+                if (r && !r.ok) setErr(r.error);
+              })}>
+        {busy ? 'Adding…' : n ? `Add ${n} ${n === 1 ? 'session' : 'sessions'} to week ${week}` : 'Tick the sessions to add'}
+      </button>
     </>
   );
 }
