@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { adminViewer, aiLine, day, loadAcademy, loadKinds, n, sourceLabel } from '@/lib/admin-data';
+import { adminViewer, aiLine, day, loadAcademy, loadInactive, loadKinds, n, sourceLabel } from '@/lib/admin-data';
 import { SelfServeAccess } from '@/components/admin/SelfServeAccess';
 import { RemoveMember } from '@/components/admin/RemoveMember';
 import { aiMonthlyLimit } from '@/lib/ai';
@@ -8,25 +8,31 @@ import { ago } from '@/lib/notes';
 import { headers } from 'next/headers';
 import { academyOrigin } from '@/lib/tenant';
 import { BackLink } from '@/components/BackLink';
-import { AdminGate, Aside, Empty, Failed, ICON, IconLink, PageHead, RoleTag, Rows, Section, Stat, Stats, Table, Tag, Td, Th } from '@/components/admin/ui';
+import { AdminGate, Aside, Empty, Failed, ICON, IconLink, PageHead, Pager, RoleTag, Rows, Section, Stat, Stats, Table, Tag, Td, Th } from '@/components/admin/ui';
 import { FreeUntil } from '@/components/admin/FreeUntil';
 import { PlayerPay } from '@/components/admin/PlayerPay';
 import { readTerms } from '@/lib/membership-server';
 import { BILLING_COLUMNS, billingState, type BillingRow } from '@/lib/billing';
 
 export const metadata = { title: 'Academy · Admin', robots: { index: false } };
+const PEOPLE_PER_PAGE = 50;
 
 /** One academy: its people, what they're doing, and what's been built. */
-export default async function AdminAcademy({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminAcademy({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ people?: string }> }) {
   const { id } = await params;
   const a = await adminViewer();
   if (a.gate) return <AdminGate gate={a.gate} next={`/admin/academies/${id}`} />;
-  const [{ data: x, error }, kinds] = await Promise.all([loadAcademy(id), loadKinds()]);
+  const [{ data: x, error }, kinds, inactive] = await Promise.all([loadAcademy(id), loadKinds(), loadInactive({ academy: id })]);
   if (error) return <div><BackLink href="/admin/academies" label="Academies" /><Failed error={error} /></div>;
   if (!x) notFound();
 
   const staff = x.members.filter((m) => m.role !== 'player');
   const players = x.members.filter((m) => m.role === 'player');
+  // The people, a page at a time: a big academy's list runs long.
+  const pages = Math.max(1, Math.ceil(x.members.length / PEOPLE_PER_PAGE));
+  const page = Math.max(0, Math.min(pages - 1, Math.floor(Number((await searchParams).people) || 0)));
+  const shown = x.members.slice(page * PEOPLE_PER_PAGE, (page + 1) * PEOPLE_PER_PAGE);
+  const off = players.filter((m) => inactive.has(`${x.id}:${m.id}`)).length;
   const h = await headers();
   const site = academyOrigin(x.slug, `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('x-forwarded-host') ?? h.get('host')}`);
   const active = players.filter((m) => m.sessions_7d > 0).length;
@@ -63,7 +69,7 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
       {kind?.selfServe && <SelfServeAccess id={x.id} slug={x.slug} site={site} open={kind.open} licensed={x.library_access} code={invite} />}
 
       <Stats>
-        <Stat label="Players" value={n(players.length)} sub={`${n(staff.length)} staff`} />
+        <Stat label="Players" value={n(players.length)} sub={`${off ? `${n(off)} inactive · ` : ''}${n(staff.length)} staff`} />
         <Stat label="Trained, last 7 days" value={n(active)} sub={players.length ? `of ${n(players.length)}` : undefined} />
         <Stat label="Sessions, last 7 days" value={n(players.reduce((s, m) => s + m.sessions_7d, 0))}
               sub={`${n(players.reduce((s, m) => s + m.sessions_30d, 0))} in 30 days`} />
@@ -101,16 +107,16 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
         </Section>
       )}
 
-      <Section title="People" count={x.members.length}>
+      <Section title="People" count={x.members.length} id="people">
         {!x.members.length ? <Empty>No one yet.</Empty> : (
           <Table head={<><Th>Name</Th><Th>Role</Th><Th>Groups</Th><Th right>Sessions 7d</Th><Th>Last session</Th><Th>Last sign-in</Th>{kind?.selfServe && <Th right><span className="sr-only">Options</span></Th>}</>}>
-            {x.members.map((m) => (
+            {shown.map((m) => (
               <tr key={m.id} className="relative hover:bg-surface-container-low">
                 <Td strong className="max-w-[15rem]">
                   <Link href={`/admin/users/${m.id}`} className="after:absolute after:inset-0 hover:underline">{m.name || m.email}</Link>
                   {m.name && <span className="block truncate text-body-sm font-normal text-on-surface-variant" title={m.email}>{m.email}</span>}
                 </Td>
-                <Td><RoleTag role={m.role} /></Td>
+                <Td><span className="flex flex-wrap items-center gap-1.5"><RoleTag role={m.role} />{inactive.has(`${x.id}:${m.id}`) && <Tag tone="rose">Inactive</Tag>}</span></Td>
                 <Td className="max-w-[12rem] truncate">{m.groups ?? '—'}</Td>
                 <Td right>{m.role === 'player' ? <><span className="text-on-surface">{n(m.sessions_7d)}</span><span className="block text-body-sm">{n(m.sessions_30d)} in 30d</span></> : '—'}</Td>
                 <Td className="whitespace-nowrap">{m.role !== 'player' ? '—' : m.last_done ? ago(m.last_done) : 'Never'}</Td>
@@ -122,6 +128,8 @@ export default async function AdminAcademy({ params }: { params: Promise<{ id: s
             ))}
           </Table>
         )}
+        <Pager page={page} per={PEOPLE_PER_PAGE} total={x.members.length} label="Pages of people"
+               href={(p) => `/admin/academies/${x.id}${p ? `?people=${p}` : ''}#people`} />
       </Section>
 
       <div className="grid gap-x-14 lg:grid-cols-2">

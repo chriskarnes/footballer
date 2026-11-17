@@ -132,6 +132,19 @@ export const loadAcademy = (id: string) =>
 export const loadUser = (id: string) =>
   UUID.test(id) ? call<UserDetail | null>('admin_user', { p_id: id }) : Promise.resolve({ data: null, error: null });
 
+/**
+ * The memberships a trainer has switched off (0040), as "academy:user" keys:
+ * in one academy, for these accounts, or both. Empty before 0041 has run, so
+ * nobody is called inactive on a guess.
+ */
+export async function loadInactive(by: { academy?: string; users?: string[] }): Promise<Set<string>> {
+  if (by.users && !by.users.length) return new Set();
+  const v = await getViewer();
+  const { data, error } = await v.db.rpc('admin_inactive', { p_academy: by.academy ?? null, p_users: by.users ?? null });
+  if (error) { if (error.code !== 'PGRST202') console.error('[admin] admin_inactive', error); return new Set(); }
+  return new Set(((data ?? []) as { academy_id: string; user_id: string }[]).map((r) => `${r.academy_id}:${r.user_id}`));
+}
+
 /** "Library", "Speed": where a session came from, in the panel's words. */
 export function sourceLabel(s: string) {
   return ({ academy: 'Trainer session', addon: 'Extra', plan: 'Plan', library: 'Library', coach: 'Free session',

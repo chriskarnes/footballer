@@ -108,9 +108,9 @@ export function Rows({ children }: { children: React.ReactNode }) {
   return <ul className="mt-5 divide-y divide-outline-variant border-t border-outline-variant">{children}</ul>;
 }
 
-export function Section({ title, count, children, action }: { title: string; count?: number; children: React.ReactNode; action?: React.ReactNode }) {
+export function Section({ title, count, children, action, id }: { title: string; count?: number; children: React.ReactNode; action?: React.ReactNode; id?: string }) {
   return (
-    <section className="mt-14">
+    <section id={id} className="mt-14 scroll-mt-6">
       <div className="flex items-center justify-between gap-4">
         <h2 className="h-card">{title}{count !== undefined && <span className="ml-2 font-normal text-on-surface-variant tabular-nums">{count.toLocaleString('en-US')}</span>}</h2>
         {action}
@@ -139,4 +139,21 @@ export function Aside({ label, children }: { label: string; children: React.Reac
 
 export function RoleTag({ role }: { role: string }) {
   return <Tag tone={role === 'player' ? 'plain' : 'dark'}>{role === 'owner' ? 'Owner' : role === 'trainer' ? 'Trainer' : 'Player'}</Tag>;
+}
+
+/** Previous and next, with where you are, under a list that runs to pages. */
+export function Pager({ page, per, total, href, label }: { page: number; per: number; total: number; href: (page: number) => string; label: string }) {
+  const pages = Math.max(1, Math.ceil(total / per));
+  if (pages <= 1) return null;
+  const link = 'btn-ghost btn-sm pressable';
+  const off = `${link} pointer-events-none opacity-40`;
+  return (
+    <nav className="mt-8 flex flex-wrap items-center gap-3 text-body" aria-label={label}>
+      {page > 0 ? <Link href={href(page - 1)} scroll={false} className={link}>Previous</Link> : <span aria-disabled="true" className={off}>Previous</span>}
+      {page + 1 < pages ? <Link href={href(page + 1)} scroll={false} className={link}>Next</Link> : <span aria-disabled="true" className={off}>Next</span>}
+      <span className="ml-1 text-body-sm text-on-surface-variant tabular-nums">
+        {(page * per + 1).toLocaleString('en-US')}–{Math.min(total, (page + 1) * per).toLocaleString('en-US')} of {total.toLocaleString('en-US')} · page {page + 1} of {pages}
+      </span>
+    </nav>
+  );
 }

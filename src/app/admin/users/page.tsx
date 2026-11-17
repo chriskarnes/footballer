@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { adminViewer, day, loadUsers, n, USER_FILTERS, USERS_PER_PAGE, type UserFilter } from '@/lib/admin-data';
+import { adminViewer, day, loadInactive, loadUsers, n, USER_FILTERS, USERS_PER_PAGE, type UserFilter } from '@/lib/admin-data';
 import { ago } from '@/lib/notes';
-import { AdminGate, Empty, Failed, PageHead, RoleTag, Table, Tag, Td, Th } from '@/components/admin/ui';
+import { AdminGate, Empty, Failed, PageHead, Pager, RoleTag, Table, Tag, Td, Th } from '@/components/admin/ui';
 import { CheckIcon } from '@/components/Chip';
 
 export const metadata = { title: 'People · Admin', robots: { index: false } };
@@ -25,7 +25,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   const { data, error } = await loadUsers(q, filter, page);
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
-  const pages = Math.max(1, Math.ceil(total / USERS_PER_PAGE));
+  const inactive = await loadInactive({ users: rows.map((u) => u.id) });
   const href = (id: UserFilter, p = 0) =>
     `/admin/users?${new URLSearchParams({ ...(id !== 'all' && { in: id }), ...(q && { q }), ...(p > 0 && { page: String(p) }) })}`;
 
@@ -64,7 +64,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                   </Td>
                   <Td>
                     {u.academies?.length
-                      ? <span className="flex flex-col gap-1">{u.academies.map((m) => <span key={m.id} className="inline-flex items-center gap-1.5 whitespace-nowrap"><RoleTag role={m.role} />{m.name}</span>)}</span>
+                      ? <span className="flex flex-col gap-1">{u.academies.map((m) => <span key={m.id} className="inline-flex items-center gap-1.5 whitespace-nowrap"><RoleTag role={m.role} />{m.name}{inactive.has(`${m.id}:${u.id}`) && <Tag tone="rose">Inactive</Tag>}</span>)}</span>
                       : 'None'}
                   </Td>
                   <Td right><span className="text-on-surface">{n(u.sessions_30d)}</span><span className="block text-body-sm">{n(u.sessions_all)} ever</span></Td>
@@ -75,15 +75,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
               ))}
             </Table></div>
           )}
-          {pages > 1 && (
-            <nav className="mt-8 flex items-center gap-4 text-body" aria-label="Pages">
-              {page > 0 && <Link href={href(filter, page - 1)} className="font-semibold underline underline-offset-4">Newer</Link>}
-              <span className="text-on-surface-variant tabular-nums">
-                {n(page * USERS_PER_PAGE + 1)}–{n(Math.min(total, (page + 1) * USERS_PER_PAGE))} of {n(total)}
-              </span>
-              {page + 1 < pages && <Link href={href(filter, page + 1)} className="font-semibold underline underline-offset-4">Older</Link>}
-            </nav>
-          )}
+          <Pager page={page} per={USERS_PER_PAGE} total={total} href={(p) => href(filter, p)} label="Pages of people" />
         </>
       )}
     </div>

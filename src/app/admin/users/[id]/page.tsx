@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { adminViewer, day, forWhom, loadUser, n, sourceLabel } from '@/lib/admin-data';
+import { adminViewer, day, forWhom, loadInactive, loadUser, n, sourceLabel } from '@/lib/admin-data';
 import { ago } from '@/lib/notes';
 import { BackLink } from '@/components/BackLink';
 import { AGE_LABEL } from '@/lib/positions';
@@ -17,6 +17,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   if (error) return <div><BackLink href="/admin/users" label="People" /><Failed error={error} /></div>;
   if (!u) notFound();
 
+  const inactive = await loadInactive({ users: [u.id] });
   const p = u.profile;
   const done = u.workouts.filter((w) => w.status === 'completed');
   // 0027 sends the last one done even when the list below is cut short.
@@ -53,7 +54,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
               {u.academies.map((m) => (
                 <li key={m.id}>
                   <Link href={`/admin/academies/${m.id}`} className="-mx-3 flex items-center justify-between gap-3 rounded-xl px-3 py-4 hover:bg-surface-container-low">
-                    <span className="flex min-w-0 items-center gap-2"><RoleTag role={m.role} /><span className="truncate font-bold text-on-surface">{m.name}</span></span>
+                    <span className="flex min-w-0 items-center gap-2"><RoleTag role={m.role} /><span className="truncate font-bold text-on-surface">{m.name}</span>{inactive.has(`${m.id}:${u.id}`) && <Tag tone="rose">Inactive</Tag>}</span>
                     <span className="shrink-0 text-body-sm text-on-surface-variant">since {day(m.joined_at)}</span>
                   </Link>
                 </li>
