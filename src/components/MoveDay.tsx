@@ -37,10 +37,15 @@ export function MoveDay({ itemKey, weekday, placed, title, today, games = [] }: 
 
   return (
     <span className="flex shrink-0 flex-col items-end">
-    <label className={`relative ${pending ? 'opacity-60' : ''}`}>
+    {/* The pill is as wide as the day it shows. A bare select is as wide as
+        its longest option, so "Fri" sat in a pill sized for "Sat (game)" and
+        squeezed the session's name on to two lines. The select lies over the
+        pill, unseen, and still opens the phone's own wheel. */}
+    <label className={`relative inline-flex h-11 items-center rounded-full border border-outline pl-3 pr-7 text-body-sm font-bold text-on-surface has-[select:focus-visible]:[outline:3px_solid_var(--md-sys-color-primary)] has-[select:focus-visible]:outline-offset-2 ${pending ? 'opacity-60' : ''}`}>
       <span className="sr-only">Day for {title}</span>
+      <span aria-hidden="true">{DAYS[day]}</span>
       <select value={day} onChange={(e) => change(Number(e.target.value))} disabled={pending}
-              className="h-11 appearance-none rounded-full border border-outline bg-transparent pl-3 pr-7 text-body-sm font-bold text-on-surface">
+              className="absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-full opacity-0">
         {DAYS.map((d, i) => (
           <option key={d} value={i} disabled={i < today && i !== day && i !== placed}>
             {d}{i === placed && day !== placed ? ' (usual)' : games.includes(i) ? ' (game)' : ''}
