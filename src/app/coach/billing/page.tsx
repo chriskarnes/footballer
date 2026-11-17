@@ -1,4 +1,5 @@
 import { PageHead } from '@/components/coach/PageHead';
+import { StatusTag } from '@/components/coach/StatusTag';
 import { staffOnly } from '@/components/coach/Gate';
 import { BillingButtons } from '@/components/coach/BillingButtons';
 import { billingState, dollars, isLive, monthlyCents, PRICE_CENTS } from '@/lib/billing';
@@ -65,13 +66,30 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           </p>
         </section>
         <section className="mt-8">
-          <p className="eyebrow mb-3">{paying} paying · {count('trial')} in free days · {count('locked')} not paying{count('paused') ? ` · ${count('paused')} inactive` : ''}</p>
+          <dl className="mb-6 grid grid-cols-2 gap-x-6 gap-y-5 border-y border-outline-variant py-5 sm:grid-cols-4">
+            {([
+              ['Paying', paying, 'good'], ['In free days', count('trial'), 'warn'],
+              ['Not paying', count('locked'), 'bad'], ['Inactive', count('paused'), null],
+            ] as const).map(([label, n, tone]) => (
+              <div key={label} className="flex flex-col-reverse">
+                <dd className="text-[1.75rem] font-bold leading-none tracking-tight text-on-surface tabular-nums">{n}</dd>
+                <dt className="mb-2 flex items-center gap-1.5 eyebrow">
+                  {tone && <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full ${tone === 'good' ? 'bg-status-good' : tone === 'warn' ? 'bg-status-warn' : 'bg-status-bad'}`} />}
+                  {label}
+                </dt>
+              </div>
+            ))}
+          </dl>
           {!list.length ? <p className="text-body text-on-surface-variant">No players yet.</p> : (
             <ul className="card divide-y divide-outline-variant">
               {list.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3.5">
                   <Link href={`/coach/players/${p.id}`} className="min-w-0 truncate text-body font-semibold text-on-surface underline-offset-4 hover:underline">{p.name}</Link>
-                  <span className={`shrink-0 text-body-sm font-semibold ${p.access.state === 'locked' || p.access.state === 'past_due' ? 'text-on-surface' : 'text-on-surface-variant'}`}>{accessLabel(p.access)}</span>
+                  <span className="shrink-0">
+                    {p.access.state === 'paused'
+                      ? <span className="text-body-sm font-semibold text-on-surface-variant">{accessLabel(p.access)}</span>
+                      : <StatusTag status={p.access.state === 'paid' ? 'good' : p.access.state === 'trial' ? 'warn' : 'bad'}>{accessLabel(p.access)}</StatusTag>}
+                  </span>
                 </li>
               ))}
             </ul>

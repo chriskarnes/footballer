@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { staffOnly } from '@/components/coach/Gate';
 import { SessionEditor } from '@/components/coach/SessionEditor';
@@ -18,7 +19,8 @@ export default async function LibrarySessionPage({ params }: { params: Promise<{
   if (!s) notFound();
   return (
     <div className="animate-pop">
-      <PageHead back={{ href: '/coach/sessions', label: 'Sessions' }} title={s.name} />
+      <PageHead back={{ href: '/coach/sessions', label: 'Sessions' }} title={s.name}
+                action={!!s.drill_ids.length && <Link href={`/coach/sessions/${s.id}/preview`} className="btn-ghost btn-sm pressable">See it as a player</Link>} />
       <div className="mt-6" />
       <SessionEditor session={s} drills={c.drills} target={{ kind: 'library', id: s.id, usedIn: placesOf(c, s.id) }} />
     </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { STATUS_TONE } from '@/components/coach/StatusTag';
 import { GroupGone } from '@/components/coach/GroupGone';
 import { staffOnly } from '@/components/coach/Gate';
 import { PageHead } from '@/components/coach/PageHead';
@@ -79,9 +80,9 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
           <colgroup><col className="w-32 xl:w-44" />{DAYS.map((d) => <col key={d} />)}</colgroup>
           <thead>
             <tr className="eyebrow">
-              <th scope="col" className="border-b border-outline-variant px-4 py-3">Player</th>
+              <th scope="col" className="sticky left-0 z-10 border-b border-outline-variant bg-surface-container-lowest px-4 py-3">Player</th>
               {DAYS.map((d, i) => (
-                <th key={d} scope="col" className={`border-b border-outline-variant px-2 py-3 ${i === today ? 'text-on-surface' : ''}`}>
+                <th key={d} scope="col" className={`border-b border-outline-variant px-2 py-3 ${i === today ? 'bg-surface-container-low text-on-surface' : ''}`}>
                   {d}{i === today && <span className="ml-1 normal-case tracking-normal">· today</span>}
                 </th>
               ))}
@@ -94,7 +95,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                 && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number));
               return (
                 <tr key={p.user_id} className="align-top">
-                  <th scope="row" className="border-b border-outline-variant px-4 py-3 font-normal">
+                  <th scope="row" className="sticky left-0 z-10 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 font-normal">
                     <Link href={`/coach/players/${p.user_id}`} className="flex items-center gap-2 font-bold text-on-surface hover:underline">
                       <StatusDot status={p.progress.status} /><span className="truncate">{p.name}</span>
                     </Link>
@@ -115,7 +116,7 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                           return (
                             <span key={it.key} title={`${it.title} · ${it.minutes} min${it.moved ? ' · moved by player' : ''}`}
                                   className={`mt-1 block truncate rounded-small px-1.5 py-1 text-caption font-semibold
-                                    ${it.done ? 'bg-on-surface text-surface' : missed ? 'border border-dashed border-on-surface-variant text-on-surface-variant' : 'border border-outline text-on-surface'}`}>
+                                    ${it.done ? STATUS_TONE.good : missed ? `${STATUS_TONE.bad} border border-dashed border-current` : 'border border-outline text-on-surface'}`}>
                               {it.done && <span aria-hidden="true">✓ </span>}
                               {/* The mark and the border carry these by sight; say them too. */}
                               <span className="sr-only">{it.done ? 'Done: ' : missed ? 'Missed: ' : ''}</span>
@@ -134,9 +135,9 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
       </div>
 
       <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-caption text-on-surface-variant">
-        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small bg-on-surface align-middle" />Done</span>
+        <span><span className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small align-middle ${STATUS_TONE.good}`} />Done</span>
         <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-outline align-middle" />To do</span>
-        <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-dashed border-on-surface-variant align-middle" />Missed</span>
+        <span><span className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-dashed border-current align-middle ${STATUS_TONE.bad}`} />Missed</span>
         <span>↷ Moved by the player</span>
         <span>Shaded: practice, game or trainer day</span>
       </p>

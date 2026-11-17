@@ -41,8 +41,10 @@ export default async function ContentPage() {
               const solo = c.playerPrograms.filter((x) => x.program_id === p.id && (!members || current.has(x.user_id))).length;
               return (
                 <li key={p.id}>
-                  <Link href={`/coach/programs/${p.id}`} className="flex items-center justify-between gap-4 px-4 py-4">
-                    <span className="min-w-0">
+                  <Link href={`/coach/programs/${p.id}`} className="flex items-center gap-4 px-4 py-4">
+                    <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-medium font-brand text-title font-extrabold text-white"
+                          style={{ background: tileColor(p.id) }}>{p.name.trim().charAt(0).toUpperCase()}</span>
+                    <span className="min-w-0 flex-1">
                       <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
                       <span className="mt-0.5 block text-body text-on-surface-variant">
                         {p.weeks} {p.weeks === 1 ? 'week' : 'weeks'} · {sessions.length ? `${weeks} ${weeks === 1 ? 'week' : 'weeks'} built` : 'nothing built yet'}
@@ -65,4 +67,14 @@ export default async function ContentPage() {
 
     </div>
   );
+}
+
+/**
+ * A colour of its own for each program, from its id: the same one every
+ * time, so a program is known by sight in the list. Dark enough for white type.
+ */
+function tileColor(id: string): string {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `hsl(${h} 45% 38%)`;
 }

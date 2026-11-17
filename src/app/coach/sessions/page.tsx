@@ -5,6 +5,7 @@ import { LIBRARY_VIEWS, ViewTabs } from '@/components/coach/ViewTabs';
 import { loadContent } from '@/lib/academy-data';
 import { placesOf } from '@/lib/session-library';
 import { Empty } from '@/components/coach/Empty';
+import { AddStarters } from '@/components/coach/ContentButtons';
 
 export const metadata = { title: 'Sessions', robots: { index: false } };
 
@@ -79,7 +80,7 @@ export default async function SessionsPage() {
             </div>
           </>
         ) : (
-          <Empty title="No sessions yet" href="/coach/sessions/new" cta="Build your first session">
+          <Empty title="No sessions yet" href="/coach/sessions/new" cta="Build your first session" extra={<AddStarters />}>
             A session is a few drills in order. Build it once here, then add it to any week of any program.
           </Empty>
         )}

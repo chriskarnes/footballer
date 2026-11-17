@@ -8,25 +8,12 @@ import { academyOrigin } from '@/lib/tenant';
 import { getViewer } from '@/lib/viewer';
 import type { DrillRow } from '@/lib/academy-week';
 import type { Exercise } from '@/lib/types';
-import { progressAmount } from '@/lib/week-builder';
+import { asExercise } from '@/lib/as-exercise';
 import { getMyWeek, getTrainer } from '@/lib/player-week';
 
 export const metadata = { title: 'Session', robots: { index: false } };
 
 /** A trainer's drill, in the shape the runner draws. */
-function asExercise(d: DrillRow, sessionId: string, i: number, step = 0): Exercise {
-  const amount = progressAmount(d.amount, step);
-  return {
-    id: `${d.id}:${i}`, session_id: sessionId, program_id: '', name: d.name, exercise_order: i,
-    sets: '', reps_time: amount ?? '', rest: '', total_seconds: d.minutes * 60, work_seconds: d.minutes * 60,
-    total_minutes: d.minutes, touches: 0, touches_per_min: 0, primary_focus: (d.focus ?? 'ball_mastery') as Exercise['primary_focus'],
-    focus_areas: [], equipment: [], intensity: 'moderate', space_required: 'minimal', can_do_at_home: true,
-    gym_required: false, level: '', category: '', video_url: d.video_url, duration_confidence: 'high',
-    amount: amount ?? `${d.minutes} min`,
-    how: d.how ? d.how.split('\n').map((l) => l.trim()).filter(Boolean) : undefined,
-  };
-}
-
 /**
  * Runs a session from the trainer's week: /train/session/<id> for a program
  * session, /train/custom/<id> for one from a week built for them, /train/addon/<id> for a "just for you" drill. RLS decides what

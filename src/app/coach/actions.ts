@@ -35,6 +35,30 @@ export async function sendNote(input: { body: string; to: string[] | null; kind:
   return { ok: true as const };
 }
 
+/**
+ * A nudge each for the players who are behind: every one their own note, as
+ * if sent one at a time. Stops at the first that fails and says how far it got.
+ */
+export async function sendNudges(items: { to: string; body: string }[]): Promise<{ ok: true; sent: number } | { ok: false; error: string }> {
+  const v = await staff();
+  if (!v) return { ok: false, error: 'Only trainers can send notes.' };
+  const list = items.filter((i) => i.to && i.body.trim()).slice(0, 200);
+  if (!list.length) return { ok: false, error: 'Pick who it’s for.' };
+  let sent = 0;
+  for (const i of list) {
+    const { error } = await v.db.rpc('send_note', {
+      p_academy: v.academy.id, p_body: i.body.trim().slice(0, 1000), p_to: [i.to], p_kind: 'nudge',
+    });
+    if (error) {
+      revalidatePath('/coach', 'layout');
+      return { ok: false, error: sent ? `Sent ${sent} of ${list.length}, then it stopped. Try the rest again.` : plain(error) };
+    }
+    sent++;
+  }
+  revalidatePath('/coach', 'layout');
+  return { ok: true, sent };
+}
+
 export async function rotateInvite(role: 'player' | 'trainer') {
   const v = await staff();
   if (!v) return { ok: false as const, error: 'Only trainers can do that.' };

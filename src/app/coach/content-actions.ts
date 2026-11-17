@@ -361,6 +361,88 @@ export async function copyWeek(programId: string, from: number, to: number): Pro
   } catch (e) { return fail(e); }
 }
 
+/**
+ * A copy of a program: its weeks and every session in them, under "(copy)",
+ * given to no group and no player. The sessions still point at the same
+ * library sessions (0017), so an edit there reaches both.
+ */
+export async function duplicateProgram(id: string): Promise<Result> {
+  try {
+    const v = await staff();
+    const { data: p, error: pe } = await v.db.from('academy_programs').select('name, description, weeks').eq('id', id).eq('academy_id', v.academy.id).maybeSingle();
+    if (pe) return { ok: false, error: plain(pe) };
+    if (!p) return { ok: false, error: 'That program isn’t here any more. Reload and try again.' };
+    const src = p as { name: string; description: string | null; weeks: number };
+    const { data: made, error: me } = await v.db.from('academy_programs')
+      .insert({ academy_id: v.academy.id, name: `${src.name.slice(0, 53)} (copy)`, description: src.description, weeks: src.weeks }).select('id').single();
+    if (me) return { ok: false, error: plain(me) };
+    const q = (cols: string) => v.db.from('academy_sessions').select(cols).eq('program_id', id).eq('academy_id', v.academy.id);
+    let { data: rows } = await q('name, week, position, drill_ids, library_id');
+    if (!rows) ({ data: rows } = await q('name, week, position, drill_ids'));
+    if (rows?.length) {
+      const { error } = await v.db.from('academy_sessions').insert(
+        (rows as unknown as Record<string, unknown>[]).map((s) => ({ ...s, academy_id: v.academy.id, program_id: made.id })));
+      // Half a copy is worse than none: take the empty program back.
+      if (error) {
+        await v.db.from('academy_programs').delete().eq('id', made.id).eq('academy_id', v.academy.id);
+        return { ok: false, error: plain(error) };
+      }
+    }
+    done();
+    redirect(withSaved(`/coach/programs/${made.id}`));
+  } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
+}
+
+/**
+ * Something to start from: six plain drills and two sessions made of them,
+ * written for this, not taken from any library. They're the trainer's own
+ * from then on, to rename, change or delete. No videos: those are theirs to add.
+ */
+const STARTER_DRILLS: { name: string; amount: string; minutes: number; focus: string; how: string }[] = [
+  { name: 'Toe taps', amount: '3 × 30 seconds', minutes: 3, focus: 'ball_mastery',
+    how: 'Ball in front of you.\nTap the top of it with the sole of one foot, then the other.\nStay on your toes and keep a steady rhythm.' },
+  { name: 'Inside, outside', amount: '3 × 20 each foot', minutes: 4, focus: 'dribbling',
+    how: 'Push the ball across with the inside of your foot.\nBring it back with the outside of the same foot.\nSmall touches, head up when you can.' },
+  { name: 'Sole rolls', amount: '3 × 20 each foot', minutes: 3, focus: 'ball_mastery',
+    how: 'Roll the ball sideways under the sole of your foot.\nStop it with the inside of the other foot.\nRoll it back the other way.' },
+  { name: 'Wall passes', amount: '50 each foot', minutes: 5, focus: 'passing',
+    how: 'Stand three big steps from a wall.\nPass with the inside of your foot and control what comes back.\nTwo touches to start, then one.' },
+  { name: 'Turn and go', amount: '10 each side', minutes: 4, focus: 'first_touch',
+    how: 'Pass against a wall, or have someone pass to you.\nTake your first touch across your body to turn.\nDribble away fast for five steps.' },
+  { name: 'Juggling', amount: '5 minutes, count your best', minutes: 5, focus: 'juggling',
+    how: 'Drop the ball and kick it back up to your hands.\nThen two kicks before you catch it, then three.\nCount your best run and try to beat it.' },
+];
+const STARTER_SESSIONS: { name: string; drills: string[] }[] = [
+  { name: 'Touch and pass (example)', drills: ['Toe taps', 'Inside, outside', 'Wall passes', 'Turn and go'] },
+  { name: 'Ball mastery (example)', drills: ['Toe taps', 'Sole rolls', 'Inside, outside', 'Juggling'] },
+];
+
+export async function addStarterSessions(): Promise<Result> {
+  try {
+    const v = await staff();
+    // Once: a second press would leave two of everything.
+    const { data: there, error: te } = await v.db.from('library_sessions').select('id').eq('academy_id', v.academy.id)
+      .in('name', STARTER_SESSIONS.map((s) => s.name)).limit(1);
+    if (te) return { ok: false, error: plain(te) };
+    if (there?.length) return { ok: false, error: 'The example sessions are already in your library.' };
+    const { data: drills, error: de } = await v.db.from('drills').insert(STARTER_DRILLS.map((d) => ({
+      academy_id: v.academy.id, created_by: v.user.id, name: d.name, amount: d.amount, minutes: d.minutes,
+      focus: d.focus, focus_areas: [d.focus], video_url: null, how: d.how,
+    }))).select('id, name');
+    if (de) return { ok: false, error: plain(de) };
+    const idOf = new Map(((drills ?? []) as { id: string; name: string }[]).map((d) => [d.name, d.id]));
+    const { error } = await v.db.from('library_sessions').insert(STARTER_SESSIONS.map((s) => ({
+      academy_id: v.academy.id, name: s.name, drill_ids: s.drills.map((n) => idOf.get(n)).filter(Boolean),
+    })));
+    if (error) {
+      await v.db.from('drills').delete().eq('academy_id', v.academy.id).in('id', [...idOf.values()]);
+      return { ok: false, error: plain(error) };
+    }
+    done();
+    redirect(withSaved('/coach/sessions'));
+  } catch (e) { if (isRedirect(e)) throw e; return fail(e); }
+}
+
 // ------------------------------------------------------------------ GROUPS ---
 export async function saveGroup(_: unknown, f: FormData): Promise<Result> {
   try {

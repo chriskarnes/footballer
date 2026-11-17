@@ -1,8 +1,10 @@
 import { positionName } from '@/lib/positions';
+import { PlayerMenu } from '@/components/coach/PlayerMenu';
+import { StatusTag } from '@/components/coach/StatusTag';
+import { Avatar } from '@/components/Avatar';
 import { notFound } from 'next/navigation';
 import { staffOnly } from '@/components/coach/Gate';
-import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
-import { RemovePlayer } from '@/components/coach/RemovePlayer';
+import { WeekDots } from '@/components/coach/WeekDots';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
 import { addDays, localDate, mondayOf, sinceLabel, weekdayOf } from '@/lib/progress';
@@ -72,18 +74,21 @@ export default async function PlayerPage({ params }: {
     <NoteProvider only players={[{ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, pr) }]}>
     <div className="animate-pop xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)] xl:gap-x-10">
      <div className="min-w-0">
-      <PageHead back={{ href: '/coach', label: 'Players' }} title={p.name}
+      <PageHead back={{ href: '/coach', label: 'Players' }}
+                title={<span className="flex items-center gap-3.5"><Avatar name={p.name} className="h-12 w-12 text-title" /><span className="min-w-0">{p.name}</span></span>}
                 action={<>
                   <NoteButton to={p.user_id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
-                  {pr.status !== 'good' && <NoteButton to={p.user_id} kind="nudge" className="btn-primary btn-sm pressable">Nudge</NoteButton>}
+                  {pr.status !== 'good' && mark?.active !== false && <NoteButton to={p.user_id} kind="nudge" className="btn-primary btn-sm pressable">Nudge</NoteButton>}
+                  <PlayerMenu userId={p.user_id} first={p.first} active={mark?.active !== false} mode={terms?.mode ?? null} paid={!!mark?.paidMarkedAt} />
                 </>}>
-        <span className="flex items-center gap-2">
-          <StatusDot status={pr.status} />
-          <span>
-            <b className="font-semibold text-on-surface">{pr.reason}</b> · last trained {sinceLabel(pr.daysSince)}
-            {about && <> · {about}</>}
-          </span>
+        {/* Who they are and where they stand, in one line of tags and one of words. */}
+        <span className="flex flex-wrap items-center gap-1.5">
+          <StatusTag status={pr.status}>{pr.reason}</StatusTag>
+          {mark && !mark.active && <span className="inline-block rounded-full border border-[#E8A0B4] bg-[#FCE4EC] px-2.5 py-0.5 text-caption font-semibold text-[#9B1C45] dark:border-[#8E3A55] dark:bg-[#4A1F2D] dark:text-[#FFC2D4]">Inactive</span>}
+          {mark?.active && mark.label && <span className={`inline-block rounded-full border px-2.5 py-0.5 text-caption font-semibold ${mark.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{mark.label}</span>}
+          {p.groups.map((g) => <span key={g} className="inline-block rounded-full bg-surface-container-high px-2.5 py-0.5 text-caption font-semibold text-on-surface-variant">{g}</span>)}
         </span>
+        <span className="mt-2 block">Last trained {sinceLabel(pr.daysSince)}{about && <> · {about}</>}</span>
       </PageHead>
 
 
@@ -144,13 +149,12 @@ export default async function PlayerPage({ params }: {
         );
       })()}
 
-      <div className="hidden xl:block"><RemovePlayer userId={p.user_id} name={p.first} /></div>
      </div>
 
      {/* On a laptop, how they're doing sits beside what they're set. */}
      <aside className="min-w-0 xl:pt-[68px]">
       {terms && mark && (
-        <PlayerStatus userId={p.user_id} first={p.first} active={mark.active} mode={terms.mode}
+        <PlayerStatus first={p.first} active={mark.active} mode={terms.mode}
           paid={!!mark.paidMarkedAt} paidOn={mark.paidMarkedAt ? markDay(mark.paidMarkedAt.slice(0, 10)) : null}
           line={terms.mode === 'players_pay' && mark.active ? membershipLineFor(terms, mark) : null} label={mark.label} />
       )}
@@ -253,7 +257,6 @@ export default async function PlayerPage({ params }: {
         ) : <p className="pl-1 text-body text-on-surface-variant">No notes yet.</p>}
       </section>
 
-      <div className="xl:hidden"><RemovePlayer userId={p.user_id} name={p.first} /></div>
      </aside>
     </div>
     </NoteProvider>

@@ -1,8 +1,9 @@
-import { rosterMarks, type RosterMark } from '@/lib/membership-server';
+import { rosterMarks } from '@/lib/membership-server';
+import { Roster, type RosterRow } from '@/components/coach/Roster';
+import { NudgeAll } from '@/components/coach/NudgeAll';
 import Link from 'next/link';
 import { GroupGone } from '@/components/coach/GroupGone';
 import { staffOnly } from '@/components/coach/Gate';
-import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { JoinRequests, type JoinRequest } from '@/components/coach/JoinRequests';
 import { loadContent } from '@/lib/academy-data';
@@ -59,11 +60,28 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
     ? all.filter((p) => content.memberships.some((m) => m.group_id === inGroup.id && m.user_id === p.user_id))
     : all;
 
-  const needs = players.filter((p) => p.progress.status !== 'good').length;
+  // Switched off (0040): on the list, not training, so not behind either.
+  const isActive = (id: string) => marks.get(id)?.active !== false;
+  const training = players.filter((p) => isActive(p.user_id));
+  const behind = training.filter((p) => p.progress.status !== 'good');
+  const needs = behind.length;
   // All three count all training this week (set sessions, Speed, their own),
   // so they agree: "3 of 12 trained · 5 sessions · 140 min".
   const thisWeek = (p: (typeof players)[number]) => p.progress.weeks[3]?.done ?? 0;
   const trained = players.filter((p) => thisWeek(p) > 0 || p.progress.minutesThisWeek > 0).length;
+  // Last week, whole, beside this week so far: said as it is, not as up or down.
+  const lastWeek = (p: (typeof players)[number]) => p.progress.weeks[2]?.done ?? 0;
+  const trainedLast = players.filter((p) => lastWeek(p) > 0).length;
+  const sessionsLast = players.reduce((a, p) => a + lastWeek(p), 0);
+  const rows: RosterRow[] = players.map((p) => {
+    const m = marks.get(p.user_id);
+    return {
+      id: p.user_id, name: p.name, groups: p.groups,
+      status: p.progress.status, reason: p.progress.reason, detail: detailOf(p.progress),
+      since: sinceLabel(p.progress.daysSince), daysSince: p.progress.daysSince, week: p.progress.week,
+      pay: m?.label ? { label: m.label, active: m.active, attention: m.attention } : m && !m.active ? { label: 'Inactive', active: false, attention: false } : null,
+    };
+  });
   const sessions = players.reduce((a, p) => a + thisWeek(p), 0);
   const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
@@ -86,16 +104,31 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       <ViewTabs tabs={PLAYER_VIEWS} on="/coach" query={inGroup ? `group=${inGroup.id}` : undefined} />
       <PageHead title={headline}
                 action={<>
+                  <NudgeAll people={behind.map((p) => ({ id: p.user_id, name: p.name, body: nudgeDraft(p.first, p.progress) }))} />
                   {!!players.length && (
                     <NoteButton group={inGroup?.id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
                   )}
                   {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable">Invite players</Link>}
                 </>}>
-        {!!players.length && <>
-          This week: <b className="font-semibold text-on-surface">{trained} of {players.length}</b> trained
-          {' · '}{sessions} {sessions === 1 ? 'session' : 'sessions'} · {minutes} min
-        </>}
       </PageHead>
+
+      {!!players.length && (
+        <dl className="mt-6 grid grid-cols-3 gap-x-6 border-y border-outline-variant py-5 lg:max-w-2xl lg:gap-x-10">
+          {([
+            ['Trained this week', `${trained} of ${players.length}`, `${trainedLast} last week`],
+            ['Sessions', String(sessions), `${sessionsLast} last week`],
+            ['Minutes', String(minutes), null],
+          ] as const).map(([label, value, sub]) => (
+            <div key={label} className="flex flex-col-reverse">
+              <dd>
+                <span className="block text-[1.75rem] font-bold leading-none tracking-tight text-on-surface tabular-nums">{value}</span>
+                {sub && <span className="mt-1.5 block text-body-sm text-on-surface-variant">{sub}</span>}
+              </dd>
+              <dt className="eyebrow mb-2">{label}</dt>
+            </div>
+          ))}
+        </dl>
+      )}
 
       {steps && (
         <section className="card mt-5 flex items-center gap-4 p-5 lg:max-w-xl">
@@ -134,76 +167,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
       {error && <p className="mt-4 text-body text-on-surface-variant">Couldn&rsquo;t load your players. Refresh to try again.</p>}
 
-      {/* Phone: cards, worst first. */}
-      <ul className="mt-6 space-y-2.5 lg:hidden">
-        {players.map((p) => {
-          const detail = detailOf(p.progress);
-          return (
-            <li key={p.user_id} className="card flex items-center gap-3 py-4 pl-4 pr-3">
-              <Link href={`/coach/players/${p.user_id}`} className="min-w-0 flex-1">
-                <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}<PayTag mark={marks.get(p.user_id)} /></span>
-                {!inGroup && !!p.groups.length && (
-                  <span className="block truncate text-caption font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
-                )}
-                <span className="mt-1 flex items-center gap-2 text-body text-on-surface-variant">
-                  <StatusDot status={p.progress.status} />
-                  <span className="truncate">
-                    <span className="font-semibold text-on-surface">{p.progress.reason}</span>
-                    {detail && <> · {detail}</>}
-                  </span>
-                </span>
-                <span className="mt-3 block"><WeekDots week={p.progress.week} /></span>
-              </Link>
-              {p.progress.status !== 'good' && (
-                <NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable shrink-0">Nudge</NoteButton>
-              )}
-              <Link href={`/coach/players/${p.user_id}`} aria-label={`Open ${p.name}`} className="pressable -mr-1 flex size-9 shrink-0 items-center justify-center text-on-surface-variant">
-                <Chevron />
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-
-      {/* Laptop: the roster as a table, still worst first. */}
-      {!!players.length && (
-        <div className="card mt-6 hidden overflow-hidden lg:block">
-          <table className="w-full text-left text-body">
-            <thead className="border-b border-outline-variant eyebrow">
-              <tr><Th>Player</Th><Th>Groups</Th><Th>This week</Th><Th>Status</Th><Th>Last trained</Th><Th><span className="sr-only">Actions</span></Th></tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant">
-              {players.map((p) => {
-                const detail = detailOf(p.progress);
-                return (
-                  <tr key={p.user_id} className="group relative cursor-pointer hover:bg-surface-container-low">
-                    <td className="px-5 py-3.5 font-bold text-on-surface">
-                      <Link href={`/coach/players/${p.user_id}`} className="underline-offset-4 after:absolute after:inset-0 group-hover:underline">{p.name}</Link><PayTag mark={marks.get(p.user_id)} />
-                    </td>
-                    <td className="max-w-[14rem] truncate px-5 py-3.5 text-body text-on-surface-variant">{p.groups.join(', ') || '—'}</td>
-                    <td className="px-5 py-3.5"><WeekDots week={p.progress.week} /></td>
-                    <td className="px-5 py-3.5 text-body text-on-surface-variant">
-                      <span className="flex items-center gap-2">
-                        <StatusDot status={p.progress.status} />
-                        <span><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-body text-on-surface-variant">{sinceLabel(p.progress.daysSince)}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className="flex items-center justify-end gap-3">
-                        {p.progress.status !== 'good' && (
-                          <span className="relative z-10"><NoteButton to={p.user_id} kind="nudge" className="btn-ghost btn-sm pressable">Nudge</NoteButton></span>
-                        )}
-                        <span className="text-on-surface-variant transition-transform group-hover:translate-x-0.5 group-hover:text-on-surface"><Chevron /></span>
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {!!players.length && <Roster rows={rows} showGroups={!inGroup} />}
 
       {/* The invite link leads only while there's nobody to list; after that it lives under Academy. */}
       {!all.length && !error && (
@@ -221,32 +185,5 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       )}
     </div>
     </NoteProvider>
-  );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return <th scope="col" className="px-5 py-3 font-semibold">{children}</th>;
-}
-
-/** Beside a player's name: where their payment stands, or that they're switched off. */
-function PayTag({ mark }: { mark?: RosterMark }) {
-  if (!mark?.label) return null;
-  return (
-    <span className={`ml-2 inline-block rounded-full border px-2 py-0.5 align-middle text-caption font-semibold
-      ${!mark.active ? INACTIVE_TAG : mark.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{mark.label}</span>
-  );
-}
-
-/**
- * Switched off: the one tag in colour, so it's seen in a long list. Rose on
- * a light page and on a dark one; the app's own palette has no red in it.
- */
-const INACTIVE_TAG = 'border-[#E8A0B4] bg-[#FCE4EC] text-[#9B1C45] dark:border-[#8E3A55] dark:bg-[#4A1F2D] dark:text-[#FFC2D4]';
-
-/** The end of a row: this opens something. */
-function Chevron() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-         className="size-4.5" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
   );
 }

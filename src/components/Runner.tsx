@@ -66,8 +66,10 @@ function glide(el: () => Element | null | undefined, block: ScrollLogicalPositio
 
 export function Runner({
   title, note, drills, workoutId, sessionRef, back, doneHref, rounds = 1, source,
-  completedDay = null, completedAt, trainer, spec, owner,
+  completedDay = null, completedAt, trainer, spec, owner, preview = false,
 }: {
+  /** A trainer looking at their own session as a player would: nothing is saved. */
+  preview?: boolean;
   title: string; drills: Exercise[];
   /** One line under the title, when there's something to say: the trainer's
    *  note on this session or on a drill set just for them, or how many rounds.
@@ -364,6 +366,8 @@ export function Runner({
     // afterthought.
     haptic('success');
     window.scrollTo({ top: 0 });
+    // A trainer's look at their own session: it isn't training, and isn't kept.
+    if (preview) { setSave('saved'); keepTicks(new Set()); return; }
     // Kept before the ticks go: send() puts the finish on the phone before
     // its first await, so there's no moment with neither.
     send(minutes);
@@ -392,6 +396,7 @@ export function Runner({
             {doneTouches > 0 && <span className="block">{doneTouches.toLocaleString('en-US')} touches on the ball</span>}
           </p>
 
+          {preview && <p className="mt-4 text-body font-semibold text-on-surface-brand-variant">This was a preview. Nothing was saved.</p>}
           {/* A trainer's session goes to the trainer: say so, while it's on its
               way or there. If it didn't save, the line below says that instead. */}
           {trainer && asksFeel && (save === 'saving' || save === 'saved' || save === 'queued') && (
