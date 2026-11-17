@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { Progress, Status } from '@/lib/progress';
-import { Avatar } from '@/components/Avatar';
 import { WeekDots } from './WeekDots';
 import { StatusTag } from './StatusTag';
 import { NoteButton } from './NoteDialog';
@@ -18,70 +17,60 @@ export type RosterRow = {
 };
 
 type Filter = 'all' | 'nudge' | 'unpaid' | 'inactive';
-type Sort = 'attention' | 'name' | 'last';
 
 const active = (r: RosterRow) => r.pay?.active !== false;
 const FILTERS: { id: Filter; label: string; keep: (r: RosterRow) => boolean }[] = [
-  { id: 'all', label: 'All', keep: () => true },
+  { id: 'all', label: 'Everyone', keep: () => true },
   { id: 'nudge', label: 'Need a nudge', keep: (r) => active(r) && r.status !== 'good' },
   { id: 'unpaid', label: 'Not paying', keep: (r) => !!r.pay?.attention },
   { id: 'inactive', label: 'Inactive', keep: (r) => !active(r) },
 ];
 
 /**
- * The trainer's players, findable: a search box, a few filters and a sort,
- * for a list of thirty to sixty. It arrives worst first, which is still the
- * order unless another is picked. Cards on a phone, a table on a laptop.
+ * The trainer's players: worst first, switched-off players last. One quiet
+ * row above it, a search box and one "Show" menu, and only once the list is
+ * long enough to need finding in. Colour is kept for what needs a look: a
+ * player on track is plain text. Cards on a phone, a table on a laptop.
  */
 export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: boolean }) {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
-  const [sort, setSort] = useState<Sort>('attention');
 
   const counts = useMemo(() => Object.fromEntries(FILTERS.map((f) => [f.id, rows.filter(f.keep).length])) as Record<Filter, number>, [rows]);
   const shown = useMemo(() => {
     const word = q.trim().toLowerCase();
     const keep = FILTERS.find((f) => f.id === filter)!.keep;
     const out = rows.filter((r) => keep(r) && (!word || r.name.toLowerCase().includes(word) || r.groups.some((g) => g.toLowerCase().includes(word))));
-    if (sort === 'name') out.sort((a, b) => a.name.localeCompare(b.name));
-    // Longest quiet first; never trained before anyone.
-    if (sort === 'last') out.sort((a, b) => (b.daysSince ?? Infinity) - (a.daysSince ?? Infinity));
-    return out;
-  }, [rows, q, filter, sort]);
+    // Switched off: still on the list, at the end of it.
+    return [...out.filter(active), ...out.filter((r) => !active(r))];
+  }, [rows, q, filter]);
 
   // With a handful of players there's nothing to find.
-  const tools = rows.length > 6;
-  const chips = FILTERS.filter((f) => f.id === 'all' || counts[f.id] > 0);
+  const search = rows.length > 8;
+  const options = FILTERS.filter((f) => f.id === 'all' || counts[f.id] > 0);
+  const pick = options.length > 1 && rows.length > 4;
 
   return (
     <div className="mt-6">
-      {tools && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
-          <label className="relative block min-w-0 flex-1 basis-56 lg:max-w-xs">
-            <span className="sr-only">Search players by name or group</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-4.5 -translate-y-1/2 text-on-surface-variant" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
-            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search players"
-                   className="min-h-11 w-full rounded-full border border-outline bg-surface-container-lowest pl-11 pr-4 text-[16px] text-on-surface outline-none placeholder:text-on-surface-variant focus:border-primary" />
-          </label>
-          <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface-variant">
-            Sort
-            <select value={sort} onChange={(e) => setSort(e.target.value as Sort)}
-                    className="min-h-11 rounded-full border border-outline bg-surface-container-lowest px-4 text-body font-semibold text-on-surface">
-              <option value="attention">Needs attention first</option>
-              <option value="name">Name</option>
-              <option value="last">Longest since training</option>
-            </select>
-          </label>
-        </div>
-      )}
-      {chips.length > 1 && (
-        <div className={`flex flex-wrap gap-2 ${tools ? 'mt-3' : ''}`} role="group" aria-label="Show">
-          {chips.map((f) => (
-            <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}
-                    className={`chip ${filter === f.id ? 'chip-on' : ''}`}>
-              {f.label} <span className="tabular-nums opacity-70">{counts[f.id]}</span>
-            </button>
-          ))}
+      {(search || pick) && (
+        <div className="flex flex-wrap items-center gap-3">
+          {search && (
+            <label className="relative block min-w-0 flex-1 basis-56 lg:max-w-xs">
+              <span className="sr-only">Search players by name or group</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-4.5 -translate-y-1/2 text-on-surface-variant" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search players"
+                     className="min-h-11 w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-11 pr-4 text-[16px] text-on-surface outline-none placeholder:text-on-surface-variant focus:border-primary" />
+            </label>
+          )}
+          {pick && (
+            <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface-variant">
+              Show
+              <select value={filter} onChange={(e) => setFilter(e.target.value as Filter)}
+                      className="min-h-11 rounded-full border border-outline-variant bg-surface-container-lowest px-4 text-body font-semibold text-on-surface">
+                {options.map((f) => <option key={f.id} value={f.id}>{f.label}{f.id === 'all' ? '' : ` (${counts[f.id]})`}</option>)}
+              </select>
+            </label>
+          )}
         </div>
       )}
 
@@ -90,21 +79,21 @@ export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: bo
       {/* Phone: cards. */}
       <ul className="mt-5 space-y-2.5 lg:hidden">
         {shown.map((p) => (
-          <li key={p.id} className={`card flex items-center gap-3 py-4 pl-4 pr-3 ${active(p) ? '' : 'opacity-75'}`}>
-            <Link href={`/coach/players/${p.id}`} className="flex min-w-0 flex-1 items-start gap-3">
-              <Avatar name={p.name} className="h-10 w-10 text-body-lg" />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
-                {showGroups && !!p.groups.length && (
-                  <span className="block truncate text-caption font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
-                )}
-                <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <StatusTag status={p.status}>{p.reason}</StatusTag>
-                  <PayTag pay={p.pay} />
-                </span>
-                {p.detail && <span className="mt-1 block truncate text-body-sm text-on-surface-variant">{p.detail}</span>}
-                <span className="mt-3 block"><WeekDots week={p.week} /></span>
+          <li key={p.id} className={`card flex items-center gap-3 py-4 pl-4 pr-3 ${active(p) ? '' : 'opacity-60'}`}>
+            <Link href={`/coach/players/${p.id}`} className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="truncate text-body-lg font-bold text-on-surface">{p.name}</span>
+                <PayTag pay={p.pay} />
               </span>
+              {showGroups && !!p.groups.length && (
+                <span className="block truncate text-caption font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
+              )}
+              {active(p) && (
+                <>
+                  <span className="mt-1.5 block text-body text-on-surface-variant"><Standing p={p} /></span>
+                  <span className="mt-3 block"><WeekDots week={p.week} /></span>
+                </>
+              )}
             </Link>
             {active(p) && p.status !== 'good' && (
               <NoteButton to={p.id} kind="nudge" className="btn-ghost btn-sm pressable shrink-0">Nudge</NoteButton>
@@ -125,22 +114,16 @@ export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: bo
             </thead>
             <tbody className="divide-y divide-outline-variant">
               {shown.map((p) => (
-                <tr key={p.id} className={`group relative cursor-pointer hover:bg-surface-container-low ${active(p) ? '' : 'opacity-75'}`}>
+                <tr key={p.id} className={`group relative cursor-pointer hover:bg-surface-container-low ${active(p) ? '' : 'opacity-60'}`}>
                   <td className="px-3 py-4">
-                    <span className="flex items-center gap-3">
-                      <Avatar name={p.name} className="h-9 w-9 text-body" />
-                      <span className="min-w-0">
-                        <Link href={`/coach/players/${p.id}`} className="font-bold text-on-surface underline-offset-4 after:absolute after:inset-0 group-hover:underline">{p.name}</Link>
-                        {p.pay?.label && <span className="mt-0.5 block"><PayTag pay={p.pay} /></span>}
-                      </span>
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <Link href={`/coach/players/${p.id}`} className="font-bold text-on-surface underline-offset-4 after:absolute after:inset-0 group-hover:underline">{p.name}</Link>
+                      <PayTag pay={p.pay} />
                     </span>
                   </td>
                   {showGroups && <td className="max-w-[14rem] truncate px-3 py-4 text-on-surface-variant">{p.groups.join(', ') || '—'}</td>}
-                  <td className="px-3 py-4"><WeekDots week={p.week} /></td>
-                  <td className="px-3 py-4 text-on-surface-variant">
-                    <StatusTag status={p.status}>{p.reason}</StatusTag>
-                    {p.detail && <span className="mt-1 block text-body-sm">{p.detail}</span>}
-                  </td>
+                  <td className="px-3 py-4">{active(p) && <WeekDots week={p.week} />}</td>
+                  <td className="px-3 py-4 text-on-surface-variant">{active(p) ? <Standing p={p} /> : '—'}</td>
                   <td className="whitespace-nowrap px-3 py-4 text-on-surface-variant">{p.since}</td>
                   <td className="px-3 py-4 text-right">
                     <span className="flex items-center justify-end gap-3">
@@ -157,6 +140,18 @@ export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: bo
         </div>
       )}
     </div>
+  );
+}
+
+/** Where their week stands: a coloured tag only when it needs a look, plain words when it doesn't. */
+function Standing({ p }: { p: RosterRow }) {
+  return (
+    <>
+      {p.status === 'good'
+        ? <span className="font-semibold text-on-surface">{p.reason}</span>
+        : <StatusTag status={p.status}>{p.reason}</StatusTag>}
+      {p.detail && <span className="text-body-sm"> · {p.detail}</span>}
+    </>
   );
 }
 

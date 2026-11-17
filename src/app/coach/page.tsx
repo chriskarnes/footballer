@@ -110,25 +110,12 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
                   )}
                   {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable">Invite players</Link>}
                 </>}>
+        {!!players.length && <>
+          This week: <b className="font-semibold text-on-surface">{trained} of {players.length}</b> trained
+          {' · '}{sessions} {sessions === 1 ? 'session' : 'sessions'} · {minutes} min
+          {sessionsLast > 0 && <> · last week {trainedLast} trained, {sessionsLast} {sessionsLast === 1 ? 'session' : 'sessions'}</>}
+        </>}
       </PageHead>
-
-      {!!players.length && (
-        <dl className="mt-6 grid grid-cols-3 gap-x-6 border-y border-outline-variant py-5 lg:max-w-2xl lg:gap-x-10">
-          {([
-            ['Trained this week', `${trained} of ${players.length}`, `${trainedLast} last week`],
-            ['Sessions', String(sessions), `${sessionsLast} last week`],
-            ['Minutes', String(minutes), null],
-          ] as const).map(([label, value, sub]) => (
-            <div key={label} className="flex flex-col-reverse">
-              <dd>
-                <span className="block text-[1.75rem] font-bold leading-none tracking-tight text-on-surface tabular-nums">{value}</span>
-                {sub && <span className="mt-1.5 block text-body-sm text-on-surface-variant">{sub}</span>}
-              </dd>
-              <dt className="eyebrow mb-2">{label}</dt>
-            </div>
-          ))}
-        </dl>
-      )}
 
       {steps && (
         <section className="card mt-5 flex items-center gap-4 p-5 lg:max-w-xl">
