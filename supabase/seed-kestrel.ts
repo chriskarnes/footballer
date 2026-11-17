@@ -384,11 +384,15 @@ async function main() {
     const owner = await account(OWNER_EMAIL);
     ownerId = owner.id;
     await must(db.from('academy_members').upsert({ academy_id: academyId, user_id: ownerId, role: 'owner', joined_at: noon(addDays(today, -95)) }), 'owner');
-    const { data: prof } = await db.from('profiles').select('display_name').eq('id', ownerId).maybeSingle();
-    if (!prof?.display_name?.trim()) await must(db.from('profiles').upsert({ id: ownerId, display_name: TRAINER_NAME }), 'owner profile');
   }
+  // A new account is named after the front of its email: not a name to show players.
+  const { data: ownerUser } = await db.auth.admin.getUserById(ownerId);
   const { data: ownerProfile } = await db.from('profiles').select('display_name').eq('id', ownerId).maybeSingle();
-  const coachName = ownerProfile?.display_name?.trim() || TRAINER_NAME;
+  let coachName = ownerProfile?.display_name?.trim() ?? '';
+  if (!coachName || coachName === ownerUser.user?.email?.split('@')[0]) {
+    coachName = TRAINER_NAME;
+    await must(db.from('profiles').upsert({ id: ownerId, display_name: coachName }), 'owner profile');
+  }
 
   // The player you can sign in as: the address given, or whoever was Leo last time.
   const memberIds = (members ?? []).filter((m) => m.role === 'player').map((m) => m.user_id as string);
@@ -493,6 +497,8 @@ async function main() {
     }
   }
   await must(db.from('group_members').insert(memberships.map((m) => ({ ...m, academy_id: academyId }))), 'group members');
+  // By name, as the app reads them: the order decides which session lands on which day.
+  groups.sort((a, b) => a.name.localeCompare(b.name));
 
   const playerPrograms: PlayerProgramRow[] = PLAYERS.filter((p) => p.own).map((p) => ({
     user_id: ids[p.first], program_id: programId[p.own!.program], starts_on: addDays(monday, -7 * p.own!.weeksAgo),
@@ -503,7 +509,9 @@ async function main() {
   const schedules: ScheduleRow[] = PLAYERS.filter((p) => p.club || p.games).map((p) => ({
     user_id: ids[p.first], club_days: p.club ?? [], game_day: p.games?.[0] ?? null, game_days: p.games ?? [], trainer_days: p.trainerDays ?? [],
   }));
-  await must(db.from('player_schedules').upsert(schedules.filter((s) => sample.has(s.user_id)).map((s) => ({ ...s, updated_at: stamp }))), 'soccer days');
+  const { data: said } = await db.from('player_schedules').select('user_id').in('user_id', players);
+  const hasOwn = new Set((said ?? []).map((r) => r.user_id as string));
+  await must(db.from('player_schedules').upsert(schedules.filter((s) => sample.has(s.user_id) || !hasOwn.has(s.user_id)).map((s) => ({ ...s, updated_at: stamp }))), 'soccer days');
   await must(db.from('player_schedules').delete().in('user_id', PLAYERS.filter((p) => !p.club && !p.games).map((p) => ids[p.first]).filter((id) => sample.has(id))), 'no soccer days');
 
   const plans = PLAYERS.filter((p) => p.built || p.focus).map((p) => ({
