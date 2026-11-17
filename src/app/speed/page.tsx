@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { BrandBand } from '@/components/BrandBand';
 import { PHASES, BLOCK_WEEKS, WEEK_TEMPLATE, SPEED_SESSIONS, SOURCES } from '@/lib/speed';
 import { serverClient } from '@/lib/supabase/server';
-import { SpeedNow, SpeedWeek, SpeedYearProvider } from '@/components/SpeedYear';
+import { SpeedNow, SpeedPath, SpeedWeek, SpeedYearProvider } from '@/components/SpeedYear';
 import { getAcademy } from '@/lib/branding-server';
 
 const Chevron = ({ className }: { className: string }) => (
@@ -40,6 +40,7 @@ export default async function SpeedPage() {
       <SpeedYearProvider completions={completions}>
         <BrandBand compact><SpeedNow /></BrandBand>
         <SpeedWeek />
+        <SpeedPath />
 
         <Link href="/speed/test" className="card pressable mt-4 flex min-h-[68px] items-center gap-3.5 px-4 py-3">
           <span className="min-w-0 flex-1">

@@ -8,6 +8,9 @@ import { membershipLine } from '@/lib/membership';
 import { myMembership } from '@/lib/membership-server';
 import { billingOn } from '@/lib/billing-server';
 import { CONTACT_EMAIL } from '@/lib/legal';
+import { CardNote, Included } from '@/components/Paywall';
+import { getTrainer } from '@/lib/player-week';
+import { Tag } from '@/components/admin/ui';
 
 export const metadata = { title: 'Membership', robots: { index: false } };
 
@@ -42,6 +45,12 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
   }
   const { terms, access, row } = m;
   const paying = access.state === 'paid' || access.state === 'past_due';
+  const trainer = await getTrainer().catch(() => null);
+  const status = access.state === 'paid' ? { tone: 'good' as const, word: row?.cancel_at_period_end ? 'Ending' : 'Active' }
+    : access.state === 'past_due' ? { tone: 'rose' as const, word: 'Payment failed' }
+    : access.state === 'trial' ? { tone: 'wait' as const, word: `Free, ${access.daysLeft} ${access.daysLeft === 1 ? 'day' : 'days'} left` }
+    : access.state === 'paused' ? { tone: 'plain' as const, word: 'Paused' }
+    : access.state === 'locked' ? { tone: 'rose' as const, word: 'Not active' } : null;
   return (
     <div className="animate-pop pt-6">
       <BackLink href="/me" label="Me" />
@@ -50,9 +59,12 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
 
       <section className="card mt-6 p-6">
         {terms.mode === 'players_pay' && (
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="font-brand text-[44px] font-extrabold leading-none text-on-surface">{dollars(terms.priceCents)}</span>
-            <span className="text-body font-semibold text-on-surface-variant">a month</span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-brand text-[44px] font-extrabold leading-none text-on-surface">{dollars(terms.priceCents)}</span>
+              <span className="text-body font-semibold text-on-surface-variant">a month</span>
+            </div>
+            {status && <Tag tone={status.tone}>{status.word}</Tag>}
           </div>
         )}
         {done && !paying && (
@@ -62,14 +74,13 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
            className={`mt-4 text-body leading-relaxed ${access.state === 'past_due' || access.state === 'locked' ? 'font-semibold text-on-surface' : 'text-on-surface-variant'}`}>
           {membershipLine(terms, access, row)}
         </p>
-        <div className="mt-5">
+        {terms.mode === 'players_pay' && !paying && access.state !== 'paused' && <Included trainer={trainer?.name} />}
+        <div className="mt-6">
           {access.state === 'paused' ? null : billingOn()
             ? <MembershipButtons action={paying ? 'manage' : 'add'} hasCustomer={!!row?.stripe_customer_id && !paying} />
             : <p className="text-body text-on-surface-variant">Paying by card isn&rsquo;t switched on yet.</p>}
         </div>
-        <p className="mt-4 text-body-sm leading-relaxed text-on-surface-variant">
-          A parent or guardian should do this. Cards are handled by Stripe; we never see or store the card number. Cancel any time, and it runs to the end of the month you&rsquo;ve paid for.
-        </p>
+        <CardNote> Cancel any time, and it runs to the end of the month you&rsquo;ve paid for.</CardNote>
       </section>
 
       {paying && <Link href="/" className="btn-ghost pressable mt-5 inline-flex">Back to training</Link>}

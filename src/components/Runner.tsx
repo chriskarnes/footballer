@@ -10,6 +10,7 @@ import { lastUser, ownerOf, whoIsHere } from '@/lib/phone-session';
 import { newId } from '@/lib/new-id';
 import { EFFORT } from '@/lib/speed-guide';
 import { isYoutubeShort, youtubeId } from '@/lib/video';
+import { amountLabel, plainAmount } from '@/lib/drill-copy';
 import { Avatar } from './Avatar';
 import { BackLink } from './BackLink';
 import { Tick, TickMark } from './TickMark';
@@ -388,6 +389,7 @@ export function Runner({
           </h1>
           <p className="mt-3 text-title font-semibold text-on-surface-brand-variant">
             {done.size} of {drills.length} drills · {played} min
+            {doneTouches > 0 && <span className="block">{doneTouches.toLocaleString('en-US')} touches on the ball</span>}
           </p>
 
           {/* A trainer's session goes to the trainer: say so, while it's on its
@@ -541,8 +543,8 @@ export function Runner({
                 <span className="mt-1 block text-title-sm font-semibold text-on-surface-variant">
                   {/* "rest 1 min", but just "walk back": a rest that's an
                       instruction rather than a time doesn't take "rest". */}
-                  {d.amount ?? `${d.sets} × ${d.reps_time}${d.rest && d.rest !== '-'
-                    ? (/^\d/.test(d.rest) ? ` · rest ${d.rest}` : ` · ${d.rest}`) : ''}`}
+                  {d.amount ?? `${amountLabel(d.sets, d.reps_time)}${d.rest && d.rest !== '-'
+                    ? (/^\d/.test(d.rest) ? ` · rest ${plainAmount(d.rest)}` : ` · ${d.rest}`) : ''}`}
                   {d.effort && ` · ${EFFORT[d.effort].label}`}
                 </span>
                 {/* The one thing to think about at speed. */}
@@ -669,19 +671,37 @@ function Circle({ on, here, locked, name, onTick }: {
  * YouTube stays underneath, small.
  */
 function Video({ id, upright, title, href }: { id: string; upright: boolean; title: string; href: string }) {
+  // The video's own picture and a play button until it's asked for: an empty
+  // black box was what a drill opened on, and it loaded YouTube's player for
+  // every drill whether or not it was watched.
+  const [playing, setPlaying] = useState(false);
   return (
     <div className="mb-4">
-      <div className={`overflow-hidden rounded-medium bg-black ${upright ? 'mx-auto max-w-full' : 'w-full'}`}
-           style={upright ? { aspectRatio: '9 / 16', height: 'min(64dvh, 520px)' } : { aspectRatio: '16 / 9' }}>
-        <iframe src={`https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0`}
-                title={`${title}: video`} loading="lazy" className="h-full w-full"
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+      <div className={`relative overflow-hidden rounded-medium bg-black ${upright ? 'mx-auto max-w-full' : 'w-full'}`}
+           style={upright ? { aspectRatio: '9 / 16', height: 'min(56dvh, 460px)' } : { aspectRatio: '16 / 9' }}>
+        {playing ? (
+          <iframe src={`https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0&autoplay=1`}
+                  title={`${title}: video`} className="h-full w-full"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+        ) : (
+          <button type="button" onClick={() => setPlaying(true)} aria-label={`Play the video: ${title}`}
+                  className="group absolute inset-0 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" referrerPolicy="no-referrer"
+                 className="absolute inset-0 h-full w-full object-cover opacity-90" />
+            <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-black shadow-level3 transition-transform group-active:scale-95">
+              <svg viewBox="0 0 24 24" className="ml-1 h-7 w-7" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            </span>
+          </button>
+        )}
       </div>
-      <a href={href} target="_blank" rel="noopener"
-         className="mt-2 block text-center text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
-        Not playing? Open it on YouTube
-      </a>
+      {playing && (
+        <a href={href} target="_blank" rel="noopener"
+           className="mt-2 block text-center text-body-sm font-semibold text-on-surface-variant underline underline-offset-4">
+          Not playing? Open it on YouTube
+        </a>
+      )}
     </div>
   );
 }

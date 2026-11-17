@@ -37,6 +37,10 @@ function tabFor(path: string, from: string | null): string | null {
   return [COACH, ...TABS].find((t) => t.href !== '/' && path.startsWith(t.href))?.href ?? null;
 }
 
+/** A session being run: Train's, the library's, a trainer's or Speed's. */
+export const inSession = (path: string) =>
+  path.startsWith('/session/') || path.startsWith('/train/') || path.startsWith('/speed/session/');
+
 type Props = {
   academyId: string | null;
   /** Whether this viewer gets Library, Plan and Speed: their trainer decides for players. */
@@ -63,10 +67,16 @@ function Bar({ academyId, library = true, plan = true, speed = true, from }: Pro
   // app's tabs are for after it. Asking to join isn't: it's a wait, and the
   // tabs are the way on from it.
   if (path.startsWith('/join') || path.startsWith('/claim')) return null;
+  // A session is the one thing on the screen while it's being done: its own
+  // back control leads out, and the bar isn't floating over the drills.
+  if (inSession(path)) return null;
   return (
     // safe-b keeps the bar clear of the iPhone home indicator; without it the pill
     // sits underneath the gesture area and taps land on the wrong thing.
     <nav className="safe-b safe-x pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center">
+      {/* The page fades out under the bar, so a row of chips or half a card
+          isn't showing through around it. */}
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-surface via-surface/85 to-transparent" />
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-outline-variant
                       tabbar-surface p-1.5 shadow-level2 backdrop-blur-xl">
         {tabs.map((t) => {

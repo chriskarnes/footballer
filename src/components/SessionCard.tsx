@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { BuiltSession } from '@/lib/types';
 import { formatTouches } from '@/lib/session-builder';
 import { sessionTitle } from '@/lib/session-url';
+import { amountLabel } from '@/lib/drill-copy';
 
 export function SessionCard({
   built, startHref, onSwap, onShuffle,
@@ -81,7 +82,7 @@ export function SessionCard({
             <div className="min-w-0 flex-1">
               <div className="text-title-sm font-bold leading-snug text-on-surface">{d.name}</div>
               <div className="mt-0.5 text-body font-semibold text-on-surface-variant">
-                {d.sets} × {d.reps_time}
+                {amountLabel(d.sets, d.reps_time)}
               </div>
             </div>
             {d.video_url && (

@@ -1,4 +1,5 @@
 'use client';
+import { amountLabel } from '@/lib/drill-copy';
 import Link from 'next/link';
 import { useState } from 'react';
 import type { DrillBrief, SessionRow } from '@/lib/types';
@@ -138,7 +139,7 @@ export function PlanWeek({
                     <span className="min-w-0 flex-1 text-body-sm font-medium text-on-surface">
                       {x.name}
                       <span className="ml-1.5 text-caption text-on-surface-variant">
-                        {x.sets} × {x.reps_time}
+                        {amountLabel(x.sets, x.reps_time)}
                       </span>
                     </span>
                     <span className="shrink-0 text-caption font-semibold text-on-surface-variant">

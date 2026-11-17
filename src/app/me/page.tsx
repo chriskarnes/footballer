@@ -1,4 +1,6 @@
 import { BandTag, BandTitle, BrandBand } from '@/components/BrandBand';
+import { myProgress } from '@/lib/my-progress';
+import { formatTouches } from '@/lib/session-builder';
 import { profileMissing } from '@/lib/profile-check';
 import Link from 'next/link';
 import { serverClient } from '@/lib/supabase/server';
@@ -222,6 +224,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   }
 
   const finished = finishedRows(workouts);
+  const progress = myProgress(finished, timeZone);
   const saved = workouts.filter((w) => w.status !== 'completed').map(toRow);
 
   const name = profile?.display_name?.trim();
@@ -269,6 +272,26 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         <section className="card mt-10 p-5">
           <div className="h-sec">Want a weekly plan?</div>
           <Link href="/plan" className="btn-ghost mt-4 min-h-13 w-full text-body-lg font-bold">Make my week</Link>
+        </section>
+      )}
+
+      {/* What they have to show for it: this week, the run of weeks, and all of it. */}
+      {finished.length > 0 && (
+        <section className="mt-10" aria-label="Your progress">
+          <dl className="grid grid-cols-3 gap-2.5">
+            {([
+              [String(progress.thisWeek), progress.thisWeek === 1 ? 'session this week' : 'sessions this week'],
+              [String(progress.weeks), progress.weeks === 1 ? 'week in a row' : 'weeks in a row'],
+              progress.touches > 0
+                ? [formatTouches(progress.touches), 'touches so far']
+                : [String(progress.sessions), progress.sessions === 1 ? 'session so far' : 'sessions so far'],
+            ] as const).map(([value, label]) => (
+              <div key={label} className="card flex flex-col-reverse px-3 py-4 text-center">
+                <dt className="mt-1.5 text-body-sm font-semibold leading-tight text-on-surface-variant">{label}</dt>
+                <dd className="font-brand text-display-sm font-extrabold leading-none tracking-brand-snug text-on-surface">{value}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       )}
 

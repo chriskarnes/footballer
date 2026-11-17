@@ -179,6 +179,33 @@ export function SpeedNow() {
  * opens its session (or, done, what was done). Rest days are a quiet line,
  * so the week reads Monday to Sunday with today among the days around it.
  */
+/**
+ * Before the year has started: what it is, as a path through its phases, so
+ * the tab isn't one button over an empty page. Gone once it's running, when
+ * the week is what's shown.
+ */
+export function SpeedPath() {
+  const s = useSpeed();
+  if (!s.ready || !s.now || s.start) return null;
+  return (
+    <section className="mt-6">
+      <h2 className="h-sec mb-4">The year ahead</h2>
+      <ol className="relative ml-1 space-y-5 border-l-2 border-outline-variant pl-6">
+        {PHASES.map((p) => (
+          <li key={p.id} className="relative">
+            <span aria-hidden="true" className="absolute -left-[35px] top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-caption font-extrabold text-on-primary">{p.number}</span>
+            <p className="text-title font-bold leading-snug text-on-surface">{p.name}</p>
+            <p className="mt-0.5 text-body font-semibold text-on-surface-variant">{p.months}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-5 text-body-lg font-medium leading-relaxed text-on-surface-variant">
+        Short sessions, a few a week, and a test every four weeks to beat.
+      </p>
+    </section>
+  );
+}
+
 export function SpeedWeek() {
   const s = useSpeed();
   if (!s.ready || !s.now) return null;

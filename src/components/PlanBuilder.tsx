@@ -306,9 +306,7 @@ function Builder({
       ) : (
         <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-lowest p-4 text-body
                       leading-relaxed text-on-surface-variant">
-          <strong className="text-on-surface">Here&rsquo;s a starting week.</strong> Train a few
-          sessions and this fills itself in from what you actually do — until then,
-          change whatever doesn&rsquo;t fit.
+          <strong className="text-on-surface">A week to start from.</strong> Change whatever doesn&rsquo;t fit.
         </p>
       )}
 

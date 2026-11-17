@@ -15,6 +15,8 @@ import { BackButton } from './BackLink';
  * to answer the one button meant for "I don't know" would defeat it.
  */
 const SURPRISE_MINUTES = 20;
+/** The quick start: short enough to say yes to. */
+const QUICK_MINUTES = 15;
 
 const MINUTES = [10, 15, 20, 30, 45];
 const PLACES: [SessionSpec['place'], string][] = [
@@ -93,6 +95,9 @@ function Train({
   const [miss, setMiss] = useState(false);
   // On the result step: a swap or a mix that had nothing else to give.
   const [stuck, setStuck] = useState<string | null>(null);
+  // The six ball skills lead; the rest, and where, are a tap away. A wall of
+  // twenty chips was the first thing a player saw.
+  const [more, setMore] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   // Whether this visit pushed the result step. If it did, Back is the back
@@ -224,6 +229,14 @@ function Train({
    * player actually knows — a surprise 45 minutes when you have 15 is not a
    * surprise, it's a wrong answer. Whatever is in "How long" is kept.
    */
+  /** One tap to a session: a short mix, no questions. */
+  function quickStart() {
+    const next = { ...spec, minutes: QUICK_MINUTES, focus: [] };
+    setAnyFocus(true);
+    setSpec(next);
+    show(build(next, true), true, 'push');
+  }
+
   function surpriseMe() {
     // Writes the fallback duration into the spec rather than only into the build,
     // so "How long" shows the time the session was actually cut to.
@@ -261,13 +274,28 @@ function Train({
     );
   }
 
+  // A place already chosen (a session that came back by URL) keeps its row open.
+  const showAll = more || !!spec.place;
+
   return (
     <div key="inputs" className="animate-pop">
       {planCard}
 
-      {/* Two questions and a button. Tapping beats typing at ten, so the
-          chips lead; the coach box is still here for anyone who'd rather say it. */}
-      <div className="mt-8 space-y-8">
+      {/* One tap for a player who just wants to train, which at ten is
+          most of them. The questions are underneath for one who knows. */}
+      <section className="brand-card mt-6 p-6">
+        <p className="text-body font-bold text-brand-accent">Quick start</p>
+        <h2 className="mt-1.5 font-brand text-display-sm font-extrabold leading-tight tracking-brand-snug text-on-surface-brand">
+          {QUICK_MINUTES} minutes on the ball
+        </h2>
+        <p className="mt-1 text-body-lg font-semibold text-on-surface-brand-variant">A mix of ball skills, picked for you.</p>
+        <button type="button" onClick={quickStart} className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
+          Get my session
+        </button>
+      </section>
+
+      <h2 className="h-sec mt-10">Or build your own</h2>
+      <div className="mt-5 space-y-7">
         <Row label="How long?">
           {MINUTES.map((m) => (
             <Chip key={m} on={spec.minutes === m} label={`${m} minutes`}
@@ -279,27 +307,37 @@ function Train({
 
         <Row label="What do you want to work on?">
           <Chip on={anyFocus} onClick={chooseAny}>Anything</Chip>
-          {(Object.keys(FOCUS_LABELS) as FocusArea[]).map((f) => (
-            <Chip key={f} on={!anyFocus && !!spec.focus?.includes(f)}
-                  onClick={() => toggleFocus(f)}>
-              {FOCUS_LABELS[f]}
-            </Chip>
-          ))}
+          {(Object.keys(FOCUS_LABELS) as FocusArea[])
+            .filter((f) => showAll || ANY_POOL.includes(f) || (!anyFocus && !!spec.focus?.includes(f)))
+            .map((f) => (
+              <Chip key={f} on={!anyFocus && !!spec.focus?.includes(f)}
+                    onClick={() => toggleFocus(f)}>
+                {FOCUS_LABELS[f]}
+              </Chip>
+            ))}
+          {!showAll && (
+            <button type="button" onClick={() => setMore(true)} aria-expanded={false}
+                    className="min-h-9 px-2 text-body font-bold text-primary underline underline-offset-4">
+              More
+            </button>
+          )}
         </Row>
 
-        <Row label="Where?">
-          {PLACES.map(([v, l]) => (
-            <Chip key={v} on={spec.place === v}
-              onClick={() => pick({ ...spec, place: v })}>{l}</Chip>
-          ))}
-        </Row>
+        {showAll && (
+          <Row label="Where?">
+            {PLACES.map(([v, l]) => (
+              <Chip key={v} on={spec.place === v}
+                onClick={() => pick({ ...spec, place: v })}>{l}</Chip>
+            ))}
+          </Row>
+        )}
       </div>
 
       <button onClick={() => show(build(), anyFocus, 'push')} disabled={!ready}
               className="btn-primary btn-big pressable mt-8 w-full">
         Build my session
       </button>
-      {/* For a player who doesn't know what to pick, which at this age is most of them. */}
+      {/* Any length, anything: for a player who has the time but not the idea. */}
       <button type="button" onClick={surpriseMe} className="btn-ghost pressable mt-3 min-h-13 w-full text-body-lg font-bold">
         Surprise me
       </button>
@@ -345,7 +383,7 @@ function Train({
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="h-sec mb-3">{label}</h2>
+      <h3 className="mb-3 text-title-sm font-bold text-on-surface">{label}</h3>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );

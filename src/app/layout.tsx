@@ -20,6 +20,7 @@ import { SiteChrome } from '@/components/site/SiteChrome';
 import { Unclaimed } from '@/components/site/Unclaimed';
 import { Brand } from '@/components/Brand';
 import { myMembership } from '@/lib/membership-server';
+import { getTrainer } from '@/lib/player-week';
 import { membershipLine } from '@/lib/membership';
 import { dollars } from '@/lib/billing';
 
@@ -142,7 +143,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const m = await myMembership();
   const membership = !m ? null : {
     lock: m.access.state === 'locked' || m.access.state === 'paused'
-      ? { academy: m.academyName, price: dollars(m.terms.priceCents), line: membershipLine(m.terms, m.access, m.row), paused: m.access.state === 'paused' } : null,
+      ? { academy: m.academyName, price: dollars(m.terms.priceCents), line: membershipLine(m.terms, m.access, m.row), paused: m.access.state === 'paused',
+          trainer: await getTrainer().catch(() => null) } : null,
     note: m.access.state === 'past_due' ? 'Your last payment didn’t go through. Update your card.'
       : m.access.state === 'trial' && m.access.daysLeft <= 5
         ? `${m.access.daysLeft} free ${m.access.daysLeft === 1 ? 'day' : 'days'} left, then ${dollars(m.terms.priceCents)} a month. Add a card.`

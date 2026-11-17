@@ -1,4 +1,5 @@
 import 'server-only';
+import { drillName } from './drill-copy';
 import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { serverClient } from './supabase/server';
@@ -57,8 +58,10 @@ export const getPrograms = cache(async (): Promise<Program[]> =>
 export const getSessions = cache(async (): Promise<SessionRow[]> =>
   !(await allowed()) ? [] : sessionRows());
 
+// The library's names were typed in capitals: shown in title case everywhere.
 export const getExercises = cache(async (): Promise<Exercise[]> =>
-  !(await allowed()) ? [] : (await fromDb<Exercise>('exercises')) ?? (await bundled()).exercises);
+  !(await allowed()) ? []
+    : ((await fromDb<Exercise>('exercises')) ?? (await bundled()).exercises).map((e: Exercise) => ({ ...e, name: drillName(e.name) })));
 
 /**
  * For the calendar feed, which has no cookies: the feed's token says who,

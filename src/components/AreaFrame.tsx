@@ -5,7 +5,7 @@ import { InstallNudge } from './InstallNudge';
 import { CoachFrame } from './coach/CoachFrame';
 import Link from 'next/link';
 import { AdminFrame } from './admin/AdminFrame';
-import { Paywall } from './Paywall';
+import { Paywall, type PaywallLock } from './Paywall';
 
 const inCoach = (path: string) => path === '/coach' || path.startsWith('/coach/');
 const inAdmin = (path: string) => path === '/admin' || path.startsWith('/admin/');
@@ -17,7 +17,7 @@ const stillOpen = (path: string) => OPEN.some((p) => path === p || path.startsWi
 /** Where the signed-in player's membership stands, worked out by the layout. */
 export type MembershipNotice = {
   /** Free days over and no card: training is replaced by the way to pay. */
-  lock: { academy: string; price: string; line: string; paused?: boolean } | null;
+  lock: PaywallLock | null;
   /** A line above the page: free days nearly over, or a payment that failed. */
   note: string | null;
 };
