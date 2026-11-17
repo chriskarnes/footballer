@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Kestrel Soccer Training crest: a shield, a K with a sky-blue arm, a ball. -->
+  <path d="M256 22 462 86v168c0 122-84 202-206 244C134 456 50 376 50 254V86Z" fill="#8EC5EC"/>
+  <path d="M256 50 436 106v148c0 106-72 176-180 215C148 430 76 360 76 254V106Z" fill="#6E1A37"/>
+  <path d="M150 138h60v236h-60z" fill="#FFFFFF"/>
+  <path d="M210 252 318 138h74L210 332Z" fill="#8EC5EC"/>
+  <path d="M254 290 298 244 392 374h-72Z" fill="#FFFFFF"/>
+  <circle cx="376" cy="222" r="21" fill="#FFFFFF"/>
+</svg>

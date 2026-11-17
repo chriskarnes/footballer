@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file-if-exists=.env.local supabase/seed.ts",
     "seed:demo": "tsx --env-file-if-exists=.env.local supabase/seed-demo.ts",
+    "seed:kestrel": "tsx --env-file-if-exists=.env.local supabase/seed-kestrel.ts",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "check": "npm run typecheck && npm test && npm run build"
   },
