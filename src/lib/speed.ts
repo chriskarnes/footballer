@@ -112,7 +112,7 @@ export const WEEK_TEMPLATE = [
 ];
 
 export const KIND_LABELS: Record<SpeedSessionKind, string> = {
-  speedA: 'Acceleration', speedB: 'Top speed', stamina: 'Stamina', games: 'Games', strength: 'Strength + jumps',
+  speedA: 'Fast starts', speedB: 'Top speed', stamina: 'Stamina', games: 'Games', strength: 'Strength + jumps',
 };
 
 /* ---- warm-up: every session ------------------------------------------------ */
@@ -502,7 +502,10 @@ export const sessionExercises = (s: SpeedSession) => sessionDrills(s).map((dr, i
 export interface SpeedTest {
   id: string;
   name: string;
+  /** One plain line for the player, who is nine to fourteen and on a phone. */
   how: string;
+  /** The protocol as a trainer runs it. Shown in the test page's "For trainers" fold, with the two below. */
+  protocol: string;
   measures: string;
   unit: 's' | 'cm';
   /** A better result is a lower number for every timed test. */
@@ -513,23 +516,31 @@ export interface SpeedTest {
 
 export const TESTS: SpeedTest[] = [
   { id: 't10', name: '10 m sprint', unit: 's', lowerIsBetter: true, measures: 'Acceleration',
-    how: '3-point start, 2 attempts, best counts. Phone timer app or two stopwatches at both lines.', goodProgress: '0.02–0.05 s' },
+    how: 'Two tries. Your best one counts.',
+    protocol: '3-point start, 2 attempts, best counts. Phone timer app or two stopwatches at both lines.', goodProgress: '0.02–0.05 s' },
   { id: 't20', name: '20 m sprint', unit: 's', lowerIsBetter: true, measures: 'Acceleration',
-    how: 'Same runs as the 10 m, timed at the 20 m line.', goodProgress: '0.02–0.05 s' },
+    how: 'The same two runs, timed at the 20 m line.',
+    protocol: 'Same runs as the 10 m, timed at the 20 m line.', goodProgress: '0.02–0.05 s' },
   { id: 'fly20', name: 'Flying 20 m', unit: 's', lowerIsBetter: true, measures: 'Max velocity',
-    how: '25 m build-in, time the 20 m zone, 2 attempts.', goodProgress: '0.02–0.05 s' },
+    how: 'Run up for 25 m, then you’re timed for 20 m. Two tries.',
+    protocol: '25 m build-in, time the 20 m zone, 2 attempts.', goodProgress: '0.02–0.05 s' },
   { id: 'shuttle', name: '5-10-5 shuttle', unit: 's', lowerIsBetter: true, measures: 'Change of direction',
-    how: 'Best of 2, one each direction.', goodProgress: '0.05–0.10 s' },
+    how: 'Two tries, one going each way. Your best one counts.',
+    protocol: 'Best of 2, one each direction.', goodProgress: '0.05–0.10 s' },
   { id: 'slj', name: 'Standing long jump', unit: 'cm', lowerIsBetter: false, measures: 'Leg power',
-    how: '3 attempts, best, toes to heels.', goodProgress: '3–5 cm' },
-  { id: 'rsa', name: 'RSA total, 6 × 30 m', unit: 's', lowerIsBetter: true, measures: 'Repeat sprint ability',
-    how: '6 × 30 m with 20 s rest. Add the six times. Total time is the score; drop-off is a note.', goodProgress: '1–3%' },
+    how: 'Three jumps. Your best one counts.',
+    protocol: '3 attempts, best, toes to heels.', goodProgress: '3–5 cm' },
+  // The name is the player's. Trainers know it as the RSA total (repeat
+  // sprint ability), which is what the fold and the progression table call it.
+  { id: 'rsa', name: '6 sprints in a row', unit: 's', lowerIsBetter: true, measures: 'Repeat sprint ability',
+    how: 'Six 30 m sprints with 20 seconds rest. Add up the times.',
+    protocol: 'RSA total: 6 × 30 m with 20 s rest. Add the six times. Total time is the score; drop-off is a note.', goodProgress: '1–3%' },
 ];
 
 export const HEIGHT_TEST = { id: 'height', name: 'Standing height', unit: 'cm',
   how: 'Shoes off, heels together. A gain of more than 2.5 cm in a block means a growth spurt — see growth rules.' } as const;
 
-/** What a result changes in the next block. Shown on the test screen. */
+/** What a result changes in the next block. In the test screen's "For trainers" fold. */
 export const PROGRESSION = [
   { result: 'Sprint times improved', change: 'Add 5 m to the main sprint distance, or one rep — not both.' },
   { result: 'Sprint times flat (within 0.02 s)', change: 'Same distances; swap the top-speed drill set for the next block’s.' },

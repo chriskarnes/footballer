@@ -82,7 +82,7 @@ export default async function DrillsPage() {
             </div>
           </>
         ) : (
-          <Empty title="No drills yet" href="/coach/drills/new" cta="Add your first drill" extra={c.libraryReady && !c.library.length ? <AddStarters /> : undefined}>
+          <Empty title="No drills yet" href="/coach/drills/new" cta="New drill" extra={c.libraryReady && !c.library.length ? <AddStarters /> : undefined}>
             A name and &ldquo;3 × 50 each foot&rdquo; is enough to start; a YouTube link is a bonus.
           </Empty>
         )}

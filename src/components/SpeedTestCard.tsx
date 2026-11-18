@@ -55,8 +55,7 @@ export function SpeedTestCard() {
       <p className="eyebrow mb-2">Test day</p>
       <h1 className="h-page">Your card</h1>
       <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
-        Thursday of every fourth week. Same six tests, same order, same surface, after the
-        normal warm-up. Height every time.
+        Six quick tests, every four weeks. Try to beat your last numbers.
       </p>
 
       <button type="button" onClick={() => { haptic('tap'); setScreen('entry'); }}
@@ -66,10 +65,11 @@ export function SpeedTestCard() {
 
       {ready && gain !== null && gain > 2.5 && (
         <div className="hint-in mt-5 brand-card p-5">
-          <p className="text-body-sm font-bold text-on-surface-brand">Growth spurt: +{gain} cm since last test</p>
+          {/* What to change in training is the trainer's to read, in the fold
+              at the bottom. The player only needs to know a dip is normal. */}
+          <p className="text-body-sm font-bold text-on-surface-brand">You&rsquo;ve grown {gain} cm!</p>
           <p className="mt-1.5 text-body-sm leading-relaxed text-on-surface-brand-variant">
-            Cut sprint volume by a third, jumping back to Phase 1 level, double the mechanics
-            drills for the next 2–3 blocks. Flat or slower times are expected and are not a problem.
+            Times can dip while you grow. That&rsquo;s normal.
           </p>
         </div>
       )}
@@ -167,31 +167,70 @@ export function SpeedTestCard() {
               <div className="min-w-0 flex-1">
                 <div className="h-card">{t.name}</div>
                 <div className="mt-1 text-body-sm leading-relaxed text-on-surface-variant">{t.how}</div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className="tag tag-accent">{t.measures}</span>
-                  <span className="tag">good block: {t.goodProgress}</span>
-                </div>
               </div>
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-body-sm leading-relaxed text-on-surface-variant">
-          Add a 4-minute run (distance on a marked loop) in weeks 4 and 12 of Phases 1 and 2 only.
-          Every test day ends with a game: numbers first, fun last.
-        </p>
       </section>
 
-      <section className="mt-8">
-        <h2 className="h-sec mb-3">What a result changes next block</h2>
-        <div className="card-flat divide-y divide-outline-variant">
-          {PROGRESSION.map((p) => (
-            <div key={p.result} className="p-4">
-              <div className="text-body font-bold">{p.result}</div>
-              <div className="mt-1 text-body-sm leading-relaxed text-on-surface-variant">{p.change}</div>
+      {/* The page is the player's: the button, the bests, six plain lines.
+          How a trainer runs test day and what a result changes is here,
+          closed, as the adults' section is on the Speed tab. */}
+      <details className="group mt-9">
+        <summary className="card pressable flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4
+                            [&::-webkit-details-marker]:hidden">
+          <span className="text-title-sm font-bold text-on-surface">For trainers</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+               className="h-5 w-5 shrink-0 text-on-surface-variant transition-transform group-open:rotate-90"><path d="M9 6l6 6-6 6" /></svg>
+        </summary>
+
+        <div className="mt-5 space-y-9">
+          <section>
+            <h2 className="h-sec mb-3">Running test day</h2>
+            <p className="mb-3 text-body-sm leading-relaxed text-on-surface-variant">
+              Thursday of every fourth week. Same six tests, same order, same surface, after the
+              normal warm-up. Height every time.
+            </p>
+            <ol className="card-flat divide-y divide-outline-variant">
+              {TESTS.map((t) => (
+                <li key={t.id} className="p-4">
+                  <div className="h-card">{t.name}</div>
+                  <div className="mt-1 text-body-sm leading-relaxed text-on-surface-variant">{t.protocol}</div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="tag tag-accent">{t.measures}</span>
+                    <span className="tag">good block: {t.goodProgress}</span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-3 text-body-sm leading-relaxed text-on-surface-variant">
+              Add a 4-minute run (distance on a marked loop) in weeks 4 and 12 of Phases 1 and 2 only.
+              Every test day ends with a game: numbers first, fun last.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="h-sec mb-3">What a result changes next block</h2>
+            <div className="card-flat divide-y divide-outline-variant">
+              {PROGRESSION.map((p) => (
+                <div key={p.result} className="p-4">
+                  <div className="text-body font-bold">{p.result}</div>
+                  <div className="mt-1 text-body-sm leading-relaxed text-on-surface-variant">{p.change}</div>
+                </div>
+              ))}
             </div>
-          ))}
+          </section>
+
+          <section>
+            <h2 className="h-sec mb-3">Growth spurts</h2>
+            <p className="text-body-sm leading-relaxed text-on-surface-variant">
+              More than 2.5 cm since the last test is a growth spurt. Cut sprint volume by a third,
+              jumping back to Phase 1 level, double the mechanics drills for the next 2–3 blocks.
+              Flat or slower times are expected and are not a problem.
+            </p>
+          </section>
         </div>
-      </section>
+      </details>
     </div>
   );
 }
@@ -258,28 +297,19 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
         Best attempt for each. Leave anything you skipped blank.
       </p>
 
-      <div className="mt-6 grid grid-cols-2 gap-2.5">
+      {/* Only the date is asked. The phase and block go on the saved day's
+          label from where the year is (above); a player shouldn't have to
+          know them, so there are no fields for them. */}
+      <div className="mt-6 space-y-2.5">
         <label className="text-field">
           <span>Date</span>
           <input type="date" value={date} max={today()} onChange={(e) => setDate(e.target.value)} className={field} required />
         </label>
         {taken.includes(date) && (
-          <p className="col-span-2 -mt-1 text-body-sm text-on-surface-variant">
-            You&rsquo;ve tests on {dayName(date)} already. These add to them; a test you fill in again replaces that one.
+          <p className="text-body-sm text-on-surface-variant">
+            You already saved tests for this day. New numbers replace the old ones.
           </p>
         )}
-        <label className="text-field">
-          <span>Block</span>
-          <select value={block} onChange={(e) => setBlock(Number(e.target.value) as 1 | 2 | 3)} className={field}>
-            <option value={1}>Block 1</option><option value={2}>Block 2</option><option value={3}>Block 3</option>
-          </select>
-        </label>
-        <label className="text-field col-span-2">
-          <span>Phase</span>
-          <select value={phase} onChange={(e) => setPhase(e.target.value as typeof phase)} className={field}>
-            {PHASES.map((p) => <option key={p.id} value={p.id}>{p.number} · {p.name}</option>)}
-          </select>
-        </label>
       </div>
 
       <div className="mt-6 space-y-3">
@@ -304,7 +334,7 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
       <div className="mt-6 flex gap-2.5">
         <button type="button" onClick={onCancel} className="btn-ghost pressable min-h-13 flex-1">Cancel</button>
         <button type="button" onClick={save} disabled={!any} className="btn-primary pressable flex-1">
-          Save to card
+          Save
         </button>
       </div>
     </div>

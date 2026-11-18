@@ -24,7 +24,7 @@ export function CopyWeek({ programId, from, to, label, onNow = [] }: { programId
     setErr('');
     const r = await copyWeek(programId, from, to).catch(offline);
     setAsking(false);
-    if (r.ok) { toast(label ? `Week ${to} is its own now. Change it below.` : `Copied to week ${to}.`); router.refresh(); }
+    if (r.ok) { toast(label ? `Week ${to} can now be changed.` : `Copied to week ${to}.`); router.refresh(); }
     else setErr(r.error);
   });
   return (
@@ -34,7 +34,7 @@ export function CopyWeek({ programId, from, to, label, onNow = [] }: { programId
         {busy ? 'Copying…' : label ?? `Copy to week ${to}`}
       </button>
       {err && <p role="alert" className="w-full text-body-sm font-semibold">{err}</p>}
-      <ConfirmSheet open={asking} busy={busy} title={`${label ?? `Copy to week ${to}`}?`} confirmLabel="Change it"
+      <ConfirmSheet open={asking} busy={busy} title={`${label ?? `Copy to week ${to}`}?`} confirmLabel={label ?? `Copy to week ${to}`}
         body={`${onNow.join(', ')} ${onNow.length === 1 && !/players on their own$/.test(onNow[0]) ? 'is' : 'are'} on week ${to} now. Sessions done this week will show as not done.`}
         onCancel={() => setAsking(false)} onConfirm={go} />
     </>

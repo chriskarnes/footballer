@@ -55,7 +55,7 @@ export default async function GroupsPage() {
                     <span className="shrink-0 text-body-sm text-on-surface-variant">{members.length} {members.length === 1 ? 'player' : 'players'}</span>
                   </div>
                   <p className="mt-1 text-body text-on-surface-variant">
-                    {[when, program ? (n ? `${program.name} · Week ${n} of ${program.weeks}` : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${shortDate(g.starts_on)}` : 'finished'}`) : 'No program'].filter(Boolean).join(' · ')}
+                    {[when, program ? (n ? `${program.name} · Week ${n} of ${program.weeks}` : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${shortDate(g.starts_on)}` : 'program ended'}`) : 'No program'].filter(Boolean).join(' · ')}
                   </p>
                   {!!members.length && (
                     <p className="mt-2.5 flex items-center gap-2 text-body font-semibold text-on-surface">
@@ -70,11 +70,11 @@ export default async function GroupsPage() {
         </ul>
       ) : archived.length ? (
         // Every group has finished: "No groups yet" would read as if they'd gone.
-        <Empty title="No groups running" href="/coach/groups/new" cta="Make a group">
+        <Empty title="No groups running" href="/coach/groups/new" cta="New group">
           Every group has finished. They&rsquo;re under Finished groups below, with their players and history.
         </Empty>
       ) : (
-        <Empty title="No groups yet" href="/coach/groups/new" cta="Make a group">
+        <Empty title="No groups yet" href="/coach/groups/new" cta="New group">
           A group is players who train together, like &ldquo;U12 Tuesday&rdquo;. Give it a program and everyone in it gets that week&rsquo;s homework. A player can be in more than one.
         </Empty>
       )}

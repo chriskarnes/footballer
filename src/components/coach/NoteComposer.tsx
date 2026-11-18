@@ -82,7 +82,7 @@ export function NoteComposer({ players, groups = [], initial, fixed, initialBody
           </div>
           <div className="mt-3 min-h-[44px]">
             {mode === 'everyone' && (
-              <p className="pt-2.5 text-body text-on-surface-variant">All {players.length} {players.length === 1 ? 'player' : 'players'} in the academy.</p>
+              <p className="pt-2.5 text-body text-on-surface-variant">{players.length === 1 ? 'Your one player.' : `All ${players.length} of your players.`}</p>
             )}
             {mode === 'groups' && (
               <div className="flex flex-wrap gap-2">

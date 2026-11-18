@@ -13,7 +13,7 @@ export type Status = 'good' | 'warn' | 'bad';
 
 export type Progress = {
   status: Status;
-  /** Why, in a few words: "On track", "2 behind", "Quiet 12 days". */
+  /** Why, in a few words: "On track", "Missed 2 sessions", "No training in 12 days". */
   reason: string;
   hasPlan: boolean;
   /** This week: sessions finished, sessions the plan asks for, and how many of those were due by today. */
@@ -105,15 +105,19 @@ export function progress(input: {
   // Silence outranks the plan: a player who hasn't trained in ten days needs a
   // message whatever this week's arithmetic says.
   let status: Status; let reason: string;
-  if (daysSince === null) { status = 'bad'; reason = 'Not started'; }
-  else if (daysSince >= 10) { status = 'bad'; reason = `Quiet ${daysSince} days`; }
+  // The words are a trainer's, not a dashboard's: "Missed 2 sessions", not
+  // "2 behind". Ahead of the plan is on track too; a trainer acts on neither.
+  // With no plan it's "Training", not "Active": Active is the word for a
+  // player who is switched on (0040), and the two sat side by side.
+  if (daysSince === null) { status = 'bad'; reason = 'Hasn’t started'; }
+  else if (daysSince >= 10) { status = 'bad'; reason = `No training in ${daysSince} days`; }
   else if (hasPlan) {
     const behind = due - done;
-    if (behind >= 2) { status = 'bad'; reason = `${behind} behind`; }
-    else if (behind === 1) { status = 'warn'; reason = '1 behind'; }
-    else { status = 'good'; reason = done > planned ? 'Ahead' : 'On track'; }
-  } else if (daysSince <= 3) { status = 'good'; reason = 'Active'; }
-  else { status = 'warn'; reason = `Quiet ${daysSince} days`; }
+    if (behind >= 2) { status = 'bad'; reason = `Missed ${behind} sessions`; }
+    else if (behind === 1) { status = 'warn'; reason = 'Missed 1 session'; }
+    else { status = 'good'; reason = 'On track'; }
+  } else if (daysSince <= 3) { status = 'good'; reason = 'Training'; }
+  else { status = 'warn'; reason = `No training in ${daysSince} days`; }
 
   return { status, reason, hasPlan, done, planned, due, daysSince, streak, streakAtLeast, week, weeks, minutesThisWeek };
 }
@@ -136,11 +140,12 @@ export function byAttention<T extends { progress: Progress; name: string }>(a: T
 
 /**
  * The second line under a player's name: the week's count, or when they last
- * trained — whichever the reason doesn't already say. "Quiet 13 days" needs
- * nothing after it; "On track" needs the count.
+ * trained — whichever the reason doesn't already say. "No training in 13
+ * days" needs nothing after it; "On track" needs the count.
  */
 export function detailOf(p: Progress): string | null {
   if (p.daysSince === null || p.daysSince >= 10) return null;
   if (p.hasPlan) return `${p.done} of ${p.planned} this week`;
-  return p.reason.startsWith('Quiet') ? null : `last trained ${sinceLabel(p.daysSince)}`;
+  // No plan: the reason is the days since, unless they trained in the last three.
+  return p.daysSince > 3 ? null : `last trained ${sinceLabel(p.daysSince)}`;
 }

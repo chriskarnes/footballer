@@ -29,7 +29,7 @@ export function ProgramForm({ program, solo = 0 }: { program?: { id: string; nam
       </Field>
       <FormError error={state && !state.ok ? state.error : null} />
       <button type="submit" disabled={pending} className="btn-primary pressable w-full">
-        {pending ? 'Saving…' : program ? 'Save' : 'Create program'}
+        {pending ? 'Saving…' : 'Save'}
       </button>
       {program && (
         <>

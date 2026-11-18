@@ -16,7 +16,7 @@ export function LegalLinks({ lead = 'By signing in you agree to the', parentLine
   return (
     <p className="mt-3 text-caption leading-snug text-on-surface-variant">
       {lead} <a href={`${root}/terms`} className={link}>terms</a> and <a href={`${root}/privacy`} className={link}>privacy policy</a>.
-      {parentLine && ' For a player under 13, a parent signs in with their own email.'}
+      {parentLine && ' For a player under 13, a parent or guardian signs in with their own email.'}
     </p>
   );
 }

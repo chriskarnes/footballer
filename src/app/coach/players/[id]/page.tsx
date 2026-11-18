@@ -1,5 +1,6 @@
 import { positionName } from '@/lib/positions';
 import { PlayerMenu } from '@/components/coach/PlayerMenu';
+import { Disclose } from '@/components/coach/Disclose';
 import { StatusTag } from '@/components/coach/StatusTag';
 import { Avatar } from '@/components/Avatar';
 import { notFound } from 'next/navigation';
@@ -33,6 +34,13 @@ export const metadata = { title: 'Player', robots: { index: false } };
  * One player, for the trainer: this week day by day, the last four weeks,
  * what they actually did, and every note they've been sent — with whether
  * they've read it.
+ *
+ * On a laptop it's two columns: what they're set on the left, how they're
+ * doing on the right. On a phone it's one, and how they're doing comes
+ * first (this week, then what they last did), since that's what a trainer
+ * opens a player to see; the tools for building their week follow, folded.
+ * It's one tree either way: below xl the two columns dissolve (`contents`)
+ * and each part takes its place by `order`.
  */
 export default async function PlayerPage({ params }: {
   params: Promise<{ id: string }>;
@@ -72,8 +80,8 @@ export default async function PlayerPage({ params }: {
 
   return (
     <NoteProvider only players={[{ id: p.user_id, name: p.name, nudge: nudgeDraft(p.first, pr) }]}>
-    <div className="animate-pop xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)] xl:gap-x-10">
-     <div className="min-w-0">
+    <div className="animate-pop flex flex-col xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,380px)] xl:gap-x-10">
+     <div className="contents xl:block xl:min-w-0">
       <PageHead back={{ href: '/coach', label: 'Players' }}
                 title={<span className="flex items-center gap-3.5"><Avatar name={p.name} className="h-12 w-12 text-title" /><span className="min-w-0">{p.name}</span></span>}
                 action={<>
@@ -83,7 +91,8 @@ export default async function PlayerPage({ params }: {
                 </>}>
         {/* Who they are and where they stand, in one line of tags and one of words. */}
         <span className="flex flex-wrap items-center gap-1.5">
-          <StatusTag status={pr.status}>{pr.reason}</StatusTag>
+          {/* Switched off, they aren't training: "Missed 2 sessions" beside Inactive was noise. */}
+          {mark?.active !== false && <StatusTag status={pr.status}>{pr.reason}</StatusTag>}
           {mark && !mark.active && <span className="inline-block rounded-full border border-[#E8A0B4] bg-[#FCE4EC] px-2.5 py-0.5 text-caption font-semibold text-[#9B1C45] dark:border-[#8E3A55] dark:bg-[#4A1F2D] dark:text-[#FFC2D4]">Inactive</span>}
           {mark?.active && mark.label && <span className={`inline-block rounded-full border px-2.5 py-0.5 text-caption font-semibold ${mark.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{mark.label}</span>}
           {p.groups.map((g) => <span key={g} className="inline-block rounded-full bg-surface-container-high px-2.5 py-0.5 text-caption font-semibold text-on-surface-variant">{g}</span>)}
@@ -117,8 +126,9 @@ export default async function PlayerPage({ params }: {
         const fallback = progNames.length ? progNames.join(' and ') : null;
         return (
           <>
-            <section className="mt-8">
-              <p className="eyebrow mb-3">Their week</p>
+            <section className="order-4 mt-8 xl:order-none">
+              <p className="eyebrow mb-3 hidden xl:block">Their week</p>
+              <Disclose label="Their week" wideOpen>
               <PlayerPlan userId={p.user_id} first={p.first} mode={mode} fallback={fallback}
                 program={
                   <div className="space-y-6">
@@ -139,11 +149,14 @@ export default async function PlayerPage({ params }: {
                 busy={{ ...teamDays(soccer),
                   meets: content.groups.filter((g) => !g.archived && g.meets_weekday !== null
                     && content.memberships.some((m) => m.group_id === g.id && m.user_id === p.user_id)).map((g) => g.meets_weekday as number) }} />
+              </Disclose>
             </section>
-            <div className="mt-8">
-              <Extras userId={p.user_id} first={p.first} drills={content.drills} added={added}
+            <div className="order-5 mt-3 xl:order-none xl:mt-8">
+              <Disclose label="Extras this week" wideOpen>
+              <Extras folded userId={p.user_id} first={p.first} drills={content.drills} added={added}
                 addons={content.addons.filter((a) => a.user_id === p.user_id && a.week_of === thisMonday).map((a) => ({
                   id: a.id, note: a.note, name: content.drills.find((d) => d.id === a.drill_id)?.name ?? 'Drill' }))} />
+              </Disclose>
             </div>
           </>
         );
@@ -152,26 +165,34 @@ export default async function PlayerPage({ params }: {
      </div>
 
      {/* On a laptop, how they're doing sits beside what they're set. */}
-     <aside className="min-w-0 xl:pt-[68px]">
+     <aside className="contents xl:block xl:min-w-0 xl:pt-[68px]">
       {terms && mark && (
+        <div className="order-6 xl:order-none">
         <PlayerStatus first={p.first} active={mark.active} mode={terms.mode}
           paid={!!mark.paidMarkedAt} paidOn={mark.paidMarkedAt ? markDay(localDate(mark.paidMarkedAt, tz)) : null}
           line={terms.mode === 'players_pay' && mark.active ? membershipLineFor(terms, mark) : null} label={mark.label} />
+        </div>
       )}
-      <section className={`card p-5 ${terms && mark ? 'mt-3' : 'mt-9 xl:mt-0'}`}>
+      <section className={`card order-2 mt-6 p-5 xl:order-none ${terms && mark ? 'xl:mt-3' : 'xl:mt-0'}`}>
         <div className="flex items-baseline justify-between">
           <div className="h-card">This week</div>
           <div className="text-body text-on-surface-variant">
-            {pr.hasPlan ? `${pr.done} of ${pr.planned} set` : `${pr.done} ${pr.done === 1 ? 'session' : 'sessions'}`} · {pr.minutesThisWeek} min
+            {pr.hasPlan ? `${pr.done} of ${pr.planned} done` : `${pr.done} ${pr.done === 1 ? 'session' : 'sessions'}`}
           </div>
         </div>
         <div className="mt-4"><WeekDots week={pr.week} large /></div>
 
-        <div className="mt-6 flex items-baseline justify-between border-t border-outline-variant pt-5">
+        {/* Phone: the streak in a line. The four bars are for a wider screen. */}
+        <p className="mt-5 border-t border-outline-variant pt-4 text-body text-on-surface-variant xl:hidden">
+          {pr.streak
+            ? `Trained ${pr.streak}${pr.streakAtLeast ? '+' : ''} ${pr.streak === 1 && !pr.streakAtLeast ? 'week' : 'weeks'} in a row`
+            : 'No training this week or last'}
+        </p>
+        <div className="mt-6 hidden items-baseline justify-between border-t border-outline-variant pt-5 xl:flex">
           <div className="text-body font-semibold text-on-surface">All training, last four weeks</div>
           <div className="text-body text-on-surface-variant">{pr.streak}{pr.streakAtLeast ? '+' : ''} {pr.streak === 1 && !pr.streakAtLeast ? 'week' : 'weeks'} in a row</div>
         </div>
-        <div className="mt-3 flex h-24 gap-3" role="img"
+        <div className="mt-3 hidden h-24 gap-3 xl:flex" role="img"
              aria-label={`All training: ${pr.weeks.map((w, i) => `${weekName(i)}: ${w.done} ${w.done === 1 ? 'session' : 'sessions'}`).join(', ')}`}>
           {pr.weeks.map((w, i) => (
             <div key={w.monday} className="flex flex-1 flex-col items-center gap-1.5">
@@ -186,10 +207,10 @@ export default async function PlayerPage({ params }: {
         </div>
       </section>
 
-      <section className="card mt-3 p-5">
+      <section className="card order-7 mt-3 p-5 xl:order-none">
         <div className="h-card">Their soccer</div>
         <p className="mt-1 text-body leading-snug text-on-surface-variant">
-          {soccer ? soccerLabel(teamDays(soccer)) ?? 'All days off.' : `${p.first} hasn’t said yet.`} Sessions go on the off days.
+          {soccer ? soccerLabel(teamDays(soccer)) ?? 'All days free.' : `${p.first} hasn’t said yet.`} Sessions go on the free days.
         </p>
         <div className="mt-4">
           <SoccerDays days={soccer ? teamDays(soccer) : null} userId={p.user_id} />
@@ -199,7 +220,7 @@ export default async function PlayerPage({ params }: {
       {!!tests.length && (() => {
         const last = [...tests].sort((a, b) => a.date.localeCompare(b.date)).at(-1)!;
         return (
-          <section className="card mt-3 p-5">
+          <section className="card order-8 mt-3 p-5 xl:order-none">
             <div className="h-card">Speed tests</div>
             <p className="mt-1 text-body text-on-surface-variant">
               {tests.length} test {tests.length === 1 ? 'day' : 'days'} · last on {shortDate(last.date)}
@@ -224,7 +245,7 @@ export default async function PlayerPage({ params }: {
         );
       })()}
 
-      <section className="mt-9">
+      <section className="order-3 mt-8 xl:order-none xl:mt-9">
         <p className="eyebrow mb-3">Recent sessions</p>
         {p.done.length ? (
           <ul className="card divide-y divide-outline-variant">
@@ -241,7 +262,7 @@ export default async function PlayerPage({ params }: {
         ) : <p className="pl-1 text-body text-on-surface-variant">Nothing finished yet.</p>}
       </section>
 
-      <section className="mt-9">
+      <section className="order-9 mt-9 xl:order-none">
         <p className="eyebrow mb-3">Notes sent</p>
         {sentNotes.length ? (
           <ul className="space-y-2.5">

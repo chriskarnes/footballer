@@ -130,7 +130,7 @@ export function SpeedNow() {
 
   const { today, next, isDone } = thisWeek(pos, s.now, s.completions, s.testDates);
   // Where they are in the year, in their words; the block and the week's
-  // name are the planner's, in "For parents and coaches".
+  // name are the planner's, in "For adults and trainers".
   const year = (
     <p className="mt-4 text-body-lg font-semibold text-on-surface-brand-variant">
       {pos.phase.name} · week {pos.weekOfYear + 1} of {pos.totalWeeks}
@@ -199,9 +199,6 @@ export function SpeedPath() {
           </li>
         ))}
       </ol>
-      <p className="mt-5 text-body-lg font-medium leading-relaxed text-on-surface-variant">
-        Short sessions, a few a week, and a test every four weeks to beat.
-      </p>
     </section>
   );
 }

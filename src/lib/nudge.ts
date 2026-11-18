@@ -6,5 +6,5 @@ export function nudgeDraft(first: string, pr: Pick<Progress, 'daysSince' | 'due'
     ? `Hi ${first}, your first session is waiting. Even 15 minutes today gets you started.`
     : pr.daysSince >= 7
       ? `Hi ${first}, haven’t seen you train in ${pr.daysSince} days. 15 minutes today is plenty to get going again.`
-      : `Hi ${first}, you’re ${Math.max(1, pr.due - pr.done)} behind this week. Can you fit one in today?`;
+      : `Hi ${first}, you have ${Math.max(1, pr.due - pr.done) === 1 ? 'a session' : `${pr.due - pr.done} sessions`} to catch up on this week. Can you fit one in today?`;
 }

@@ -126,8 +126,10 @@ export function ProgramSetup({ userId, first, groups, finished = 0, programs, ow
 }
 
 /** Extras: a drill or two on top of this week, however the week is set. Suggest can pick one. */
-export function Extras({ userId, first, addons, drills, added = [] }: {
+export function Extras({ userId, first, addons, drills, added = [], folded = false }: {
   userId: string; first: string;
+  /** Under a button that already names it on a phone: its own heading is for xl up. */
+  folded?: boolean;
   addons: { id: string; name: string; note: string | null }[];
   /** Sessions the player added themselves this week. */
   added?: { id: string; name: string; done: boolean; weekday: number }[];
@@ -145,7 +147,7 @@ export function Extras({ userId, first, addons, drills, added = [] }: {
   return (
     <section>
       <div className="mb-3 flex items-baseline justify-between">
-        <p className="eyebrow">Extras this week</p>
+        <p className={`eyebrow ${folded ? 'hidden xl:block' : ''}`}>Extras this week</p>
         {!adding && !!drills.length && (
           <button type="button" className="text-body font-semibold text-on-surface underline underline-offset-4" onClick={() => setAdding(true)}>+ Add a drill</button>
         )}

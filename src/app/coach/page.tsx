@@ -26,8 +26,11 @@ export const metadata = { title: 'Players', robots: { index: false } };
  * The trainer's front page: who needs a word from them this week.
  *
  * The headline is the count of players who need a nudge, because that's the
- * question a trainer opens this with. The list is sorted worst first, so the
- * players to act on are at the top and the Nudge button is next to them.
+ * question a trainer opens this with: the ones in red, who have gone quiet,
+ * never started or missed two sessions. A player one session behind isn't
+ * counted: mid-week that's most of a roster, and "15 players need a nudge"
+ * of 17 says nothing. The list is sorted worst first, so the players to act
+ * on are at the top and the Nudge button is next to them.
  */
 export default async function CoachPage({ searchParams }: { searchParams: Promise<{ group?: string; ready?: string }> }) {
   const gate = await staffOnly('/coach');
@@ -77,15 +80,15 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const cardDue = !billing || inGroup ? null
     : ['past_due', 'unpaid'].includes(billing.status ?? '') ? 'failed' as const
     : !isLive(billing.status) && !freeLeft && all.some((p) => isActive(p.user_id)) ? 'add' as const : null;
-  const needs = behind.length;
-  // All three count all training this week (set sessions, Speed, their own),
-  // so they agree: "3 of 12 trained · 5 sessions · 140 min".
+  // The headline's count is the red ones. Nudge all still goes to everyone
+  // behind, and says how many that is.
+  const needs = behind.filter((p) => p.progress.status === 'bad').length;
+  // "A session behind" is only true of players with a week set; a player
+  // with none who's gone a few days without training is amber too.
+  const oneBehind = behind.every((p) => p.progress.hasPlan);
+  // Any training this week counts (set sessions, Speed, their own).
   const thisWeek = (p: (typeof players)[number]) => p.progress.weeks[3]?.done ?? 0;
   const trained = training.filter((p) => thisWeek(p) > 0 || p.progress.minutesThisWeek > 0).length;
-  // Last week, whole, beside this week so far: said as it is, not as up or down.
-  const lastWeek = (p: (typeof players)[number]) => p.progress.weeks[2]?.done ?? 0;
-  const trainedLast = players.filter((p) => lastWeek(p) > 0).length;
-  const sessionsLast = players.reduce((a, p) => a + lastWeek(p), 0);
   const rows: RosterRow[] = players.map((p) => {
     const m = marks.get(p.user_id);
     return {
@@ -95,8 +98,6 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
       pay: m?.label ? { label: m.label, active: m.active, attention: m.attention } : m && !m.active ? { label: 'Inactive', active: false, attention: false } : null,
     };
   });
-  const sessions = players.reduce((a, p) => a + thisWeek(p), 0);
-  const minutes = players.reduce((a, p) => a + p.progress.minutesThisWeek, 0);
 
   // What the note dialog needs: everyone it could go to, and who's in each group.
   // Not the players switched off: they can't open the app to read one.
@@ -111,25 +112,25 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
   const headline = error ? 'Couldn’t load your players'
     : !players.length ? (inGroup ? `No one in ${inGroup.name} yet` : 'No players yet')
     : needs ? `${needs} ${needs === 1 ? 'player needs' : 'players need'} a nudge`
+    : behind.length ? `${behind.length} ${behind.length === 1 ? 'player is' : 'players are'} ${oneBehind ? 'a session' : 'a little'} behind`
     : 'Everyone’s on track';
 
   return (
     <NoteProvider players={notePlayers} groups={noteGroups}>
     <div className="animate-pop">
       <ViewTabs tabs={PLAYER_VIEWS} on="/coach" query={inGroup ? `group=${inGroup.id}` : undefined} />
-      <PageHead title={headline}
+      {/* Invite players is always here and always the filled button: inviting
+          is how an academy grows. On a phone the three don't fit on a line,
+          so it takes a row of its own and the other two share the next. */}
+      <PageHead title={headline} actionRow
                 action={<>
-                  <NudgeAll people={behind.map((p) => ({ id: p.user_id, name: p.name, body: nudgeDraft(p.first, p.progress) }))} />
+                  <NudgeAll className="flex-1 lg:flex-none" people={behind.map((p) => ({ id: p.user_id, name: p.name, body: nudgeDraft(p.first, p.progress) }))} />
                   {!!players.length && (
-                    <NoteButton group={inGroup?.id} className="btn-ghost btn-sm pressable">Send a note</NoteButton>
+                    <NoteButton group={inGroup?.id} className="btn-ghost btn-sm pressable flex-1 lg:flex-none">Send a note</NoteButton>
                   )}
-                  {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable">Invite players</Link>}
+                  {!!all.length && <Link href="/coach/team#invite" className="btn-primary btn-sm pressable order-first w-full lg:order-none lg:w-auto">Invite players</Link>}
                 </>}>
-        {!!players.length && <>
-          This week: <b className="font-semibold text-on-surface">{trained} of {training.length}</b> trained
-          {' · '}{sessions} {sessions === 1 ? 'session' : 'sessions'} · {minutes} min
-          {sessionsLast > 0 && <> · last week {trainedLast} trained, {sessionsLast} {sessionsLast === 1 ? 'session' : 'sessions'}</>}
-        </>}
+        {!!players.length && <><b className="font-semibold text-on-surface">{trained} of {training.length}</b> trained this week.</>}
       </PageHead>
 
       {steps && (
@@ -183,7 +184,7 @@ export default async function CoachPage({ searchParams }: { searchParams: Promis
 
       {!!players.length && <Roster rows={rows} showGroups={!inGroup} />}
 
-      {/* The invite link leads only while there's nobody to list; after that it lives under Academy. */}
+      {/* The invite link leads only while there's nobody to list; after that it lives under Settings. */}
       {!all.length && !error && (
         <section className="mt-6 lg:max-w-xl">
           <div className="card p-5">

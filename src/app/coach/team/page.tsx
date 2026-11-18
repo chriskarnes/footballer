@@ -4,6 +4,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { InviteLink } from '@/components/coach/InviteLink';
 import { ROOT_DOMAIN } from '@/lib/tenant';
 import { BuildDefaults } from '@/components/coach/BuildDefaults';
+import { Disclose } from '@/components/coach/Disclose';
 import { PlayerOptions } from '@/components/coach/PlayerOptions';
 import { loadDefaults } from '@/lib/academy-data';
 import { usage } from '@/lib/ai';
@@ -14,13 +15,15 @@ import { billingOn } from '@/lib/billing-server';
 import { readTerms } from '@/lib/membership-server';
 import { dollars } from '@/lib/billing';
 
-export const metadata = { title: 'Academy', robots: { index: false } };
+export const metadata = { title: 'Settings', robots: { index: false } };
 
 type Staff = { user_id: string; role: string; email: string | null; display_name: string | null };
 
 /**
- * The academy itself: who trains here, the two invite links, and — for the
- * owner — the brand. Every trainer sees every player, so there's nothing to
+ * Settings (the address is still /coach/team): the academy itself. Who
+ * trains here and the two invite links first, since those are what a trainer
+ * comes for; the training defaults folded away under them, since they're set
+ * once; and — for the owner — being found, billing and the brand. Every trainer sees every player, so there's nothing to
  * assign; adding a trainer is sending them a link.
  */
 export default async function TeamPage() {
@@ -41,7 +44,7 @@ export default async function TeamPage() {
 
   return (
     <div className="animate-pop">
-      <PageHead title={academy.name} eyebrow={`${academy.slug}.${ROOT_DOMAIN}`} />
+      <PageHead title="Settings" eyebrow={academy.name}>{academy.slug}.{ROOT_DOMAIN}</PageHead>
 
       <section className="mt-8">
         <p className="eyebrow mb-3">Trainers</p>
@@ -83,11 +86,12 @@ export default async function TeamPage() {
       </section>
 
       <section className="mt-9">
-        <p className="eyebrow mb-3">Training</p>
-        <div className="space-y-3">
-          <BuildDefaults defaults={defaults} ai={ai} />
-          <PlayerOptions library={defaults.playerLibrary} extras={defaults.playerExtras} speed={defaults.playerSpeed} />
-        </div>
+        <Disclose label="Training defaults">
+          <div className="space-y-3">
+            <BuildDefaults defaults={defaults} ai={ai} />
+            <PlayerOptions library={defaults.playerLibrary} extras={defaults.playerExtras} speed={defaults.playerSpeed} />
+          </div>
+        </Disclose>
       </section>
 
       {owner && setup.ready && (
@@ -115,8 +119,8 @@ export default async function TeamPage() {
 
       {canBrand && (
         <Link href="/coach/brand" className="card pressable mt-9 flex min-h-14 items-center justify-between px-4">
-          <span className="text-body font-semibold text-on-surface">Brand settings</span>
-          <span className="text-body text-on-surface-variant">Name, colors, logo ›</span>
+          <span className="text-body font-semibold text-on-surface">Colors and logo</span>
+          <span className="text-body text-on-surface-variant">Academy name, too ›</span>
         </Link>
       )}
     </div>

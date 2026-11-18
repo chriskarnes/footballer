@@ -29,9 +29,15 @@ export type WorkoutRow = {
  *   saved     sessions kept from Train to do later: Start, or remove
  *   history   sessions done: what was done, and do it again
  *
- * Each row's action is a glyph in the 36px tonal button the drills use, not a
- * black Again button — twenty-five of the app's strongest button down one list
- * said nothing about which one mattered.
+ * The whole row is the link, and says what a tap does in a word, Start or
+ * Again. It was a glyph in a 36px button whose meaning was only in its
+ * tooltip, which a phone never shows. The word sits in a ghost button, not a
+ * black one — twenty-five of the app's strongest button down one list said
+ * nothing about which one mattered.
+ *
+ * Removing a saved session is one worded button under the list, as deleting a
+ * test day is on the speed card: a bin beside Start on every row was one
+ * slip of the thumb from the wrong one.
  */
 export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind: 'saved' | 'history' }) {
   // The rows follow the page: a session PendingSaves sent from the phone
@@ -52,8 +58,9 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
     // And the page follows: deleting the last one takes the "Saved for later"
     // heading with it, rather than leaving it over nothing.
     if (res?.ok) { setRemoved((r) => new Set(r).add(id)); router.refresh(); }
-    else setErr('Couldn’t delete it. Check your connection and try again.');
+    else setErr(res ? 'Couldn’t delete it. Try again.' : 'No signal. Try again.');
   }
+  // Which one Delete takes off: the one picked in the sheet.
   const asking = rows.find((w) => w.id === confirm);
 
   return (
@@ -69,43 +76,36 @@ export function WorkoutList({ rows: initial, kind }: { rows: WorkoutRow[]; kind:
         ].filter(Boolean).join(' · ');
 
         return (
-          <li key={w.id} className="card flex items-center gap-3 p-4">
-            <div className="min-w-0 flex-1">
-              <div className="h-card truncate">{w.title}</div>
-              <div className="mt-1 text-body-sm font-medium text-on-surface-variant">{facts}</div>
-            </div>
-            {kind === 'saved' && (
-              <button type="button" onClick={() => setConfirm(w.id)}
-                      aria-label={`Delete ${w.title}`} title="Delete"
-                      className="icon-btn pressable text-on-surface-variant hover:text-on-surface">
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true"
-                     stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13" />
-                </svg>
-              </button>
-            )}
-            <Link href={`/session/${w.id}?from=history`}
-                  aria-label={kind === 'saved' ? `Start ${w.title}` : `Do ${w.title} again`}
-                  title={kind === 'saved' ? 'Start' : 'Do it again'}
-                  className="icon-btn pressable">
-              {kind === 'saved' ? (
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true"
-                     stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" />
-                </svg>
-              )}
+          <li key={w.id}>
+            <Link href={`/session/${w.id}?from=history`} className="card pressable flex items-center gap-3 p-4">
+              <span className="min-w-0 flex-1">
+                <span className="h-card block truncate">{w.title}</span>
+                <span className="mt-1 block text-body-sm font-medium text-on-surface-variant">{facts}</span>
+              </span>
+              <span className="btn-ghost btn-sm shrink-0">{kind === 'saved' ? 'Start' : 'Again'}</span>
             </Link>
           </li>
         );
       })}
     </ul>
+    {kind === 'saved' && !!rows.length && (
+      <button type="button" onClick={() => { setErr(''); setConfirm(rows[0].id); }} className="btn-ghost pressable mt-3">
+        Delete a saved session
+      </button>
+    )}
     {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface">{err}</p>}
-    <ConfirmSheet open={!!asking} busy={busy} title={`Delete ${asking?.title ?? ''}?`}
-                  body="It comes off your saved sessions. Anything you’ve done stays in your training."
+    <ConfirmSheet open={!!asking} busy={busy} title={rows.length > 1 ? 'Delete a saved session?' : `Delete ${asking?.title ?? ''}?`}
+                  body={<>
+                    {rows.length > 1 && (
+                      <label className="text-field mb-3 block">
+                        <span>Session</span>
+                        <select value={confirm ?? ''} onChange={(e) => setConfirm(e.target.value)}>
+                          {rows.map((w) => <option key={w.id} value={w.id}>{w.title}{w.minutes ? ` · ${Math.round(w.minutes)} min` : ''}</option>)}
+                        </select>
+                      </label>
+                    )}
+                    It comes off your saved sessions. Anything you’ve done stays in your training.
+                  </>}
                   confirmLabel="Delete" onConfirm={() => asking && remove(asking.id)} onCancel={() => setConfirm(null)} />
     </>
   );

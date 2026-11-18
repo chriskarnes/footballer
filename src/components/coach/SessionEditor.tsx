@@ -20,9 +20,9 @@ import { DrillForm } from './DrillForm';
  * `target` is where the session lives, which decides what Save does:
  *   library  a session in the trainer's library, from the Sessions tab.
  *   placed   a session in a program week. With a library session behind it,
- *            Save changes it everywhere it's used; when that's more than this
- *            one place there is a second button to save it as a new session
- *            for this week alone.
+ *            Save changes it everywhere it's used, and the line above the
+ *            button says where; when that's more than this one place there
+ *            is a second button to save a copy for this week alone.
  *   legacy   a program week before migration 0017: the session is the week's own.
  */
 export type SessionTarget =
@@ -150,7 +150,7 @@ export function SessionEditor({ target, session, drills: given, lastNote }: {
             <>
               <button type="button" disabled={busy} className="btn-primary pressable w-full"
                       onClick={() => run(() => saveSession({ id, programId, week, ...body }))}>
-                {busy ? 'Saving…' : id ? 'Save' : 'Create session'}
+                {busy ? 'Saving…' : 'Save'}
               </button>
               {id && <Remove label="Delete this session" title="Delete this session?" confirm="Delete"
                              body={`It comes out of week ${week}. The drills stay.${lastNote ? ` ${lastNote}` : ''}`}
@@ -169,7 +169,7 @@ export function SessionEditor({ target, session, drills: given, lastNote }: {
               )}
               <button type="button" disabled={busy} className="btn-primary pressable w-full"
                       onClick={() => run(() => saveLibrarySession({ libraryId: id, ...body, back: target.back ?? '/coach/sessions' }))}>
-                {busy ? 'Saving…' : id ? 'Save' : 'Create session'}
+                {busy ? 'Saving…' : 'Save'}
               </button>
               {id && (usedIn.length
                 ? <p className="text-center text-body text-on-surface-variant">To delete it, take it out of those weeks first.</p>
@@ -194,15 +194,15 @@ export function SessionEditor({ target, session, drills: given, lastNote }: {
                       !placementId ? { ...body, place: { programId, week }, back }
                         : libraryId ? { libraryId, ...body, back }
                         : { relink: placementId, ...body, back }))}>
-              {busy ? 'Saving…' : shared ? `Save everywhere it’s used` : placementId ? 'Save' : 'Create session'}
+              {busy ? 'Saving…' : 'Save'}
             </button>
             {shared && placementId && (
               <button type="button" disabled={busy} className="btn-ghost pressable w-full"
                       onClick={() => run(() => saveLibrarySession({ relink: placementId, ...body, back }))}>
-                Save as a new session, for week {week} only
+                Save a copy just for week {week}
               </button>
             )}
-            {placementId && <Remove label={`Take it out of week ${week}`} title={`Take it out of week ${week}?`} confirm="Take out"
+            {placementId && <Remove label={`Remove from week ${week}`} title={`Remove from week ${week}?`} confirm="Remove"
                                     body={`It stays in your sessions, and anywhere else it’s used.${lastNote ? ` ${lastNote}` : ''}`}
                                     run={() => deleteSession(placementId)} then={back} />}
           </>
@@ -233,7 +233,7 @@ function Remove({ label, title, body, confirm, run, then }: {
           setBusy(true);
           const r = await run().catch(offline);
           setBusy(false); setOpen(false);
-          if (r.ok) { toast(confirm === 'Delete' ? 'Session deleted.' : 'Taken out.'); router.push(then); router.refresh(); }
+          if (r.ok) { toast(confirm === 'Delete' ? 'Session deleted.' : 'Removed.'); router.push(then); router.refresh(); }
           else setErr(r.error ?? 'Couldn’t do that.');
         }} />
     </>

@@ -10,7 +10,7 @@ export function TrainingLocked() {
   return (
     <div className="animate-pop pt-6">
       <h1 className="h-page">Training is locked</h1>
-      <p className="mt-3 text-body leading-relaxed text-on-surface-variant">Your membership here needs a look before you can train.</p>
+      <p className="mt-3 text-body leading-relaxed text-on-surface-variant">Your membership needs a quick look before you can train. Show this to whoever looks after it.</p>
       <Link href="/membership" className="btn-primary pressable mt-5 inline-flex">Membership</Link>
     </div>
   );

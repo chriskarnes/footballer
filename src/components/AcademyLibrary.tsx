@@ -12,9 +12,25 @@ const Chevron = () => (
 );
 
 /**
+ * The order the drill categories are listed in: ball work first, then the
+ * body. They came out in whatever order the first drills happened to be
+ * tagged. Anything not named here (Power, a tag of the trainer's own) follows,
+ * in the order it's met.
+ */
+const ORDER: string[] = [
+  'ball_mastery', 'first_touch', 'passing', 'dribbling', 'finishing', 'crossing', 'juggling', 'weak_foot',
+  'speed', 'agility', 'strength', 'core', 'conditioning', 'mobility',
+] satisfies FocusArea[];
+const rank = (t: string) => { const i = ORDER.indexOf(t); return i < 0 ? ORDER.length : i; };
+
+/**
  * The academy's own programs and drills, for players, when their trainer
  * lets them browse (0015). Any session or drill runs and is recorded like
  * one their trainer set. Null when it's off or there's nothing in it.
+ *
+ * Programs, then one closed row per drill category that opens in place, as a
+ * program does. Every drill used to be listed under its category's heading:
+ * fifty drills and sixteen headings to scroll through on a phone.
  */
 export async function AcademyLibrary({ heading = true }: { heading?: boolean }) {
   const v = await getViewer();
@@ -23,7 +39,8 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
   if (!c.defaults.playerLibrary) return null;
   if (!c.programs.length && !c.drills.length) return null;
 
-  const tags = [...new Set(c.drills.flatMap(drillTags))];
+  // A stable sort, so tags outside ORDER keep the order they were met in.
+  const tags = [...new Set(c.drills.flatMap(drillTags))].sort((a, b) => rank(a) - rank(b));
   const groups = [
     ...tags.map((t) => ({ key: t, title: label(t), drills: c.drills.filter((d) => drillTags(d)[0] === t) })),
     { key: 'other', title: 'More drills', drills: c.drills.filter((d) => !drillTags(d).length) },
@@ -74,24 +91,37 @@ export async function AcademyLibrary({ heading = true }: { heading?: boolean }) 
         </section>
       )}
 
-      {groups.map((g) => (
-        <section key={g.key} className="mt-8">
-          <h2 className="h-sec mb-3">{g.title}</h2>
-          <ul className="card divide-y divide-outline-variant">
-            {g.drills.map((d) => (
-              <li key={d.id}>
-                <Link href={`/train/drill/${d.id}?from=library`} className="flex min-h-14 items-center gap-3 px-4 py-3">
+      {!!groups.length && (
+        <section className="mt-8">
+          <h2 className="h-sec mb-3">Drills</h2>
+          <div className="space-y-2.5">
+            {groups.map((g) => (
+              <details key={g.key} className="card group overflow-hidden">
+                <summary className="pressable flex cursor-pointer list-none items-center gap-4 p-4">
                   <span className="min-w-0 flex-1">
-                    <span className="block text-body-lg font-bold text-on-surface">{d.name}</span>
-                    <span className="block truncate text-body font-medium text-on-surface-variant">{d.amount ?? `${d.minutes} min`}</span>
+                    <span className="block text-title-sm font-bold leading-snug text-on-surface">{g.title}</span>
+                    <span className="mt-0.5 block text-body font-semibold text-on-surface-variant">{g.drills.length} {g.drills.length === 1 ? 'drill' : 'drills'}</span>
                   </span>
-                  <Chevron />
-                </Link>
-              </li>
+                  <span className="transition-transform group-open:rotate-90"><Chevron /></span>
+                </summary>
+                <ul className="divide-y divide-outline-variant border-t border-outline-variant">
+                  {g.drills.map((d) => (
+                    <li key={d.id}>
+                      <Link href={`/train/drill/${d.id}?from=library`} className="flex min-h-14 items-center gap-3 px-4 py-3">
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-body-lg font-bold text-on-surface">{d.name}</span>
+                          <span className="block truncate text-body font-medium text-on-surface-variant">{d.amount ?? `${d.minutes} min`}</span>
+                        </span>
+                        <Chevron />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
             ))}
-          </ul>
+          </div>
         </section>
-      ))}
+      )}
     </div>
   );
 }

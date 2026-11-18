@@ -5,6 +5,7 @@ import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 import { AvatarPicker } from '@/components/AvatarPicker';
 import { YourName } from '@/components/coach/YourName';
 import { getViewer } from '@/lib/viewer';
+import { LeaveOrDelete } from '@/components/LeaveOrDelete';
 
 /**
  * The profile, reachable at any time.
@@ -12,6 +13,9 @@ import { getViewer } from '@/lib/viewer';
  * The setup questions used to appear only on an account with no history and no
  * name, which meant anyone who had already trained could never get to them —
  * including every account that existed before the form did.
+ *
+ * Leaving the academy and deleting the account are at the bottom, under
+ * their own heading. They were on Me, two rows under Sign out.
  */
 export default async function ProfilePage() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) redirect('/me');
@@ -46,6 +50,16 @@ export default async function ProfilePage() {
   // A trainer's profile is their name and photo: the player questions (age,
   // position, foot) were required to save, and aren't theirs to answer.
   const viewer = await getViewer().catch(() => null);
+  // The ways out for good, last on the page either way. Leave names the
+  // academy this page is on, when they're in it; its owner can't leave.
+  const leaving = (
+    <section className="mt-12">
+      <h2 className="mb-3 pl-1 text-body font-semibold text-on-surface-variant">Leaving</h2>
+      <div className="card divide-y divide-outline-variant">
+        <LeaveOrDelete academy={viewer?.role ? viewer.academy?.name ?? null : null} owner={viewer?.role === 'owner'} />
+      </div>
+    </section>
+  );
   if (viewer?.staff) {
     return (
       <div>
@@ -53,6 +67,7 @@ export default async function ProfilePage() {
         <h1 className="h-page">My profile</h1>
         <AvatarPicker name={initial.display_name} email={user.email} updatedAt={avatarAt?.avatar_updated_at ?? null} />
         <YourName initial={initial.display_name ?? ''} />
+        {leaving}
       </div>
     );
   }
@@ -62,6 +77,7 @@ export default async function ProfilePage() {
       <BackLink href="/me" label="Me" />
       <ProfileSetup email={user.email} initial={initial} parent={by?.signed_up_by === 'parent' ? true : by?.signed_up_by === 'player' ? false : null}
         photo={<AvatarPicker name={initial.display_name} email={user.email} updatedAt={avatarAt?.avatar_updated_at ?? null} />} />
+      {leaving}
     </div>
   );
 }

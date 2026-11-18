@@ -8,30 +8,29 @@ import { ConfirmSheet } from './ConfirmSheet';
 export type SavedPlan = { id: string; name: string; active: boolean; created_at: string };
 
 /**
- * Every saved week, one of them active. The active week is the one the Plan
- * tab opens to, Train's "today" card reads, and This week measures.
+ * Every saved week, one of them in use ("active" in the data; "this week's
+ * plan" to the player). It's the one the Plan tab opens to, Train's "today"
+ * card reads, and This week measures.
  *
  * Each row has a calendar button — the Plan tab's own calendar, so the two
- * read as the same thing. Inactive, it's the grey tonal button rename and
- * delete use: something you can press. Active, it's filled, with a tick in
+ * read as the same thing. Not in use, it's the grey tonal button rename and
+ * delete use: something you can press. In use, it's filled, with a tick in
  * it: filled is what's in effect, everywhere in this app, and the tick is a
  * second difference that doesn't depend on telling grey from black. The
- * active week also sits first. No tags — the button says it.
+ * week in use also sits first. No tags — the button says it.
  *
- * Switching is a second tap, in a sheet that names both weeks: changing which
- * week runs your Plan tab and your Train card is worth being sure of, and the
- * week that stops being active doesn't go anywhere.
+ * Switching is one tap. It used to ask first, in a sheet; nothing is lost
+ * by switching and switching back is the same tap, so the question was only
+ * in the way. Deleting still asks.
  */
 export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedPlan[]; /** The academy's, for "Saved Nov 13". */ timeZone?: string }) {
   const router = useRouter();
   const [plans, setPlans] = useState(initial);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const [switching, setSwitching] = useState<SavedPlan | null>(null);
   const [deleting, setDeleting] = useState<SavedPlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const active = plans.find((p) => p.active);
 
   async function call(method: 'PATCH' | 'DELETE', body: Record<string, unknown>) {
     setBusy(true); setErr('');
@@ -40,9 +39,9 @@ export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedP
         method, headers: { 'content-type': 'application/json' },
         body: method === 'DELETE' ? undefined : JSON.stringify(body),
       });
-      if (!res.ok) setErr('Couldn’t save that. Check your connection and try again.');
+      if (!res.ok) setErr('Couldn’t save that. Try again.');
       return res.ok;
-    } catch { setErr('Couldn’t save that. Check your connection and try again.'); return false; } finally { setBusy(false); }
+    } catch { setErr('No signal. Try again.'); return false; } finally { setBusy(false); }
   }
 
   async function rename(id: string) {
@@ -56,12 +55,11 @@ export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedP
 
   async function activate(plan: SavedPlan) {
     if (await call('PATCH', { id: plan.id, follow: true })) {
-      // The active week moves to the top, where it's read first.
+      // The week in use moves to the top, where it's read first.
       setPlans((ps) => ps.map((p) => ({ ...p, active: p.id === plan.id }))
         .sort((a, b) => Number(b.active) - Number(a.active)));
-      setSwitching(null);
       router.refresh();
-    } else setSwitching(null);
+    }
   }
 
   async function remove(plan: SavedPlan) {
@@ -99,16 +97,17 @@ export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedP
                 <Link href={p.active ? '/plan' : `/plan?plan=${p.id}`} className="min-w-0 flex-1">
                   <div className="h-card truncate">{p.name}</div>
                   <div className="mt-1 text-body-sm font-medium text-on-surface-variant">
-                    {p.active ? 'Active' : `Saved ${shortDate(p.created_at, timeZone)}`}
+                    {p.active ? 'This week’s plan' : `Saved ${shortDate(p.created_at, timeZone)}`}
                   </div>
                 </Link>
 
                 {/* A toggle, not a radio: each sits in its own row beside
                     Rename and Delete, which a radio group can't hold. */}
                 <button type="button" aria-pressed={p.active}
-                        aria-label={p.active ? `${p.name} is active` : `Make ${p.name} active`}
-                        title={p.active ? 'Active' : 'Make active'}
-                        onClick={() => { if (!p.active) setSwitching(p); }}
+                        aria-label={p.active ? `${p.name} is this week’s plan` : `Use ${p.name} this week`}
+                        title={p.active ? 'This week’s plan' : 'Use this week'}
+                        disabled={busy && !p.active}
+                        onClick={() => { if (!p.active) activate(p); }}
                         className={`icon-btn pressable ${p.active
                           ? 'cursor-default bg-secondary-container text-on-secondary-container'
                           : 'text-on-surface-variant hover:text-on-surface'}`}>
@@ -140,20 +139,10 @@ export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedP
       <Link href="/plan?new=1" className="btn-ghost pressable mt-3 w-full">Build another week</Link>
 
       <ConfirmSheet
-        open={!!switching}
-        title={`Make ${switching?.name ?? ''} active?`}
-        body={active
-          ? <>{active.name} becomes inactive. It stays in your plans, and you can switch back any time.</>
-          : <>Plan and Train will show you this week each day.</>}
-        confirmLabel="Make active" busy={busy}
-        onConfirm={() => switching && activate(switching)}
-        onCancel={() => setSwitching(null)} />
-
-      <ConfirmSheet
         open={!!deleting}
         title={`Delete ${deleting?.name ?? ''}?`}
         body={deleting?.active
-          ? <>This is your active plan, so you&rsquo;ll have none until you make another one active. Sessions you&rsquo;ve done stay in Your training.</>
+          ? <>This is the week you&rsquo;re using. You&rsquo;ll have none until you pick another. Sessions you&rsquo;ve done stay in Your training.</>
           : <>Sessions you&rsquo;ve done stay in Your training.</>}
         confirmLabel="Delete" busy={busy}
         onConfirm={() => deleting && remove(deleting)}
@@ -164,7 +153,7 @@ export function SavedPlans({ plans: initial, timeZone = 'UTC' }: { plans: SavedP
 
 /** "Sep 3": see lib/dates. */
 
-/** The Plan tab's calendar, with a tick in it for the active week. */
+/** The Plan tab's calendar, with a tick in it for the week in use. */
 function CalendarIcon({ checked }: { checked: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true"

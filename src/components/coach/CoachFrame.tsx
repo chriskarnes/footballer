@@ -13,15 +13,18 @@ import { ToastProvider } from './Toast';
  * column, since a 1200px-wide text field is harder to use, not easier.
  */
 const PLACES = [
-  // Players holds the list and the calendar (Week); Library, programs and drills.
+  // Players holds the list and the calendar (Week); Library, programs and
+  // drills (an open book: it had the calendar's glyph, which said Week);
+  // Settings, the academy's trainers, invite links and defaults (a gear: it
+  // was "Academy", which didn't say what was in it).
   { href: '/coach',         label: 'Players',  match: ['/coach', '/coach/players', '/coach/week'],
     d: 'M4 21v-1a6 6 0 0 1 12 0v1M10 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' },
   { href: '/coach/groups',  label: 'Groups',   match: ['/coach/groups'],
     d: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0' },
   { href: '/coach/content', label: 'Library',  match: ['/coach/content', '/coach/programs', '/coach/sessions', '/coach/drills'],
-    d: 'M4 5h16v15H4zM16 3v4M8 3v4M4 10h16M8 14h3M8 17h6' },
-  { href: '/coach/team',    label: 'Academy',  match: ['/coach/team', '/coach/billing'],
-    d: 'M9 4h6v3H9zM7 5.5H5V21h14V5.5h-2M9 12h6M9 16h4' },
+    d: 'M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z' },
+  { href: '/coach/team',    label: 'Settings', match: ['/coach/team', '/coach/billing'],
+    d: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z' },
 ] as const;
 
 // Pages that use the width: tables and two-column views.
@@ -70,18 +73,27 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
         </main>
       </div>
 
-      {/* Phone: the trainer's own bar, not the player's. */}
+      {/* Phone: the trainer's own bar, not the player's, laid out the way the
+          player's is (TabBar): every place named under its icon, and the one
+          you're on in the brand's ink with a short bar under it. Only the
+          lit one used to be named, which left three icons to guess at. */}
       <nav className="safe-b safe-x pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center lg:hidden" aria-label="Trainer area">
-        <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-outline-variant tabbar-surface p-1.5 shadow-level2 backdrop-blur-xl">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-outline-variant tabbar-surface p-1.5 shadow-level2 backdrop-blur-xl">
           {PLACES.map((p) => {
             const on = isOn(path, p.match);
             return (
               <Link key={p.href} href={p.href} aria-current={on ? 'page' : undefined}
                     onClick={() => { if (!on) haptic('tap'); }}
-                    className={`pressable flex min-h-11 items-center gap-2 rounded-full px-3.5 text-body-sm font-bold tracking-tight transition-colors duration-300
-                      ${on ? 'bg-inverse-surface text-inverse-primary' : 'text-on-surface-variant'}`}>
-                <Icon d={p.d} />
-                <span className={on ? 'inline' : 'sr-only'}>{p.label}</span>
+                    className={`tab flex min-h-13 min-w-[64px] flex-col items-center justify-center rounded-medium px-3 pt-1
+                                text-caption font-bold tracking-tight transition-colors duration-300
+                                ${on ? 'text-primary' : 'text-on-surface-variant'}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.3 : 1.9}
+                     strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true"><path d={p.d} /></svg>
+                <span className="mt-0.5">{p.label}</span>
+                {/* Always there, so the label doesn't jump when it shows. */}
+                <span aria-hidden="true"
+                      className={`mt-[3px] h-[3px] w-4 rounded-full bg-current transition-[opacity,transform] duration-300
+                                  ${on ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`} />
               </Link>
             );
           })}

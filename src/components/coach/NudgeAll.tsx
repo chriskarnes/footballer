@@ -6,11 +6,11 @@ import { offline } from '@/lib/plain-error';
 import { useToast } from './Toast';
 
 /**
- * One button for the headline's "6 players need a nudge": each gets their
+ * One button for everyone who's behind this week: each gets their
  * own note, written from their own week, shown here first so nothing goes
  * out unread. Untick anyone it shouldn't go to.
  */
-export function NudgeAll({ people }: { people: { id: string; name: string; body: string }[] }) {
+export function NudgeAll({ people, className = '' }: { people: { id: string; name: string; body: string }[]; className?: string }) {
   const [open, setOpen] = useState(false);
   const [skip, setSkip] = useState<Set<string>>(new Set());
   const [err, setErr] = useState('');
@@ -46,7 +46,7 @@ export function NudgeAll({ people }: { people: { id: string; name: string; body:
   if (people.length < 2) return null;
   return (
     <>
-      <button type="button" className="btn-ghost btn-sm pressable" onClick={() => setOpen(true)}>Nudge all {people.length}</button>
+      <button type="button" className={`btn-ghost btn-sm pressable ${className}`} onClick={() => setOpen(true)}>Nudge all {people.length}</button>
       <dialog ref={ref} className="note-dialog" aria-labelledby="nudge-all-title"
               onCancel={(e) => { e.preventDefault(); close(); }}
               onClick={(e) => { if (e.target === e.currentTarget) close(); }}>

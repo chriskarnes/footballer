@@ -8,10 +8,14 @@ import { Chip } from '@/components/Chip';
 import { MINUTE_CHOICES } from '@/lib/week-builder';
 import type { Defaults } from '@/lib/academy-data';
 
+// How much of the month's AI has to be used before the meter shows.
+const AI_NEAR = 0.8;
+
 /**
  * The academy's defaults for custom weeks: how much every player trains
- * unless set on their own page, and whether drills level up. With how much
- * AI the academy has used this month.
+ * unless set on their own page, and whether drills level up. How much AI
+ * the academy has used this month shows only when it's nearly gone: before
+ * that it's a number a trainer has nothing to do about.
  */
 export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used: number; limit: number; on: boolean } | null }) {
   const router = useRouter();
@@ -66,20 +70,17 @@ export function BuildDefaults({ defaults, ai }: { defaults: Defaults; ai: { used
           {pending ? 'Saving…' : 'Save'}
         </button>
       )}
-      {ai && (
+      {ai?.on && ai.limit > 0 && ai.used >= ai.limit * AI_NEAR && (
         <div className="mt-5 border-t border-outline-variant pt-4">
           <div className="flex items-baseline justify-between gap-3 text-body">
             <span className="font-bold text-on-surface">AI this month</span>
-            <span className="text-on-surface-variant">{ai.on ? `${ai.used} of ${ai.limit}` : 'Not set up'}</span>
+            <span className="text-on-surface-variant">{ai.used} of {ai.limit}</span>
           </div>
-          {ai.on && (
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-highest" aria-hidden>
-              <div className="h-full rounded-full bg-on-surface" style={{ width: `${Math.min(100, (ai.used / ai.limit) * 100)}%` }} />
-            </div>
-          )}
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-container-highest" aria-hidden>
+            <div className="h-full rounded-full bg-on-surface" style={{ width: `${Math.min(100, (ai.used / ai.limit) * 100)}%` }} />
+          </div>
           <p className="mt-2 text-body-sm leading-snug text-on-surface-variant">
-            {ai.on ? 'Builds and suggestions. Past the limit, weeks are still built, just without AI.'
-              : 'Weeks are built from each player’s settings.'}
+            Builds and suggestions. Past the limit, weeks are still built, just without AI.
           </p>
         </div>
       )}

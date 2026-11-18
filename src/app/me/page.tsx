@@ -12,7 +12,6 @@ import { waitingLine } from '@/components/Waiting';
 import { WorkoutList } from '@/components/WorkoutList';
 import { AccountSection } from '@/components/AccountSection';
 import { finishedRows, readWorkouts, toRow, type WorkoutRaw } from '@/lib/workout-rows';
-import pkg from '../../../package.json';
 import { ProfileSetup, type ProfileValues } from '@/components/ProfileSetup';
 import { SavedPlans, type SavedPlan } from '@/components/SavedPlans';
 import { CalendarSection, type CalendarFeed } from '@/components/CalendarSection';
@@ -38,7 +37,8 @@ import { membershipLine } from '@/lib/membership';
  *   saved sessions   kept from Train to do later
  *   your plans       every saved week
  *   history          the last five, and See all
- *   account          email, add to home screen, sign out
+ *   account          email, add to home screen, sign out (leaving and
+ *                    deleting are on My profile)
  *
  * Saved and finished sessions used to share one "Do it again" list, so a
  * session you meant to do sat between ones you'd done, looking the same.
@@ -108,7 +108,6 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
   let timeZone = 'UTC';
   let staffAnywhere = false;
   let role: string | null = null;
-  let academyName: string | null = null;
   // undefined: the calendar table doesn't exist yet (migration 0003), so no
   // section. null: it does, and this player hasn't turned it on.
   let calendar: CalendarFeed | null | undefined;
@@ -146,7 +145,6 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         const { data: staffRows } = await db.from('academy_members').select('role').eq('user_id', user.id).in('role', ['owner', 'trainer']).limit(1);
         staffAnywhere = !!staffRows?.length;
         role = viewer.role;
-        academyName = viewer.academy?.name ?? null;
         if (!cal.error) calendar = cal.data ?? null;
         workouts = rows;
         profile = prof;
@@ -175,8 +173,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
           <div className="card mt-5 p-5" role="alert">
             <div className="h-card">That link didn’t work</div>
             <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
-              Sign-in links work once, for an hour, in the browser you asked from. Asked in the app on your
-              home screen? Go back there and type the 6-digit code from the email instead. Or send yourself a new one here.
+              Links work once, in the browser you asked from. Get a new code below and type it in.
             </p>
           </div>
         )}
@@ -330,8 +327,7 @@ export default async function MePage({ searchParams }: { searchParams: Promise<{
         </Link>
       ))}
 
-      <AccountSection email={user.email} version={pkg.version} canBrand={canBrand} role={selfServe && role === 'player' ? null : role} admin={admin}
-                      academy={role ? academyName : null} owner={role === 'owner'}
+      <AccountSection email={user.email} canBrand={canBrand} role={selfServe && role === 'player' ? null : role} admin={admin}
                       legal={{ privacy: await rootHref('/privacy'), terms: await rootHref('/terms') }} />
     </div>
   );

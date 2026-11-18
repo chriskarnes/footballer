@@ -51,7 +51,7 @@ export function PlayerOptions({ library: savedLibrary, extras: savedExtras, spee
         </div>
         <p className="mt-2 text-body-sm leading-snug text-on-surface-variant">
           {extras
-            ? 'Built from their focus and session length, with drills they haven’t done this week. Only once this week’s sessions so far are done, and never on a game day.'
+            ? 'Only after their set sessions are done.'
             : 'Players stick to the week you set.'}
         </p>
       </div>

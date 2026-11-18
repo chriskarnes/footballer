@@ -26,7 +26,7 @@ export function Included({ trainer }: { trainer?: string | null }) {
   );
 }
 
-/** Who takes the card, said once, small, where a parent is about to type it. */
+/** Who takes the card, said once, small, where whoever pays is about to type it. */
 export function CardNote({ children }: { children?: React.ReactNode }) {
   return (
     <div className="mt-4 flex items-start gap-2.5 text-body-sm leading-relaxed text-on-surface-variant">
@@ -34,7 +34,7 @@ export function CardNote({ children }: { children?: React.ReactNode }) {
         <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
       </svg>
       <div>
-        <p>A parent or guardian should do this. Cards are taken by Stripe; we never see or store the card number.{children}</p>
+        <p>This part is for whoever pays for your training. Cards are taken by Stripe; we never see or store the card number.{children}</p>
         {/* Said where the card is about to go in: it renews, and how to stop it. */}
         <LegalLinks lead="It renews every month until you cancel, under Me, then Membership. By adding a card you agree to the" parentLine={false} />
       </div>
@@ -69,7 +69,7 @@ export function Paywall({ lock }: { lock: PaywallLock }) {
     return (
       <div className="animate-pop pt-6">
         {head('Training is paused')}
-        <Link href="/me" className="mt-6 inline-block text-body font-semibold text-on-surface-variant underline underline-offset-4">Your account</Link>
+        <Link href="/me" className="btn-ghost pressable mt-6 inline-flex">Me</Link>
       </div>
     );
   }
@@ -85,7 +85,7 @@ export function Paywall({ lock }: { lock: PaywallLock }) {
         <div className="mt-6 [&_button]:w-full"><MembershipButtons action="add" label="Add a card" /></div>
         <CardNote />
       </div>
-      <Link href="/me" className="mt-6 inline-block text-body font-semibold text-on-surface-variant underline underline-offset-4">Your account</Link>
+      <Link href="/me" className="btn-ghost pressable mt-6 inline-flex">Me</Link>
     </div>
   );
 }

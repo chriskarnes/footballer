@@ -9,12 +9,6 @@ import { SessionCard } from './SessionCard';
 import { Chip } from './Chip';
 import { BackButton } from './BackLink';
 
-/**
- * Only used when someone hits Surprise me without having chosen a time. Nothing
- * is preselected in the rows, but a session still needs a duration, and refusing
- * to answer the one button meant for "I don't know" would defeat it.
- */
-const SURPRISE_MINUTES = 20;
 /** The quick start: short enough to say yes to. */
 const QUICK_MINUTES = 15;
 
@@ -98,6 +92,9 @@ function Train({
   // The six ball skills lead; the rest, and where, are a tap away. A wall of
   // twenty chips was the first thing a player saw.
   const [more, setMore] = useState(false);
+  // "Type what you want", closed until asked for. In state, not the
+  // <details>'s own, so it's still open on the way back from a session.
+  const [typing, setTyping] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   // Whether this visit pushed the result step. If it did, Back is the back
@@ -224,23 +221,9 @@ function Train({
    *  made the whole screen feel like browsing — Build is when it gets made. */
   const pick = (n: Partial<SessionSpec>) => { setSpec(n); setMiss(false); };
 
-  /**
-   * Randomises what you work on, not how long for. Time is the one thing the
-   * player actually knows — a surprise 45 minutes when you have 15 is not a
-   * surprise, it's a wrong answer. Whatever is in "How long" is kept.
-   */
   /** One tap to a session: a short mix, no questions. */
   function quickStart() {
     const next = { ...spec, minutes: QUICK_MINUTES, focus: [] };
-    setAnyFocus(true);
-    setSpec(next);
-    show(build(next, true), true, 'push');
-  }
-
-  function surpriseMe() {
-    // Writes the fallback duration into the spec rather than only into the build,
-    // so "How long" shows the time the session was actually cut to.
-    const next = { ...spec, minutes: spec.minutes ?? SURPRISE_MINUTES, focus: [] };
     setAnyFocus(true);
     setSpec(next);
     show(build(next, true), true, 'push');
@@ -289,7 +272,13 @@ function Train({
           {QUICK_MINUTES} minutes on the ball
         </h2>
         <p className="mt-1 text-body-lg font-semibold text-on-surface-brand-variant">A mix of ball skills, picked for you.</p>
-        <button type="button" onClick={quickStart} className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
+        {/* One filled button on the screen at a time. This one, until a length
+            and a focus are picked below: then Build my session is the next
+            thing to press, and this steps back to an outline. */}
+        <button type="button" onClick={quickStart}
+                className={`btn-big pressable mt-5 w-full ${ready
+                  ? 'btn-ghost border-on-surface-brand-variant text-on-surface-brand'
+                  : 'btn-primary btn-on-brand'}`}>
           Get my session
         </button>
       </section>
@@ -333,13 +322,11 @@ function Train({
         )}
       </div>
 
+      {/* No "Surprise me" under it any more: any length, anything is what
+          Quick start already is. */}
       <button onClick={() => show(build(), anyFocus, 'push')} disabled={!ready}
-              className="btn-primary btn-big pressable mt-8 w-full">
+              className={`${ready ? 'btn-primary' : 'btn-ghost'} btn-big pressable mt-8 w-full`}>
         Build my session
-      </button>
-      {/* Any length, anything: for a player who has the time but not the idea. */}
-      <button type="button" onClick={surpriseMe} className="btn-ghost pressable mt-3 min-h-13 w-full text-body-lg font-bold">
-        Surprise me
       </button>
 
       {miss && (
@@ -349,8 +336,15 @@ function Train({
       )}
 
       {/* ---- or say it ---- */}
-      <div className="mt-10">
-        <h2 className="h-sec">Or describe it</h2>
+      {/* One closed row, so the page is two ways to a session and a third
+          for whoever goes looking, not a heading and a text box to read past. */}
+      <details className="group mt-10" open={typing} onToggle={(e) => setTyping(e.currentTarget.open)}>
+        <summary className="card pressable flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4
+                            [&::-webkit-details-marker]:hidden">
+          <span className="text-title-sm font-bold text-on-surface">Type what you want</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+               className="h-5 w-5 shrink-0 text-on-surface-variant transition-transform group-open:rotate-90"><path d="M9 6l6 6-6 6" /></svg>
+        </summary>
         <div className="mt-3 flex items-center gap-2 rounded-full border border-outline bg-surface-container-lowest
                         p-1.5 pl-5 transition-colors focus-within:border-primary">
           <input
@@ -375,7 +369,7 @@ function Train({
         {reply && (
           <p key={reply} className="hint-in mt-4 pl-1 text-body-lg font-medium text-on-surface">{reply}</p>
         )}
-      </div>
+      </details>
     </div>
   );
 }

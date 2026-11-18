@@ -7,7 +7,6 @@ import type { DrillBrief, SessionRow } from '@/lib/types';
 import { WEEKDAYS } from '@/lib/types';
 import { dayKey, weekState, type Completion } from '@/lib/plan-today';
 import { PlanWeek, type WeekRow } from './PlanWeek';
-import { ConfirmSheet } from './ConfirmSheet';
 import { splitSessionName } from '@/lib/program-copy';
 
 const FULL_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -16,10 +15,12 @@ const FULL_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
  * A saved week. Read-only on purpose — this is the week you train to, not the
  * thing you fiddle with; Rebuild is one tap away.
  *
- * The active week leads with today, because "what am I doing today" is the
- * question this tab gets opened to answer, and the old screen made you find
- * today in a list of seven and work out what you'd already done. An inactive
- * week shows the same list with Make active in place of today.
+ * The week in use ("active" in the data) leads with today, because "what am
+ * I doing today" is the question this tab gets opened to answer, and the old
+ * screen made you find today in a list of seven and work out what you'd
+ * already done. Any other week shows the same list with Use this week in
+ * place of today: one tap, no sheet to confirm, since switching back is the
+ * same tap on the other week.
  */
 export function SavedWeek({
   plan, rows, drillsBySession, completions,
@@ -33,7 +34,6 @@ export function SavedWeek({
   // The local day is only known in the browser, so today and the ticks
   // arrive after mount. See plan-today.ts.
   const now = useNow();
-  const [confirming, setConfirming] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [err, setErr] = useState('');
 
@@ -50,7 +50,7 @@ export function SavedWeek({
       body: JSON.stringify({ id: plan.id, follow: true }),
     }).catch(() => null);
     if (res?.ok) router.push('/plan');
-    else { setSwitching(false); setConfirming(false); setErr('Couldn’t save that. Check your connection and try again.'); }
+    else { setSwitching(false); setErr(res ? 'Couldn’t save that. Try again.' : 'No signal. Try again.'); }
   }
 
   return (
@@ -64,20 +64,15 @@ export function SavedWeek({
       {!plan.active && (
         <div className="mt-7 brand-card p-6">
           <p className="text-body font-medium text-on-surface-brand">
-            This week isn&rsquo;t active. Make it active and it&rsquo;s the one Plan and Train
-            show you each day.
+            You&rsquo;re not using this week. Use it?
           </p>
-          <button onClick={() => setConfirming(true)}
+          <button onClick={activate} disabled={switching}
                   className="btn-primary btn-on-brand btn-big pressable mt-5 w-full">
-            Make active
+            {switching ? 'One moment…' : 'Use this week'}
           </button>
           {err && <p role="alert" className="mt-3 text-body-sm font-semibold text-on-surface-brand">{err}</p>}
         </div>
       )}
-      <ConfirmSheet open={confirming} title={`Make ${plan.name} active?`}
-        body="Your current active plan becomes inactive. It stays in your plans, and you can switch back any time."
-        confirmLabel="Make active" busy={switching}
-        onConfirm={activate} onCancel={() => setConfirming(false)} />
 
       <h2 className="h-card mt-9">Your week</h2>
       <PlanWeek rows={rows} drillsBySession={drillsBySession}

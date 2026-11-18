@@ -4,7 +4,7 @@ import { staffOnly } from '@/components/coach/Gate';
 import { getViewer } from '@/lib/viewer';
 import { inSetup } from '@/lib/setup';
 
-export const metadata = { title: 'Brand settings', robots: { index: false } };
+export const metadata = { title: 'Colors and logo', robots: { index: false } };
 
 /**
  * The academy's name, colours and logo, in the trainer area beside the rest
@@ -18,7 +18,7 @@ export default async function BrandPage() {
     if ('page' in gate) return gate.page;
     return (
       <div className="lg:max-w-2xl">
-        <PageHead back={{ href: '/coach/team', label: 'Academy' }} title="Owner only">Only {v.academy?.name}&rsquo;s owner can change its name, colors and logo.</PageHead>
+        <PageHead back={{ href: '/coach/team', label: 'Settings' }} title="Owner only">Only {v.academy?.name}&rsquo;s owner can change its name, colors and logo.</PageHead>
       </div>
     );
   }
@@ -26,7 +26,7 @@ export default async function BrandPage() {
   const setup = await inSetup(v.db, v.academy.id, v.role);
   return (
     <div className="lg:max-w-2xl">
-      <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/team', label: 'Academy' }} eyebrow={v.academy.name} title="Brand settings">
+      <PageHead back={setup ? { href: '/coach/setup', label: 'Setup' } : { href: '/coach/team', label: 'Settings' }} eyebrow={v.academy.name} title="Colors and logo">
         Pick your colors, add your crest, and every player sees it on their next load.
       </PageHead>
       <BrandingAdmin initial={v.academy.branding} academyName={v.academy.name} />

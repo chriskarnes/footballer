@@ -80,7 +80,7 @@ export default async function SessionsPage() {
             </div>
           </>
         ) : (
-          <Empty title="No sessions yet" href="/coach/sessions/new" cta="Build your first session" extra={<AddStarters />}>
+          <Empty title="No sessions yet" href="/coach/sessions/new" cta="New session" extra={<AddStarters />}>
             A session is a few drills in order. Build it once here, then add it to any week of any program.
           </Empty>
         )}

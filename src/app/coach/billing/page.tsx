@@ -23,7 +23,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   if ('page' in gate) return gate.page;
   const { db, academy, role } = gate.viewer;
   const { done, session_id } = await searchParams;
-  const back = { href: '/coach/team', label: 'Academy' };
+  const back = { href: '/coach/team', label: 'Settings' };
 
   if (role !== 'owner') {
     return (

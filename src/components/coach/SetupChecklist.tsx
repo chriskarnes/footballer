@@ -69,7 +69,7 @@ export function SetupChecklist({ name, email, setup: s, content, profile, invite
     },
     {
       title: 'Your players',
-      why: 'Send this link to your players or their parents. They sign in and appear on your Players page. Then put each one in a group with your program, or give them the program, and their week starts.',
+      why: 'Send this link to your players. When they join, give them your program.',
       done: s.done ? (s.listed ? 'Finished · in Find your trainer' : 'Finished · invite link only') : null,
       body: (
         <>

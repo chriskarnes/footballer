@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { askToInstall, watchInstallable } from '@/lib/install';
 import { SignOut } from './SignOut';
-import { LeaveOrDelete } from './LeaveOrDelete';
 
 /**
  * The account's own business, at the bottom where it belongs. Sign out used to
@@ -13,13 +12,13 @@ import { LeaveOrDelete } from './LeaveOrDelete';
  * Add to home screen is here for anyone who dismissed the sheet or never got to
  * the third visit; it only appears where installing is possible and hasn't
  * happened.
+ *
+ * Leaving the academy and deleting the account aren't here: they're at the
+ * bottom of My profile, a tap further from Sign out, which is the one a
+ * player means nearly every time.
  */
-export function AccountSection({ email, version, canBrand, role, admin, academy, owner, legal }: {
-  email?: string; version: string; canBrand?: boolean; role?: string | null;
-  /** The academy this page is on, when they're in it: the one "Leave" leaves. */
-  academy?: string | null;
-  /** They own this academy: it's handed over or closed before they can go. */
-  owner?: boolean;
+export function AccountSection({ email, canBrand, role, admin, legal }: {
+  email?: string; canBrand?: boolean; role?: string | null;
   /** Where the privacy policy and terms are (the main site). */
   legal?: { privacy: string; terms: string };
   /** A platform admin: the way into /admin. */
@@ -67,7 +66,7 @@ export function AccountSection({ email, version, canBrand, role, admin, academy,
         )}
         {canBrand && (
           <Link href="/coach/brand" className="pressable block">
-            <Row label="Brand settings">
+            <Row label="Colors and logo">
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-on-surface-variant"
                    fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                 <path d="M9 6l6 6-6 6" />
@@ -89,12 +88,7 @@ export function AccountSection({ email, version, canBrand, role, admin, academy,
         <SignOut className="pressable flex min-h-14 w-full items-center px-4 text-left
                             text-body-lg font-bold text-on-surface" />
       </div>
-      <p className="mt-3 pl-1 text-caption text-on-surface-variant">{email && `${email} · `}v{version}</p>
-
-      {/* Apart from the everyday rows, and last: the ways out for good. */}
-      <div className="card mt-6 divide-y divide-outline-variant">
-        <LeaveOrDelete academy={academy} owner={owner} />
-      </div>
+      {email && <p className="mt-3 pl-1 text-caption text-on-surface-variant">{email}</p>}
       {legal && (
         <p className="mt-3 pl-1 text-caption text-on-surface-variant">
           <a href={legal.privacy} className="underline underline-offset-4">Privacy</a>{' · '}

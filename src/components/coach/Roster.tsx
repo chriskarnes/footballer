@@ -12,7 +12,8 @@ export type RosterRow = {
   /** "today", "3 days ago", "never". */
   since: string; daysSince: number | null;
   week: Progress['week'];
-  /** Where payment stands, or that they're switched off: null with nothing to say. */
+  /** Where payment stands, or that they're switched off: null with nothing to say.
+   *  Shown only when it's the trainer's to act on (`attention`) or they're off. */
   pay: { label: string; active: boolean; attention: boolean } | null;
 };
 
@@ -22,6 +23,8 @@ const active = (r: RosterRow) => r.pay?.active !== false;
  * The trainer's players: worst first, switched-off players last. A search box
  * above it, and only once the list is long enough to need finding in. Colour is kept for what needs a look: a
  * player on track is plain text. Cards on a phone, a table on a laptop.
+ * The week's dots are in the table only: on a card they were seven circles
+ * with no day letters, and the words beside them already say it.
  */
 export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: boolean }) {
   const [q, setQ] = useState('');
@@ -62,12 +65,7 @@ export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: bo
               {showGroups && !!p.groups.length && (
                 <span className="block truncate text-caption font-semibold text-on-surface-variant">{p.groups.join(' · ')}</span>
               )}
-              {active(p) && (
-                <>
-                  <span className="mt-1.5 block text-body text-on-surface-variant"><Standing p={p} /></span>
-                  <span className="mt-3 block"><WeekDots week={p.week} /></span>
-                </>
-              )}
+              {active(p) && <span className="mt-1.5 block text-body text-on-surface-variant"><Standing p={p} stacked /></span>}
             </Link>
             {active(p) && p.status !== 'good' && (
               <NoteButton to={p.id} kind="nudge" className="btn-ghost btn-sm pressable shrink-0">Nudge</NoteButton>
@@ -117,14 +115,20 @@ export function Roster({ rows, showGroups }: { rows: RosterRow[]; showGroups: bo
   );
 }
 
-/** Where their week stands: a coloured tag only when it needs a look, plain words when it doesn't. */
-function Standing({ p }: { p: RosterRow }) {
+/**
+ * Where their week stands: a coloured tag only when it needs a look, plain
+ * words when it doesn't. `stacked`, on a phone card, puts the count on its
+ * own line: beside the tag it wrapped mid-phrase.
+ */
+function Standing({ p, stacked }: { p: RosterRow; stacked?: boolean }) {
   return (
     <>
       {p.status === 'good'
         ? <span className="font-semibold text-on-surface">{p.reason}</span>
         : <StatusTag status={p.status}>{p.reason}</StatusTag>}
-      {p.detail && <span className="text-body-sm"> · {p.detail}</span>}
+      {p.detail && (stacked
+        ? <span className="mt-1 block text-body-sm">{p.detail}</span>
+        : <span className="text-body-sm"> · {p.detail}</span>)}
     </>
   );
 }
@@ -133,13 +137,17 @@ function Th({ children }: { children: React.ReactNode }) {
   return <th scope="col" className="px-3 pb-3 font-semibold">{children}</th>;
 }
 
-/** Where a player's payment stands, or that they're switched off (the one in rose). */
+/**
+ * A player's payment, only when it wants a look (not paid, a failed payment,
+ * not paying), or that they're switched off (the one in rose). Paid and
+ * paying say nothing: a tag on every row is a tag nobody reads.
+ */
 function PayTag({ pay }: { pay: RosterRow['pay'] }) {
-  if (!pay?.label) return null;
+  if (!pay?.label || (pay.active && !pay.attention)) return null;
   return (
     <span className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-caption font-semibold
       ${!pay.active ? 'border-[#E8A0B4] bg-[#FCE4EC] text-[#9B1C45] dark:border-[#8E3A55] dark:bg-[#4A1F2D] dark:text-[#FFC2D4]'
-        : pay.attention ? 'border-on-surface text-on-surface' : 'border-outline-variant text-on-surface-variant'}`}>{pay.label}</span>
+        : 'border-on-surface text-on-surface'}`}>{pay.label}</span>
   );
 }
 

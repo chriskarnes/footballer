@@ -12,7 +12,7 @@ const FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 type Kind = 'off' | 'trainer' | 'practice' | 'game';
 /** The order a tap goes in. */
 const KINDS: Kind[] = ['off', 'trainer', 'practice', 'game'];
-const NAME: Record<Kind, string> = { off: 'Off', trainer: 'Trainer', practice: 'Practice', game: 'Game' };
+const NAME: Record<Kind, string> = { off: 'Free', trainer: 'Trainer', practice: 'Practice', game: 'Game' };
 
 const toWeek = (d: TeamDays | null): Kind[] => DAYS.map((_, i) =>
   !d ? 'off' : d.games.includes(i) ? 'game' : d.trainer.includes(i) ? 'trainer' : d.practice.includes(i) ? 'practice' : 'off');
@@ -158,7 +158,7 @@ export function SoccerDays({ days, userId }: { days: TeamDays | null; userId?: s
           )}
         </div>
       ) : !userId && (
-        <p className="mt-3 text-body-lg font-medium leading-snug text-on-surface">Your sessions go on the off days.</p>
+        <p className="mt-3 text-body-lg font-medium leading-snug text-on-surface">Your sessions go on your free days.</p>
       )}
     </div>
   );

@@ -7,7 +7,7 @@ import { MemberToggle } from '@/components/coach/MemberToggle';
 import { ArchiveGroup } from '@/components/coach/ArchiveGroup';
 import { Disclose } from '@/components/coach/Disclose';
 import { NoteButton, NoteProvider } from '@/components/coach/NoteDialog';
-import { StatusDot, WeekDots } from '@/components/coach/WeekDots';
+import { StatusDot } from '@/components/coach/WeekDots';
 import { loadContent } from '@/lib/academy-data';
 import { loadPlayers } from '@/lib/coach-data';
 import { LoadFailed } from '@/components/coach/LoadFailed';
@@ -51,7 +51,8 @@ export default async function GroupPage({ params }: {
     ? n ? `${program.name} · Week ${n} of ${program.weeks}`
         // A finished group already says Finished, up front.
         : g.archived ? program.name
-        : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${shortDate(g.starts_on)}` : 'finished'}`
+        // The program ran out; the group itself hasn't been finished.
+        : `${program.name} · ${g.starts_on && g.starts_on > today ? `starts ${shortDate(g.starts_on)}` : 'program ended'}`
     : null].filter(Boolean).join(' · ');
 
   // This group stays on the list even when finished: Send a note here is to it,
@@ -96,16 +97,13 @@ export default async function GroupPage({ params }: {
               const detail = detailOf(p.progress);
               return (
                 <li key={p.user_id}>
-                  <Link href={`/coach/players/${p.user_id}`} className="flex items-center gap-4 px-4 py-3.5 hover:bg-surface-container-low">
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
-                      <span className="mt-0.5 flex items-center gap-2 text-body text-on-surface-variant">
-                        <StatusDot status={p.progress.status} />
-                        <span className="truncate"><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
-                      </span>
-                      {onCustom.has(p.user_id) && <span className="mt-0.5 block text-body-sm text-on-surface-variant">{CUSTOM_NOTE}</span>}
+                  <Link href={`/coach/players/${p.user_id}`} className="block px-4 py-3.5 hover:bg-surface-container-low">
+                    <span className="block truncate text-body-lg font-bold text-on-surface">{p.name}</span>
+                    <span className="mt-0.5 flex items-center gap-2 text-body text-on-surface-variant">
+                      <StatusDot status={p.progress.status} />
+                      <span className="truncate"><b className="font-semibold text-on-surface">{p.progress.reason}</b>{detail && <> · {detail}</>}</span>
                     </span>
-                    <span className="shrink-0"><WeekDots week={p.progress.week} /></span>
+                    {onCustom.has(p.user_id) && <span className="mt-0.5 block text-body-sm text-on-surface-variant">{CUSTOM_NOTE}</span>}
                   </Link>
                 </li>
               );
@@ -133,7 +131,7 @@ export default async function GroupPage({ params }: {
             </Disclose>
             )}
           </div>
-        ) : <p className="pl-1 text-body text-on-surface-variant">No players in the academy yet. <Link href="/coach/team" className="font-semibold text-on-surface underline underline-offset-4">Invite them from Academy</Link>.</p>}
+        ) : <p className="pl-1 text-body text-on-surface-variant">No players in the academy yet. <Link href="/coach/team" className="font-semibold text-on-surface underline underline-offset-4">Invite them from Settings</Link>.</p>}
       </section>
 
       <section className="mt-8">

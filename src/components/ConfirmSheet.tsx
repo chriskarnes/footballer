@@ -2,8 +2,8 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * A second tap for an action that changes something you'd notice — making a
- * different plan active, deleting one. A sentence saying what will happen,
+ * A second tap for an action that changes something you'd notice and can't
+ * take straight back — deleting a plan, leaving a trainer. A sentence saying what will happen,
  * Cancel, and the action named as itself rather than "OK".
  *
  * Open while `open` is true. Escape, the backdrop and Cancel all call

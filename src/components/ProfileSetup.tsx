@@ -169,7 +169,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
         </div>
         {/* At the question, not in the footer — this is where it becomes relevant. */}
         {!parent && !named && <p className="mt-3 pl-0.5 text-body font-medium leading-snug text-on-surface-variant">
-          Under 13? Get a parent to do this with you.
+          Under 13? Get an adult to do this with you.
         </p>}
       </div>
 

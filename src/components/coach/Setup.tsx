@@ -40,7 +40,7 @@ export function SetupYou({ name, timeZone, fresh }: { name: string; timeZone: st
       <label className="text-field">
         <span>Your name</span>
         <input value={n} onChange={(e) => setN(e.target.value)} required maxLength={60} autoComplete="name" />
-        <small className="mt-1.5 block text-body text-on-surface-variant">Players see the first word, so write &ldquo;Mike&rdquo;, not &ldquo;Coach Mike&rdquo;: &ldquo;Mike is getting your training ready.&rdquo;</small>
+        <small className="mt-1.5 block text-body text-on-surface-variant">Use your first name. Players see &ldquo;Mike is getting your training ready.&rdquo;</small>
       </label>
       <label className="text-field">
         <span>Your time zone</span>

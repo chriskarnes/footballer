@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { STATUS_TONE } from '@/components/coach/StatusTag';
+import { STATUS_TONE, StatusTag } from '@/components/coach/StatusTag';
 import { GroupGone } from '@/components/coach/GroupGone';
 import { staffOnly } from '@/components/coach/Gate';
 import { PageHead } from '@/components/coach/PageHead';
@@ -17,8 +17,9 @@ export const metadata = { title: 'This week', robots: { index: false } };
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /**
- * Everyone's week on one screen: players down the side, days across. Nothing
- * here is set by hand. Each player's sessions sit where the app put them,
+ * Everyone's week on one screen: players down the side, days across. On a
+ * phone seven columns don't fit, so each player is a card with their
+ * sessions listed under their name, in words. Nothing here is set by hand. Each player's sessions sit where the app put them,
  * around the club and game days they told it, or where they moved them.
  * The trainer reads it; they don't keep it up to date.
  */
@@ -38,6 +39,10 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
     : all;
   const today = weekdayOf(localDate(new Date(), academy.timeZone));
   const unset = players.filter((p) => !content.schedules.some((s) => s.user_id === p.user_id)).length;
+  // Only what was set can be missed: a "just for you" drill or an extra isn't due.
+  const missed = (it: (typeof players)[number]['week'][number]) => !it.done && it.weekday < today && setItems([it]).length > 0;
+  const count = (p: (typeof players)[number]) =>
+    p.progress.hasPlan ? `${p.progress.done} of ${p.progress.planned} done` : detailOf(p.progress) ?? 'Nothing set';
 
   return (
     <div className="animate-pop">
@@ -72,10 +77,43 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
               </Empty>}
         </div>
       ) : <>
-      {/* Seven days fit from a 1024px screen up (the name column narrows on
-          a laptop); narrower, it scrolls, with the bar showing so it's clear
-          there's more. */}
-      <div className="scroll-x scroll-shown -mx-5 mt-6 px-5 lg:mx-0 lg:px-0">
+      {/* Phone: a card a player, their sessions in the order of the week.
+          Practice, game and with-you days aren't listed: there's nothing on
+          them to do, and the table's shading has no place here. */}
+      <ul className="mt-6 space-y-2.5 lg:hidden">
+        {players.map((p) => {
+          const items = [...p.week].sort((a, b) => a.weekday - b.weekday);
+          return (
+            <li key={p.user_id} className="card p-4">
+              <Link href={`/coach/players/${p.user_id}`} className="flex items-baseline justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-body-lg font-bold text-on-surface">
+                  <StatusDot status={p.progress.status} /><span className="truncate">{p.name}</span>
+                </span>
+                <span className="shrink-0 text-body-sm text-on-surface-variant">{count(p)}</span>
+              </Link>
+              {items.length ? (
+                <ul className="mt-2 divide-y divide-outline-variant">
+                  {items.map((it) => (
+                    <li key={it.key} className="flex items-baseline gap-3 py-2 text-body">
+                      <span className={`w-9 shrink-0 text-body-sm ${it.weekday === today ? 'font-bold text-on-surface' : 'font-semibold text-on-surface-variant'}`}>{DAYS[it.weekday]}</span>
+                      <span className="min-w-0 flex-1 text-on-surface">{it.title}</span>
+                      <span className="shrink-0 text-body-sm">
+                        {it.done ? <span className="font-semibold text-on-surface"><span aria-hidden="true">✓ </span>Done</span>
+                          : missed(it) ? <StatusTag status="bad">Missed</StatusTag>
+                          : <span className="text-on-surface-variant">To do</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="mt-2 text-body-sm text-on-surface-variant">Nothing to do this week.</p>}
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Laptop: seven days fit from a 1024px screen up (the name column
+          narrows there). */}
+      <div className="mt-6 hidden lg:block">
         <table className="card w-full min-w-[680px] table-fixed border-separate border-spacing-0 overflow-hidden text-left text-body-sm">
           <colgroup><col className="w-32 xl:w-44" />{DAYS.map((d) => <col key={d} />)}</colgroup>
           <thead>
@@ -99,27 +137,25 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
                     <Link href={`/coach/players/${p.user_id}`} className="flex items-center gap-2 font-bold text-on-surface hover:underline">
                       <StatusDot status={p.progress.status} /><span className="truncate">{p.name}</span>
                     </Link>
-                    <span className="mt-0.5 block text-caption text-on-surface-variant">
-                      {p.progress.hasPlan ? `${p.progress.done} of ${p.progress.planned} done` : detailOf(p.progress) ?? 'Nothing set'}
-                    </span>
+                    <span className="mt-0.5 block text-caption text-on-surface-variant">{count(p)}</span>
                   </th>
                   {DAYS.map((_, d) => {
                     const items = p.week.filter((w) => w.weekday === d);
-                    const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'Trainer' : s.practice.includes(d) ? 'Practice' : meets.has(d) ? 'Trainer' : null;
+                    // A day with their trainer is "With you": it's the trainer reading this.
+                    const tag = s.games.includes(d) ? 'Game' : s.trainer.includes(d) ? 'With you' : s.practice.includes(d) ? 'Practice' : meets.has(d) ? 'With you' : null;
                     return (
                       <td key={d} className={`border-b border-l border-outline-variant px-1.5 py-2 ${/* One background per cell: two collided, and today hid the busy shading. */
                         tag ? (d === today ? 'bg-surface-container-high' : 'bg-surface-container') : d === today ? 'bg-surface-container-low' : ''}`}>
                         {tag && <span className="eyebrow block px-1">{tag}</span>}
                         {items.map((it) => {
-                          // Only what was set can be missed: a "just for you" drill or an extra isn't due.
-                          const missed = !it.done && d < today && setItems([it]).length > 0;
+                          const late = missed(it);
                           return (
                             <span key={it.key} title={`${it.title} · ${it.minutes} min${it.moved ? ' · moved by player' : ''}`}
                                   className={`mt-1 block truncate rounded-small px-1.5 py-1 text-caption font-semibold
-                                    ${it.done ? STATUS_TONE.good : missed ? `${STATUS_TONE.bad} border border-dashed border-current` : 'border border-outline text-on-surface'}`}>
+                                    ${it.done ? STATUS_TONE.good : late ? `${STATUS_TONE.bad} border border-dashed border-current` : 'border border-outline text-on-surface'}`}>
                               {it.done && <span aria-hidden="true">✓ </span>}
                               {/* The mark and the border carry these by sight; say them too. */}
-                              <span className="sr-only">{it.done ? 'Done: ' : missed ? 'Missed: ' : ''}</span>
+                              <span className="sr-only">{it.done ? 'Done: ' : late ? 'Missed: ' : ''}</span>
                               {it.title}{it.moved && <><span aria-hidden="true"> ↷</span><span className="sr-only"> (moved by player)</span></>}
                             </span>
                           );
@@ -134,12 +170,13 @@ export default async function WeekPage({ searchParams }: { searchParams: Promise
         </table>
       </div>
 
-      <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-caption text-on-surface-variant">
+      {/* The legend is the table's: the cards say done, missed and to do in words. */}
+      <p className="mt-4 hidden flex-wrap gap-x-5 gap-y-1 text-caption text-on-surface-variant lg:flex">
         <span><span className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small align-middle ${STATUS_TONE.good}`} />Done</span>
         <span><span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-outline align-middle" />To do</span>
         <span><span className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-extra-small border border-dashed border-current align-middle ${STATUS_TONE.bad}`} />Missed</span>
         <span>↷ Moved by the player</span>
-        <span>Shaded: practice, game or trainer day</span>
+        <span>Shaded: practice, game or a day with you</span>
       </p>
       </>}
     </div>

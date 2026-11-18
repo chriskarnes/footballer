@@ -16,20 +16,22 @@ import type {
 import { FOCUS_LABELS, WEEKDAYS } from '@/lib/types';
 
 const PHASES: [PlanIntake['seasonPhase'], string, string][] = [
-  ['off', 'Off-season', 'Longest sessions — this is when volume goes in'],
-  ['pre', 'Pre-season', 'Building up, matches not yet the priority'],
-  ['in', 'In-season', 'Short and sharp, so matches come first'],
+  ['off', 'Off-season', 'Longer sessions'],
+  ['pre', 'Pre-season', 'Building up'],
+  ['in', 'In-season', 'Short, so games come first'],
 ];
 
 const CYCLE: Availability[] = ['rest', 'technical', 'physical', 'both'];
-/** All four letters wide on purpose: a seven-column grid on a 375px screen has
- *  about 45px per day, and "Physical" overflowed its chip. */
+/** Whole words, the ones the saved week uses (PlanWeek says Rest). They were
+ *  cut to four letters ("Off", "Fit") to fit seven columns on a 375px screen,
+ *  about 43px a day; the days are four across on a phone instead, so the
+ *  word fits at a size a ten-year-old can read. */
 const DAY_LABEL: Record<Availability, string> = {
-  rest: 'Off', technical: 'Ball', physical: 'Fit', both: 'Both',
+  rest: 'Rest', technical: 'Ball', physical: 'Fitness', both: 'Both',
 };
 /** Spelled out for screen readers, which have no width problem. */
 const DAY_SPOKEN: Record<Availability, string> = {
-  rest: 'Off', technical: 'Ball work', physical: 'Physical', both: 'Ball work and physical',
+  rest: 'Rest', technical: 'Ball work', physical: 'Fitness', both: 'Ball work and fitness',
 };
 
 const KIT = ['ball', 'cones', 'wall', 'goal', 'box', 'ladder', 'hurdles', 'weights', 'jump_rope', 'partner'];
@@ -60,8 +62,9 @@ type Props = {
  *
  * PLAN.md's instruction for the first step still holds — "do not open with ten
  * questions" — so everything the prefill already knows is shown as a stated
- * fact you can correct, and the only thing asked outright is whether you're
- * injured.
+ * fact you can correct. The week and what to get better at are on the page;
+ * the season, the kit, home and being hurt are already filled in and rarely
+ * change, so they wait closed behind "More choices".
  *
  * The step lives in the URL (plan-url.ts). useSearchParams needs Suspense or
  * the page can't render without it; the fallback is the questions step, which
@@ -89,6 +92,9 @@ function Builder({
   const [save, setSave] = useState<'idle' | 'saving' | 'signin' | 'error'>('idle');
   const [error, setError] = useState('');
   const [full, setFull] = useState(false);
+  // "More choices", closed to begin with. Open from the start when they've
+  // said they're hurt: that changes the whole week, and shouldn't be on unseen.
+  const [more, setMore] = useState((editing?.intake ?? prefill.intake).injured);
   // Whether this visit pushed the result step — if so Back is the back
   // gesture; if the week arrived by URL, going back would leave the tab.
   const pushed = useRef(false);
@@ -174,8 +180,8 @@ function Builder({
     const days = planDayRows(week, '');
     if (saveId.current?.week !== week) saveId.current = { week, id: newId() };
     const client_id = saveId.current.id;
-    // Signed out, the week is kept in this browser and saved — as the active
-    // week — once you sign in. It used to say it "won't be here
+    // Signed out, the week is kept in this browser and saved — as the week
+    // in use — once you sign in. It used to say it "won't be here
     // tomorrow", which was true and the end of it.
     if (!signedIn) {
       // The latest week only: saving again replaces it, rather than making
@@ -211,7 +217,7 @@ function Builder({
     } catch (e) {
       setSave('error');
       // A dropped connection throws its own words ("Failed to fetch"); say ours.
-      setError(e instanceof TypeError || !(e instanceof Error) ? 'Couldn’t reach the server. Check your connection and try again.' : e.message);
+      setError(e instanceof TypeError || !(e instanceof Error) ? 'No signal. Try again.' : e.message);
     }
   }
 
@@ -262,7 +268,7 @@ function Builder({
             {save === 'signin' && (
               <span className="mt-4 block">
                 <Link href="/me" className="font-bold text-on-surface-brand underline underline-offset-4">Sign in</Link> and
-                this week is saved as your active plan.
+                this week is saved as the one you’re using.
               </span>
             )}
             {save === 'error' && <span className="mt-4 block">{error}</span>}
@@ -272,11 +278,10 @@ function Builder({
         {!!plan.uncovered.length && (
           <p className="mt-4 rounded-large border border-outline-variant bg-surface-container-low p-3.5 text-body-sm
                         leading-relaxed text-on-surface-variant">
-            Nothing in the library covers{' '}
+            We couldn&rsquo;t find sessions for{' '}
             <strong className="text-on-surface">
               {plan.uncovered.map((f) => FOCUS_LABELS[f]).join(', ')}
-            </strong>{' '}
-            under these constraints. The rest of the week still targets what it can.
+            </strong>. Try adding kit.
           </p>
         )}
 
@@ -296,12 +301,7 @@ function Builder({
       {prefill.sessionsSeen > 0 ? (
         <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-high p-4 text-body
                       leading-relaxed text-on-surface">
-          Built from your last {prefill.sessionsSeen} session
-          {prefill.sessionsSeen === 1 ? '' : 's'}
-          {prefill.known.weaknesses && ' — the areas you actually train'}
-          {prefill.known.availability && ', on the days you actually trained'}
-          {prefill.known.length && `, at about ${intake.targetMinutes} minutes`}.
-          Change anything that&rsquo;s wrong.
+          We set this up from what you&rsquo;ve been doing. Change anything.
         </p>
       ) : (
         <p className="mb-7 rounded-large-increased border border-outline-variant bg-surface-container-lowest p-4 text-body
@@ -313,7 +313,7 @@ function Builder({
       {/* ---- the week ---- */}
       <h2 className="h-card">Your week</h2>
       <p className="mt-1 text-body text-on-surface-variant">Tap a day to change what it&rsquo;s for.</p>
-      <div className="mt-3.5 grid grid-cols-7 gap-1.5">
+      <div className="mt-3.5 grid grid-cols-4 gap-1.5 sm:grid-cols-7">
         {WEEKDAYS.map((d, i) => {
           const a = intake.availability[i];
           return (
@@ -321,7 +321,7 @@ function Builder({
               aria-label={`${d}: ${DAY_SPOKEN[a]}. Tap to change.`}
               className={`tile pressable py-2.5 text-center ${a === 'rest' ? '' : 'tile-on'}`}>
               <span className="block font-brand text-caption font-bold tracking-tight">{d}</span>
-              <span className="eyebrow mt-0.5 block text-current">
+              <span className="mt-0.5 block text-body-sm font-semibold">
                 {DAY_LABEL[a]}
               </span>
             </button>
@@ -331,9 +331,9 @@ function Builder({
 
       {/* ---- weaknesses ---- */}
       <div className="mt-9">
-        <h2 className="h-card">What to fix</h2>
+        <h2 className="h-card">What do you want to get better at?</h2>
         <p className="mt-1 text-body text-on-surface-variant">
-          In order — the first one gets the most time. Up to four.
+          Pick up to 4. The first gets the most time.
         </p>
         {full && <p role="status" className="hint-in mt-2 text-body font-semibold text-on-surface">That’s four. Tap one to take it off first.</p>}
         <div className="mt-3.5 flex flex-wrap gap-2">
@@ -355,8 +355,17 @@ function Builder({
         </div>
       </div>
 
+      {/* ---- the rest, already filled in ---- */}
+      <details className="group mt-9" open={more} onToggle={(e) => setMore(e.currentTarget.open)}>
+        <summary className="card pressable flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4
+                            [&::-webkit-details-marker]:hidden">
+          <span className="text-title-sm font-bold text-on-surface">More choices</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+               className="h-5 w-5 shrink-0 text-on-surface-variant transition-transform group-open:rotate-90"><path d="M9 6l6 6-6 6" /></svg>
+        </summary>
+
       {/* ---- phase ---- */}
-      <div className="mt-9">
+      <div className="mt-6">
         <h2 className="h-card">Where you are in the season</h2>
         <div className="mt-3.5 space-y-2">
           {PHASES.map(([v, title, why]) => (
@@ -392,19 +401,20 @@ function Builder({
         </div>
         <div className="mt-3.5 flex flex-wrap gap-2">
           <Chip on={intake.homeOnly} onClick={() => set({ homeOnly: !intake.homeOnly })}>
-            Home only
+            Only at home
           </Chip>
-          {/* The one thing history can't tell us, so it's the one thing asked outright. */}
+          {/* The one thing history can't tell us. */}
           <Chip on={intake.injured} onClick={() => set({ injured: !intake.injured })}>
-            Carrying an injury
+            I&rsquo;m hurt
           </Chip>
         </div>
         {intake.injured && (
           <p className="mt-2.5 pl-1 text-body-sm text-on-surface-variant">
-            Physical sessions are left out while this is on. Ball work only.
+            We&rsquo;ll skip running and jumping. Ball work only.
           </p>
         )}
       </div>
+      </details>
 
       {/* The moment the week is made. It used to regenerate under the
           questions on every tap, which never felt like anything had happened. */}

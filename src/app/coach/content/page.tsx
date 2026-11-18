@@ -59,7 +59,7 @@ export default async function ContentPage() {
             })}
           </ul>
         ) : (
-          <Empty title="No programs yet" href="/coach/programs/new" cta="Make your first program">
+          <Empty title="No programs yet" href="/coach/programs/new" cta="New program">
             A program is a run of weeks: what your players do at home between sessions. Build week 1 and it repeats until you add week 2.
           </Empty>
         )}

@@ -6,7 +6,7 @@ import { pendingPlan, pendingWorkout } from '@/lib/pending';
 import { safeNext } from '@/lib/safe-next';
 
 /**
- * Email in, magic link out. One card, both states: the form, then "check your
+ * Email in, sign-in code out (the email carries a link as well). One card, both states: the form, then "check your
  * email" in the same place, so the page doesn't jump when it's sent.
  *
  * `next` is where the emailed link lands once it has signed you in. `title`
@@ -62,17 +62,17 @@ export function SignIn({ next: given = '/me', title, button = 'Email me a sign-i
       if (!error) { try { localStorage.setItem(ASKED_FOR, JSON.stringify({ next, at: Date.now() })); } catch { /* storage off */ } }
       if (error) {
         console.error(error);
-        // Supabase allows one link a minute per address; anything else is ours.
+        // Supabase allows one email a minute per address; anything else is ours.
         setErr(error.status === 429 || /rate|seconds/i.test(error.message)
-          ? 'A link was just sent. Wait a minute, then try again.'
-          : 'Couldn’t send the link. Check the address and try again.');
+          ? 'A code was just sent. Wait a minute, then try again.'
+          : 'Couldn’t send the code. Check the address and try again.');
         return false;
       }
       setSent(true);
       return true;
     } catch (e) {
       console.error(e);
-      setErr('Couldn’t send the link. Try again in a moment.');
+      setErr('Couldn’t send the code. Try again in a moment.');
       return false;
     } finally {
       setBusy(false);
@@ -103,10 +103,12 @@ export function SignIn({ next: given = '/me', title, button = 'Email me a sign-i
       <div role="status">
         <div className="h-card">Check your email</div>
         <p className="mt-1.5 text-body leading-relaxed text-on-surface-variant">
-          We sent a sign-in email to <b className="font-semibold text-on-surface">{email.trim()}</b>.
+          We emailed a code to <b className="font-semibold text-on-surface">{email.trim()}</b>. Type it here.
+          {/* The email carries a link too. In the installed app it must not be
+              tapped; with something waiting, only this browser can save it. */}
           {installed
-            ? <>{' '}Type the 6-digit code from it here. <b className="font-semibold text-on-surface">Don&rsquo;t tap its link</b>: it opens in another browser and uses up the code.</>
-            : <>{' '}Type the code from it here, or open its link on this phone{waiting ? ', in this browser, so what’s waiting can be saved' : ''}.</>}
+            ? <>{' '}<b className="font-semibold text-on-surface">Don&rsquo;t tap the link in the email</b>: it opens in another browser and uses up the code.</>
+            : waiting ? <>{' '}That saves what&rsquo;s waiting.</> : null}
         </p>
       </div>
       <label className="text-field mt-4">
@@ -140,7 +142,7 @@ export function SignIn({ next: given = '/me', title, button = 'Email me a sign-i
       {/* The reason most people are here: they just finished a session. */}
       {waiting && <p className="mb-1 text-body font-medium leading-snug text-on-surface">{waiting}</p>}
       <p className="mb-4 text-body leading-snug text-on-surface-variant">
-        {note ?? 'No password. We’ll email you a code and a link.'}
+        {note ?? 'No password. We’ll email you a code.'}
       </p>
       <label className="text-field">
         <input

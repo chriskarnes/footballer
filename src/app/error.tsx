@@ -12,12 +12,11 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
   const offline = typeof navigator !== 'undefined' && !navigator.onLine;
   return (
     <div className="animate-pop pt-6">
-      <p className="eyebrow mb-3">{offline ? 'No signal' : 'Something went wrong'}</p>
       <h1 className="h-page">{offline ? 'You’re offline' : 'That didn’t load'}</h1>
       <p className="mt-3 text-body-lg leading-relaxed text-on-surface-variant">
         {offline
           ? 'Nothing you’ve done is lost. Try again when you have signal.'
-          : 'It’s probably nothing you did. Try again, and if it keeps happening, go back to Train.'}
+          : 'Not your fault. Try again.'}
       </p>
       <div className="mt-6 flex flex-col gap-3">
         <button type="button" onClick={() => retry()} className="btn-primary btn-big pressable w-full">Try again</button>
