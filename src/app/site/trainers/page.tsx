@@ -4,7 +4,7 @@ import { DarkCta, Lime, SiteHero } from '@/components/site/Photo';
 
 export const metadata = {
   title: 'For trainers · Train.futbol',
-  description: 'For private soccer trainers. Give your players drills to do at home between sessions, see who did them, and stay in touch all week. $10 a player a month.',
+  description: 'For private soccer trainers. Give your players drills to do at home between sessions, see who did them, and stay in touch all week. Free for trainers: families pay $10 a month per player.',
 };
 
 /**
@@ -43,7 +43,7 @@ export default function TrainersPage() {
             Build sessions from the drills you already teach. Set the reps and the time for each one, and add a video if you have it.
           </Piece>
           <Piece title="Who trained this week">
-            Each player&rsquo;s week is on one line: on track, one behind, or not seen since Tuesday. Check it before you see them next.
+            Each player&rsquo;s week is on one line: on track, missed a session, or no training in a week. Check it before you see them next.
           </Piece>
           <Piece title="Notes and reminders">
             If a player falls behind, one tap writes the reminder for you. Notes go one way, so there&rsquo;s no group chat to manage.
@@ -59,8 +59,9 @@ export default function TrainersPage() {
       </section>
 
       <section id="pricing" className="mt-24 scroll-mt-8">
-        <SectionHead eyebrow="Pricing" title="$10 a player, per month.">
-          Or charge your players however you like, and it&rsquo;s $5 a player.
+        <SectionHead eyebrow="Pricing" title="Free for you. Families pay $10 a month.">
+          Each player&rsquo;s family pays by card, and you pay nothing.
+          Or charge your players however you like, and it&rsquo;s $5 a player a month, billed to you.
         </SectionHead>
         <ul className="mt-6 max-w-[40rem] space-y-2 text-[14.5px] leading-relaxed text-on-surface-variant">
           <li>Every player&rsquo;s first 7 days are free.</li>

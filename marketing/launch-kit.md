@@ -19,8 +19,8 @@ The other things you'll need, in the order you'll reach for them.
 
 **Decide**
 
-- [x] The price, as the site says it: $10 a player a month, or $5 a player for a
-      trainer who charges their own way. Every player's first 7 days are free.
+- [x] The price, as the site says it: free for the trainer, each player's family pays
+      $10 a month; or $5 a player, billed to a trainer who charges their own way. Every player's first 7 days are free.
 - [x] The founding offer: the first 3 months free, for the first 3 trainers
 - [x] /trainers states the price. /players shows no price, on purpose.
 - [ ] Which inbox trainers reply to, and set `NEXT_PUBLIC_CONTACT_EMAIL` to it
@@ -70,7 +70,7 @@ Record your phone screen and talk over it. One take is fine.
 | 0:10 | Picking sessions for a player's week | "After a session, the trainer picks two or three short sessions for the week." |
 | 0:25 | The player's side: today's session | "The player opens the link. Today's session is there." |
 | 0:35 | A drill with the video playing, then checked off | "Each drill has the trainer's video and the reps. They check it off when it's done." |
-| 0:55 | The trainer's player list | "The trainer sees every player's week on one line: on track, one behind, quiet for ten days." |
+| 0:55 | The trainer's player list | "The trainer sees every player's week on one line: on track, missed a session, no training in ten days." |
 | 1:10 | Tapping Nudge beside a player, then Send | "One tap writes the reminder. Send it." |
 | 1:20 | train.futbol/trainers | "Ten dollars a player a month, and the first week is free. I set up your page with you. train.futbol." |
 
@@ -98,8 +98,9 @@ by text. This is that same video, here."
 **Minutes 12 to 15: the ask.**
 
 - "What would you want in your first three sessions?"
-- "I'll set your page up myself. It's $10 a player a month, or $5 a player if you'd
-  rather charge your players your own way. Every player's first 7 days are free."
+- "I'll set your page up myself. It's free for you: each player's family pays $10 a
+  month. Or it's $5 a player, billed to you, if you'd rather charge your players your
+  own way. Every player's first 7 days are free."
 - "Which would suit you?" If they ask how it's paid: at $10 the player's family pays
   by card and you pay nothing; at $5 you pay for your players and charge them however
   you like. Write down the answer; it's the most useful thing you'll learn.
@@ -249,8 +250,8 @@ For printing, or pasting into a message when someone asks "what is it?"
 > - Groups, individual players, or both
 > - Nothing for players to download
 >
-> **Price:** $10 a player a month, or $5 a player if you'd rather charge your players
-> your own way. Every player's first 7 days are free. No setup fee, no contract.
+> **Price:** Free for you. Each player's family pays $10 a month. Or $5 a player,
+> billed to you, if you'd rather charge your players your own way. Every player's first 7 days are free. No setup fee, no contract.
 > Founding trainers: your first 3 months free.
 >
 > **Start:** train.futbol/start · [your email]

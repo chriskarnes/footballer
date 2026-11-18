@@ -57,8 +57,8 @@ Each one is a single idea. Film on a phone; these do better looking real than po
 
 ### 2. Did they do it?
 
-- **Visual:** screen recording of the trainer's player list: On track, One behind,
-  Quiet 10 days. A thumb taps "Nudge".
+- **Visual:** screen recording of the trainer's player list: On track, Missed 1
+  session, No training in 10 days. A thumb taps "Nudge".
 - **Headline:** See who trained this week
 - **Text:** You give your players homework. Do you know who does it? Each player's
   week on one line, before you see them next.
@@ -80,7 +80,7 @@ Each one is a single idea. Film on a phone; these do better looking real than po
   colors. Cut between two differently branded pages.
 - **Headline:** Your own training page
 - **Text:** Your page, your drills, your videos, your name. Players join from one link
-  with no app to download. $10 a player a month.
+  with no app to download. Free for you; families pay $10 a month.
 - **Button:** Get started
 
 ### 5. A trainer says it (run this as soon as you have one)
@@ -97,8 +97,8 @@ Each one is a single idea. Film on a phone; these do better looking real than po
 - **Visual:** plain text on the dark green brand color, no footage.
 - **Headline:** Your first 3 months free
 - **Text:** We're setting up our first 3 private soccer trainers by hand: your page,
-  your first sessions, built with you. Free for your first 3 months, then $10 a
-  player a month.
+  your first sessions, built with you. Free for your first 3 months. After that, families
+  pay $10 a month per player.
 - **Button:** Apply now
 
 Start with 1, 2 and 3. Add 5 the day you have the footage; it will probably win.
@@ -128,14 +128,14 @@ any child other than your own appears in an ad.
 - See Who Trained This Week
 - Drills Players Do at Home
 - Your Own Training Page
-- $10 a Player per Month
+- Families Pay $10 a Month
 - No App Download for Players
 - Soccer Trainer Homework App
 
 **Descriptions** (90 characters or fewer):
 
 - Give your players drills to do at home between sessions, and see who did them.
-- Your page, your drills, your videos. Players join from one link. $10 a player a month.
+- Your page, your drills, your videos. Players join from one link. Families pay $10 a month.
 - We set up your page and first sessions with you. No setup fee and no contract.
 
 ## Budget and rules

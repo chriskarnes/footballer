@@ -38,8 +38,9 @@ Three reasons a trainer says yes, in the order they care:
 
 ## The offer
 
-**What you say:** $10 a player a month, or $5 a player if the trainer would rather
-charge their players their own way. Every player's first 7 days are free. No setup
+**What you say:** Free for the trainer: each player's family pays $10 a month. Or $5
+a player, billed to the trainer, if they would rather charge their players their own
+way. Every player's first 7 days are free. No setup
 fee, no contract. This is the wording on the site, the deck and the emails.
 
 **How each is paid** (for the conversation, not the pitch):

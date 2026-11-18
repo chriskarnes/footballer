@@ -7,7 +7,7 @@ import { ConfirmSheet } from './ConfirmSheet';
 import { haptic } from '@/lib/haptics';
 import { HEIGHT_TEST, PHASES, PROGRESSION, TESTS, fmtTest } from '@/lib/speed';
 import { bests, heightGain, localDay, useSpeedCard, type TestEntry } from '@/lib/speed-card';
-import { position } from '@/lib/speed-year';
+import { parseDate, position } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 
 /** 2026-11-13 → Nov 13. */
@@ -111,7 +111,7 @@ export function SpeedTestCard() {
                   <th className="p-3 font-semibold">Test</th>
                   {entries.map((e) => (
                     <th key={e.date} className="p-3 font-semibold whitespace-nowrap">
-                      {shortDate(e.date)}<br /><span className="font-medium">{e.label}</span>
+                      {shortDate(e.date)}{e.label && <><br /><span className="font-medium">{e.label}</span></>}
                     </th>
                   ))}
                 </tr>
@@ -238,7 +238,7 @@ export function SpeedTestCard() {
 /** What's typed on the entry screen, kept for this tab until saved or
  *  cancelled, so leaving it by accident doesn't lose the numbers. */
 const DRAFT = 'forge.speed.draft';
-type Draft = { date: string; phase: (typeof PHASES)[number]["id"]; block: 1 | 2 | 3; vals: Record<string, string>; height: string; note: string };
+type Draft = { date: string; vals: Record<string, string>; height: string; note: string };
 function readDraft(): Draft | null {
   try { const raw = sessionStorage.getItem(DRAFT); return raw ? JSON.parse(raw) as Draft : null; } catch { return null; }
 }
@@ -248,14 +248,7 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
   // Which block this test closes, from the year if one has been started —
   // the athlete shouldn't have to know they're in Build, block 2.
   const { start } = useYearStart();
-  const at = start ? position(start) : null;
   const [date, setDate] = useState(today());
-  const [phase, setPhase] = useState(PHASES[0].id);
-  const [block, setBlock] = useState<1 | 2 | 3>(1);
-  const [seeded, setSeeded] = useState(false);
-  if (!seeded && at?.state === 'running') {
-    setSeeded(true); setPhase(at.phase.id); setBlock(at.block);
-  }
   const [vals, setVals] = useState<Record<string, string>>({});
   const [height, setHeight] = useState('');
   const [note, setNote] = useState('');
@@ -263,13 +256,13 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
   const [restored, setRestored] = useState(false);
   useEffect(() => {
     const d = readDraft();
-    if (d) { setSeeded(true); setDate(d.date); setPhase(d.phase); setBlock(d.block); setVals(d.vals); setHeight(d.height); setNote(d.note); }
+    if (d) { setDate(d.date); setVals(d.vals); setHeight(d.height); setNote(d.note); }
     setRestored(true);
   }, []);
   useEffect(() => {
     if (!restored) return;
-    try { sessionStorage.setItem(DRAFT, JSON.stringify({ date, phase, block, vals, height, note })); } catch { /* private mode */ }
-  }, [restored, date, phase, block, vals, height, note]);
+    try { sessionStorage.setItem(DRAFT, JSON.stringify({ date, vals, height, note })); } catch { /* private mode */ }
+  }, [restored, date, vals, height, note]);
 
   const num = (s: string) => { const n = parseFloat(s.replace(',', '.')); return Number.isFinite(n) && n > 0 ? n : undefined; };
   const any = TESTS.some((t) => num(vals[t.id] ?? '') !== undefined) || num(height) !== undefined;
@@ -277,10 +270,13 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
   function save() {
     const values: Record<string, number> = {};
     for (const t of TESTS) { const v = num(vals[t.id] ?? ''); if (v !== undefined) values[t.id] = v; }
-    const p = PHASES.find((x) => x.id === phase)!;
     // A cleared date field (iOS has Clear) would save a day with no date, and
     // one typed in the future would tick a test week that hasn't come.
-    onDone({ date: /^\d{4}-\d\d-\d\d$/.test(date) && date <= today() ? date : today(), label: `${p.name} · block ${block}`, values, height: num(height), note: note.trim() || undefined });
+    const day = /^\d{4}-\d\d-\d\d$/.test(date) && date <= today() ? date : today();
+    // Worked out for the day tested, not today: a test entered a week late
+    // still belongs to the block it closed. No year running, no label.
+    const at = start ? position(start, parseDate(day)) : null;
+    onDone({ date: day, label: at?.state === 'running' ? `${at.phase.name} · block ${at.block}` : '', values, height: num(height), note: note.trim() || undefined });
   }
 
   // The app's own .text-field, as the profile and sign-in use: 16px so iOS
@@ -298,7 +294,7 @@ function Entry({ onDone, onCancel, taken = [] }: { onDone: (e: TestEntry) => voi
       </p>
 
       {/* Only the date is asked. The phase and block go on the saved day's
-          label from where the year is (above); a player shouldn't have to
+          label from where the year was that day (in save); a player shouldn't have to
           know them, so there are no fields for them. */}
       <div className="mt-6 space-y-2.5">
         <label className="text-field">
