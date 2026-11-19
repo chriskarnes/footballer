@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Chip, CheckIcon } from './Chip';
 import { ConfirmSheet } from './ConfirmSheet';
+import { useCopied } from '@/lib/use-copied';
 
 export type CalendarFeed = {
   token: string; include_plan: boolean; include_speed: boolean;
@@ -33,7 +34,7 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
   const [feed, setFeed] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copied, flashCopied] = useCopied();
   const [confirm, setConfirm] = useState<'reset' | 'off' | null>(null);
   // The site's own origin, read after mount — this also renders on the server.
   const [origin, setOrigin] = useState('');
@@ -100,11 +101,12 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
         </div>
         <button type="button" className="btn-ghost btn-sm pressable mt-2.5 w-full"
                 onClick={async () => {
-                  try { await navigator.clipboard.writeText(https); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+                  try { await navigator.clipboard.writeText(https); flashCopied(); }
                   catch { setErr('Couldn’t copy — long-press the Apple button instead.'); }
                 }}>
           {copied ? 'Copied' : 'Copy link (Outlook, others)'}
         </button>
+        <span role="status" className="sr-only">{copied ? 'Copied' : ''}</span>
 
         {(plan || speed) && <>
         <p className="mb-2.5 mt-6 text-body font-bold text-on-surface">Include</p>
@@ -115,12 +117,20 @@ export function CalendarSection({ initial, speed = true, plan = true }: {
         </>}
 
         <p className="mb-2.5 mt-6 text-body font-bold text-on-surface">Show sessions</p>
-        <div className="segmented" role="radiogroup" aria-label="Show sessions">
-          <button type="button" role="radio" aria-checked={!timed} onClick={() => update({ start_time: null })}
+        {/* A radiogroup's keys: Tab reaches the chosen one, the arrows choose. */}
+        <div className="segmented" role="radiogroup" aria-label="Show sessions"
+             onKeyDown={(e) => {
+               if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+               e.preventDefault();
+               // Two choices, so any arrow is "the other one".
+               update({ start_time: timed ? null : '17:00' });
+               (e.currentTarget.children[timed ? 0 : 1] as HTMLElement | undefined)?.focus();
+             }}>
+          <button type="button" role="radio" aria-checked={!timed} tabIndex={timed ? -1 : 0} onClick={() => update({ start_time: null })}
                   className={`segment pressable ${!timed ? 'segment-on' : ''}`}>
             <CheckIcon className="seg-check" />All day
           </button>
-          <button type="button" role="radio" aria-checked={timed} onClick={() => !timed && update({ start_time: '17:00' })}
+          <button type="button" role="radio" aria-checked={timed} tabIndex={timed ? 0 : -1} onClick={() => !timed && update({ start_time: '17:00' })}
                   className={`segment pressable ${timed ? 'segment-on' : ''}`}>
             <CheckIcon className="seg-check" />At a time
           </button>

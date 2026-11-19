@@ -93,6 +93,10 @@ export async function generateViewport(): Promise<Viewport> {
     // by `touch-action: manipulation` in globals.css, which is the accessible fix.
     viewportFit: 'cover',                  // let content reach under the notch
     interactiveWidget: 'resizes-content',  // keyboard pushes the layout, not covers it
+    // Said in the head, before the stylesheet arrives, so a dark-mode phone
+    // starts on a dark canvas, not a white one. The marketing pages are
+    // always light (data-theme below).
+    colorScheme: site ? 'light' : 'light dark',
     themeColor: band ?? [
       { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
       { media: '(prefers-color-scheme: dark)', color: '#121212' },

@@ -1,6 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useBackdropClose } from '@/lib/use-backdrop-close';
 import { useToast } from './Toast';
 import { NoteComposer, type NoteGroup, type NotePlayer, type NoteTo } from './NoteComposer';
 
@@ -25,6 +26,7 @@ export function NoteProvider({ players, groups = [], only = false, children }: {
   const setToast = useToast();
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
+  const backdrop = useBackdropClose(() => setAsk(null));
 
   useEffect(() => {
     const d = ref.current;
@@ -47,7 +49,7 @@ export function NoteProvider({ players, groups = [], only = false, children }: {
       {children}
       <dialog ref={ref} className="note-dialog" aria-labelledby="note-dialog-title"
               onCancel={(e) => { e.preventDefault(); setAsk(null); }}
-              onClick={(e) => { if (e.target === e.currentTarget) setAsk(null); }}>
+              {...backdrop}>
         {ask && (
           <div className="note-panel">
             <div className="flex items-center justify-between gap-4">

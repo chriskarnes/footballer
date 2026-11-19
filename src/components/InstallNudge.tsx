@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { haptic } from '@/lib/haptics';
-import { announceInstallable, INSTALL_ASK } from '@/lib/install';
+import { announceInstallable, INSTALL_ASK, retractInstallable } from '@/lib/install';
 
 /**
  * The "put me on your home screen" prompt.
@@ -120,13 +120,18 @@ export function InstallNudge({ name = 'Train.futbol', icon = '/icon-192.png' }: 
     if (!prompt) return;
     haptic('select');
     // A prompt can be used once, and the browser may refuse it: either way,
-    // put the nudge away rather than leave a button that does nothing.
+    // let go of it before asking, and take back Me's "Add to home screen",
+    // which otherwise reopened this sheet with an Install that did nothing.
+    // If Chrome sends another prompt, the offer comes back with it.
+    setPrompt(null);
+    setPlatform(null);
+    retractInstallable();
+    localStorage.setItem(DISMISSED, '1');
+    setOpen(false);
     try {
       await prompt.prompt();
       await prompt.userChoice;
-    } catch { /* nothing to tell them: the menu's Install still works */ }
-    localStorage.setItem(DISMISSED, '1');
-    setOpen(false);
+    } catch { /* refused: nothing to tell them */ }
   };
 
   if (!open || !platform || hushed || !frontPath(path)) return null;

@@ -21,6 +21,7 @@ export function AdminFrame({ brand, children }: { brand: React.ReactNode; childr
   const path = usePathname();
   return (
     <>
+      <a href="#main" className="skip-link">Skip to the page</a>
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-outline-variant bg-surface-container-low px-3 py-6 lg:flex">
         <div className="px-3">{brand}</div>
         <p className="mt-1 px-3 text-caption font-semibold text-on-surface-variant">Platform admin</p>
@@ -59,7 +60,7 @@ export function AdminFrame({ brand, children }: { brand: React.ReactNode; childr
             })}
           </nav>
         </header>
-        <main className="safe-x mx-auto w-full max-w-6xl px-5 pb-24 pt-6 lg:px-14 lg:pt-14">{children}</main>
+        <main id="main" tabIndex={-1} className="outline-none safe-x mx-auto w-full max-w-6xl px-5 pb-24 pt-6 lg:px-14 lg:pt-14">{children}</main>
       </div>
     </>
   );

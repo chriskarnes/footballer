@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { autoStart } from '@/lib/speed-year';
 import { useYearStart } from '@/lib/use-year-start';
 import { haptic } from '@/lib/haptics';
+import { useBackdropClose } from '@/lib/use-backdrop-close';
 
 const WATCH = 'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM12 9v4l2.5 2.5M10 2h4M19 5l1.5 1.5';
 const Icon = ({ d, className }: { d: string; className: string }) => (
@@ -28,6 +29,7 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDialogElement>(null);
   const router = useRouter();
+  const backdrop = useBackdropClose(() => setOpen(false));
 
   useEffect(() => {
     const d = ref.current;
@@ -60,8 +62,7 @@ export function SpeedInvite({ trainer, onBrand = false, className = '' }: {
       <button type="button" className={look} onClick={() => { haptic('tap'); setOpen(true); }}>{inner}</button>
       <dialog ref={ref} className="confirm-sheet" aria-labelledby="speed-invite-title"
               onCancel={(e) => { e.preventDefault(); setOpen(false); }}
-              // A tap on the backdrop lands on the dialog itself, outside the card.
-              onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+              {...backdrop}>
         {open && (
           <div className="sheet-in card p-5 shadow-level3">
             <span className="flex h-12 w-12 items-center justify-center rounded-large bg-surface-container-high text-on-surface">

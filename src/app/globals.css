@@ -440,19 +440,40 @@ body {
      available, because taking it away fails WCAG 1.4.4 and Safari ignores it anyway. */
   touch-action: manipulation;
 
-  /* Long-pressing a button and getting a selection handle is the loudest browser
-     tell there is. Text content opts back in below. */
+  /* No long-press menu on anything but text content, which opts back in below. */
+  -webkit-touch-callout: none;
+}
+
+/* Long-pressing a button and getting a selection handle is the loudest browser
+   tell there is, so the controls can't be selected. Only the controls: this
+   was on the whole body, with text opted back in tag by tag, and anything in
+   a div, span or table cell (a drill's name, an email in the admin tables)
+   couldn't be selected to copy. A link in running text is text. */
+button, summary, label, nav, a:not(:is(p, dd, blockquote) a),
+[role="button"], [role="tab"], [role="radio"], [role="switch"], [role="checkbox"],
+.pressable, .chip, .tile, .segment, .tab, .icon-btn {
   -webkit-user-select: none;
   user-select: none;
-  -webkit-touch-callout: none;
 }
 
 p, h1, h2, h3, h4, li, blockquote, code, pre,
 input, textarea, [data-selectable] {
-  -webkit-user-select: text;
-  user-select: text;
   -webkit-touch-callout: default;
 }
+input, textarea, [data-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Past a sidebar or a row of places, straight to the page. Off screen until
+   the keyboard reaches it: the first Tab on a trainer or admin page. */
+.skip-link {
+  position: fixed; top: 12px; left: 12px; z-index: 100;
+  padding: 12px 18px; border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-inverse-surface); color: var(--md-sys-color-inverse-on-surface);
+  font-weight: 700; transform: translateY(-200%);
+}
+.skip-link:focus-visible { transform: none; }
 
 /* iOS zooms the entire page when a field smaller than 16px takes focus, and never
    zooms back out. 16px is a floor, not a design choice. */
@@ -1025,9 +1046,11 @@ label:has(> input.sr-only:focus-visible) { outline: 3px solid var(--md-sys-color
   font-family: var(--md-ref-typeface-plain); font-size: 16px;
   color: var(--md-sys-color-on-surface);
 }
-/* A textarea keeps the same box; it grows downward instead of sitting at 52px. */
+/* A textarea keeps the same box; it grows downward with what's typed, up to
+   about half the screen, then scrolls. Where field-sizing isn't supported it
+   stays at its rows and can be dragged taller instead. */
 .text-field textarea {
-  display: block; width: 100%; padding: 14px 16px; resize: none;
+  display: block; width: 100%; padding: 14px 16px; resize: vertical;
   border: 1px solid var(--md-sys-color-outline);
   border-radius: var(--md-sys-shape-corner-small);
   background: var(--md-sys-color-surface-container-lowest);
@@ -1045,6 +1068,16 @@ label:has(> input.sr-only:focus-visible) { outline: 3px solid var(--md-sys-color
    on-surface-variant of each scheme by hand. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .text-field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23C7C7C7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+}
+@supports (field-sizing: content) {
+  .text-field textarea {
+    field-sizing: content; resize: none;
+    /* Sizing to content drops the rows attribute, so the empty height each
+       field had is set here: its rows, plus the padding and border. */
+    min-block-size: calc(2lh + 30px); max-block-size: 50dvh;
+  }
+  .text-field textarea[rows="3"] { min-block-size: calc(3lh + 30px); }
+  .text-field textarea[rows="4"] { min-block-size: calc(4lh + 30px); }
 }
 .text-field input::placeholder, .text-field textarea::placeholder { color: var(--md-sys-color-on-surface-variant); }
 .text-field textarea:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 1px; }
@@ -1084,6 +1117,12 @@ label:has(> input.sr-only:focus-visible) { outline: 3px solid var(--md-sys-color
    .sheet-inner, .sheet-handle/-head/-body/-actions and the phone-scroll[inert]
    guard — went with it (.icon-btn stayed; it is with the buttons above) rather than sitting here unused.
    Recoverable from design/train-futbol-harness-m3.html if the decision reverses. */
+
+/* The page behind a modal dialog stays where it is: a scroll that starts on
+   the backdrop, or runs off the end of the dialog, doesn't carry on into it.
+   The backdrop has to be a scroll container for that to apply to it. */
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
 
 /* The confirmation sheet — <ConfirmSheet />. Not that sheet back: this one
    holds two buttons and a sentence, for the few actions worth a second tap
@@ -1207,8 +1246,17 @@ label:has(> input.sr-only:focus-visible) { outline: 3px solid var(--md-sys-color
 .stagger > *:nth-child(3){animation-delay:90ms}   .stagger > *:nth-child(4){animation-delay:135ms}
 .stagger > *:nth-child(5){animation-delay:180ms}  .stagger > *:nth-child(n+6){animation-delay:215ms}
 
+/* Less motion asked for: nothing moves, grows or pulses. Each case by name,
+   not every animation and transition cut to nothing, which also took the
+   colour fades on hover and press. Those stay; they aren't movement.
+   Everything here ends where it would have: an entrance is already in place. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .animate-pop, .stagger > *, .animate-pulse, .animate-spin { animation: none; }
+  /* Tailwind's own: chevrons turning, bars filling, the tab bar's marker. */
+  .transition-transform, .transition-all, [class*="transition-["] { transition-duration: 0s; }
+  .transition { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity; }
+  .btn-lime { transition: none; }
+  .btn-lime:hover { transform: none; }
 }
 
 /* Site photo heroes: the photo itself fades out (a mask, not a white wash),

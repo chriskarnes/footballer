@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { useBackdropClose } from '@/lib/use-backdrop-close';
 
 /**
  * A second tap for an action that changes something you'd notice and can't
@@ -16,6 +17,7 @@ export function ConfirmSheet({
   busy?: boolean; onConfirm: () => void; onCancel: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const backdrop = useBackdropClose(onCancel);
 
   useEffect(() => {
     const d = ref.current;
@@ -27,8 +29,7 @@ export function ConfirmSheet({
   return (
     <dialog ref={ref} className="confirm-sheet" aria-labelledby="confirm-sheet-title"
             onCancel={(e) => { e.preventDefault(); onCancel(); }}
-            // A tap on the backdrop lands on the dialog itself, outside the card.
-            onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+            {...backdrop}>
       {open && (
         <div className="sheet-in card p-5 shadow-level3">
           <p id="confirm-sheet-title" className="h-card">{title}</p>

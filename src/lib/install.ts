@@ -18,11 +18,18 @@ export function announceInstallable(): void {
   window.dispatchEvent(new Event(INSTALLABLE));
 }
 
+/** Called by InstallNudge once Chrome's prompt has been used: it works once,
+ *  so there is nothing to offer until Chrome hands over another. */
+export function retractInstallable(): void {
+  installable = false;
+  window.dispatchEvent(new Event(INSTALLABLE));
+}
+
 /** Whether to offer it, and a way to hear if that changes — Chrome's prompt
- *  event can arrive after the page has rendered. */
+ *  event can arrive after the page has rendered, and is gone once used. */
 export function watchInstallable(cb: (yes: boolean) => void): () => void {
   cb(installable);
-  const on = () => cb(true);
+  const on = () => cb(installable);
   window.addEventListener(INSTALLABLE, on);
   return () => window.removeEventListener(INSTALLABLE, on);
 }

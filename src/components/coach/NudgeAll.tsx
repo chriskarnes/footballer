@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { sendNudges } from '@/app/coach/actions';
 import { offline } from '@/lib/plain-error';
+import { useBackdropClose } from '@/lib/use-backdrop-close';
 import { useToast } from './Toast';
 
 /**
@@ -28,6 +29,7 @@ export function NudgeAll({ people, className = '' }: { people: { id: string; nam
 
   const going = people.filter((p) => !skip.has(p.id));
   const close = () => { setOpen(false); setErr(''); };
+  const backdrop = useBackdropClose(close);
   const send = () => start(async () => {
     setErr('');
     const r = await sendNudges(going.map((p) => ({ to: p.id, body: p.body }))).catch(offline);
@@ -49,7 +51,7 @@ export function NudgeAll({ people, className = '' }: { people: { id: string; nam
       <button type="button" className={`btn-ghost btn-sm pressable ${className}`} onClick={() => setOpen(true)}>Nudge all {people.length}</button>
       <dialog ref={ref} className="note-dialog" aria-labelledby="nudge-all-title"
               onCancel={(e) => { e.preventDefault(); close(); }}
-              onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
+              {...backdrop}>
         {open && (
           <div className="note-panel">
             <h2 id="nudge-all-title" className="h-card">Nudge {going.length} {going.length === 1 ? 'player' : 'players'}</h2>

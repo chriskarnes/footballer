@@ -3,6 +3,7 @@ import { offline } from '@/lib/plain-error';
 import { useEffect, useState } from 'react';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { rotateInvite } from '@/app/coach/actions';
+import { useCopied } from '@/lib/use-copied';
 import { useToast } from './Toast';
 
 /**
@@ -16,7 +17,7 @@ export function InviteLink({ path, role, canRotate = true }: {
   const toast = useToast();
   const [current, setCurrent] = useState(path);
   const [origin, setOrigin] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copied, flashCopied] = useCopied();
   const [canShare, setCanShare] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -38,7 +39,7 @@ export function InviteLink({ path, role, canRotate = true }: {
   const shown = url.replace(/^https?:\/\//, '') || current;
 
   async function copy() {
-    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    try { await navigator.clipboard.writeText(url); flashCopied(); }
     catch { setErr('Couldn’t copy. Press and hold the link instead.'); }
   }
 
@@ -53,6 +54,7 @@ export function InviteLink({ path, role, canRotate = true }: {
         <button type="button" className="btn-ghost btn-sm pressable shrink-0" onClick={copy}>
           {copied ? 'Copied' : 'Copy'}
         </button>
+        <span role="status" className="sr-only">{copied ? 'Copied' : ''}</span>
       </div>
       <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1">
         {role === 'player' && (

@@ -5,6 +5,7 @@ import { approveRequest } from '@/app/admin/requests/actions';
 import { academyOrigin } from '@/lib/tenant';
 import { offline } from '@/lib/plain-error';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
+import { useCopied } from '@/lib/use-copied';
 
 /**
  * Approving a "Get started" request, on its card in /admin/requests: the
@@ -26,7 +27,7 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
   const [done, setDone] = useState(approved);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [copied, flashCopied] = useCopied();
   const [here, setHere] = useState('');
   const [confirming, setConfirming] = useState(false);
   useEffect(() => { setHere(window.location.origin); }, []);
@@ -51,11 +52,12 @@ export function ApproveRequest({ id, slug, academyName, email, trainer, approved
               </div>
               <button type="button" className="btn-ghost btn-sm pressable shrink-0"
                       onClick={async () => {
-                        try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+                        try { await navigator.clipboard.writeText(url); flashCopied(); }
                         catch { setErr('Couldn’t copy. Press and hold the link instead.'); }
                       }}>
                 {copied ? 'Copied' : 'Copy'}
               </button>
+              <span role="status" className="sr-only">{copied ? 'Copied' : ''}</span>
             </div>
             <a href={`mailto:${mailtoAddr(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}
                className="btn-primary btn-sm pressable mt-2.5 inline-flex">

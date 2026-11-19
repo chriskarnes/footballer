@@ -76,7 +76,7 @@ function Bar({ academyId, library = true, plan = true, speed = true, from }: Pro
     <nav className="safe-b safe-x pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center">
       {/* The page fades out under the bar, so a row of chips or half a card
           isn't showing through around it. */}
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-surface via-surface/85 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-surface to-transparent" />
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-outline-variant
                       tabbar-surface p-1.5 shadow-level2 backdrop-blur-xl">
         {tabs.map((t) => {

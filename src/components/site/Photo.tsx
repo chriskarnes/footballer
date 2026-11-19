@@ -1,5 +1,6 @@
 import Image, { type StaticImageData } from 'next/image';
 import Link from 'next/link';
+import { preload } from 'react-dom';
 import { DuotoneVideo } from './DuotoneVideo';
 
 /** Runs a box from screen edge to screen edge, whatever column it sits in. */
@@ -45,6 +46,10 @@ export function SiteHero({ photo, video, alt, position, cards = [], children }: 
   video?: { src: string; poster: string; delay?: number; position?: string };
 }) {
   const media = photo || video;
+  // A video with no photo under it: its poster is the biggest thing on the
+  // screen, and the browser only finds it once it reaches the video. Asked
+  // for up front, ahead of the clip. (A photo is preloaded by <Duotone>.)
+  if (video && !photo) preload(video.poster, { as: 'image', fetchPriority: 'high' });
   return (
     <section className={`site-dark relative isolate ${media ? 'pt-[250px] sm:pt-20' : 'pt-12 sm:pt-16'} pb-32 sm:pb-40`}>
       {/* The ground: green, a lime glow where the photo is, then paper. */}

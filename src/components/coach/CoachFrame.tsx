@@ -40,6 +40,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
 
   return (
     <ToastProvider>
+      <a href="#main" className="skip-link">Skip to the page</a>
       {/* Desktop: the sidebar. */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-outline-variant bg-surface-container-low px-3 py-6 lg:flex">
         <div className="px-3">{brand}</div>
@@ -67,7 +68,7 @@ export function CoachFrame({ brand, children }: { brand: React.ReactNode; childr
           {brand}
           <Link href="/" className="text-body font-semibold text-on-surface-variant underline underline-offset-4">Player view</Link>
         </header>
-        <main className={`safe-x mx-auto w-full max-w-lg px-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-2
+        <main id="main" tabIndex={-1} className={`outline-none safe-x mx-auto w-full max-w-lg px-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-2
                           lg:px-10 lg:pb-16 lg:pt-10 ${wide ? 'lg:max-w-6xl' : 'lg:max-w-2xl'}`}>
           {children}
         </main>
