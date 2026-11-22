@@ -1,0 +1,34 @@
+# The typecheck, the unit tests and a production build, on every push to main
+# and every pull request. GitHub emails whoever pushed when it fails.
+#
+# It doesn't stop Vercel: a push to main still deploys on its own (a build
+# that fails there isn't promoted, but failing tests don't block it). What it
+# adds is the tests, run every time, and a red mark on the commit that broke
+# them. No secrets: the app builds without Supabase or Stripe set.
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          # The version DEPLOY.md builds with locally.
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check

@@ -4,6 +4,29 @@ Left over from the tenth audit (November 14, 2026). The audit's fixes, migration
 0034–0036 and the privacy and terms pages are all live; these are what was not
 done, or could not be checked from here.
 
+## 0. Before launch (launch review, November 22, 2026)
+
+Accounts and settings outside the code, checked from here on that day. Plan:
+a soft launch with trainers you know until the legal review (§3) is back.
+
+- [ ] Vercel: the `i250` team is on **Hobby**, which is for non-commercial use
+      only. Move to Pro before the first real payment.
+- [ ] `support@train.futbol` can't receive mail: train.futbol has no MX record,
+      and the privacy page, terms, Membership and Billing all send people there.
+      Add forwarding (or an inbox) in Vercel DNS, then send it a test message.
+- [ ] Add a DMARC record at `_dmarc.train.futbol` (none exists). To start:
+      `v=DMARC1; p=none; rua=mailto:support@train.futbol`.
+- [ ] Supabase: check which plan the project is on. Pro adds daily backups.
+      Also Authentication → Rate Limits: the email cap starts low with your own
+      SMTP, and a group signing up the same evening can hit it.
+- [ ] Stripe: once §1b passes, switch to live with `supabase/stripe-go-live.sql`
+      (the steps are at the top of that file).
+- [ ] Turn on Stripe's emails for failing webhooks. Nothing else alerts on
+      errors, and Hobby keeps server logs for about an hour.
+- [ ] Decide the founding offer for the first three trainers (90 free days for
+      their families was a guess, never confirmed), and whether there's a
+      company behind Stripe and the terms.
+
 ## 1. Check the changed flows on a real phone and account
 
 None of this was tested signed in or against the live database. About ten minutes.
@@ -24,7 +47,7 @@ None of this was tested signed in or against the live database. About ten minute
 
 Billing was audited and fixed in code; none of it was run against Stripe.
 
-- [ ] Run migration `0042_audit_eleven.sql` (after the app is deployed).
+- [x] Run migration `0042_audit_eleven.sql` (after the app is deployed).
 - [ ] In Stripe test mode, on a throwaway player: add a card and confirm the
       Membership page shows "Active" straight away; have the trainer make the
       player inactive and active again (the subscription should pause and
@@ -48,8 +71,10 @@ Billing was audited and fixed in code; none of it was run against Stripe.
 Nothing runs the tests, the typecheck or the build unless someone remembers to,
 which is why each audit kept finding new problems.
 
-- [ ] A GitHub Actions workflow that runs `npm run check` on every push and pull
-      request.
+- [x] A GitHub Actions workflow that runs `npm run check` on every push to main
+      and every pull request (`.github/workflows/check.yml`; it starts with the
+      first push). It reports but doesn't block: Vercel still deploys a push to
+      main whose tests fail. To block, work through pull requests.
 - [ ] Replace `npm run lint` (left over from an older Next.js; it does not run)
       with a real linter, and add it to `npm run check`.
 

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "seed": "tsx --env-file-if-exists=.env.local supabase/seed.ts",
     "seed:demo": "tsx --env-file-if-exists=.env.local supabase/seed-demo.ts",
     "seed:kestrel": "tsx --env-file-if-exists=.env.local supabase/seed-kestrel.ts",

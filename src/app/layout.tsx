@@ -31,8 +31,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const { academy } = await getAcademy();
   const { name, own, v } = appOf(academy);
   // A closed self-serve space (0030) is unlisted: kept out of search too.
-  // So is an academy whose owner keeps it to their invite link (0036).
-  const robots = academy && ((academy.selfServe && !academy.open) || !academy.listed) ? { index: false, follow: false } : undefined;
+  // So is an academy whose owner keeps it to their invite link (0036), and
+  // any academy holding the licensed library (0005): demo shows it to
+  // visitors, and it mustn't turn up in search results.
+  const robots = academy && ((academy.selfServe && !academy.open) || !academy.listed || academy.libraryAccess)
+    ? { index: false, follow: false } : undefined;
   // The drill count is the licensed library's: only where that is.
   const description = !academy || academy.libraryAccess ? metadata.description
     : `Training from ${name}: sessions to do between practices.`;
