@@ -1,5 +1,6 @@
 import { getExercises } from '@/lib/library';
 import { trainingLocked } from '@/lib/membership-server';
+import { isChildPlayer } from '@/lib/consent-server';
 import { TrainingLocked } from '@/components/TrainingLocked';
 import { libraryAllowed } from '@/lib/library-gate';
 import { LibraryLocked } from '@/components/LibraryLocked';
@@ -58,7 +59,7 @@ export default async function TrainNowPage({ searchParams }: { searchParams: Pro
       {/* Today's session from your active week, if there is one. Under
           its own Suspense so signed-out visitors — most of them — never wait
           on the account lookup it needs. */}
-      <Coach exercises={exercises}
+      <Coach exercises={exercises} canType={!(await isChildPlayer())}
              planCard={<Suspense key="today-on-plan" fallback={null}><TodayOnPlan /></Suspense>} />
     </div>
   );

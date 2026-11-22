@@ -23,6 +23,8 @@ import { myMembership } from '@/lib/membership-server';
 import { getTrainer } from '@/lib/player-week';
 import { membershipLine } from '@/lib/membership';
 import { dollars } from '@/lib/billing';
+import { myConsentGate } from '@/lib/consent-server';
+import { rootHref } from '@/lib/root-link';
 
 export async function generateMetadata(): Promise<Metadata> {
   // The marketing pages name themselves.
@@ -157,6 +159,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ? `${m.access.daysLeft} free ${m.access.daysLeft === 1 ? 'day' : 'days'} left, then ${dollars(m.terms.priceCents)} a month. Add a card.`
         : null,
   };
+  // A player under 13 with no parent's or guardian's agreement yet (0043):
+  // that comes first, in place of training and of any paywall.
+  const gate = await myConsentGate();
+  const consent = gate && { ...gate, privacy: await rootHref('/privacy') };
   return (
     <html lang="en">
       <body className="min-h-dvh antialiased">
@@ -166,7 +172,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {brand?.primary && brand.accent && <style id="brand-tokens" dangerouslySetInnerHTML={{ __html: brandCss(brand.primary, brand.accent) }} />}
         {/* The player app, or the trainer area's own frame under /coach. */}
         <AreaFrame brand={<Brand small />} app={appOf(academy)} academyId={academy?.id ?? null}
-                   library={lib.drills || lib.own} plan={lib.drills} speed={speed} membership={membership}>{children}</AreaFrame>
+                   library={lib.drills || lib.own} plan={lib.drills} speed={speed} membership={membership} consent={consent}>{children}</AreaFrame>
         <ServiceWorker />
         <PendingSaves />
         <DayTurn />

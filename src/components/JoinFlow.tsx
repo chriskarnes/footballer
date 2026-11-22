@@ -2,32 +2,40 @@
 import { useState } from 'react';
 import { SignIn } from './SignIn';
 import { JoinButton } from './JoinButton';
+import { AgeQuestion, GrownUpSignsUp, useUnder13 } from './AgeCheck';
 import type { Who } from '@/lib/who';
 
 
 const CHOICES: { who: Who; title: string }[] = [
   { who: 'player', title: 'I’m the player' },
-  { who: 'parent', title: 'I’m a parent' },
+  { who: 'parent', title: 'I’m a parent or guardian' },
 ];
 
 /**
  * The card under the join page's header. For a player invite it first asks
- * whose email this is, the player's or a parent's, then the email form (or,
- * already signed in, the join button). The answer rides along in the emailed
- * link (`?as=`), so it survives the trip through the inbox and is saved when
- * they join. Trainer invites skip the question.
+ * whose email this is, the player's or a parent's or guardian's. A player is
+ * asked their age before anything else (0043): under 13, a parent or
+ * guardian signs up instead, and the player's email is never asked for. Then
+ * the email form (or, already signed in, the join button). The answer rides
+ * along in the emailed link (`?as=`), so it survives the trip through the
+ * inbox and is saved when they join. Trainer invites skip the questions.
  */
 export function JoinFlow({ code, role, email, initial }: {
   code: string; role: 'player' | 'trainer'; email: string | null; initial: Who | null;
 }) {
   const [who, setWho] = useState<Who | null>(initial);
-  const as = role === 'trainer' ? 'a trainer' : who === 'parent' ? 'a parent' : 'a player';
+  const [old, setOld] = useState(false);
+  const [young, markYoung] = useUnder13();
+  const as = role === 'trainer' ? 'a trainer' : who === 'parent' ? 'a parent or guardian' : 'a player';
 
   if (role === 'trainer') {
     return email
       ? <JoinButton code={code} label="Join as a trainer" email={email} />
       : <SignIn next={`/join/${code}`} title="Join as a trainer" />;
   }
+
+  // A player says how old they are first; under 13 goes no further as the player.
+  const step = who === 'player' && young ? 'grown-up' : who === 'player' && !old ? 'age' : who ? 'email' : null;
 
   return (
     <div className="space-y-3">
@@ -53,11 +61,23 @@ export function JoinFlow({ code, role, email, initial }: {
         </div>
       </fieldset>
 
-      {who && (
+      {step === 'age' && (
+        <div className="animate-pop"><AgeQuestion onOlder={() => setOld(true)} onYounger={markYoung} /></div>
+      )}
+      {step === 'grown-up' && (
+        <div className="animate-pop">
+          <GrownUpSignsUp>
+            <button type="button" onClick={() => setWho('parent')} className="btn-primary pressable mt-4 w-full">
+              I&rsquo;m the parent or guardian
+            </button>
+          </GrownUpSignsUp>
+        </div>
+      )}
+      {step === 'email' && who && (
         <div key={who} className="animate-pop">
           {email
             ? <JoinButton code={code} who={who} label={`Join as ${as}`} email={email} />
-            : <SignIn next={`/join/${code}?as=${who}`} title="Your email" />}
+            : <SignIn next={`/join/${code}?as=${who}`} title={who === 'parent' ? 'Your own email' : 'Your email'} />}
         </div>
       )}
     </div>

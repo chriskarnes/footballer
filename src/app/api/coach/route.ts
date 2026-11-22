@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import type { SessionSpec } from '@/lib/types';
 import { serverClient } from '@/lib/supabase/server';
 import { libraryAllowed } from '@/lib/library-gate';
+import { isUnder13 } from '@/lib/child';
+import { staffSomewhere } from '@/lib/consent-server';
 
 export const runtime = 'nodejs';
 
@@ -82,6 +84,12 @@ export async function POST(req: Request) {
   const { data: { user } } = await db.auth.getUser();
   if (!user) {
     return NextResponse.json({ reply: 'Sign in to describe a session in your own words. The buttons above work without it.' }, { status: 401 });
+  }
+  // Not for a player under 13 (0043): what they type would go to the AI
+  // company. The app doesn't offer the box to them; this is the same door twice.
+  const { data: prof } = await db.from('profiles').select('age_band').eq('id', user.id).maybeSingle();
+  if (isUnder13((prof as { age_band: string | null } | null)?.age_band) && !(await staffSomewhere(db, user.id))) {
+    return NextResponse.json({ reply: 'Use the buttons above to make a session.' }, { status: 403 });
   }
   // Only where the session builder is: it builds from the drill library, so
   // anywhere without it there's nothing for a description to become.

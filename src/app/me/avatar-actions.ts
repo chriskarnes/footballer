@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { serverClient } from '@/lib/supabase/server';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '@/lib/avatar';
 import { plain } from '@/lib/plain-error';
+import { isUnder13 } from '@/lib/child';
+import { staffSomewhere } from '@/lib/consent-server';
 
 type Result = { ok: true; updatedAt: string | null } | { ok: false; error: string };
 
@@ -23,6 +25,16 @@ async function write(patch: { avatar_type: string | null; avatar_data: string | 
 
 /** Save a photo the browser has already cropped and shrunk. */
 export async function uploadAvatar(form: FormData): Promise<Result> {
+  // No photos of players under 13 (0043). A trainer here for their own child
+  // keeps theirs: it's the trainer's photo their players see.
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (user) {
+    const { data: p } = await db.from('profiles').select('age_band').eq('id', user.id).maybeSingle();
+    if (isUnder13((p as { age_band: string | null } | null)?.age_band) && !(await staffSomewhere(db, user.id))) {
+      return { ok: false, error: 'Players under 13 don’t have a photo. Their initial shows instead.' };
+    }
+  }
   const file = form.get('avatar');
   if (!(file instanceof File) || !file.size) return { ok: false, error: 'Choose a photo.' };
   if (!AVATAR_TYPES.includes(file.type)) return { ok: false, error: 'Use a JPEG, PNG or WebP.' };

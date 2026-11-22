@@ -6,12 +6,14 @@ import { CoachFrame } from './coach/CoachFrame';
 import Link from 'next/link';
 import { AdminFrame } from './admin/AdminFrame';
 import { Paywall, type PaywallLock } from './Paywall';
+import { ConsentGate, type ConsentGateProps } from './ConsentGate';
 
 const inCoach = (path: string) => path === '/coach' || path.startsWith('/coach/');
 const inAdmin = (path: string) => path === '/admin' || path.startsWith('/admin/');
 // Open to a player whose free days are over (0038): their account (to sign
 // out, leave or delete), the page that takes the card, and the ways in.
-const OPEN = ['/me', '/membership', '/auth', '/join', '/claim', '/request', '/offline'];
+// The agreement link a parent opens (0043) is open too, on any phone.
+const OPEN = ['/me', '/membership', '/auth', '/join', '/claim', '/request', '/offline', '/consent'];
 const stillOpen = (path: string) => OPEN.some((p) => path === p || path.startsWith(`${p}/`));
 
 /** Where the signed-in player's membership stands, worked out by the layout. */
@@ -31,13 +33,15 @@ export type MembershipNotice = {
  * column and tab bar, and "Player view" left Train inside the sidebar.
  * usePathname changes on every navigation, so the frame follows.
  */
-export function AreaFrame({ brand, app, academyId, library, plan, speed, membership, children }: {
+export function AreaFrame({ brand, app, academyId, library, plan, speed, membership, consent, children }: {
   brand: React.ReactNode;
   /** The app's name and icon as installed, for the add-to-home-screen prompt. */
   app: { name: string; icon: string };
   academyId: string | null;
   library: boolean; plan: boolean; speed: boolean;
   membership?: MembershipNotice | null;
+  /** A player under 13 with no parent's or guardian's agreement yet (0043): before anything else. */
+  consent?: ConsentGateProps | null;
   children: React.ReactNode;
 }) {
   const path = usePathname();
@@ -47,7 +51,8 @@ export function AreaFrame({ brand, app, academyId, library, plan, speed, members
   return (
     <div className="pad-nav">
       <main className="safe-t safe-x mx-auto w-full max-w-lg px-5">
-        {membership?.lock && !stillOpen(path) ? <Paywall lock={membership.lock} /> : (
+        {consent && !stillOpen(path) ? <ConsentGate {...consent} />
+          : membership?.lock && !stillOpen(path) ? <Paywall lock={membership.lock} /> : (
           <>
             {membership?.note && !stillOpen(path) && (
               <Link href="/membership" className="card-flat pressable mt-3 flex items-center justify-between gap-3 px-4 py-3 text-body-sm font-semibold text-on-surface">

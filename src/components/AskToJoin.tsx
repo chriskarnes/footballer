@@ -4,6 +4,7 @@ import { askToJoin } from '@/app/request/actions';
 import { SignOut } from '@/components/SignOut';
 import { offline } from '@/lib/plain-error';
 import { CheckIcon } from '@/components/Chip';
+import { AgeQuestion, GrownUpSignsUp, useUnder13 } from '@/components/AgeCheck';
 
 /** Who you are, in words the trainer will recognise, and one button. */
 export function AskToJoin({ academy, email, pending: wasPending, declined, initial }: {
@@ -21,6 +22,10 @@ export function AskToJoin({ academy, email, pending: wasPending, declined, initi
   const [message, setMessage] = useState(initial?.message ?? '');
   const [err, setErr] = useState('');
   const [busy, start] = useTransition();
+  // A player says how old they are before asking (0043); under 13, a parent
+  // or guardian asks instead, signed in with their own email.
+  const [old, setOld] = useState(initial?.who === 'player');
+  const [young, markYoung] = useUnder13();
 
   if (member) {
     return (
@@ -76,15 +81,25 @@ export function AskToJoin({ academy, email, pending: wasPending, declined, initi
           {(['player', 'parent'] as const).map((w) => (
             <button key={w} type="button" aria-pressed={who === w} onClick={() => { setWho(w); setErr(''); }}
                     className={`chip pressable ${who === w ? 'chip-on' : ''}`}>
-              <CheckIcon />{w === 'player' ? 'I’m the player' : 'I’m a parent'}
+              <CheckIcon />{w === 'player' ? 'I’m the player' : 'I’m a parent or guardian'}
             </button>
           ))}
         </div>
       </fieldset>
+      {who === 'player' && young ? (
+        <GrownUpSignsUp>
+          <p className="mt-3 text-body text-on-surface-variant">
+            <SignOut to="/request" className="pressable font-semibold text-on-surface underline underline-offset-4" /> first, so they can sign in with theirs.
+          </p>
+        </GrownUpSignsUp>
+      ) : who === 'player' && !old ? (
+        <AgeQuestion onOlder={() => setOld(true)} onYounger={markYoung} />
+      ) : (<>
       <label className="text-field">
-        <span>Player&rsquo;s name</span>
+        <span>Player&rsquo;s first name</span>
         <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoComplete="off" />
       </label>
+      <p className="-mt-2 pl-0.5 text-body-sm text-on-surface-variant">A first name, and a last initial if your trainer has two of you.</p>
       <label className="text-field">
         <span>Note for your trainer (optional)</span>
         <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={300}
@@ -92,6 +107,7 @@ export function AskToJoin({ academy, email, pending: wasPending, declined, initi
       </label>
       {err && <p role="alert" className="text-body-sm font-semibold text-on-surface">{err}</p>}
       <button type="submit" disabled={busy} className="btn-primary pressable w-full">{busy ? 'Asking…' : 'Ask to join'}</button>
+      </>)}
     </form>
   );
 }

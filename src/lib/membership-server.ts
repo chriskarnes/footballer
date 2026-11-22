@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getViewer } from './viewer';
 import { accessLabel, playerAccess, toTerms, type Access, type PlayerBillingRow, type Terms } from './membership';
 import { withPrice } from './billing-server';
+import { myConsentGate } from './consent-server';
 
 /** What an academy charges (0038). Null before the migration, or when it can't be read. */
 export async function readTerms(db: SupabaseClient, academyId: string): Promise<Terms | null> {
@@ -47,8 +48,13 @@ export async function trialStart(db: SupabaseClient, academyId: string, userId?:
   }
 }
 
-/** True when the signed-in player may not open training here: free days over and no card, or switched off. */
+/**
+ * True when the signed-in player may not open training here: free days over
+ * and no card, switched off, or under 13 with no parent's or guardian's
+ * agreement yet (0043).
+ */
 export async function trainingLocked(): Promise<boolean> {
+  if (await myConsentGate()) return true;
   const s = (await myMembership())?.access.state;
   return s === 'locked' || s === 'paused';
 }

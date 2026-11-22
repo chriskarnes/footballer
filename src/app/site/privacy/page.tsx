@@ -18,8 +18,9 @@ export default function PrivacyPage() {
       <LegalSection title="What we keep">
         <ul>
           <li><b>Your email address</b>, to sign you in. There are no passwords: we email a code and a link.</li>
-          <li><b>Your profile</b>: the name you give, an age range (not a birthday), positions, stronger foot, and, if you add them, your club, your area and a photo.</li>
-          <li><b>Whether the account was made by the player or a parent.</b></li>
+          <li><b>Your profile</b>: a first name and last initial (we don&rsquo;t keep last names), an age range (not a birthday), positions, stronger foot, and, if you add them, your club, your area and a photo. Players under 13 don&rsquo;t have a photo, club or area.</li>
+          <li><b>Whether the account was made by the player or a parent or guardian.</b></li>
+          <li><b>For a player under 13</b>, their parent&rsquo;s or guardian&rsquo;s agreement: the email address it came from, when, and how.</li>
           <li><b>Your training</b>: the sessions you finish, when, how long, which drills you ticked, how a session felt, your saved weeks, your Speed test results, and the soccer days you tell us about (practice, games, trainer days).</li>
           <li><b>Notes</b> your trainer sends you, and whether you&rsquo;ve opened them.</li>
           <li><b>Requests</b>: if you ask to join an academy, the name and message you send; if you ask for a trainer page, what you put in that form.</li>
@@ -41,7 +42,7 @@ export default function PrivacyPage() {
         <p>We use a small number of companies to run the app. They handle your information only to provide their service to us.</p>
         <ul>
           <li><b>Hosting and the database</b> (currently Vercel and Supabase): everything above is stored and served through them, including the sign-in emails.</li>
-          <li><b>AI services</b> (currently Anthropic and Google): if you type what you want to train in your own words, that text is sent to turn it into a session. When a trainer has the AI help with a player&rsquo;s week, the player&rsquo;s age range, positions and recent session titles are sent with the trainer&rsquo;s drills. Names, email addresses and photos are never sent.</li>
+          <li><b>AI services</b> (currently Anthropic and Google): if you type what you want to train in your own words, that text is sent to turn it into a session. Players under 13 aren&rsquo;t offered this. When a trainer has the AI help with a player&rsquo;s week, the player&rsquo;s age range, positions and recent session titles are sent with the trainer&rsquo;s drills. Names, email addresses and photos are never sent.</li>
           <li><b>Payments</b> (Stripe): where an academy is paid for by card, Stripe takes the card and the payment on its own pages. We send Stripe the email address of the account that pays and the academy&rsquo;s name, and for a trainer the number of players they pay for. A player&rsquo;s name is never sent. We never see or store the card number; we keep Stripe&rsquo;s reference for the payer and where the subscription stands (free days, paid, ended).</li>
           <li><b>YouTube</b>: drill videos are YouTube&rsquo;s. When you play one, YouTube receives the request and may set its own cookies.</li>
         </ul>
@@ -54,8 +55,15 @@ export default function PrivacyPage() {
       </LegalSection>
 
       <LegalSection title="Children">
-        <p>Many players are children. A parent or guardian should make the account for a player under 13, using the parent&rsquo;s own email address, and the app asks whether a player or a parent is signing up.</p>
-        <p>We keep only what the app needs for training, as listed above. A parent can see everything kept about their child by signing in to the account, change it under Me, and delete it at any time. <Contact about="if you&rsquo;d like us to do any of that for you, or if you believe a child has an account without a parent knowing" /></p>
+        <p>Many players are children. A player under 13 can&rsquo;t train until a parent or guardian agrees:</p>
+        <ul>
+          <li>A player is asked their age before their email. Under 13, a parent or guardian signs up instead, with their own email, and agrees in the app.</li>
+          <li>If a player under 13 has an account of their own, they&rsquo;re asked for a parent&rsquo;s or guardian&rsquo;s email, and we send that address a link to agree, or to have the account deleted. We use that address only to ask and to confirm.</li>
+          <li>The day after a parent or guardian agrees, we email them to confirm, with how to change their mind.</li>
+          <li>If nobody agrees within 30 days, we delete the account, and the parent&rsquo;s or guardian&rsquo;s email address with it.</li>
+        </ul>
+        <p>For players under 13 we keep less: no photo, club or area, and no typed requests to an AI service. Nothing about them is sold, used for advertising, or shared beyond the trainer and the companies listed above.</p>
+        <p>A parent or guardian can see everything kept about their child by signing in to the account, change it under Me, and delete it at any time, which also withdraws their agreement. <Contact about="if you&rsquo;d like us to do any of that for you, or if you believe a child has an account without a parent or guardian knowing" /></p>
       </LegalSection>
 
       <LegalSection title="Changing and deleting">
@@ -64,7 +72,7 @@ export default function PrivacyPage() {
           <li><b>Leave an academy</b> under Me. Its trainers stop seeing new training; you keep your own history.</li>
           <li><b>Delete your account</b> under Me. That removes your sign-in, profile, photo, training history, saved weeks and memberships straight away, and can&rsquo;t be undone. Copies may stay in our providers&rsquo; routine backups for a short while after.</li>
         </ul>
-        <p>We keep your information for as long as you have an account. A trainer who owns an academy should ask us to hand it over or close it before deleting their own account.</p>
+        <p><b>How long we keep it.</b> We keep your information to run your training, and only while the account is in use. A player&rsquo;s account that goes a year without being used (no sign-in and no training) is deleted, with everything in it; one that&rsquo;s still paying is kept until its payments stop. A player under 13 with no parent&rsquo;s or guardian&rsquo;s agreement after 30 days is deleted, as above. A trainer&rsquo;s account is kept while their academy runs; a trainer who owns an academy should ask us to hand it over or close it before deleting their own account.</p>
       </LegalSection>
 
       <LegalSection title="Changes and questions">

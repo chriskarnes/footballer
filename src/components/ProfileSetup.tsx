@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Chip, CheckIcon } from './Chip';
 import { POSITIONS, positionName } from '@/lib/positions';
+import { AGE_BANDS, isUnder13 } from '@/lib/child';
 
 /**
  * The Me empty state: four questions, each of which changes what the player
@@ -15,12 +16,6 @@ import { POSITIONS, positionName } from '@/lib/positions';
  * you" and answer about themselves. So someone who joined as a parent
  * (profiles.signed_up_by) is asked about "your player" instead.
  */
-
-const AGE_BANDS: [string, string][] = [
-  ['u10', 'Under 10'], ['10_12', '10–12'], ['13_15', '13–15'],
-  ['16_18', '16–17'], ['18_plus', '18+'],
-];
-
 
 const FEET: [string, string][] = [['left', 'Left'], ['right', 'Right'], ['both', 'Both']];
 
@@ -63,12 +58,12 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   const named = parent === null && !returning && !!initial?.display_name?.trim();
   const who = (name.trim() || initial?.display_name?.trim() || '').split(/\s+/)[0];
   const q = named
-    ? { name: 'Player’s name', age: `How old is ${who}?`, where: `Where does ${who} play?`,
+    ? { name: 'Player’s first name', age: `How old is ${who}?`, where: `Where does ${who} play?`,
         foot: `Which foot is ${who}’s best?`, team: `${who}’s team (you can skip this)`, club: `${who}’s team, if they’re in one` }
     : parent
-    ? { name: 'What’s your player’s name?', age: 'How old are they?', where: 'Where do they play?',
+    ? { name: 'What’s your player’s first name?', age: 'How old are they?', where: 'Where do they play?',
         foot: 'Which foot is their best?', team: 'Their team (you can skip this)', club: 'Their team, if they’re in one' }
-    : { name: 'What’s your name?', age: 'How old are you?', where: 'Where do you play?',
+    : { name: 'What’s your first name?', age: 'How old are you?', where: 'Where do you play?',
         foot: 'Which foot is your best?', team: 'Your team (you can skip this)', club: 'Your team, if you’re in one' };
   const router = useRouter();
   const [ageBand, setAgeBand] = useState(initial?.age_band ?? '');
@@ -78,6 +73,9 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
   const [club, setClub] = useState(initial?.club ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Under 13 (0043): no photo, club or area. A trainer here for their own
+  // child (keepName) keeps their own photo.
+  const child = isUnder13(ageBand) && !keepName;
 
   // The four that count are the four that change a drill. Region and club are
   // deliberately not in this number — showing "4 of 6" would make skippable
@@ -112,10 +110,12 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
         body: JSON.stringify({
           ...(keepName ? { keep_name: true } : { display_name: name.trim() }), age_band: ageBand, positions,
           dominant_foot: foot,
-          region: region.trim() || null, club: club.trim() || null,
+          region: child ? null : region.trim() || null, club: child ? null : club.trim() || null,
         }),
       });
       if (r.status === 401) { setError(SIGNED_OUT); setBusy(false); return; }
+      // Said in words: an age that can't be raised yet (0043).
+      if (r.status === 409) { setError((await r.json().catch(() => null))?.error ?? 'Couldn’t save. Try again.'); setBusy(false); return; }
       if (!r.ok) throw new Error(String(r.status));
       // First time through, go where the answers are used: the week, when
       // this academy has one, otherwise Train. Someone correcting one answer
@@ -132,7 +132,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
     // First-time setup asks the install prompt to keep out of the way.
     <div className="animate-pop" data-install-quiet={returning ? undefined : ''}>
       {heading && <h1 className="h-page">{returning ? (parent !== false ? 'Player profile' : 'My profile') : named ? `Set ${who} up` : parent ? 'Let’s set your player up' : 'Let’s set you up'}</h1>}
-      {photo}
+      {!child && photo}
 
       {/* Name is required now the profile is about someone else, but a first
           name or nickname is all the app ever needs. A full legal name adds
@@ -142,8 +142,9 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
         <label className="text-field">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} maxLength={60}
                  placeholder="e.g. Sam" autoComplete="off"
-                 aria-label={q.name} />
+                 aria-label={q.name} aria-describedby="q-name-note" />
         </label>
+        <p id="q-name-note" className="mt-2 pl-0.5 text-body-sm text-on-surface-variant">Add a last initial if your trainer has two of you. Last names aren&rsquo;t kept.</p>
       </div>}
 
       {/* The address the account signs in with, shown as a field because that
@@ -208,7 +209,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           pressed the obvious control never saw them, and the two fields that
           most needed to be a free choice were the two nobody was offered.
           Region rather than town, never device location, both skippable. */}
-      <div className="mt-10 border-t border-outline-variant pt-5">
+      {!child && <div className="mt-10 border-t border-outline-variant pt-5">
         <p className="h-sec mb-3">{q.team}</p>
         <label className="text-field">
           <span>Club</span>
@@ -220,7 +221,7 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
           <input type="text" value={region} onChange={(e) => setRegion(e.target.value)} maxLength={80}
                  placeholder="e.g. Pennsylvania" autoComplete="off" />
         </label>
-      </div>
+      </div>}
 
       <button type="button" onClick={save} disabled={!complete || busy}
               aria-describedby={complete ? undefined : 'profile-left'}

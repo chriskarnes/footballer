@@ -51,22 +51,27 @@ function pickAnyFocus(): FocusArea[] {
  * The fallback is the inputs step with no session — which is what the
  * prerendered page is anyway, since a static render has no query string.
  */
-export function Coach({ exercises, planCard }: { exercises: Exercise[]; planCard?: React.ReactNode }) {
+export function Coach({ exercises, planCard, canType = true }: {
+  exercises: Exercise[]; planCard?: React.ReactNode;
+  /** False for a player under 13 (0043): what they type would go to an AI company. The buttons do the same job. */
+  canType?: boolean;
+}) {
   return (
-    <Suspense fallback={<Train exercises={exercises} planCard={planCard} params={null} />}>
-      <TrainFromUrl exercises={exercises} planCard={planCard} />
+    <Suspense fallback={<Train exercises={exercises} planCard={planCard} canType={canType} params={null} />}>
+      <TrainFromUrl exercises={exercises} planCard={planCard} canType={canType} />
     </Suspense>
   );
 }
 
-function TrainFromUrl(props: { exercises: Exercise[]; planCard?: React.ReactNode }) {
+function TrainFromUrl(props: { exercises: Exercise[]; planCard?: React.ReactNode; canType: boolean }) {
   return <Train {...props} params={useSearchParams()} />;
 }
 
 function Train({
-  exercises, planCard, params,
+  exercises, planCard, params, canType,
 }: {
   exercises: Exercise[];
+  canType: boolean;
   /** "Today on your plan" — shown on the questions step only; on the result
    *  step you've already chosen what to do today. */
   planCard?: React.ReactNode;
@@ -338,7 +343,7 @@ function Train({
       {/* ---- or say it ---- */}
       {/* One closed row, so the page is two ways to a session and a third
           for whoever goes looking, not a heading and a text box to read past. */}
-      <details className="group mt-10" open={typing} onToggle={(e) => setTyping(e.currentTarget.open)}>
+      {canType && <details className="group mt-10" open={typing} onToggle={(e) => setTyping(e.currentTarget.open)}>
         <summary className="card pressable flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4
                             [&::-webkit-details-marker]:hidden">
           <span className="text-title-sm font-bold text-on-surface">Type what you want</span>
@@ -369,7 +374,7 @@ function Train({
         {reply && (
           <p key={reply} className="hint-in mt-4 pl-1 text-body-lg font-medium text-on-surface">{reply}</p>
         )}
-      </details>
+      </details>}
     </div>
   );
 }

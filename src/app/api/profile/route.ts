@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
 import { plain } from '@/lib/plain-error';
 import { POSITIONS, positionName } from '@/lib/positions';
+import { AGE_BANDS as BANDS, isUnder13, shortName } from '@/lib/child';
+import { staffSomewhere } from '@/lib/consent-server';
 
-const AGE_BANDS = ['u10', '10_12', '13_15', '16_18', '18_plus'];
+const AGE_BANDS = BANDS.map(([v]) => v);
 const FEET = ['left', 'right', 'both'];
 
 /** Columns added by supabase/migrations/0001_profile_setup_fields.sql. */
@@ -30,7 +32,8 @@ export async function POST(req: Request) {
   // Capped like the trainer's own name (60), and positions only from the list
   // the form offers (old names read as today's), each once.
   const text = (v: unknown, max: number) => typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, max) : '';
-  const name = text(body.display_name, 60);
+  // A first name and last initial, never a full name (0043).
+  const name = shortName(text(body.display_name, 60));
   const foot = body.dominant_foot;
   const ageBand = body.age_band;
   const positions: string[] = Array.isArray(body.positions)
@@ -47,6 +50,21 @@ export async function POST(req: Request) {
   if (!FEET.includes(foot)) return NextResponse.json({ error: 'invalid dominant foot' }, { status: 400 });
   if (!positions.length) return NextResponse.json({ error: 'at least one position is required' }, { status: 400 });
 
+  // Under 13 (0043), unless this is a trainer here for their own child: no
+  // photo, club or area kept, and the age isn't raised past 12 until a
+  // parent or guardian has agreed, so it can't be used to get round them.
+  const staff = await staffSomewhere(db, user.id).catch(() => false);
+  const child = isUnder13(ageBand) && !staff;
+  if (!staff && !isUnder13(ageBand)) {
+    const { data: was } = await db.from('profiles').select('age_band').eq('id', user.id).maybeSingle();
+    if (isUnder13((was as { age_band: string | null } | null)?.age_band)) {
+      const { data: c, error: ce } = await db.from('parent_consents').select('agreed_at').eq('user_id', user.id).maybeSingle();
+      if (!ce && !(c as { agreed_at: string | null } | null)?.agreed_at) {
+        return NextResponse.json({ error: 'A parent or guardian agrees first. After that, the age can be changed.' }, { status: 409 });
+      }
+    }
+  }
+
   const full = {
     id: user.id,
     ...(keepName ? {} : { display_name: name }),
@@ -56,12 +74,16 @@ export async function POST(req: Request) {
     position: positions[0],
     age_band: ageBand,
     positions,
-    region: text(body.region, 80) || null,
-    club: text(body.club, 80) || null,
+    region: child ? null : text(body.region, 80) || null,
+    club: child ? null : text(body.club, 80) || null,
   };
 
   const { error } = await db.from('profiles').upsert(full);
-  if (!error) return NextResponse.json({ ok: true, stored: 'all' });
+  if (!error) {
+    // A photo added before the age was set goes now. Before 0016 there's no column: nothing to clear.
+    if (child) await db.from('profiles').update({ avatar_type: null, avatar_data: null, avatar_updated_at: null }).eq('id', user.id);
+    return NextResponse.json({ ok: true, stored: 'all' });
+  }
 
   // PGRST204 is PostgREST for "no such column", which here means exactly one
   // thing: the migration has not been run yet. Any other failure is real.

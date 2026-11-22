@@ -18,7 +18,8 @@ export default function TermsPage() {
       <LegalSection title="Accounts">
         <ul>
           <li>Use your own email address, and keep access to it: it&rsquo;s how you sign in.</li>
-          <li>For a player under 13, a parent or guardian makes and holds the account.</li>
+          <li>For a player under 13, a parent or guardian makes and holds the account, or agrees from a link we email them, before the player trains. If nobody agrees within 30 days, the account is deleted.</li>
+          <li>A player&rsquo;s account that goes a year without being used is deleted, with what&rsquo;s in it.</li>
           <li>You can leave an academy or delete your account at any time, under Me.</li>
         </ul>
       </LegalSection>

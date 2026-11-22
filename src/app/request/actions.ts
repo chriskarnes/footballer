@@ -1,5 +1,6 @@
 'use server';
 import { getViewer } from '@/lib/viewer';
+import { shortName } from '@/lib/child';
 
 /** Asks to join the academy this request came in on. */
 export async function askToJoin(name: string, message: string, who?: 'player' | 'parent') {
@@ -7,7 +8,8 @@ export async function askToJoin(name: string, message: string, who?: 'player' | 
   if (!v.academy || !v.user) return { ok: false as const, error: 'Sign in first.' };
   // A self-serve space (0030) has no one to ask.
   if (v.academy.selfServe) return { ok: false as const, error: 'There’s no one to ask here. Open the invite link you were sent.' };
-  const n = name.trim().slice(0, 80);
+  // A first name and last initial, never a full name (0043).
+  const n = shortName(name.slice(0, 80));
   if (!n) return { ok: false as const, error: 'Add the player’s name, so your trainer knows who it is.' };
   const as = who === 'player' || who === 'parent' ? who : null;
   let { data, error } = await v.db.rpc('request_to_join', { p_slug: v.academy.slug, p_name: n, p_message: message.trim().slice(0, 300), p_as: as });

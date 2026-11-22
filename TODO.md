@@ -27,6 +27,26 @@ a soft launch with trainers you know until the legal review (§3) is back.
       their families was a guess, never confirmed), and whether there's a
       company behind Stripe and the terms.
 
+**Under-13 protections (built November 22, 2026; not live until these are done)**
+
+- [ ] Run migration `0043_children.sql` after the app is deployed. It also cuts
+      existing players' names to a first name and last initial, and removes
+      under-13s' photos, clubs and areas.
+- [ ] Vercel env: `RESEND_API_KEY` (an API key from the Resend account that
+      sends the sign-in emails). Without it, nothing is emailed: no parent
+      requests, no confirmations, and players under 13 on their own accounts
+      aren't asked.
+- [ ] Vercel env: `CRON_SECRET` (any long random string). Without it the daily
+      job (`/api/cron/daily`: confirmations, deleting unagreed and unused
+      accounts) refuses to run. Check it under the project's Cron Jobs.
+- [ ] Redeploy after adding both.
+- [ ] Re-run `npm run seed:kestrel`, so Leo (your sign-in) is marked as agreed
+      and his name is "Leo M.".
+- [ ] Cole's account in forge is under 13 and will be asked: enter your own
+      email as the parent's (not the +cole alias it signs in with) and agree
+      from the link. That's also the test of the whole email flow.
+- [ ] Fill in your name in `SECURITY-PLAN.md` and tick its account boxes.
+
 ## 1. Check the changed flows on a real phone and account
 
 None of this was tested signed in or against the live database. About ten minutes.
@@ -84,10 +104,12 @@ which is why each audit kept finding new problems.
 a lawyer.
 
 - [ ] Legal review, the children's section especially, before families you don't
-      know sign up.
-- [ ] Decide whether to enforce parent sign-up for under-13s. The pages and the
-      sign-in form say a parent signs in with their own email; the app does not
-      check it.
+      know sign up. Include the two parent emails (`src/lib/consent-email.ts`)
+      and the "email plus" method behind them.
+- [x] Enforce parent sign-up for under-13s (November 22, 2026, migration 0043):
+      a player is asked their age before their email; under 13, a parent or
+      guardian signs up and agrees, or is emailed a link; a confirmation goes a
+      day later; no agreement in 30 days and the account is deleted.
 - [ ] Decide which state's law governs the terms, and add it.
 - [ ] When the pages change, update `LEGAL_UPDATED` in `src/lib/legal.ts`.
 

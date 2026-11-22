@@ -44,7 +44,10 @@ const ACADEMY = {
 };
 const TRAINER_NAME = 'Matt Reyes';
 /** The player the --player address signs in as. */
-const LOGIN_PLAYER = 'Leo Marsh';
+// First name and last initial, as the app keeps players' names (0043).
+// 'Leo Marsh' is how the seed named him before that, so a re-run finds him.
+const LOGIN_PLAYER = 'Leo M.';
+const LOGIN_NAMES = [LOGIN_PLAYER, 'Leo Marsh'];
 const TZ = ACADEMY.time_zone;
 
 // ------------------------------------------------------------- content ---
@@ -398,18 +401,18 @@ async function main() {
   const memberIds = (members ?? []).filter((m) => m.role === 'player').map((m) => m.user_id as string);
   const { data: memberProfiles } = memberIds.length
     ? await db.from('profiles').select('id, display_name').in('id', memberIds) : { data: [] as { id: string; display_name: string | null }[] };
-  const wasLogin = memberProfiles?.find((p) => p.display_name === LOGIN_PLAYER)?.id as string | undefined;
+  const wasLogin = memberProfiles?.find((p) => LOGIN_NAMES.includes(p.display_name ?? ''))?.id as string | undefined;
 
   const ids: Record<string, string> = {};
   const sample = new Set<string>();
   for (const p of PLAYERS) {
-    const name = `${p.first} ${p.last}`;
+    const name = `${p.first} ${p.last[0]}.`;
     let id: string;
     if (name === LOGIN_PLAYER && PLAYER_EMAIL) {
       const a = await account(PLAYER_EMAIL);
       if (!a.fresh && a.id !== wasLogin) {
         const { data: prof } = await db.from('profiles').select('display_name').eq('id', a.id).maybeSingle();
-        if (prof?.display_name?.trim() && prof.display_name !== LOGIN_PLAYER) {
+        if (prof?.display_name?.trim() && !LOGIN_NAMES.includes(prof.display_name)) {
           throw new Error(`${PLAYER_EMAIL} is already ${prof.display_name}'s account. Use a fresh address for --player.`);
         }
       }
@@ -424,6 +427,15 @@ async function main() {
     ids[p.first] = id;
     await must(db.from('profiles').upsert({ id, display_name: name, age_band: p.age, positions: p.positions, dominant_foot: p.foot }), 'profile');
     await must(db.from('academy_members').upsert({ academy_id: academyId, user_id: id, role: 'player', joined_at: noon(addDays(today, -p.joined)) }), 'member');
+    // The player you sign in as is under 13 and on a real inbox: marked as
+    // agreed, so the demo opens on training, not the parent's screen (0043).
+    // The sample players' train.futbol addresses are never asked.
+    if (!sample.has(id)) {
+      const { error } = await db.from('parent_consents').upsert({
+        user_id: id, parent_email: null, agreed_at: new Date().toISOString(), method: 'sample', notice_version: 'sample', confirm_sent_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (error && !/parent_consents|does not exist|could not find/i.test(error.message)) throw new Error(`consent: ${error.message}`);
+    }
   }
   const players = Object.values(ids);
 

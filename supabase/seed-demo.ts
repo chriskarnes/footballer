@@ -141,7 +141,7 @@ async function main() {
     ids[p.first] = id;
 
     await must(db.from('profiles').upsert({
-      id, display_name: `${p.first} ${p.last}`, age_band: p.age, positions: p.positions, dominant_foot: p.foot,
+      id, display_name: `${p.first} ${p.last[0]}.`, age_band: p.age, positions: p.positions, dominant_foot: p.foot,
     }), 'profile');
     await must(db.from('academy_members').upsert({
       academy_id: academy.id, user_id: id, role: 'player', joined_at: new Date(toUtc(addDays(today, -30))).toISOString(),
