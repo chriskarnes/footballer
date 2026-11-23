@@ -27,21 +27,21 @@ a soft launch with trainers you know until the legal review (§3) is back.
       their families was a guess, never confirmed), and whether there's a
       company behind Stripe and the terms.
 
-**Under-13 protections (built November 22, 2026; not live until these are done)**
+**Under-13 protections (built and live November 22, 2026)**
 
-- [ ] Run migration `0043_children.sql` after the app is deployed. It also cuts
+- [x] Run migration `0043_children.sql` after the app is deployed. It also cuts
       existing players' names to a first name and last initial, and removes
       under-13s' photos, clubs and areas.
-- [ ] Vercel env: `RESEND_API_KEY` (an API key from the Resend account that
+- [x] Vercel env: `RESEND_API_KEY` (an API key from the Resend account that
       sends the sign-in emails). Without it, nothing is emailed: no parent
       requests, no confirmations, and players under 13 on their own accounts
       aren't asked.
-- [ ] Vercel env: `CRON_SECRET` (any long random string). Without it the daily
+- [x] Vercel env: `CRON_SECRET` (any long random string). Without it the daily
       job (`/api/cron/daily`: confirmations, deleting unagreed and unused
       accounts) refuses to run. Check it under the project's Cron Jobs.
-- [ ] Redeploy after adding both.
-- [ ] Re-run `npm run seed:kestrel`, so Leo (your sign-in) is marked as agreed
-      and his name is "Leo M.".
+- [x] Redeploy after adding both.
+- [x] Leo (your Kestrel sign-in) marked as agreed, straight in the database so
+      nothing else was reset. Re-running `npm run seed:kestrel` does the same.
 - [ ] Cole's account in forge is under 13 and will be asked: enter your own
       email as the parent's (not the +cole alias it signs in with) and agree
       from the link. That's also the test of the whole email flow.
