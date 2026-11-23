@@ -170,7 +170,10 @@ export function ProfileSetup({ email, initial, photo, next = '/', parent = false
         </div>
         {/* At the question, not in the footer — this is where it becomes relevant. */}
         {!parent && !named && <p className="mt-3 pl-0.5 text-body font-medium leading-snug text-on-surface-variant">
-          Under 13? Get an adult to do this with you.
+          {/* Picked by mistake, it can't be undone without a parent's agreement (0044): say so before it's saved. */}
+          {isUnder13(ageBand) && !keepName && !isUnder13(initial?.age_band)
+            ? 'Under 13 means a parent or guardian agrees before you train, and the age can’t be changed back until they do. Not under 13? Pick your age before you save.'
+            : 'Under 13? Get an adult to do this with you.'}
         </p>}
       </div>
 

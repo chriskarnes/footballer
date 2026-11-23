@@ -47,6 +47,8 @@ The full list of what's kept per person is in the privacy policy.
   addresses, phone numbers or locations are asked for.
 - Players under 13: no photo, club or area, and nothing they type goes to an
   AI service. A parent or guardian agrees before they train (migration 0043).
+  The database enforces the photo, club, area and age rules itself, not just
+  the app (migration 0044).
 - The AI services are sent age ranges, positions and session titles, never a
   name, email or photo.
 - Stripe is sent the paying account's email and the academy's name, never a
@@ -56,6 +58,9 @@ The full list of what's kept per person is in the privacy policy.
 **Keeping it no longer than needed** (the daily job, `/api/cron/daily`)
 - Accounts unused for a year are deleted.
 - Accounts of players under 13 with no agreement after 30 days are deleted.
+- The job never deletes staff, admins, sample accounts or anyone paying, and
+  holds an account back (listed in its log) whenever it can't check one of
+  those.
 - Delete account (under Me) removes everything at once.
 
 **Checks**

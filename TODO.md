@@ -46,6 +46,24 @@ a soft launch with trainers you know until the legal review (§3) is back.
       email as the parent's (not the +cole alias it signs in with) and agree
       from the link. That's also the test of the whole email flow.
 - [ ] Fill in your name in `SECURITY-PLAN.md` and tick its account boxes.
+- [ ] Run migration `0044_children_rules.sql` after the app is deployed (the
+      database's own under-13 rules, and the email cap's counts). Before then
+      the app works as it did, just without those.
+
+**From the second launch review (November 23, 2026)**
+
+- [x] The daily job holds back whenever it can't read something, checks the
+      admins list, and doesn't delete anyone while Stripe isn't set up.
+- [x] The under-13 rules are enforced by the database too (0044).
+- [x] An age picked by mistake: the profile form warns before it's saved,
+      and an admin puts it right (admin → the person → Age).
+- [x] Parent request emails: three a day per account, 200 a day in all.
+- [ ] Mail to `support@train.futbol` now arrives in Resend (its MX record
+      points there). Send it a test and check where it shows up; set up
+      forwarding if you want it in your own inbox.
+- [ ] Later, with hundreds of players under 13: the daily job's 30-day count
+      sends every under-13 id in one request, and accounts it holds back
+      stay at the front of the deletion queue. Fine at today's numbers.
 
 ## 1. Check the changed flows on a real phone and account
 

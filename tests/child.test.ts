@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { consentNeed, isSampleEmail, isUnder13, looksLikeEmail, shortName } from '../src/lib/child';
+import { consentNeed, isSampleEmail, isUnder13, looksLikeEmail, requestsToday, shortName } from '../src/lib/child';
 import { confirmEmail, requestEmail } from '../src/lib/consent-email';
 
 test('a full name is kept as a first name and last initial', () => {
@@ -86,4 +86,13 @@ test('the confirmation says when they agreed and how to change their mind', () =
   assert.match(m.text, /Delete account/);
   assert.match(m.text, /sam@example\.com/);
   assert.match(m.text, /didn’t agree/);
+});
+
+test('request emails are counted from the first of the day, and start again a day later', () => {
+  const now = Date.parse('2026-11-23T12:00:00Z');
+  assert.deepEqual(requestsToday(null, now), { fresh: true, sent: 0 });
+  assert.deepEqual(requestsToday({ requests_sent: 0, requests_since: null }, now), { fresh: true, sent: 0 });
+  assert.deepEqual(requestsToday({ requests_sent: 2, requests_since: '2026-11-23T08:00:00Z' }, now), { fresh: false, sent: 2 });
+  assert.deepEqual(requestsToday({ requests_sent: 3, requests_since: '2026-11-22T11:59:00Z' }, now), { fresh: true, sent: 0 });
+  assert.deepEqual(requestsToday({ requests_sent: null, requests_since: '2026-11-23T11:00:00Z' }, now), { fresh: false, sent: 0 });
 });

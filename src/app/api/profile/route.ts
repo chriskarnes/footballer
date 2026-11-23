@@ -4,6 +4,7 @@ import { plain } from '@/lib/plain-error';
 import { POSITIONS, positionName } from '@/lib/positions';
 import { AGE_BANDS as BANDS, isUnder13, shortName } from '@/lib/child';
 import { staffSomewhere } from '@/lib/consent-server';
+import { CONTACT_EMAIL } from '@/lib/legal';
 
 const AGE_BANDS = BANDS.map(([v]) => v);
 const FEET = ['left', 'right', 'both'];
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
     if (isUnder13((was as { age_band: string | null } | null)?.age_band)) {
       const { data: c, error: ce } = await db.from('parent_consents').select('agreed_at').eq('user_id', user.id).maybeSingle();
       if (!ce && !(c as { agreed_at: string | null } | null)?.agreed_at) {
-        return NextResponse.json({ error: 'A parent or guardian agrees first. After that, the age can be changed.' }, { status: 409 });
+        return NextResponse.json({ error: `A parent or guardian agrees first. After that, the age can be changed. If it was picked by mistake, ${CONTACT_EMAIL ? `write to ${CONTACT_EMAIL}` : 'ask your trainer to tell us'} and it’ll be put right.` }, { status: 409 });
       }
     }
   }

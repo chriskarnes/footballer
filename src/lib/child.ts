@@ -40,6 +40,20 @@ export function shortName(raw: string | null | undefined): string {
  */
 export const isSampleEmail = (email: string | null | undefined) => !!email && /@train\.futbol$/i.test(email.trim());
 
+/** Request emails one account can send a parent or guardian in a day (0044). */
+export const REQUESTS_PER_DAY = 3;
+
+/**
+ * How many request emails an account has sent in its current day (0044),
+ * and whether a new day starts with this one: the day runs from the first
+ * request, not from midnight.
+ */
+export function requestsToday(row: { requests_sent?: number | null; requests_since?: string | null } | null, now = Date.now()) {
+  const since = row?.requests_since ? Date.parse(row.requests_since) : NaN;
+  const fresh = !Number.isFinite(since) || now - since >= 86_400_000;
+  return { fresh, sent: fresh ? 0 : Math.max(0, row?.requests_sent ?? 0) };
+}
+
 /** Days a parent or guardian has to agree before an under-13 account is deleted. */
 export const CONSENT_DAYS = 30;
 /** Days a player's account can go unused (no sign-in, no training) before it's deleted. */

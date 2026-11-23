@@ -3,17 +3,20 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { getViewer } from '@/lib/viewer';
 import { LEGAL_UPDATED, CONTACT_EMAIL } from '@/lib/legal';
-import { LINK_DAYS, looksLikeEmail, shortName } from '@/lib/child';
+import { LINK_DAYS, REQUESTS_PER_DAY, looksLikeEmail, requestsToday, shortName } from '@/lib/child';
 import { hashToken, myConsentGate, newToken, playerAcademies, staffSomewhere } from '@/lib/consent-server';
 import { requestEmail } from '@/lib/consent-email';
 import { sendEmail } from '@/lib/email';
-import { serviceDb } from '@/lib/service-db';
+import { notMadeYet, serviceDb } from '@/lib/service-db';
 import { rootHref } from '@/lib/root-link';
 import { playerSubscriptions, stopSubscriptions } from '@/lib/billing-server';
 
 type Result = { ok: true } | { ok: false; error: string };
 
 const LATER = 'That isn’t switched on yet. Try again later.';
+const DAY_MS = 86_400_000;
+/** Request emails from everyone together in a day (0044): one account is held to REQUESTS_PER_DAY, and this keeps a flood from costing the domain its good name with inboxes. */
+const PER_DAY_ALL = 200;
 const FAILED = 'Couldn’t save that. Try again.';
 
 /**
@@ -51,21 +54,37 @@ export async function askParent(email: string): Promise<Result> {
   const db = serviceDb();
   if (!db) return { ok: false, error: LATER };
 
-  const { data: was } = await db.from('parent_consents').select('requested_at').eq('user_id', v.user.id).maybeSingle();
-  const last = was?.requested_at ? Date.parse(was.requested_at as string) : 0;
+  // Every column, so this reads the same before and after 0044 adds the counts.
+  const { data: was, error: we } = await db.from('parent_consents').select('*').eq('user_id', v.user.id).maybeSingle();
+  if (we) { console.error('askParent read', we); return { ok: false, error: FAILED }; }
+  const w = was as { requested_at?: string | null; requests_sent?: number | null; requests_since?: string | null } | null;
+  const last = w?.requested_at ? Date.parse(w.requested_at) : 0;
   if (Date.now() - last < 2 * 60_000) return { ok: false, error: 'Sent a moment ago. Check that inbox, and its spam folder.' };
+  const now = new Date().toISOString();
+  const { fresh, sent: sentToday } = requestsToday(w);
+  if (sentToday >= REQUESTS_PER_DAY) return { ok: false, error: 'That’s three emails today. Check those inboxes and their spam folders, or try again tomorrow.' };
+  const { count, error: ae } = await db.from('parent_consents').select('user_id', { count: 'exact', head: true })
+    .gte('requested_at', new Date(Date.now() - DAY_MS).toISOString());
+  if (ae) { console.error('askParent count', ae); return { ok: false, error: FAILED }; }
+  if ((count ?? 0) >= PER_DAY_ALL) {
+    console.error(`askParent: ${PER_DAY_ALL} requests in a day, so no more today`);
+    return { ok: false, error: 'Too many emails have gone out today. Try again tomorrow.' };
+  }
 
   const { token, hash } = newToken();
-  const { error } = await db.from('parent_consents').upsert({
-    user_id: v.user.id, parent_email: to, token_hash: hash, requested_at: new Date().toISOString(),
+  const row = { user_id: v.user.id, parent_email: to, token_hash: hash, requested_at: now };
+  let { error } = await db.from('parent_consents').upsert({
+    ...row, requests_sent: sentToday + 1, requests_since: fresh ? now : w?.requests_since,
   }, { onConflict: 'user_id' });
+  // Before 0044 there are no counts to keep.
+  if (error && notMadeYet(error)) ({ error } = await db.from('parent_consents').upsert(row, { onConflict: 'user_id' }));
   if (error) { console.error('askParent', error); return { ok: false, error: FAILED }; }
 
   const h = await headers();
   const here = `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('x-forwarded-host') ?? h.get('host')}`;
   const { data: prof } = await v.db.from('profiles').select('display_name').eq('id', v.user.id).maybeSingle();
   const sent = await sendEmail(requestEmail({
-    to, player: shortName(prof?.display_name as string | null).split(' ')[0],
+    to, player: shortName(prof?.display_name as string | null).split(' ')[0].slice(0, 30),
     academies: await playerAcademies(db, v.user.id),
     link: `${here}/consent/${token}`, privacy: await rootHref('/privacy'), contact: CONTACT_EMAIL,
   }));

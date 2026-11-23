@@ -39,14 +39,17 @@ their trainer sees how the week is going.
   never a player's name.
 - **Privacy and terms** are at `/privacy` and `/terms`; set
   `NEXT_PUBLIC_CONTACT_EMAIL` so they give an inbox.
-- **Players under 13** (migration 0043, `src/lib/child.ts`): a player is asked
+- **Players under 13** (migrations 0043 and 0044, `src/lib/child.ts`): a player is asked
   their age before their email; under 13, a parent or guardian agrees before
   they train, in the app or from an emailed link (`RESEND_API_KEY`). Every
   player's name is kept as a first name and last initial; under-13s have no
   photo, club, area or typed AI requests. A daily job (`CRON_SECRET`,
   `vercel.json`) sends confirmations and deletes accounts nobody agreed to in
-  30 days, or unused for a year. `SECURITY-PLAN.md` is the written security
-  plan.
+  30 days, or unused for a year, holding back on anything it can't read. The
+  database keeps the same rules on profiles (0044), so they hold even for a
+  write that skips the app. An age picked by mistake is put right by an admin
+  (admin → the person → Age). Request emails are capped at three a day per
+  account. `SECURITY-PLAN.md` is the written security plan.
 
 ## Checks
 

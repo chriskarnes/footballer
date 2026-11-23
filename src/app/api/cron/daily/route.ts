@@ -5,7 +5,7 @@ import { emailOn, sendEmail } from '@/lib/email';
 import { CONTACT_EMAIL } from '@/lib/legal';
 import { serviceDb, notMadeYet } from '@/lib/service-db';
 import { ROOT_DOMAIN } from '@/lib/tenant';
-import { playerSubscriptions, stopSubscriptions } from '@/lib/billing-server';
+import { billingOn, playerSubscriptions, stopSubscriptions } from '@/lib/billing-server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -26,7 +26,9 @@ const MAX_DELETES = 25;
  *   3. Players under 13 nobody agreed for within 30 days: deleted.
  *   4. Players' accounts unused for a year: deleted.
  * Never a trainer's or an admin's account, never one still paying, never a
- * sample account. Vercel calls it with CRON_SECRET; nobody else can.
+ * sample account. Anything it can't read, it holds back rather than guess:
+ * a deleted account can't come back. Vercel calls it with CRON_SECRET;
+ * nobody else can.
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -50,19 +52,36 @@ export async function GET(req: Request) {
 
 type Done = { confirmed: number; counting: number; unagreedDeleted: number; inactiveDeleted: number; held: string[]; errors: string[] };
 
-/** The first name, the account's email, and whether it's staff anywhere. */
+/**
+ * The first name, the account's email, and whether it's staff anywhere or a
+ * platform admin. Throws if any of it can't be read: a failed read must never
+ * look like "not staff" or "not a sample" to a job that deletes.
+ */
 async function who(db: SupabaseClient, id: string) {
-  const [{ data: prof }, { data: staff }, { data: u }] = await Promise.all([
+  const [prof, staff, admin, u] = await Promise.all([
     db.from('profiles').select('display_name, age_band').eq('id', id).maybeSingle(),
     db.from('academy_members').select('role').eq('user_id', id).in('role', ['owner', 'trainer']).limit(1),
+    db.from('admins').select('user_id').eq('user_id', id).limit(1),
     db.auth.admin.getUserById(id),
   ]);
+  const failed = prof.error ?? staff.error ?? admin.error ?? u.error;
+  if (failed) throw new Error(`who ${id}: ${failed.message}`);
+  if (!u.data?.user) throw new Error(`who ${id}: no such account`);
   return {
-    first: shortName((prof as { display_name: string | null } | null)?.display_name).split(' ')[0],
-    ageBand: (prof as { age_band: string | null } | null)?.age_band ?? null,
-    staff: !!staff?.length,
-    email: u?.user?.email ?? null,
+    first: shortName((prof.data as { display_name: string | null } | null)?.display_name).split(' ')[0],
+    ageBand: (prof.data as { age_band: string | null } | null)?.age_band ?? null,
+    staff: !!staff.data?.length,
+    admin: !!admin.data?.length,
+    email: u.data.user.email ?? null,
   };
+}
+
+/** One account's turn, its own failure held back and noted, so one bad row doesn't stop the rest. */
+async function each(id: string, why: string, done: Done, fn: () => Promise<void>) {
+  try { await fn(); } catch (e) {
+    console.error(`cron daily: ${why}: ${id}`, e);
+    done.held.push(`${why}: ${id} (couldn't check: ${e instanceof Error ? e.message : 'error'})`);
+  }
 }
 
 async function confirmations(db: SupabaseClient, done: Done) {
@@ -73,14 +92,16 @@ async function confirmations(db: SupabaseClient, done: Done) {
   if (error) { if (notMadeYet(error)) return; throw error; }
   for (const r of (data ?? []) as { user_id: string; parent_email: string; agreed_at: string; method: string | null }[]) {
     if (r.method === 'sample') continue;
-    const w = await who(db, r.user_id);
-    const sent = await sendEmail(confirmEmail({
-      to: r.parent_email, player: w.first, agreedOn: longDate(r.agreed_at),
-      accountEmail: w.email, privacy: `https://${ROOT_DOMAIN}/privacy`, contact: CONTACT_EMAIL,
-    }));
-    if (!sent) continue;
-    await db.from('parent_consents').update({ confirm_sent_at: new Date().toISOString() }).eq('user_id', r.user_id);
-    done.confirmed++;
+    await each(r.user_id, 'confirm', done, async () => {
+      const w = await who(db, r.user_id);
+      const sent = await sendEmail(confirmEmail({
+        to: r.parent_email, player: w.first, agreedOn: longDate(r.agreed_at),
+        accountEmail: w.email, privacy: `https://${ROOT_DOMAIN}/privacy`, contact: CONTACT_EMAIL,
+      }));
+      if (!sent) return;
+      await db.from('parent_consents').update({ confirm_sent_at: new Date().toISOString() }).eq('user_id', r.user_id);
+      done.confirmed++;
+    });
   }
 }
 
@@ -99,20 +120,31 @@ async function startCounting(db: SupabaseClient, done: Done) {
   const counted = new Set((rows ?? []).map((r) => r.user_id as string));
   for (const k of (kids ?? []) as { id: string; signed_up_by: string | null }[]) {
     if (counted.has(k.id)) continue;
-    const w = await who(db, k.id);
-    if (w.staff || isSampleEmail(w.email)) continue;
-    // Only accounts that are players somewhere are asked.
-    const { data: member } = await db.from('academy_members').select('user_id').eq('user_id', k.id).eq('role', 'player').limit(1);
-    if (!member?.length) continue;
-    if (k.signed_up_by !== 'parent' && !emailOn()) continue;
-    const { error: ie } = await db.from('parent_consents').insert({ user_id: k.id, first_asked_at: new Date().toISOString() });
-    if (!ie) done.counting++;
+    await each(k.id, 'count', done, async () => {
+      const w = await who(db, k.id);
+      if (w.staff || w.admin || isSampleEmail(w.email)) return;
+      // Only accounts that are players somewhere are asked.
+      const { data: member, error: me } = await db.from('academy_members').select('user_id').eq('user_id', k.id).eq('role', 'player').limit(1);
+      if (me) throw me;
+      if (!member?.length) return;
+      if (k.signed_up_by !== 'parent' && !emailOn()) return;
+      const { error: ie } = await db.from('parent_consents').insert({ user_id: k.id, first_asked_at: new Date().toISOString() });
+      if (!ie) done.counting++;
+    });
   }
 }
 
-/** Deletes an account the way Delete account does, card payments stopped after. False if it was held back. */
+/**
+ * Deletes an account the way Delete account does, card payments stopped
+ * after. False if it was held back: staff, an admin or a sample account
+ * (checked again here, whichever rule picked it), payments that can't be
+ * read (Stripe not set up reads as nothing, not as "not paying"), or a
+ * family still paying.
+ */
 async function remove(db: SupabaseClient, id: string, why: string, done: Done): Promise<boolean> {
-  const subs = await playerSubscriptions(id);
+  const w = await who(db, id);
+  if (w.staff || w.admin || isSampleEmail(w.email)) { done.held.push(`${why}: ${id} (staff, admin or sample)`); return false; }
+  const subs = billingOn() ? await playerSubscriptions(id) : null;
   if (!subs) { done.held.push(`${why}: ${id} (payments unreadable)`); return false; }
   if (subs.some((s) => s.status && !['canceled', 'incomplete_expired'].includes(s.status))) {
     // Someone's paying: a person looks at it, not a job.
@@ -128,16 +160,19 @@ async function remove(db: SupabaseClient, id: string, why: string, done: Done): 
 
 async function deleteUnagreed(db: SupabaseClient, done: Done) {
   const before = new Date(Date.now() - CONSENT_DAYS * DAY).toISOString();
-  const { data, error } = await db.from('parent_consents').select('user_id').is('agreed_at', null).lt('first_asked_at', before).limit(MAX_DELETES);
+  const { data, error } = await db.from('parent_consents').select('user_id').is('agreed_at', null).lt('first_asked_at', before).order('first_asked_at').limit(MAX_DELETES);
   if (error) { if (notMadeYet(error)) return; throw error; }
   for (const { user_id: id } of (data ?? []) as { user_id: string }[]) {
-    const w = await who(db, id);
-    // Grown up since, or a trainer now, or a sample: not this rule's to delete.
-    if (w.staff || isSampleEmail(w.email) || !UNDER_13_BANDS.includes(w.ageBand ?? '')) {
-      if (!w.staff && !isSampleEmail(w.email)) await db.from('parent_consents').delete().eq('user_id', id).is('agreed_at', null);
-      continue;
-    }
-    if (await remove(db, id, 'no agreement', done)) done.unagreedDeleted++;
+    await each(id, 'no agreement', done, async () => {
+      const w = await who(db, id);
+      // Grown up since (an admin put the age right), or a trainer now, or a
+      // sample: not this rule's to delete. A grown-up's waiting row goes.
+      if (w.staff || w.admin || isSampleEmail(w.email) || !UNDER_13_BANDS.includes(w.ageBand ?? '')) {
+        if (!w.staff && !w.admin && !isSampleEmail(w.email)) await db.from('parent_consents').delete().eq('user_id', id).is('agreed_at', null);
+        return;
+      }
+      if (await remove(db, id, 'no agreement', done)) done.unagreedDeleted++;
+    });
   }
 }
 
@@ -146,6 +181,8 @@ async function deleteInactive(db: SupabaseClient, done: Done) {
   const { data, error } = await db.rpc('inactive_players', { p_before: before, p_limit: MAX_DELETES });
   if (error) { if (error.code === 'PGRST202' || notMadeYet(error)) return; throw error; }
   for (const { user_id: id } of (data ?? []) as { user_id: string }[]) {
-    if (await remove(db, id, 'unused for a year', done)) done.inactiveDeleted++;
+    await each(id, 'unused for a year', done, async () => {
+      if (await remove(db, id, 'unused for a year', done)) done.inactiveDeleted++;
+    });
   }
 }
