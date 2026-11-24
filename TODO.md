@@ -11,10 +11,10 @@ a soft launch with trainers you know until the legal review (§3) is back.
 
 - [ ] Vercel: the `i250` team is on **Hobby**, which is for non-commercial use
       only. Move to Pro before the first real payment.
-- [ ] `support@train.futbol` can't receive mail: train.futbol has no MX record,
+- [x] `support@train.futbol` can't receive mail: train.futbol has no MX record,
       and the privacy page, terms, Membership and Billing all send people there.
       Add forwarding (or an inbox) in Vercel DNS, then send it a test message.
-- [ ] Add a DMARC record at `_dmarc.train.futbol` (none exists). To start:
+- [x] Add a DMARC record at `_dmarc.train.futbol` (none exists). To start:
       `v=DMARC1; p=none; rua=mailto:support@train.futbol`.
 - [ ] Supabase: check which plan the project is on. Pro adds daily backups.
       Also Authentication → Rate Limits: the email cap starts low with your own
@@ -42,11 +42,13 @@ a soft launch with trainers you know until the legal review (§3) is back.
 - [x] Redeploy after adding both.
 - [x] Leo (your Kestrel sign-in) marked as agreed, straight in the database so
       nothing else was reset. Re-running `npm run seed:kestrel` does the same.
-- [ ] Cole's account in forge is under 13 and will be asked: enter your own
+- [x] Cole's account in forge is under 13 and will be asked: enter your own
       email as the parent's (not the +cole alias it signs in with) and agree
-      from the link. That's also the test of the whole email flow.
+      from the link. That's also the test of the whole email flow. Agreed by
+      the emailed link on November 24, 2026; the confirmation email follows
+      with the daily job on the 25th.
 - [ ] Fill in your name in `SECURITY-PLAN.md` and tick its account boxes.
-- [ ] Run migration `0044_children_rules.sql` after the app is deployed (the
+- [x] Run migration `0044_children_rules.sql` after the app is deployed (the
       database's own under-13 rules, and the email cap's counts). Before then
       the app works as it did, just without those.
 
@@ -58,7 +60,7 @@ a soft launch with trainers you know until the legal review (§3) is back.
 - [x] An age picked by mistake: the profile form warns before it's saved,
       and an admin puts it right (admin → the person → Age).
 - [x] Parent request emails: three a day per account, 200 a day in all.
-- [ ] Mail to `support@train.futbol` now arrives in Resend (its MX record
+- [x] Mail to `support@train.futbol` now arrives in Resend (its MX record
       points there). Send it a test and check where it shows up; set up
       forwarding if you want it in your own inbox.
 - [ ] Later, with hundreds of players under 13: the daily job's 30-day count

@@ -72,7 +72,7 @@ The full list of what's kept per person is in the privacy policy.
 - [ ] Two-step sign-in on: Supabase, Vercel, Stripe, GitHub, Resend, and the
       email account those all sign in with.
 - [ ] Supabase on a plan with daily backups.
-- [ ] `support@train.futbol` receives mail (it's where the privacy policy
+- [x] `support@train.futbol` receives mail (it's where the privacy policy
       sends people).
 - [ ] Nobody else's devices or browsers are signed in to the accounts above.
 
