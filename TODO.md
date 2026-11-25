@@ -17,8 +17,13 @@ a soft launch with trainers you know until the legal review (§3) is back.
 - [x] Add a DMARC record at `_dmarc.train.futbol` (none exists). To start:
       `v=DMARC1; p=none; rua=mailto:support@train.futbol`.
 - [ ] Supabase: check which plan the project is on. Pro adds daily backups.
-      Also Authentication → Rate Limits: the email cap starts low with your own
-      SMTP, and a group signing up the same evening can hit it.
+- [x] Supabase → Authentication → Rate Limits raised (November 25, 2026):
+      sign-in emails 150 an hour (30 with your own SMTP), sign-ins and code
+      checks 100 per 5 minutes per network (30). A team on one Wi-Fi shares
+      the per-network count. The sign-in card says which limit was hit.
+- [ ] Resend: check the plan. Free stops at 100 emails a day (sign-in codes,
+      parent emails and mail arriving at support@ all count), and anything
+      over is turned away, not queued. Pro ($20 a month) has no daily limit.
 - [ ] Stripe: once §1b passes, switch to live with `supabase/stripe-go-live.sql`
       (the steps are at the top of that file).
 - [ ] Turn on Stripe's emails for failing webhooks. Nothing else alerts on
