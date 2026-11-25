@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { browserClient } from '@/lib/supabase/client';
 import { pendingPlan, pendingWorkout } from '@/lib/pending';
 import { safeNext } from '@/lib/safe-next';
+import { limitMessage } from '@/lib/sign-in-errors';
+import { CONTACT_EMAIL } from '@/lib/legal';
 
 /**
  * Email in, sign-in code out (the email carries a link as well). One card, both states: the form, then "check your
@@ -62,10 +64,9 @@ export function SignIn({ next: given = '/me', title, button = 'Email me a sign-i
       if (!error) { try { localStorage.setItem(ASKED_FOR, JSON.stringify({ next, at: Date.now() })); } catch { /* storage off */ } }
       if (error) {
         console.error(error);
-        // Supabase allows one email a minute per address; anything else is ours.
-        setErr(error.status === 429 || /rate|seconds/i.test(error.message)
-          ? 'A code was just sent. Wait a minute, then try again.'
-          : 'Couldn’t send the code. Check the address and try again.');
+        // A limit says which one (this address, this network, or the app's
+        // emails for the hour); anything else is the address.
+        setErr(limitMessage(error, CONTACT_EMAIL) ?? 'Couldn’t send the code. Check the address and try again.');
         return false;
       }
       setSent(true);
@@ -89,7 +90,8 @@ export function SignIn({ next: given = '/me', title, button = 'Email me a sign-i
     setErr(''); setBusy(true);
     try {
       const { error } = await browserClient().auth.verifyOtp({ email: email.trim(), token, type: 'email' });
-      if (error) { setErr('That code didn’t work. Check it, or send a new one.'); setBusy(false); return; }
+      // A team on one Wi-Fi checking codes together can hit the network's limit: not a wrong code.
+      if (error) { setErr(limitMessage(error) ?? 'That code didn’t work. Check it, or send a new one.'); setBusy(false); return; }
       // A full load, so every page reads the new account from the start.
       window.location.assign(safeNext(next, '/me'));
     } catch {
