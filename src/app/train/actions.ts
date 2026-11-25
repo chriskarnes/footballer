@@ -6,6 +6,7 @@ import { loadContent, targetFor } from '@/lib/academy-data';
 import { addDays, localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import { buildPlayerWeek } from '@/lib/week-builder';
 import { plain, notReady } from '@/lib/plain-error';
+import { AGREE_FIRST, waitsForAgreement } from '@/lib/consent-server';
 
 const isRedirect = (e: unknown) => typeof e === 'object' && e !== null && 'digest' in e && String((e as { digest: unknown }).digest).startsWith('NEXT_REDIRECT');
 
@@ -18,6 +19,7 @@ export async function addMySession(): Promise<{ ok: false; error: string }> {
   try {
     const v = await getViewer();
     if (!v.academy || !v.user || v.role !== 'player') return { ok: false, error: 'Only players can add a session.' };
+    if (await waitsForAgreement(v.db, v.user)) return { ok: false, error: AGREE_FIRST };
     const week = await readMyWeek();
     if (!week?.more) return { ok: false, error: 'Your trainer hasn’t turned this on.' };
     if (week.more.why) return { ok: false, error: week.more.why };

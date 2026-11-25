@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
 import { plain } from '@/lib/plain-error';
+import { AGREE_FIRST, waitsForAgreement } from '@/lib/consent-server';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FEELS = ['easy', 'right', 'hard'];
@@ -18,11 +19,21 @@ const amount = (v: unknown, max: number) =>
   typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.min(max, v)) : null;
 const MIN = 600, TOUCHES = 50000;
 
+/**
+ * A player under 13 whose parent or guardian hasn't agreed yet: nothing of
+ * their training is kept until they do (0043). The screen already stands in
+ * front of training; this is the same door from the API. A 403, which the
+ * phone's queue takes as final: a finish from before the screen went up is
+ * a child's data from before anyone agreed, and isn't kept either.
+ */
+const held = () => NextResponse.json({ error: AGREE_FIRST }, { status: 403 });
+
 /** Save a built session to history. This is what makes "order it again" possible. */
 export async function POST(req: Request) {
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
+  if (await waitsForAgreement(db, user)) return held();
 
   // Not JSON: a 400, which the phone's queue takes as final. A 500 it sends again for ever.
   const body = await req.json().catch(() => null);
@@ -102,6 +113,7 @@ export async function PATCH(req: Request) {
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 });
+  if (await waitsForAgreement(db, user)) return held();
 
   // Not JSON: a 400, which the phone's queue takes as final. A 500 it sends again for ever.
   const body = await req.json().catch(() => null);

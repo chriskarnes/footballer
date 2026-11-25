@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '@/lib/supabase/server';
 import { plain } from '@/lib/plain-error';
+import { AGREE_FIRST, waitsForAgreement } from '@/lib/consent-server';
 
 /**
  * Saved weeks. A player can keep several — an off-season week and an in-season
@@ -25,6 +26,13 @@ async function signedIn() {
 }
 
 const unauthorized = () => NextResponse.json({ error: 'not signed in' }, { status: 401 });
+/**
+ * A player under 13 whose parent or guardian hasn't agreed yet: their week
+ * (their answers, their days) isn't kept until they do (0043). The screen
+ * already stands in front of it; this is the same door from the API. Taking
+ * a week away (DELETE) is always fine.
+ */
+const held = () => NextResponse.json({ error: AGREE_FIRST }, { status: 403 });
 
 /** A 400 naming the problem beats a check-constraint error surfacing as a failed save. */
 function invalid(intake: unknown, days: unknown): NextResponse | null {
@@ -65,6 +73,7 @@ async function activate(db: Awaited<ReturnType<typeof signedIn>>['db'], userId: 
 export async function POST(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
+  if (await waitsForAgreement(db, user)) return held();
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'intake and days are required' }, { status: 400 });
@@ -116,6 +125,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
+  if (await waitsForAgreement(db, user)) return held();
 
   const { id, intake, days } = (await req.json().catch(() => null)) ?? {};
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
@@ -150,6 +160,7 @@ export async function PUT(req: Request) {
 export async function PATCH(req: Request) {
   const { db, user } = await signedIn();
   if (!user) return unauthorized();
+  if (await waitsForAgreement(db, user)) return held();
 
   const { id, name, follow } = (await req.json().catch(() => null)) ?? {};
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });

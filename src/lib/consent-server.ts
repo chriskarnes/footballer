@@ -69,6 +69,38 @@ export const myConsentGate = async () => (await myChild())?.gate ?? null;
 /** A player under 13 (not a trainer here for their own child): no photo, no typed requests to the AI. */
 export const isChildPlayer = async () => { const c = await myChild(); return !!c?.under13 && !c.staffAnywhere; };
 
+/** What a save turned down for want of an agreement says; the screen says the rest. */
+export const AGREE_FIRST = 'Nothing’s saved until a parent or guardian agrees.';
+
+/**
+ * Whether this account's own training saves (a finish, a week, its days)
+ * wait for a parent's or guardian's agreement: the screen's rule
+ * (consentNeed), read for the account rather than for the academy a page is
+ * on, so a save is held the same whichever address it's sent to. The screen
+ * already stands in front of training; this is the same door from the API.
+ * Staff anywhere aren't held here: grown-ups, here for their own child, who
+ * agree on the screen. A failed read reads as no, as it does for the screen.
+ */
+export async function waitsForAgreement(db: SupabaseClient, user: { id: string; email?: string | null }): Promise<boolean> {
+  try {
+    const { data: prof, error } = await db.from('profiles').select('age_band, signed_up_by').eq('id', user.id).maybeSingle();
+    const p = prof as { age_band: string | null; signed_up_by: string | null } | null;
+    if (error || !isUnder13(p?.age_band)) return false;
+    const [staff, consent] = await Promise.all([
+      staffSomewhere(db, user.id),
+      db.from('parent_consents').select('agreed_at').eq('user_id', user.id).maybeSingle(),
+    ]);
+    // Before 0043 runs: nobody is asked.
+    if (consent.error) return false;
+    return !!consentNeed({
+      ageBand: p?.age_band, email: user.email, staffHere: staff, parentHeld: p?.signed_up_by === 'parent',
+      agreed: !!(consent.data as { agreed_at: string | null } | null)?.agreed_at, canEmail: emailOn(),
+    });
+  } catch {
+    return false;
+  }
+}
+
 /** A new link's secret, and what's kept of it. */
 export function newToken(): { token: string; hash: string } {
   const token = randomBytes(24).toString('base64url');

@@ -60,6 +60,12 @@ a soft launch with trainers you know until the legal review (§3) is back.
 - [x] An age picked by mistake: the profile form warns before it's saved,
       and an admin puts it right (admin → the person → Age).
 - [x] Parent request emails: three a day per account, 200 a day in all.
+- [x] No other site can show the app in a frame (clickjacking):
+      `X-Frame-Options` and `frame-ancestors` on every response
+      (`next.config.mjs`). The uploaded-image routes keep their own sandbox.
+- [x] A player under 13 still waiting for an agreement can't save training
+      from the API either: finishes, weeks, soccer days, moved and added
+      sessions are refused until a parent or guardian agrees.
 - [x] Mail to `support@train.futbol` now arrives in Resend (its MX record
       points there). Send it a test and check where it shows up; set up
       forwarding if you want it in your own inbox.

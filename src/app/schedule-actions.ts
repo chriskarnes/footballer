@@ -4,6 +4,7 @@ import { getViewer } from '@/lib/viewer';
 import { localDate, mondayOf, weekdayOf } from '@/lib/progress';
 import type { TeamDays } from '@/lib/academy-week';
 import { plain } from '@/lib/plain-error';
+import { AGREE_FIRST, waitsForAgreement } from '@/lib/consent-server';
 
 type Result = { ok: true } | { ok: false; error: string };
 const days = (xs: unknown[]) => [...new Set(xs.map(Number).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))].sort();
@@ -27,6 +28,9 @@ export async function saveSoccerDays(input: TeamDays & { userId?: string }): Pro
   // that is told no, rather than having it saved to their own week.
   if (input.userId && input.userId !== v.user.id && !v.staff) return { ok: false, error: 'Only trainers can do that.' };
   const target = input.userId ?? v.user.id;
+  // A player's own days wait for a parent's or guardian's agreement under 13
+  // (0043), as training does. A trainer setting them for a player isn't held.
+  if (target === v.user.id && await waitsForAgreement(v.db, v.user)) return { ok: false, error: AGREE_FIRST };
   const games = days(input.games);
   const trainer = days(input.trainer).filter((d) => !games.includes(d));
   const practice = days(input.practice).filter((d) => !games.includes(d) && !trainer.includes(d));
@@ -48,6 +52,7 @@ export async function saveSoccerDays(input: TeamDays & { userId?: string }): Pro
 export async function moveItem(input: { key: string; weekday: number; placed: number }): Promise<Result> {
   const v = await getViewer();
   if (!v.user || !v.academy) return { ok: false, error: 'Sign in first.' };
+  if (await waitsForAgreement(v.db, v.user)) return { ok: false, error: AGREE_FIRST };
   const weekday = days([input.weekday])[0];
   // s: a program's session, a: a trainer's extra, c: a week built for them
   // or a session they added. buildWeek applies a move to any of them by key.

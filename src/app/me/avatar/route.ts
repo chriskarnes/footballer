@@ -23,7 +23,7 @@ export async function GET() {
       'Content-Type': row.avatar_type,
       'Cache-Control': 'private, max-age=31536000, immutable',
       'X-Content-Type-Options': 'nosniff',
-      'Content-Security-Policy': "default-src 'none'; sandbox",
+      'Content-Security-Policy': "default-src 'none'; sandbox; frame-ancestors 'none'",
     },
   });
 }

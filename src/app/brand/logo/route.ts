@@ -17,7 +17,7 @@ export async function GET() {
     headers: {
       'Content-Type': logo.type,
       'Cache-Control': 'public, max-age=31536000, immutable',
-      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox; frame-ancestors 'none'",
       'X-Content-Type-Options': 'nosniff',
     },
   });
