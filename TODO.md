@@ -16,7 +16,8 @@ a soft launch with trainers you know until the legal review (§3) is back.
       Add forwarding (or an inbox) in Vercel DNS, then send it a test message.
 - [x] Add a DMARC record at `_dmarc.train.futbol` (none exists). To start:
       `v=DMARC1; p=none; rua=mailto:support@train.futbol`.
-- [ ] Supabase: check which plan the project is on. Pro adds daily backups.
+- [x] Supabase on Pro (November 26, 2026): a daily backup kept 7 days, restored
+      from Database → Backups. The first one shows up within a day.
 - [x] Supabase → Authentication → Rate Limits raised (November 25, 2026):
       sign-in emails 150 an hour (30 with your own SMTP), sign-ins and code
       checks 100 per 5 minutes per network (30). A team on one Wi-Fi shares
